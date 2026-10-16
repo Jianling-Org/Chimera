@@ -1,0 +1,505 @@
+From b00822748706752a3f3c473079b1732a451af05a Mon Sep 17 00:00:00 2001
+From: Chimera Patch Builder <chimera@example.invalid>
+Date: Thu, 13 Aug 2026 11:00:00 +0800
+Subject: [PATCH 7/7] llvm: reject vectorization candidates with spill cost
+
+Chimera LLVM patch 7 of 7.
+---
+ .../Transforms/Vectorize/LoopVectorize.cpp    | 42 ++++++--
+ .../Transforms/Vectorize/SLPVectorizer.cpp    | 11 ++-
+ .../Transforms/Vectorize/VPlanAnalysis.cpp    | 13 +++
+ llvm/lib/Transforms/Vectorize/VPlanAnalysis.h |  8 ++
+ llvm/lib/Transforms/Vectorize/Vectorize.cpp   |  6 ++
+ .../Transforms/Vectorize/VectorizeOptions.h   | 12 +++
+ .../LoopVectorize/RISCV/spill-cost.ll         | 108 +++++++++++++++++++
+ .../Transforms/SLPVectorizer/spill-cost.ll    | 62 ++++++++++++
+ .../Transforms/Vectorize/CMakeLists.txt       |  1 +
+ .../Vectorize/VPlanAnalysisTest.cpp           | 54 ++++++++++
+ 10 files changed, 308 insertions(+), 9 deletions(-)
+ create mode 100644 llvm/lib/Transforms/Vectorize/VectorizeOptions.h
+ create mode 100644 llvm/test/Transforms/LoopVectorize/RISCV/spill-cost.ll
+ create mode 100644 llvm/test/Transforms/SLPVectorizer/spill-cost.ll
+ create mode 100644 llvm/unittests/Transforms/Vectorize/VPlanAnalysisTest.cpp
+
+diff --git a/llvm/lib/Transforms/Vectorize/LoopVectorize.cpp b/llvm/lib/Transforms/Vectorize/LoopVectorize.cpp
+index 5cf4b16..5b54828 100644
+--- a/llvm/lib/Transforms/Vectorize/LoopVectorize.cpp
++++ b/llvm/lib/Transforms/Vectorize/LoopVectorize.cpp
+@@ -52,7 +52,7 @@
+ //  Vectorizing Compilers.
+ //
+ //===----------------------------------------------------------------------===//
+-
++#include "VectorizeOptions.h"
+ #include "llvm/Transforms/Vectorize/LoopVectorize.h"
+ #include "LoopVectorizationPlanner.h"
+ #include "VPRecipeBuilder.h"
+@@ -4254,9 +4254,15 @@ VectorizationFactor LoopVectorizationPlanner::selectVectorizationFactor() {
+                                P->vectorFactors().end());
+ 
+     SmallVector<VPRegisterUsage, 8> RUs;
+-    if (CM.useMaxBandwidth(TargetTransformInfo::RGK_ScalableVector) ||
+-        CM.useMaxBandwidth(TargetTransformInfo::RGK_FixedWidthVector))
+-      RUs = calculateRegisterUsageForPlan(*P, VFs, TTI, CM.ValuesToIgnore);
++
++    const bool CheckRegisterPressure =
++        EnableSpillCost ||
++        CM.useMaxBandwidth(TargetTransformInfo::RGK_ScalableVector) ||
++        CM.useMaxBandwidth(TargetTransformInfo::RGK_FixedWidthVector);
++
++    if (CheckRegisterPressure)
++      RUs =
++          calculateRegisterUsageForPlan(*P, VFs, TTI, CM.ValuesToIgnore);
+ 
+     for (unsigned I = 0; I < VFs.size(); I++) {
+       ElementCount VF = VFs[I];
+@@ -4269,6 +4275,14 @@ VectorizationFactor LoopVectorizationPlanner::selectVectorizationFactor() {
+       if (CM.useMaxBandwidth(VF) && RUs[I].exceedsMaxNumRegs(TTI))
+         continue;
+ 
++      if (EnableSpillCost && RUs[I].exceedsMaxNumVectorRegs(TTI)) {
++        LLVM_DEBUG(dbgs() << "LV(REG): Not considering vector loop of width "
++                          << VF
++                          << " because it is expected to spill vector "
++                             "registers\n");
++        continue;
++      }
++
+       InstructionCost C = CM.expectedCost(VF);
+ 
+       // Add on other costs that are modelled in VPlan, but not in the legacy
+@@ -7021,9 +7035,15 @@ VectorizationFactor LoopVectorizationPlanner::computeBestVF() {
+                                P->vectorFactors().end());
+ 
+     SmallVector<VPRegisterUsage, 8> RUs;
+-    if (CM.useMaxBandwidth(TargetTransformInfo::RGK_ScalableVector) ||
+-        CM.useMaxBandwidth(TargetTransformInfo::RGK_FixedWidthVector))
+-      RUs = calculateRegisterUsageForPlan(*P, VFs, TTI, CM.ValuesToIgnore);
++
++    const bool CheckRegisterPressure =
++        EnableSpillCost ||
++        CM.useMaxBandwidth(TargetTransformInfo::RGK_ScalableVector) ||
++        CM.useMaxBandwidth(TargetTransformInfo::RGK_FixedWidthVector);
++
++    if (CheckRegisterPressure)
++      RUs =
++          calculateRegisterUsageForPlan(*P, VFs, TTI, CM.ValuesToIgnore);
+ 
+     for (unsigned I = 0; I < VFs.size(); I++) {
+       ElementCount VF = VFs[I];
+@@ -7054,6 +7074,14 @@ VectorizationFactor LoopVectorizationPlanner::computeBestVF() {
+         continue;
+       }
+ 
++      if (EnableSpillCost && RUs[I].exceedsMaxNumVectorRegs(TTI)) {
++        LLVM_DEBUG(dbgs() << "LV(REG): Not considering vector loop of width "
++                          << VF
++                          << " because it is expected to spill vector "
++                             "registers\n");
++        continue;
++      }
++
+       if (isMoreProfitable(CurrentFactor, BestFactor, P->hasScalarTail()))
+         BestFactor = CurrentFactor;
+ 
+diff --git a/llvm/lib/Transforms/Vectorize/SLPVectorizer.cpp b/llvm/lib/Transforms/Vectorize/SLPVectorizer.cpp
+index f6610ea..8b1a3d9 100644
+--- a/llvm/lib/Transforms/Vectorize/SLPVectorizer.cpp
++++ b/llvm/lib/Transforms/Vectorize/SLPVectorizer.cpp
+@@ -15,7 +15,7 @@
+ //  "Loop-Aware SLP in GCC" by Ira Rosen, Dorit Nuzman, Ayal Zaks.
+ //
+ //===----------------------------------------------------------------------===//
+-
++#include "VectorizeOptions.h"
+ #include "llvm/Transforms/Vectorize/SLPVectorizer.h"
+ #include "llvm/ADT/DenseMap.h"
+ #include "llvm/ADT/DenseSet.h"
+@@ -15085,7 +15085,14 @@ InstructionCost BoUpSLP::getTreeCost(ArrayRef<Value *> VectorizedVals,
+   std::optional<InstructionCost> SpillCost;
+   if (Cost < -SLPCostThreshold) {
+     SpillCost = getSpillCost();
+-    Cost += *SpillCost;
++
++    if (EnableSpillCost && *SpillCost > 0) {
++      LLVM_DEBUG(dbgs() << "SLP: Rejecting vectorization because it is "
++                         "expected to spill vector registers\n");
++      Cost = InstructionCost::getMax();
++    } else {
++      Cost += *SpillCost;
++    }
+   }
+ #ifndef NDEBUG
+   SmallString<256> Str;
+diff --git a/llvm/lib/Transforms/Vectorize/VPlanAnalysis.cpp b/llvm/lib/Transforms/Vectorize/VPlanAnalysis.cpp
+index 66657b9..428a9f5 100644
+--- a/llvm/lib/Transforms/Vectorize/VPlanAnalysis.cpp
++++ b/llvm/lib/Transforms/Vectorize/VPlanAnalysis.cpp
+@@ -411,6 +411,14 @@ bool VPRegisterUsage::exceedsMaxNumRegs(const TargetTransformInfo &TTI) const {
+   });
+ }
+ 
++bool VPRegisterUsage::exceedsMaxNumVectorRegs(
++    const TargetTransformInfo &TTI) const {
++  return any_of(MaxLocalUsers, [this, &TTI](auto &LU) {
++    return VectorRegisterClasses.contains(LU.first) &&
++           LU.second > TTI.getNumberOfRegisters(LU.first);
++  });
++}
++
+ SmallVector<VPRegisterUsage, 8> llvm::calculateRegisterUsageForPlan(
+     VPlan &Plan, ArrayRef<ElementCount> VFs, const TargetTransformInfo &TTI,
+     const SmallPtrSetImpl<const Value *> &ValuesToIgnore) {
+@@ -491,6 +499,7 @@ SmallVector<VPRegisterUsage, 8> llvm::calculateRegisterUsageForPlan(
+   SmallPtrSet<VPRecipeBase *, 8> OpenIntervals;
+   SmallVector<VPRegisterUsage, 8> RUs(VFs.size());
+   SmallVector<SmallMapVector<unsigned, unsigned, 4>, 8> MaxUsages(VFs.size());
++  SmallVector<SmallDenseSet<unsigned, 4>, 8> VectorRegisterClasses(VFs.size());
+ 
+   LLVM_DEBUG(dbgs() << "LV(REG): Calculating max register usage:\n");
+ 
+@@ -576,6 +585,7 @@ SmallVector<VPRegisterUsage, 8> llvm::calculateRegisterUsageForPlan(
+           for (VPValue *DefV : R->definedValues()) {
+             Type *ScalarTy = TypeInfo.inferScalarType(DefV);
+             unsigned ClassID = TTI.getRegisterClassForType(true, ScalarTy);
++            VectorRegisterClasses[J].insert(ClassID);
+             RegUsage[ClassID] += GetRegUsage(ScalarTy, VF);
+           }
+         }
+@@ -615,6 +625,8 @@ SmallVector<VPRegisterUsage, 8> llvm::calculateRegisterUsageForPlan(
+       ElementCount VF = IsScalar ? ElementCount::getFixed(1) : VFs[Idx];
+       unsigned ClassID = TTI.getRegisterClassForType(
+           VF.isVector(), TypeInfo.inferScalarType(In));
++      if (VF.isVector())
++        VectorRegisterClasses[Idx].insert(ClassID);
+       Invariant[ClassID] += GetRegUsage(TypeInfo.inferScalarType(In), VF);
+     }
+ 
+@@ -638,6 +650,7 @@ SmallVector<VPRegisterUsage, 8> llvm::calculateRegisterUsageForPlan(
+ 
+     RU.LoopInvariantRegs = Invariant;
+     RU.MaxLocalUsers = MaxUsages[Idx];
++    RU.VectorRegisterClasses = VectorRegisterClasses[Idx];
+     RUs[Idx] = RU;
+   }
+ 
+diff --git a/llvm/lib/Transforms/Vectorize/VPlanAnalysis.h b/llvm/lib/Transforms/Vectorize/VPlanAnalysis.h
+index 7bcf9db..941f542 100644
+--- a/llvm/lib/Transforms/Vectorize/VPlanAnalysis.h
++++ b/llvm/lib/Transforms/Vectorize/VPlanAnalysis.h
+@@ -80,13 +80,21 @@ struct VPRegisterUsage {
+   /// Holds the number of loop invariant values that are used in the loop.
+   /// The key is ClassID of target-provided register class.
+   SmallMapVector<unsigned, unsigned, 4> LoopInvariantRegs;
++
+   /// Holds the maximum number of concurrent live intervals in the loop.
+   /// The key is ClassID of target-provided register class.
+   SmallMapVector<unsigned, unsigned, 4> MaxLocalUsers;
+ 
++  /// Register classes used for vector values.
++  SmallDenseSet<unsigned, 4> VectorRegisterClasses;
++
+   /// Check if any of the tracked live intervals exceeds the number of
+   /// available registers for the target.
+   bool exceedsMaxNumRegs(const TargetTransformInfo &TTI) const;
++
++  /// Check if any vector register class exceeds the number of available
++  /// registers for the target.
++  bool exceedsMaxNumVectorRegs(const TargetTransformInfo &TTI) const;
+ };
+ 
+ /// Estimate the register usage for \p Plan and vectorization factors in \p VFs
+diff --git a/llvm/lib/Transforms/Vectorize/Vectorize.cpp b/llvm/lib/Transforms/Vectorize/Vectorize.cpp
+index 2f5048d..5cf5e55 100644
+--- a/llvm/lib/Transforms/Vectorize/Vectorize.cpp
++++ b/llvm/lib/Transforms/Vectorize/Vectorize.cpp
+@@ -12,11 +12,17 @@
+ //
+ //===----------------------------------------------------------------------===//
+ 
++#include "VectorizeOptions.h"
+ #include "llvm/InitializePasses.h"
+ #include "llvm/PassRegistry.h"
+ 
+ using namespace llvm;
+ 
++cl::opt<bool> llvm::EnableSpillCost(
++    "spill-cost", cl::init(false), cl::Hidden,
++    cl::desc("Reject vectorization candidates expected to cause vector "
++             "register spills"));
++
+ /// Initialize all passes linked into the Vectorization library.
+ void llvm::initializeVectorization(PassRegistry &Registry) {
+   initializeLoadStoreVectorizerLegacyPassPass(Registry);
+diff --git a/llvm/lib/Transforms/Vectorize/VectorizeOptions.h b/llvm/lib/Transforms/Vectorize/VectorizeOptions.h
+new file mode 100644
+index 0000000..b6c9a96
+--- /dev/null
++++ b/llvm/lib/Transforms/Vectorize/VectorizeOptions.h
+@@ -0,0 +1,12 @@
++#ifndef LLVM_LIB_TRANSFORMS_VECTORIZE_VECTORIZEOPTIONS_H
++#define LLVM_LIB_TRANSFORMS_VECTORIZE_VECTORIZEOPTIONS_H
++
++#include "llvm/Support/CommandLine.h"
++
++namespace llvm {
++
++extern cl::opt<bool> EnableSpillCost;
++
++} // namespace llvm
++
++#endif
+diff --git a/llvm/test/Transforms/LoopVectorize/RISCV/spill-cost.ll b/llvm/test/Transforms/LoopVectorize/RISCV/spill-cost.ll
+new file mode 100644
+index 0000000..cb768e5
+--- /dev/null
++++ b/llvm/test/Transforms/LoopVectorize/RISCV/spill-cost.ll
+@@ -0,0 +1,108 @@
++; RUN: opt -mtriple=riscv64 -mattr=+v -passes=loop-vectorize \
++; RUN:   -force-vector-interleave=1 \
++; RUN:   -scalable-vectorization=on -force-target-supports-scalable-vectors \
++; RUN:   -S < %s | FileCheck %s --check-prefix=OFF
++; RUN: opt -mtriple=riscv64 -mattr=+v -passes=loop-vectorize \
++; RUN:   -force-vector-interleave=1 \
++; RUN:   -scalable-vectorization=on -force-target-supports-scalable-vectors \
++; RUN:   -spill-cost -S < %s | FileCheck %s --check-prefix=ON
++; RUN: opt -mtriple=riscv64 -mattr=+v -passes=loop-vectorize \
++; RUN:   -force-vector-interleave=1 \
++; RUN:   -scalable-vectorization=on -force-target-supports-scalable-vectors \
++; RUN:   -spill-cost -debug-only=loop-vectorize -disable-output < %s 2>&1 \
++; RUN:   | FileCheck %s --check-prefix=REJECT
++; REQUIRES: asserts
++
++; @pressure needs ~34 vector registers, two more than RISC-V's 32. OFF keeps
++; LLVM's prior choice of VF under that pressure; ON rejects the same candidate
++; because -spill-cost gates vector register pressure. The GPR-only case cannot
++; be expressed stably through a VPlan, so it is covered by a unit test instead
++; (llvm/unittests/Transforms/Vectorize/VPlanAnalysisTest.cpp).
++
++define void @pressure(
++    ptr noalias %a0, ptr noalias %a1, ptr noalias %a2,
++    ptr noalias %a3, ptr noalias %a4, ptr noalias %a5,
++    ptr noalias %a6, ptr noalias %a7, ptr noalias %a8,
++    ptr noalias %a9, ptr noalias %a10, ptr noalias %a11,
++    ptr noalias %a12, ptr noalias %a13, ptr noalias %a14,
++    ptr noalias %a15, ptr noalias %a16, ptr noalias %out, i64 %n) {
++entry:
++  br label %loop
++
++loop:
++  %iv = phi i64 [ 0, %entry ], [ %next, %loop ]
++  %p0 = getelementptr float, ptr %a0, i64 %iv
++  %p1 = getelementptr float, ptr %a1, i64 %iv
++  %p2 = getelementptr float, ptr %a2, i64 %iv
++  %p3 = getelementptr float, ptr %a3, i64 %iv
++  %p4 = getelementptr float, ptr %a4, i64 %iv
++  %p5 = getelementptr float, ptr %a5, i64 %iv
++  %p6 = getelementptr float, ptr %a6, i64 %iv
++  %p7 = getelementptr float, ptr %a7, i64 %iv
++  %p8 = getelementptr float, ptr %a8, i64 %iv
++  %p9 = getelementptr float, ptr %a9, i64 %iv
++  %p10 = getelementptr float, ptr %a10, i64 %iv
++  %p11 = getelementptr float, ptr %a11, i64 %iv
++  %p12 = getelementptr float, ptr %a12, i64 %iv
++  %p13 = getelementptr float, ptr %a13, i64 %iv
++  %p14 = getelementptr float, ptr %a14, i64 %iv
++  %p15 = getelementptr float, ptr %a15, i64 %iv
++  %p16 = getelementptr float, ptr %a16, i64 %iv
++  %x0 = load float, ptr %p0, align 4
++  %x1 = load float, ptr %p1, align 4
++  %x2 = load float, ptr %p2, align 4
++  %x3 = load float, ptr %p3, align 4
++  %x4 = load float, ptr %p4, align 4
++  %x5 = load float, ptr %p5, align 4
++  %x6 = load float, ptr %p6, align 4
++  %x7 = load float, ptr %p7, align 4
++  %x8 = load float, ptr %p8, align 4
++  %x9 = load float, ptr %p9, align 4
++  %x10 = load float, ptr %p10, align 4
++  %x11 = load float, ptr %p11, align 4
++  %x12 = load float, ptr %p12, align 4
++  %x13 = load float, ptr %p13, align 4
++  %x14 = load float, ptr %p14, align 4
++  %x15 = load float, ptr %p15, align 4
++  %x16 = load float, ptr %p16, align 4
++  %s0 = fadd float %x1, %x2
++  %s1 = fadd float %x3, %x4
++  %s2 = fadd float %x5, %x6
++  %s3 = fadd float %x7, %x8
++  %s4 = fadd float %x9, %x10
++  %s5 = fadd float %x11, %x12
++  %s6 = fadd float %x13, %x14
++  %s7 = fadd float %x15, %x16
++  %s8 = fadd float %x0, %s0
++  %s9 = fadd float %s1, %s2
++  %s10 = fadd float %s3, %s4
++  %s11 = fadd float %s5, %s6
++  %s12 = fadd float %s8, %s9
++  %s13 = fadd float %s10, %s11
++  %s14 = fadd float %s12, %s13
++  %sum = fadd float %s14, %s7
++  %q = getelementptr float, ptr %out, i64 %iv
++  store float %sum, ptr %q, align 4
++  %next = add nuw i64 %iv, 1
++  %done = icmp eq i64 %next, %n
++  br i1 %done, label %exit, label %loop, !llvm.loop !0
++
++exit:
++  ret void
++}
++
++; OFF-LABEL: define void @pressure(
++; OFF-NOT: <vscale x 2 x float>
++; OFF: <vscale x 4 x float>
++; OFF-NOT: <vscale x 2 x float>
++;
++; ON-LABEL: define void @pressure(
++; ON-NOT: <vscale x 4 x float>
++; ON: <vscale x 2 x float>
++; ON-NOT: <vscale x 4 x float>
++;
++; REJECT: Not considering vector loop of width vscale x 4 because it is expected to spill vector registers
++
++!0 = distinct !{!0, !1, !2}
++!1 = !{!"llvm.loop.vectorize.enable", i1 true}
++!2 = !{!"llvm.loop.vectorize.scalable.enable", i1 true}
+diff --git a/llvm/test/Transforms/SLPVectorizer/spill-cost.ll b/llvm/test/Transforms/SLPVectorizer/spill-cost.ll
+new file mode 100644
+index 0000000..7949cd4
+--- /dev/null
++++ b/llvm/test/Transforms/SLPVectorizer/spill-cost.ll
+@@ -0,0 +1,62 @@
++; RUN: opt -mtriple=riscv64 -mattr=+v -passes=slp-vectorizer \
++; RUN:   -slp-threshold=-100 -S < %s | FileCheck %s --check-prefix=OFF
++; RUN: opt -mtriple=riscv64 -mattr=+v -passes=slp-vectorizer \
++; RUN:   -slp-threshold=-100 -spill-cost -S < %s \
++; RUN:   | FileCheck %s --check-prefix=ON
++; RUN: opt -mtriple=riscv64 -mattr=+v -passes=slp-vectorizer \
++; RUN:   -slp-threshold=-100 -spill-cost -debug-only=SLP -disable-output \
++; RUN:   < %s 2>&1 | FileCheck %s --check-prefix=DEBUG
++; REQUIRES: asserts
++
++declare void @clobber()
++
++define void @positive_spill(ptr noalias %src, ptr noalias %dst) {
++  %s1 = getelementptr float, ptr %src, i64 1
++  %s2 = getelementptr float, ptr %src, i64 2
++  %s3 = getelementptr float, ptr %src, i64 3
++  %d1 = getelementptr float, ptr %dst, i64 1
++  %d2 = getelementptr float, ptr %dst, i64 2
++  %d3 = getelementptr float, ptr %dst, i64 3
++  %v0 = load float, ptr %src, align 4
++  %v1 = load float, ptr %s1, align 4
++  %v2 = load float, ptr %s2, align 4
++  %v3 = load float, ptr %s3, align 4
++  call void @clobber()
++  store float %v0, ptr %dst, align 4
++  store float %v1, ptr %d1, align 4
++  store float %v2, ptr %d2, align 4
++  store float %v3, ptr %d3, align 4
++  ret void
++}
++
++define void @zero_spill(ptr noalias %src, ptr noalias %dst) {
++  %s1 = getelementptr float, ptr %src, i64 1
++  %s2 = getelementptr float, ptr %src, i64 2
++  %s3 = getelementptr float, ptr %src, i64 3
++  %d1 = getelementptr float, ptr %dst, i64 1
++  %d2 = getelementptr float, ptr %dst, i64 2
++  %d3 = getelementptr float, ptr %dst, i64 3
++  %v0 = load float, ptr %src, align 4
++  %v1 = load float, ptr %s1, align 4
++  %v2 = load float, ptr %s2, align 4
++  %v3 = load float, ptr %s3, align 4
++  store float %v0, ptr %dst, align 4
++  store float %v1, ptr %d1, align 4
++  store float %v2, ptr %d2, align 4
++  store float %v3, ptr %d3, align 4
++  ret void
++}
++
++; OFF-LABEL: @positive_spill(
++; OFF: load <4 x float>
++; OFF: store <4 x float>
++; ON-LABEL: @positive_spill(
++; ON-NOT: load <4 x float>
++; ON: call void @clobber()
++; ON-LABEL: @zero_spill(
++; ON: load <4 x float>
++; ON: store <4 x float>
++
++; DEBUG: SLP: Rejecting vectorization because it is expected to spill vector registers
++; DEBUG: SLP: Spill Cost = {{[1-9][0-9]*}}
++; DEBUG: SLP: Spill Cost = 0
+diff --git a/llvm/unittests/Transforms/Vectorize/CMakeLists.txt b/llvm/unittests/Transforms/Vectorize/CMakeLists.txt
+index 53eeff2..3fc044d 100644
+--- a/llvm/unittests/Transforms/Vectorize/CMakeLists.txt
++++ b/llvm/unittests/Transforms/Vectorize/CMakeLists.txt
+@@ -15,4 +15,5 @@ add_llvm_unittest(VectorizeTests
+   VPlanPatternMatchTest.cpp
+   VPlanSlpTest.cpp
+   VPlanVerifierTest.cpp
++  VPlanAnalysisTest.cpp
+   )
+diff --git a/llvm/unittests/Transforms/Vectorize/VPlanAnalysisTest.cpp b/llvm/unittests/Transforms/Vectorize/VPlanAnalysisTest.cpp
+new file mode 100644
+index 0000000..9221118
+--- /dev/null
++++ b/llvm/unittests/Transforms/Vectorize/VPlanAnalysisTest.cpp
+@@ -0,0 +1,54 @@
++//===- VPlanAnalysisTest.cpp - Tests for VPlan register usage analysis ----===//
++//
++// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
++// See https://llvm.org/LICENSE.txt for license information.
++// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
++//
++//===----------------------------------------------------------------------===//
++
++#include "../lib/Transforms/Vectorize/VPlanAnalysis.h"
++#include "llvm/Analysis/TargetTransformInfo.h"
++#include "llvm/IR/DataLayout.h"
++#include "gtest/gtest.h"
++
++using namespace llvm;
++
++namespace {
++
++// Generic baseline-TTI register class IDs: scalar = 0, vector = 1.
++constexpr unsigned ScalarClass = 0;
++constexpr unsigned VectorClass = 1;
++
++// VPRegisterUsage::exceedsMaxNumVectorRegs must only reject candidates whose
++// vector register class pressure exceeds the target's register count. A scalar
++// (GPR) class that exceeds its own limit must not trigger the gate, which is
++// what distinguishes this check from exceedsMaxNumRegs().
++
++TEST(VPRegisterUsageTest, OnlyVectorClassesTriggerTheGate) {
++  // The baseline TTI reports 8 registers for every class.
++  DataLayout DL("e-p:64:64");
++  TargetTransformInfo TTI(DL);
++
++  VPRegisterUsage RU;
++
++  // A vector class over the limit is rejected.
++  RU.MaxLocalUsers[VectorClass] = 9;
++  RU.VectorRegisterClasses.insert(VectorClass);
++  EXPECT_TRUE(RU.exceedsMaxNumVectorRegs(TTI));
++
++  // A scalar class over the limit is ignored because it is not recorded as a
++  // vector class.
++  RU.MaxLocalUsers.clear();
++  RU.MaxLocalUsers[ScalarClass] = 9;
++  RU.VectorRegisterClasses.clear();
++  EXPECT_FALSE(RU.exceedsMaxNumVectorRegs(TTI));
++
++  // A vector class within its limit is not rejected, even when a scalar class
++  // is over its own limit at the same time.
++  RU.MaxLocalUsers[VectorClass] = 8;
++  RU.MaxLocalUsers[ScalarClass] = 9;
++  RU.VectorRegisterClasses.insert(VectorClass);
++  EXPECT_FALSE(RU.exceedsMaxNumVectorRegs(TTI));
++}
++
++} // namespace
+-- 
+2.55.0.windows.3

@@ -1,0 +1,422 @@
+
+/root/yangzheng/gcc-rebuild/chimera-staged-20260919-132951/build-gate4/gcc/xgcc：     文件格式 elf64-littleriscv
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+00000000000217fe <_ZL25check_offload_target_namePKcl>:
+   217fe:	7135                	addi	sp,sp,-160
+   21800:	ed06                	sd	ra,152(sp)
+   21802:	e922                	sd	s0,144(sp)
+   21804:	e526                	sd	s1,136(sp)
+   21806:	e14a                	sd	s2,128(sp)
+   21808:	fcce                	sd	s3,120(sp)
+   2180a:	f8d2                	sd	s4,112(sp)
+   2180c:	f4d6                	sd	s5,104(sp)
+   2180e:	f0da                	sd	s6,96(sp)
+   21810:	ecde                	sd	s7,88(sp)
+   21812:	e8e2                	sd	s8,80(sp)
+   21814:	e4e6                	sd	s9,72(sp)
+   21816:	e0ea                	sd	s10,64(sp)
+   21818:	fc6e                	sd	s11,56(sp)
+   2181a:	1100                	addi	s0,sp,160
+   2181c:	8aae                	mv	s5,a1
+   2181e:	8baa                	mv	s7,a0
+   21820:	000e79b7          	lui	s3,0xe7
+   21824:	a1c98993          	addi	s3,s3,-1508 # e6a1c <_ZZ13trim_filenamePKcE9this_file+0x1a44>
+   21828:	a031                	j	21834 <_ZL25check_offload_target_namePKcl+0x36>
+   2182a:	0004c503          	lbu	a0,0(s1)
+   2182e:	00148993          	addi	s3,s1,1
+   21832:	cd15                	beqz	a0,2186e <_ZL25check_offload_target_namePKcl+0x70>
+   21834:	02c00593          	li	a1,44
+   21838:	854e                	mv	a0,s3
+   2183a:	cf7f20ef          	jal	14530 <strchr@plt>
+   2183e:	84aa                	mv	s1,a0
+   21840:	c511                	beqz	a0,2184c <_ZL25check_offload_target_namePKcl+0x4e>
+   21842:	41348533          	sub	a0,s1,s3
+   21846:	feaa92e3          	bne	s5,a0,2182a <_ZL25check_offload_target_namePKcl+0x2c>
+   2184a:	a811                	j	2185e <_ZL25check_offload_target_namePKcl+0x60>
+   2184c:	854e                	mv	a0,s3
+   2184e:	fe2f20ef          	jal	14030 <strlen@plt>
+   21852:	00a984b3          	add	s1,s3,a0
+   21856:	41348533          	sub	a0,s1,s3
+   2185a:	fcaa98e3          	bne	s5,a0,2182a <_ZL25check_offload_target_namePKcl+0x2c>
+   2185e:	855e                	mv	a0,s7
+   21860:	85ce                	mv	a1,s3
+   21862:	8656                	mv	a2,s5
+   21864:	dedf20ef          	jal	14650 <strncmp@plt>
+   21868:	f169                	bnez	a0,2182a <_ZL25check_offload_target_namePKcl+0x2c>
+   2186a:	4505                	li	a0,1
+   2186c:	a66d                	j	21c16 <_ZL25check_offload_target_namePKcl+0x418>
+   2186e:	80000c37          	lui	s8,0x80000
+   21872:	3c7d                	addiw	s8,s8,-1 # 7fffffff <__BSS_END__+0x7fe5629f>
+   21874:	f8043823          	sd	zero,-112(s0)
+   21878:	858a                	mv	a1,sp
+   2187a:	ff058513          	addi	a0,a1,-16
+   2187e:	812a                	mv	sp,a0
+   21880:	fe058823          	sb	zero,-16(a1)
+   21884:	000c95b7          	lui	a1,0xc9
+   21888:	dfb58593          	addi	a1,a1,-517 # c8dfb <_ZZL9init_specvE2tf+0x21da9>
+   2188c:	8f5f20ef          	jal	14180 <strtok@plt>
+   21890:	85aa                	mv	a1,a0
+   21892:	c2202df3          	csrr	s11,vlenb
+   21896:	18050163          	beqz	a0,21a18 <_ZL25check_offload_target_namePKcl+0x21a>
+   2189a:	f7743823          	sd	s7,-144(s0)
+   2189e:	4c81                	li	s9,0
+   218a0:	4505                	li	a0,1
+   218a2:	001d9d13          	slli	s10,s11,0x1
+   218a6:	f9b43023          	sd	s11,-128(s0)
+   218aa:	002ddd93          	srli	s11,s11,0x2
+   218ae:	1502                	slli	a0,a0,0x20
+   218b0:	1579                	addi	a0,a0,-2
+   218b2:	f6a43c23          	sd	a0,-136(s0)
+   218b6:	000c9a37          	lui	s4,0xc9
+   218ba:	dfba0a13          	addi	s4,s4,-517 # c8dfb <_ZZL9init_specvE2tf+0x21da9>
+   218be:	f6b43423          	sd	a1,-152(s0)
+   218c2:	8b2e                	mv	s6,a1
+   218c4:	a01d                	j	218ea <_ZL25check_offload_target_namePKcl+0xec>
+   218c6:	8bce                	mv	s7,s3
+   218c8:	8caa                	mv	s9,a0
+   218ca:	020b9513          	slli	a0,s7,0x20
+   218ce:	0b85                	addi	s7,s7,1
+   218d0:	8175                	srli	a0,a0,0x1d
+   218d2:	9566                	add	a0,a0,s9
+   218d4:	01653423          	sd	s6,8(a0)
+   218d8:	017ca223          	sw	s7,4(s9)
+   218dc:	4501                	li	a0,0
+   218de:	85d2                	mv	a1,s4
+   218e0:	8a1f20ef          	jal	14180 <strtok@plt>
+   218e4:	8b2a                	mv	s6,a0
+   218e6:	10050063          	beqz	a0,219e6 <_ZL25check_offload_target_namePKcl+0x1e8>
+   218ea:	020c8763          	beqz	s9,21918 <_ZL25check_offload_target_namePKcl+0x11a>
+   218ee:	000ca583          	lw	a1,0(s9)
+   218f2:	004cab83          	lw	s7,4(s9)
+   218f6:	0185f533          	and	a0,a1,s8
+   218fa:	fd7518e3          	bne	a0,s7,218ca <_ZL25check_offload_target_namePKcl+0xcc>
+   218fe:	0805ca63          	bltz	a1,21992 <_ZL25check_offload_target_namePKcl+0x194>
+   21902:	0015059b          	addiw	a1,a0,1
+   21906:	10a1b0ef          	jal	3ca10 <_ZN10vec_prefix22calculate_allocation_1Ejj>
+   2190a:	84aa                	mv	s1,a0
+   2190c:	4b81                	li	s7,0
+   2190e:	4901                	li	s2,0
+   21910:	004ca983          	lw	s3,4(s9)
+   21914:	8566                	mv	a0,s9
+   21916:	a819                	j	2192c <_ZL25check_offload_target_namePKcl+0x12e>
+   21918:	4b81                	li	s7,0
+   2191a:	4485                	li	s1,1
+   2191c:	4511                	li	a0,4
+   2191e:	00956363          	bltu	a0,s1,21924 <_ZL25check_offload_target_namePKcl+0x126>
+   21922:	4491                	li	s1,4
+   21924:	4501                	li	a0,0
+   21926:	4981                	li	s3,0
+   21928:	01903933          	snez	s2,s9
+   2192c:	02049593          	slli	a1,s1,0x20
+   21930:	81f5                	srli	a1,a1,0x1d
+   21932:	05a1                	addi	a1,a1,8
+   21934:	457810ef          	jal	a358a <xrealloc>
+   21938:	f8a43823          	sd	a0,-112(s0)
+   2193c:	0184f5b3          	and	a1,s1,s8
+   21940:	c10c                	sw	a1,0(a0)
+   21942:	01352223          	sw	s3,4(a0)
+   21946:	f80900e3          	beqz	s2,218c6 <_ZL25check_offload_target_namePKcl+0xc8>
+   2194a:	040b8163          	beqz	s7,2198c <_ZL25check_offload_target_namePKcl+0x18e>
+   2194e:	45a1                	li	a1,8
+   21950:	866e                	mv	a2,s11
+   21952:	01b5e363          	bltu	a1,s11,21958 <_ZL25check_offload_target_namePKcl+0x15a>
+   21956:	4621                	li	a2,8
+   21958:	020b9593          	slli	a1,s7,0x20
+   2195c:	9181                	srli	a1,a1,0x20
+   2195e:	00c5e663          	bltu	a1,a2,2196a <_ZL25check_offload_target_namePKcl+0x16c>
+   21962:	41950633          	sub	a2,a0,s9
+   21966:	05a67063          	bgeu	a2,s10,219a6 <_ZL25check_offload_target_namePKcl+0x1a8>
+   2196a:	865e                	mv	a2,s7
+   2196c:	86e6                	mv	a3,s9
+   2196e:	872a                	mv	a4,a0
+   21970:	00868593          	addi	a1,a3,8
+   21974:	0721                	addi	a4,a4,8
+   21976:	167d                	addi	a2,a2,-1
+   21978:	1602                	slli	a2,a2,0x20
+   2197a:	8275                	srli	a2,a2,0x1d
+   2197c:	9636                	add	a2,a2,a3
+   2197e:	0641                	addi	a2,a2,16
+   21980:	6194                	ld	a3,0(a1)
+   21982:	05a1                	addi	a1,a1,8
+   21984:	e314                	sd	a3,0(a4)
+   21986:	0721                	addi	a4,a4,8
+   21988:	fec59ce3          	bne	a1,a2,21980 <_ZL25check_offload_target_namePKcl+0x182>
+   2198c:	01752223          	sw	s7,4(a0)
+   21990:	bf25                	j	218c8 <_ZL25check_offload_target_namePKcl+0xca>
+   21992:	f8043823          	sd	zero,-112(s0)
+   21996:	004cab83          	lw	s7,4(s9)
+   2199a:	001b849b          	addiw	s1,s7,1
+   2199e:	4511                	li	a0,4
+   219a0:	f89571e3          	bgeu	a0,s1,21922 <_ZL25check_offload_target_namePKcl+0x124>
+   219a4:	b741                	j	21924 <_ZL25check_offload_target_namePKcl+0x126>
+   219a6:	f8043603          	ld	a2,-128(s0)
+   219aa:	820d                	srli	a2,a2,0x3
+   219ac:	00850493          	addi	s1,a0,8
+   219b0:	f7843683          	ld	a3,-136(s0)
+   219b4:	02d60633          	mul	a2,a2,a3
+   219b8:	00b67833          	and	a6,a2,a1
+   219bc:	410b863b          	subw	a2,s7,a6
+   219c0:	00381713          	slli	a4,a6,0x3
+   219c4:	00ec86b3          	add	a3,s9,a4
+   219c8:	972a                	add	a4,a4,a0
+   219ca:	0ca1                	addi	s9,s9,8
+   219cc:	87c2                	mv	a5,a6
+   219ce:	228cf407          	vl2re64.v	v8,(s9)
+   219d2:	41b787b3          	sub	a5,a5,s11
+   219d6:	22848427          	vs2r.v	v8,(s1)
+   219da:	94ea                	add	s1,s1,s10
+   219dc:	9cea                	add	s9,s9,s10
+   219de:	fbe5                	bnez	a5,219ce <_ZL25check_offload_target_namePKcl+0x1d0>
+   219e0:	f8b818e3          	bne	a6,a1,21970 <_ZL25check_offload_target_namePKcl+0x172>
+   219e4:	b765                	j	2198c <_ZL25check_offload_target_namePKcl+0x18e>
+   219e6:	000ca583          	lw	a1,0(s9)
+   219ea:	004caa03          	lw	s4,4(s9)
+   219ee:	0185f533          	and	a0,a1,s8
+   219f2:	0b451963          	bne	a0,s4,21aa4 <_ZL25check_offload_target_namePKcl+0x2a6>
+   219f6:	f7043b83          	ld	s7,-144(s0)
+   219fa:	f8043d83          	ld	s11,-128(s0)
+   219fe:	2205cd63          	bltz	a1,21c38 <_ZL25check_offload_target_namePKcl+0x43a>
+   21a02:	0015059b          	addiw	a1,a0,1
+   21a06:	00a1b0ef          	jal	3ca10 <_ZN10vec_prefix22calculate_allocation_1Ejj>
+   21a0a:	84aa                	mv	s1,a0
+   21a0c:	4a01                	li	s4,0
+   21a0e:	4981                	li	s3,0
+   21a10:	004cab03          	lw	s6,4(s9)
+   21a14:	8566                	mv	a0,s9
+   21a16:	a821                	j	21a2e <_ZL25check_offload_target_namePKcl+0x230>
+   21a18:	4c81                	li	s9,0
+   21a1a:	4a01                	li	s4,0
+   21a1c:	4485                	li	s1,1
+   21a1e:	4511                	li	a0,4
+   21a20:	00956363          	bltu	a0,s1,21a26 <_ZL25check_offload_target_namePKcl+0x228>
+   21a24:	4491                	li	s1,4
+   21a26:	4501                	li	a0,0
+   21a28:	4b01                	li	s6,0
+   21a2a:	00b039b3          	snez	s3,a1
+   21a2e:	02049593          	slli	a1,s1,0x20
+   21a32:	81f5                	srli	a1,a1,0x1d
+   21a34:	05a1                	addi	a1,a1,8
+   21a36:	355810ef          	jal	a358a <xrealloc>
+   21a3a:	f8a43823          	sd	a0,-112(s0)
+   21a3e:	0184f5b3          	and	a1,s1,s8
+   21a42:	c10c                	sw	a1,0(a0)
+   21a44:	01652223          	sw	s6,4(a0)
+   21a48:	04098c63          	beqz	s3,21aa0 <_ZL25check_offload_target_namePKcl+0x2a2>
+   21a4c:	040a0763          	beqz	s4,21a9a <_ZL25check_offload_target_namePKcl+0x29c>
+   21a50:	020a1593          	slli	a1,s4,0x20
+   21a54:	002dd613          	srli	a2,s11,0x2
+   21a58:	4741                	li	a4,16
+   21a5a:	9181                	srli	a1,a1,0x20
+   21a5c:	86b2                	mv	a3,a2
+   21a5e:	00c76363          	bltu	a4,a2,21a64 <_ZL25check_offload_target_namePKcl+0x266>
+   21a62:	46c1                	li	a3,16
+   21a64:	00d5e863          	bltu	a1,a3,21a74 <_ZL25check_offload_target_namePKcl+0x276>
+   21a68:	001d9693          	slli	a3,s11,0x1
+   21a6c:	41950733          	sub	a4,a0,s9
+   21a70:	1ed77063          	bgeu	a4,a3,21c50 <_ZL25check_offload_target_namePKcl+0x452>
+   21a74:	88d2                	mv	a7,s4
+   21a76:	8766                	mv	a4,s9
+   21a78:	82aa                	mv	t0,a0
+   21a7a:	00870593          	addi	a1,a4,8
+   21a7e:	02a1                	addi	t0,t0,8
+   21a80:	18fd                	addi	a7,a7,-1
+   21a82:	1882                	slli	a7,a7,0x20
+   21a84:	01d8d613          	srli	a2,a7,0x1d
+   21a88:	963a                	add	a2,a2,a4
+   21a8a:	0641                	addi	a2,a2,16
+   21a8c:	6194                	ld	a3,0(a1)
+   21a8e:	05a1                	addi	a1,a1,8
+   21a90:	00d2b023          	sd	a3,0(t0)
+   21a94:	02a1                	addi	t0,t0,8
+   21a96:	fec59be3          	bne	a1,a2,21a8c <_ZL25check_offload_target_namePKcl+0x28e>
+   21a9a:	01452223          	sw	s4,4(a0)
+   21a9e:	a801                	j	21aae <_ZL25check_offload_target_namePKcl+0x2b0>
+   21aa0:	8a5a                	mv	s4,s6
+   21aa2:	a031                	j	21aae <_ZL25check_offload_target_namePKcl+0x2b0>
+   21aa4:	8566                	mv	a0,s9
+   21aa6:	f7043b83          	ld	s7,-144(s0)
+   21aaa:	f8043d83          	ld	s11,-128(s0)
+   21aae:	020a1593          	slli	a1,s4,0x20
+   21ab2:	0a05                	addi	s4,s4,1
+   21ab4:	000d3637          	lui	a2,0xd3
+   21ab8:	6e360613          	addi	a2,a2,1763 # d36e3 <_ZZL9init_specvE2tf+0x2c691>
+   21abc:	81f5                	srli	a1,a1,0x1d
+   21abe:	95aa                	add	a1,a1,a0
+   21ac0:	e590                	sd	a2,8(a1)
+   21ac2:	01452223          	sw	s4,4(a0)
+   21ac6:	f9043a03          	ld	s4,-112(s0)
+   21aca:	020a0963          	beqz	s4,21afc <_ZL25check_offload_target_namePKcl+0x2fe>
+   21ace:	000a2503          	lw	a0,0(s4)
+   21ad2:	004a2583          	lw	a1,4(s4)
+   21ad6:	018579b3          	and	s3,a0,s8
+   21ada:	0ab99263          	bne	s3,a1,21b7e <_ZL25check_offload_target_namePKcl+0x380>
+   21ade:	0019849b          	addiw	s1,s3,1
+   21ae2:	00054f63          	bltz	a0,21b00 <_ZL25check_offload_target_namePKcl+0x302>
+   21ae6:	854e                	mv	a0,s3
+   21ae8:	85a6                	mv	a1,s1
+   21aea:	7271a0ef          	jal	3ca10 <_ZN10vec_prefix22calculate_allocation_1Ejj>
+   21aee:	84aa                	mv	s1,a0
+   21af0:	4981                	li	s3,0
+   21af2:	4901                	li	s2,0
+   21af4:	004a2b03          	lw	s6,4(s4)
+   21af8:	8552                	mv	a0,s4
+   21afa:	a819                	j	21b10 <_ZL25check_offload_target_namePKcl+0x312>
+   21afc:	4981                	li	s3,0
+   21afe:	4485                	li	s1,1
+   21b00:	4511                	li	a0,4
+   21b02:	00956363          	bltu	a0,s1,21b08 <_ZL25check_offload_target_namePKcl+0x30a>
+   21b06:	4491                	li	s1,4
+   21b08:	4501                	li	a0,0
+   21b0a:	4b01                	li	s6,0
+   21b0c:	01403933          	snez	s2,s4
+   21b10:	02049593          	slli	a1,s1,0x20
+   21b14:	81f5                	srli	a1,a1,0x1d
+   21b16:	05a1                	addi	a1,a1,8
+   21b18:	273810ef          	jal	a358a <xrealloc>
+   21b1c:	f8a43823          	sd	a0,-112(s0)
+   21b20:	0184f5b3          	and	a1,s1,s8
+   21b24:	c10c                	sw	a1,0(a0)
+   21b26:	01652223          	sw	s6,4(a0)
+   21b2a:	04090863          	beqz	s2,21b7a <_ZL25check_offload_target_namePKcl+0x37c>
+   21b2e:	04098363          	beqz	s3,21b74 <_ZL25check_offload_target_namePKcl+0x376>
+   21b32:	002dd593          	srli	a1,s11,0x2
+   21b36:	46c1                	li	a3,16
+   21b38:	862e                	mv	a2,a1
+   21b3a:	00b6e363          	bltu	a3,a1,21b40 <_ZL25check_offload_target_namePKcl+0x342>
+   21b3e:	4641                	li	a2,16
+   21b40:	00c9e863          	bltu	s3,a2,21b50 <_ZL25check_offload_target_namePKcl+0x352>
+   21b44:	001d9493          	slli	s1,s11,0x1
+   21b48:	41450633          	sub	a2,a0,s4
+   21b4c:	12967e63          	bgeu	a2,s1,21c88 <_ZL25check_offload_target_namePKcl+0x48a>
+   21b50:	88ce                	mv	a7,s3
+   21b52:	86d2                	mv	a3,s4
+   21b54:	87aa                	mv	a5,a0
+   21b56:	00868593          	addi	a1,a3,8
+   21b5a:	07a1                	addi	a5,a5,8
+   21b5c:	18fd                	addi	a7,a7,-1
+   21b5e:	1882                	slli	a7,a7,0x20
+   21b60:	01d8d613          	srli	a2,a7,0x1d
+   21b64:	9636                	add	a2,a2,a3
+   21b66:	0641                	addi	a2,a2,16
+   21b68:	6194                	ld	a3,0(a1)
+   21b6a:	05a1                	addi	a1,a1,8
+   21b6c:	e394                	sd	a3,0(a5)
+   21b6e:	07a1                	addi	a5,a5,8
+   21b70:	fec59ce3          	bne	a1,a2,21b68 <_ZL25check_offload_target_namePKcl+0x36a>
+   21b74:	01352223          	sw	s3,4(a0)
+   21b78:	a029                	j	21b82 <_ZL25check_offload_target_namePKcl+0x384>
+   21b7a:	89da                	mv	s3,s6
+   21b7c:	a019                	j	21b82 <_ZL25check_offload_target_namePKcl+0x384>
+   21b7e:	89ae                	mv	s3,a1
+   21b80:	8552                	mv	a0,s4
+   21b82:	02099593          	slli	a1,s3,0x20
+   21b86:	0985                	addi	s3,s3,1
+   21b88:	000df637          	lui	a2,0xdf
+   21b8c:	25560613          	addi	a2,a2,597 # df255 <_ZZL9init_specvE2tf+0x38203>
+   21b90:	81f5                	srli	a1,a1,0x1d
+   21b92:	95aa                	add	a1,a1,a0
+   21b94:	e590                	sd	a2,8(a1)
+   21b96:	01352223          	sw	s3,4(a0)
+   21b9a:	010a8513          	addi	a0,s5,16
+   21b9e:	9941                	andi	a0,a0,-16
+   21ba0:	40a104b3          	sub	s1,sp,a0
+   21ba4:	8126                	mv	sp,s1
+   21ba6:	8526                	mv	a0,s1
+   21ba8:	85de                	mv	a1,s7
+   21baa:	8656                	mv	a2,s5
+   21bac:	905f20ef          	jal	144b0 <memcpy@plt>
+   21bb0:	9aa6                	add	s5,s5,s1
+   21bb2:	000a8023          	sb	zero,0(s5)
+   21bb6:	000a6537          	lui	a0,0xa6
+   21bba:	59150513          	addi	a0,a0,1425 # a6591 <_ZL12thread_model+0x181e>
+   21bbe:	85a6                	mv	a1,s1
+   21bc0:	2382d0ef          	jal	4edf8 <_Z5errorPKcz>
+   21bc4:	f8840593          	addi	a1,s0,-120
+   21bc8:	f9040613          	addi	a2,s0,-112
+   21bcc:	8526                	mv	a0,s1
+   21bce:	26e120ef          	jal	33e3c <_Z24candidates_list_and_hintPKcRPcRK8auto_vecIS0_Lm0EE>
+   21bd2:	f8843603          	ld	a2,-120(s0)
+   21bd6:	c911                	beqz	a0,21bea <_ZL25check_offload_target_namePKcl+0x3ec>
+   21bd8:	86aa                	mv	a3,a0
+   21bda:	000a65b7          	lui	a1,0xa6
+   21bde:	5d158593          	addi	a1,a1,1489 # a65d1 <_ZL12thread_model+0x185e>
+   21be2:	4501                	li	a0,0
+   21be4:	2f52c0ef          	jal	4e6d8 <_Z6informmPKcz>
+   21be8:	a039                	j	21bf6 <_ZL25check_offload_target_namePKcl+0x3f8>
+   21bea:	000a65b7          	lui	a1,0xa6
+   21bee:	60b58593          	addi	a1,a1,1547 # a660b <_ZL12thread_model+0x1898>
+   21bf2:	2e72c0ef          	jal	4e6d8 <_Z6informmPKcz>
+   21bf6:	f8843503          	ld	a0,-120(s0)
+   21bfa:	867f20ef          	jal	14460 <free@plt>
+   21bfe:	f9043503          	ld	a0,-112(s0)
+   21c02:	c909                	beqz	a0,21c14 <_ZL25check_offload_target_namePKcl+0x416>
+   21c04:	410c                	lw	a1,0(a0)
+   21c06:	0005c563          	bltz	a1,21c10 <_ZL25check_offload_target_namePKcl+0x412>
+   21c0a:	857f20ef          	jal	14460 <free@plt>
+   21c0e:	a019                	j	21c14 <_ZL25check_offload_target_namePKcl+0x416>
+   21c10:	00052223          	sw	zero,4(a0)
+   21c14:	4501                	li	a0,0
+   21c16:	f6040113          	addi	sp,s0,-160
+   21c1a:	60ea                	ld	ra,152(sp)
+   21c1c:	644a                	ld	s0,144(sp)
+   21c1e:	64aa                	ld	s1,136(sp)
+   21c20:	690a                	ld	s2,128(sp)
+   21c22:	79e6                	ld	s3,120(sp)
+   21c24:	7a46                	ld	s4,112(sp)
+   21c26:	7aa6                	ld	s5,104(sp)
+   21c28:	7b06                	ld	s6,96(sp)
+   21c2a:	6be6                	ld	s7,88(sp)
+   21c2c:	6c46                	ld	s8,80(sp)
+   21c2e:	6ca6                	ld	s9,72(sp)
+   21c30:	6d06                	ld	s10,64(sp)
+   21c32:	7de2                	ld	s11,56(sp)
+   21c34:	610d                	addi	sp,sp,160
+   21c36:	8082                	ret
+   21c38:	f8043823          	sd	zero,-112(s0)
+   21c3c:	004caa03          	lw	s4,4(s9)
+   21c40:	001a049b          	addiw	s1,s4,1
+   21c44:	f6843583          	ld	a1,-152(s0)
+   21c48:	4511                	li	a0,4
+   21c4a:	dc957de3          	bgeu	a0,s1,21a24 <_ZL25check_offload_target_namePKcl+0x226>
+   21c4e:	bbe1                	j	21a26 <_ZL25check_offload_target_namePKcl+0x228>
+   21c50:	002dd713          	srli	a4,s11,0x2
+   21c54:	00850793          	addi	a5,a0,8
+   21c58:	40e00733          	neg	a4,a4
+   21c5c:	00b77833          	and	a6,a4,a1
+   21c60:	410a08bb          	subw	a7,s4,a6
+   21c64:	00381293          	slli	t0,a6,0x3
+   21c68:	005c8733          	add	a4,s9,t0
+   21c6c:	92aa                	add	t0,t0,a0
+   21c6e:	0ca1                	addi	s9,s9,8
+   21c70:	84c2                	mv	s1,a6
+   21c72:	228cf407          	vl2re64.v	v8,(s9)
+   21c76:	8c91                	sub	s1,s1,a2
+   21c78:	22878427          	vs2r.v	v8,(a5)
+   21c7c:	97b6                	add	a5,a5,a3
+   21c7e:	9cb6                	add	s9,s9,a3
+   21c80:	f8ed                	bnez	s1,21c72 <_ZL25check_offload_target_namePKcl+0x474>
+   21c82:	deb81ce3          	bne	a6,a1,21a7a <_ZL25check_offload_target_namePKcl+0x27c>
+   21c86:	bd11                	j	21a9a <_ZL25check_offload_target_namePKcl+0x29c>
+   21c88:	002dd613          	srli	a2,s11,0x2
+   21c8c:	00850713          	addi	a4,a0,8
+   21c90:	40c00633          	neg	a2,a2
+   21c94:	01367833          	and	a6,a2,s3
+   21c98:	410988bb          	subw	a7,s3,a6
+   21c9c:	00381793          	slli	a5,a6,0x3
+   21ca0:	00fa06b3          	add	a3,s4,a5
+   21ca4:	97aa                	add	a5,a5,a0
+   21ca6:	0a21                	addi	s4,s4,8
+   21ca8:	8642                	mv	a2,a6
+   21caa:	228a7407          	vl2re64.v	v8,(s4)
+   21cae:	8e0d                	sub	a2,a2,a1
+   21cb0:	22870427          	vs2r.v	v8,(a4)
+   21cb4:	9726                	add	a4,a4,s1
+   21cb6:	9a26                	add	s4,s4,s1
+   21cb8:	fa6d                	bnez	a2,21caa <_ZL25check_offload_target_namePKcl+0x4ac>
+   21cba:	e9381ee3          	bne	a6,s3,21b56 <_ZL25check_offload_target_namePKcl+0x358>
+   21cbe:	bd5d                	j	21b74 <_ZL25check_offload_target_namePKcl+0x376>

@@ -1,0 +1,2937 @@
+
+/root/yangzheng/gcc-rebuild/chimera-staged-20260919-132951/build-gate4/gcc/cc1：     文件格式 elf64-littleriscv
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+0000000000ce5fac <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags>:
+  ce5fac:	cd010113          	addi	sp,sp,-816
+  ce5fb0:	32113423          	sd	ra,808(sp)
+  ce5fb4:	32813023          	sd	s0,800(sp)
+  ce5fb8:	30913c23          	sd	s1,792(sp)
+  ce5fbc:	31213823          	sd	s2,784(sp)
+  ce5fc0:	31313423          	sd	s3,776(sp)
+  ce5fc4:	31413023          	sd	s4,768(sp)
+  ce5fc8:	2f513c23          	sd	s5,760(sp)
+  ce5fcc:	2f613823          	sd	s6,752(sp)
+  ce5fd0:	2f713423          	sd	s7,744(sp)
+  ce5fd4:	2f813023          	sd	s8,736(sp)
+  ce5fd8:	2d913c23          	sd	s9,728(sp)
+  ce5fdc:	2da13823          	sd	s10,720(sp)
+  ce5fe0:	2db13423          	sd	s11,712(sp)
+  ce5fe4:	1e00                	addi	s0,sp,816
+  ce5fe6:	8db6                	mv	s11,a3
+  ce5fe8:	8d32                	mv	s10,a2
+  ce5fea:	00063a03          	ld	s4,0(a2)
+  ce5fee:	0185bb03          	ld	s6,24(a1)
+  ce5ff2:	892a                	mv	s2,a0
+  ce5ff4:	dde540ef          	jal	c3a5d2 <_Z11ao_ref_baseP6ao_ref>
+  ce5ff8:	f8043823          	sd	zero,-112(s0)
+  ce5ffc:	000b4b83          	lbu	s7,0(s6)
+  ce6000:	4599                	li	a1,6
+  ce6002:	8aaa                	mv	s5,a0
+  ce6004:	0abb9c63          	bne	s7,a1,ce60bc <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x110>
+  ce6008:	03ade4b7          	lui	s1,0x3ade
+  ce600c:	6a848493          	addi	s1,s1,1704 # 3ade6a8 <_ZL13next_value_id>
+  ce6010:	74a8                	ld	a0,104(s1)
+  ce6012:	048b3c03          	ld	s8,72(s6)
+  ce6016:	c119                	beqz	a0,ce601c <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x70>
+  ce6018:	00052223          	sw	zero,4(a0)
+  ce601c:	018b3503          	ld	a0,24(s6)
+  ce6020:	0104b983          	ld	s3,16(s1)
+  ce6024:	e888                	sd	a0,16(s1)
+  ce6026:	000da503          	lw	a0,0(s11)
+  ce602a:	4589                	li	a1,2
+  ce602c:	14b55263          	bge	a0,a1,ce6170 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1c4>
+  ce6030:	cfb43c23          	sd	s11,-776(s0)
+  ce6034:	cf743823          	sd	s7,-784(s0)
+  ce6038:	8bda                	mv	s7,s6
+  ce603a:	8b56                	mv	s6,s5
+  ce603c:	8aca                	mv	s5,s2
+  ce603e:	8dd2                	mv	s11,s4
+  ce6040:	06848913          	addi	s2,s1,104
+  ce6044:	8562                	mv	a0,s8
+  ce6046:	85ca                	mv	a1,s2
+  ce6048:	2d9020ef          	jal	ce8b20 <_ZL27copy_reference_ops_from_refP9tree_nodeP3vecI22vn_reference_op_struct7va_heap6vl_ptrE>
+  ce604c:	d0040593          	addi	a1,s0,-768
+  ce6050:	4605                	li	a2,1
+  ce6052:	854a                	mv	a0,s2
+  ce6054:	ecffe0ef          	jal	ce4f22 <_ZL15valueize_refs_1P3vecI22vn_reference_op_struct7va_heap6vl_ptrEPbb>
+  ce6058:	d0044a03          	lbu	s4,-768(s0)
+  ce605c:	0134b823          	sd	s3,16(s1)
+  ce6060:	f3840513          	addi	a0,s0,-200
+  ce6064:	85e2                	mv	a1,s8
+  ce6066:	c13540ef          	jal	c3ac78 <_Z11ao_ref_initP6ao_refP9tree_node>
+  ce606a:	100a0f63          	beqz	s4,ce6188 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1dc>
+  ce606e:	f3840513          	addi	a0,s0,-200
+  ce6072:	ca7540ef          	jal	c3ad18 <_Z16ao_ref_alias_setP6ao_ref>
+  ce6076:	8caa                	mv	s9,a0
+  ce6078:	f3840513          	addi	a0,s0,-200
+  ce607c:	c43540ef          	jal	c3acbe <_Z21ao_ref_base_alias_setP6ao_ref>
+  ce6080:	008c3683          	ld	a3,8(s8)
+  ce6084:	862a                	mv	a2,a0
+  ce6086:	f3840513          	addi	a0,s0,-200
+  ce608a:	85e6                	mv	a1,s9
+  ce608c:	874a                	mv	a4,s2
+  ce608e:	f2afc0ef          	jal	ce27b8 <_Z29ao_ref_init_from_vn_referenceP6ao_refiiP9tree_nodeRK3vecI22vn_reference_op_struct7va_heap6vl_ptrE>
+  ce6092:	16050d63          	beqz	a0,ce620c <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x260>
+  ce6096:	084d4603          	lbu	a2,132(s10)
+  ce609a:	f3840593          	addi	a1,s0,-200
+  ce609e:	8956                	mv	s2,s5
+  ce60a0:	8556                	mv	a0,s5
+  ce60a2:	b6c550ef          	jal	c3b40e <_Z18refs_may_alias_p_1P6ao_refS0_b>
+  ce60a6:	8a6e                	mv	s4,s11
+  ce60a8:	8ada                	mv	s5,s6
+  ce60aa:	8b5e                	mv	s6,s7
+  ce60ac:	cf043b83          	ld	s7,-784(s0)
+  ce60b0:	cf843d83          	ld	s11,-776(s0)
+  ce60b4:	4985                	li	s3,1
+  ce60b6:	e175                	bnez	a0,ce619a <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1ee>
+  ce60b8:	4505                	li	a0,1
+  ce60ba:	aced                	j	ce63b4 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x408>
+  ce60bc:	000da503          	lw	a0,0(s11)
+  ce60c0:	4585                	li	a1,1
+  ce60c2:	00a5d463          	bge	a1,a0,ce60ca <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x11e>
+  ce60c6:	68a0106f          	j	ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce60ca:	458d                	li	a1,3
+  ce60cc:	855a                	mv	a0,s6
+  ce60ce:	ffbe8097          	auipc	ra,0xffbe8
+  ce60d2:	3a0080e7          	jalr	928(ra) # 8ce46e <_Z21gimple_call_builtin_pPK6gimple14built_in_class>
+  ce60d6:	34050e63          	beqz	a0,ce6432 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x486>
+  ce60da:	008b2503          	lw	a0,8(s6)
+  ce60de:	ffd5059b          	addiw	a1,a0,-3
+  ce60e2:	4611                	li	a2,4
+  ce60e4:	34b66763          	bltu	a2,a1,ce6432 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x486>
+  ce60e8:	cfb43c23          	sd	s11,-776(s0)
+  ce60ec:	cf543023          	sd	s5,-800(s0)
+  ce60f0:	85ea                	mv	a1,s10
+  ce60f2:	8d4a                	mv	s10,s2
+  ce60f4:	cf443423          	sd	s4,-792(s0)
+  ce60f8:	ceb43823          	sd	a1,-784(s0)
+  ce60fc:	458d                	li	a1,3
+  ce60fe:	32b50063          	beq	a0,a1,ce641e <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x472>
+  ce6102:	4d81                	li	s11,0
+  ce6104:	4901                	li	s2,0
+  ce6106:	557d                	li	a0,-1
+  ce6108:	070b0a13          	addi	s4,s6,112
+  ce610c:	e5040613          	addi	a2,s0,-432
+  ce6110:	02055c93          	srli	s9,a0,0x20
+  ce6114:	03adeab7          	lui	s5,0x3ade
+  ce6118:	003d9993          	slli	s3,s11,0x3
+  ce611c:	99b2                	add	s3,s3,a2
+  ce611e:	003d8513          	addi	a0,s11,3
+  ce6122:	01957533          	and	a0,a0,s9
+  ce6126:	050e                	slli	a0,a0,0x3
+  ce6128:	00aa0c33          	add	s8,s4,a0
+  ce612c:	000c3483          	ld	s1,0(s8)
+  ce6130:	6c0ab583          	ld	a1,1728(s5) # 3ade6c0 <vn_valueize>
+  ce6134:	0099b023          	sd	s1,0(s3)
+  ce6138:	8526                	mv	a0,s1
+  ce613a:	9582                	jalr	a1
+  ce613c:	00951c63          	bne	a0,s1,ce6154 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1a8>
+  ce6140:	008b2503          	lw	a0,8(s6)
+  ce6144:	0d85                	addi	s11,s11,1
+  ce6146:	1575                	addi	a0,a0,-3
+  ce6148:	1502                	slli	a0,a0,0x20
+  ce614a:	9101                	srli	a0,a0,0x20
+  ce614c:	09a1                	addi	s3,s3,8
+  ce614e:	fcade8e3          	bltu	s11,a0,ce611e <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x172>
+  ce6152:	a4b5                	j	ce63be <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x412>
+  ce6154:	008b2583          	lw	a1,8(s6)
+  ce6158:	00ac3023          	sd	a0,0(s8)
+  ce615c:	0d85                	addi	s11,s11,1
+  ce615e:	15f5                	addi	a1,a1,-3
+  ce6160:	1582                	slli	a1,a1,0x20
+  ce6162:	9181                	srli	a1,a1,0x20
+  ce6164:	4905                	li	s2,1
+  ce6166:	e5040613          	addi	a2,s0,-432
+  ce616a:	fabde7e3          	bltu	s11,a1,ce6118 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x16c>
+  ce616e:	ac99                	j	ce63c4 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x418>
+  ce6170:	0134b823          	sd	s3,16(s1)
+  ce6174:	f3840513          	addi	a0,s0,-200
+  ce6178:	85e2                	mv	a1,s8
+  ce617a:	aff540ef          	jal	c3ac78 <_Z11ao_ref_initP6ao_refP9tree_node>
+  ce617e:	4981                	li	s3,0
+  ce6180:	085d4503          	lbu	a0,133(s10)
+  ce6184:	cd11                	beqz	a0,ce61a0 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1f4>
+  ce6186:	a879                	j	ce6224 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x278>
+  ce6188:	4981                	li	s3,0
+  ce618a:	8a6e                	mv	s4,s11
+  ce618c:	8956                	mv	s2,s5
+  ce618e:	8ada                	mv	s5,s6
+  ce6190:	8b5e                	mv	s6,s7
+  ce6192:	cf043b83          	ld	s7,-784(s0)
+  ce6196:	cf843d83          	ld	s11,-776(s0)
+  ce619a:	085d4503          	lbu	a0,133(s10)
+  ce619e:	e159                	bnez	a0,ce6224 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x278>
+  ce61a0:	000b6503          	lwu	a0,0(s6)
+  ce61a4:	0ff57593          	zext.b	a1,a0
+  ce61a8:	4619                	li	a2,6
+  ce61aa:	06c59d63          	bne	a1,a2,ce6224 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x278>
+  ce61ae:	01055593          	srli	a1,a0,0x10
+  ce61b2:	02781537          	lui	a0,0x2781
+  ce61b6:	2c850513          	addi	a0,a0,712 # 27812c8 <gimple_rhs_class_table>
+  ce61ba:	95aa                	add	a1,a1,a0
+  ce61bc:	0005c603          	lbu	a2,0(a1)
+  ce61c0:	4591                	li	a1,4
+  ce61c2:	06b61163          	bne	a2,a1,ce6224 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x278>
+  ce61c6:	050b3603          	ld	a2,80(s6)
+  ce61ca:	00066603          	lwu	a2,0(a2)
+  ce61ce:	03061693          	slli	a3,a2,0x30
+  ce61d2:	92c1                	srli	a3,a3,0x30
+  ce61d4:	9536                	add	a0,a0,a3
+  ce61d6:	00054503          	lbu	a0,0(a0)
+  ce61da:	04b51563          	bne	a0,a1,ce6224 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x278>
+  ce61de:	00090537          	lui	a0,0x90
+  ce61e2:	157d                	addi	a0,a0,-1 # 8ffff <__gmpfr_default_rounding_mode+0x8fc9f>
+  ce61e4:	8d71                	and	a0,a0,a2
+  ce61e6:	000805b7          	lui	a1,0x80
+  ce61ea:	03a58593          	addi	a1,a1,58 # 8003a <__gmpfr_default_rounding_mode+0x7fcda>
+  ce61ee:	02b51b63          	bne	a0,a1,ce6224 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x278>
+  ce61f2:	f3840513          	addi	a0,s0,-200
+  ce61f6:	bdc540ef          	jal	c3a5d2 <_Z11ao_ref_baseP6ao_ref>
+  ce61fa:	4621                	li	a2,8
+  ce61fc:	85d6                	mv	a1,s5
+  ce61fe:	ffba5097          	auipc	ra,0xffba5
+  ce6202:	0ee080e7          	jalr	238(ra) # 88b2ec <_Z15operand_equal_pPK9tree_nodeS1_j>
+  ce6206:	ed19                	bnez	a0,ce6224 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x278>
+  ce6208:	4509                	li	a0,2
+  ce620a:	a26d                	j	ce63b4 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x408>
+  ce620c:	8a6e                	mv	s4,s11
+  ce620e:	8956                	mv	s2,s5
+  ce6210:	8ada                	mv	s5,s6
+  ce6212:	8b5e                	mv	s6,s7
+  ce6214:	cf043b83          	ld	s7,-784(s0)
+  ce6218:	cf843d83          	ld	s11,-776(s0)
+  ce621c:	4985                	li	s3,1
+  ce621e:	085d4503          	lbu	a0,133(s10)
+  ce6222:	dd3d                	beqz	a0,ce61a0 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1f4>
+  ce6224:	00093503          	ld	a0,0(s2)
+  ce6228:	14050a63          	beqz	a0,ce637c <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x3d0>
+  ce622c:	000b2503          	lw	a0,0(s6)
+  ce6230:	03151593          	slli	a1,a0,0x31
+  ce6234:	0005d863          	bgez	a1,ce6244 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x298>
+  ce6238:	0ff57513          	zext.b	a0,a0
+  ce623c:	1569                	addi	a0,a0,-6
+  ce623e:	4595                	li	a1,5
+  ce6240:	1eb56963          	bltu	a0,a1,ce6432 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x486>
+  ce6244:	008c3483          	ld	s1,8(s8)
+  ce6248:	0004d503          	lhu	a0,0(s1)
+  ce624c:	152d                	addi	a0,a0,-21
+  ce624e:	55ed                	li	a1,-5
+  ce6250:	1ea5e163          	bltu	a1,a0,ce6432 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x486>
+  ce6254:	040a3c83          	ld	s9,64(s4)
+  ce6258:	03948263          	beq	s1,s9,ce627c <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x2d0>
+  ce625c:	8526                	mv	a0,s1
+  ce625e:	85e6                	mv	a1,s9
+  ce6260:	ffbeb097          	auipc	ra,0xffbeb
+  ce6264:	15e080e7          	jalr	350(ra) # 8d13be <_Z25useless_type_conversion_pP9tree_nodeS0_>
+  ce6268:	1c050563          	beqz	a0,ce6432 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x486>
+  ce626c:	8566                	mv	a0,s9
+  ce626e:	85a6                	mv	a1,s1
+  ce6270:	ffbeb097          	auipc	ra,0xffbeb
+  ce6274:	14e080e7          	jalr	334(ra) # 8d13be <_Z25useless_type_conversion_pP9tree_nodeS0_>
+  ce6278:	1a050d63          	beqz	a0,ce6432 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x486>
+  ce627c:	00093503          	ld	a0,0(s2)
+  ce6280:	e509                	bnez	a0,ce628a <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x2de>
+  ce6282:	008d3583          	ld	a1,8(s10)
+  ce6286:	1a058663          	beqz	a1,ce6432 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x486>
+  ce628a:	068d3583          	ld	a1,104(s10)
+  ce628e:	1a059263          	bnez	a1,ce6432 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x486>
+  ce6292:	090d3583          	ld	a1,144(s10)
+  ce6296:	c581                	beqz	a1,ce629e <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x2f2>
+  ce6298:	41cc                	lw	a1,4(a1)
+  ce629a:	18059c63          	bnez	a1,ce6432 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x486>
+  ce629e:	e119                	bnez	a0,ce62a4 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x2f8>
+  ce62a0:	008d3503          	ld	a0,8(s10)
+  ce62a4:	ffa80097          	auipc	ra,0xffa80
+  ce62a8:	ec2080e7          	jalr	-318(ra) # 766166 <_Z20get_object_alignmentP9tree_node>
+  ce62ac:	02093583          	ld	a1,32(s2)
+  ce62b0:	02051613          	slli	a2,a0,0x20
+  ce62b4:	9201                	srli	a2,a2,0x20
+  ce62b6:	02b665b3          	rem	a1,a2,a1
+  ce62ba:	16059c63          	bnez	a1,ce6432 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x486>
+  ce62be:	c509                	beqz	a0,ce62c8 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x31c>
+  ce62c0:	02893503          	ld	a0,40(s2)
+  ce62c4:	16051763          	bnez	a0,ce6432 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x486>
+  ce62c8:	8562                	mv	a0,s8
+  ce62ca:	ffa80097          	auipc	ra,0xffa80
+  ce62ce:	e9c080e7          	jalr	-356(ra) # 766166 <_Z20get_object_alignmentP9tree_node>
+  ce62d2:	02093583          	ld	a1,32(s2)
+  ce62d6:	02051613          	slli	a2,a0,0x20
+  ce62da:	9201                	srli	a2,a2,0x20
+  ce62dc:	02b665b3          	rem	a1,a2,a1
+  ce62e0:	14059963          	bnez	a1,ce6432 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x486>
+  ce62e4:	c509                	beqz	a0,ce62ee <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x342>
+  ce62e6:	02893503          	ld	a0,40(s2)
+  ce62ea:	14051463          	bnez	a0,ce6432 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x486>
+  ce62ee:	078d3503          	ld	a0,120(s10)
+  ce62f2:	050b3483          	ld	s1,80(s6)
+  ce62f6:	c909                	beqz	a0,ce6308 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x35c>
+  ce62f8:	85a6                	mv	a1,s1
+  ce62fa:	4601                	li	a2,0
+  ce62fc:	ffba5097          	auipc	ra,0xffba5
+  ce6300:	ff0080e7          	jalr	-16(ra) # 88b2ec <_Z15operand_equal_pPK9tree_nodeS1_j>
+  ce6304:	12050763          	beqz	a0,ce6432 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x486>
+  ce6308:	0004e503          	lwu	a0,0(s1)
+  ce630c:	6c41                	lui	s8,0x10
+  ce630e:	1c7d                	addi	s8,s8,-1 # ffff <__gmpfr_default_rounding_mode+0xfc9f>
+  ce6310:	01857533          	and	a0,a0,s8
+  ce6314:	050a                	slli	a0,a0,0x2
+  ce6316:	0272e5b7          	lui	a1,0x272e
+  ce631a:	80058593          	addi	a1,a1,-2048 # 272d800 <tree_code_type>
+  ce631e:	952e                	add	a0,a0,a1
+  ce6320:	4108                	lw	a0,0(a0)
+  ce6322:	4585                	li	a1,1
+  ce6324:	00b50463          	beq	a0,a1,ce632c <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x380>
+  ce6328:	35a0106f          	j	ce7682 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x16d6>
+  ce632c:	036a3537          	lui	a0,0x36a3
+  ce6330:	7a053683          	ld	a3,1952(a0) # 36a37a0 <dump_file>
+  ce6334:	ce8d                	beqz	a3,ce636e <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x3c2>
+  ce6336:	036a3537          	lui	a0,0x36a3
+  ce633a:	79454503          	lbu	a0,1940(a0) # 36a3794 <dump_flags>
+  ce633e:	8921                	andi	a0,a0,8
+  ce6340:	c51d                	beqz	a0,ce636e <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x3c2>
+  ce6342:	02521537          	lui	a0,0x2521
+  ce6346:	e1c50513          	addi	a0,a0,-484 # 2520e1c <num_to_text+0x41c08>
+  ce634a:	02700593          	li	a1,39
+  ce634e:	4605                	li	a2,1
+  ce6350:	ff980097          	auipc	ra,0xff980
+  ce6354:	b00080e7          	jalr	-1280(ra) # 665e50 <fwrite@plt>
+  ce6358:	036a3537          	lui	a0,0x36a3
+  ce635c:	7a053503          	ld	a0,1952(a0) # 36a37a0 <dump_file>
+  ce6360:	85da                	mv	a1,s6
+  ce6362:	4601                	li	a2,0
+  ce6364:	4681                	li	a3,0
+  ce6366:	ffc04097          	auipc	ra,0xffc04
+  ce636a:	9ba080e7          	jalr	-1606(ra) # 8e9d20 <_Z17print_gimple_stmtP8_IO_FILEP6gimplei9dump_flag>
+  ce636e:	040d3c23          	sd	zero,88(s10)
+  ce6372:	069d3c23          	sd	s1,120(s10)
+  ce6376:	4501                	li	a0,0
+  ce6378:	3da0106f          	j	ce7752 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a6>
+  ce637c:	008d3503          	ld	a0,8(s10)
+  ce6380:	ea0506e3          	beqz	a0,ce622c <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x280>
+  ce6384:	008d0c93          	addi	s9,s10,8
+  ce6388:	f3840493          	addi	s1,s0,-200
+  ce638c:	00098963          	beqz	s3,ce639e <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x3f2>
+  ce6390:	e5040513          	addi	a0,s0,-432
+  ce6394:	e5040493          	addi	s1,s0,-432
+  ce6398:	85e2                	mv	a1,s8
+  ce639a:	8df540ef          	jal	c3ac78 <_Z11ao_ref_initP6ao_refP9tree_node>
+  ce639e:	084d4603          	lbu	a2,132(s10)
+  ce63a2:	8566                	mv	a0,s9
+  ce63a4:	85a6                	mv	a1,s1
+  ce63a6:	868550ef          	jal	c3b40e <_Z18refs_may_alias_p_1P6ao_refS0_b>
+  ce63aa:	e80511e3          	bnez	a0,ce622c <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x280>
+  ce63ae:	4509                	li	a0,2
+  ce63b0:	4135053b          	subw	a0,a0,s3
+  ce63b4:	00ada023          	sw	a0,0(s11)
+  ce63b8:	4501                	li	a0,0
+  ce63ba:	3980106f          	j	ce7752 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a6>
+  ce63be:	00197513          	andi	a0,s2,1
+  ce63c2:	cd31                	beqz	a0,ce641e <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x472>
+  ce63c4:	cf043503          	ld	a0,-784(s0)
+  ce63c8:	08454603          	lbu	a2,132(a0)
+  ce63cc:	855a                	mv	a0,s6
+  ce63ce:	85ea                	mv	a1,s10
+  ce63d0:	927550ef          	jal	c3bcf6 <_Z24call_may_clobber_ref_p_1P5gcallP6ao_refb>
+  ce63d4:	008b2583          	lw	a1,8(s6)
+  ce63d8:	35f5                	addiw	a1,a1,-3
+  ce63da:	c1a1                	beqz	a1,ce641a <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x46e>
+  ce63dc:	1582                	slli	a1,a1,0x20
+  ce63de:	c2202773          	csrr	a4,vlenb
+  ce63e2:	00275293          	srli	t0,a4,0x2
+  ce63e6:	46b1                	li	a3,12
+  ce63e8:	9181                	srli	a1,a1,0x20
+  ce63ea:	8616                	mv	a2,t0
+  ce63ec:	0056e363          	bltu	a3,t0,ce63f2 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x446>
+  ce63f0:	4631                	li	a2,12
+  ce63f2:	2cc5f2e3          	bgeu	a1,a2,ce6eb6 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0xf0a>
+  ce63f6:	4601                	li	a2,0
+  ce63f8:	00361693          	slli	a3,a2,0x3
+  ce63fc:	e5040713          	addi	a4,s0,-432
+  ce6400:	96ba                	add	a3,a3,a4
+  ce6402:	6298                	ld	a4,0(a3)
+  ce6404:	00360793          	addi	a5,a2,3
+  ce6408:	0605                	addi	a2,a2,1
+  ce640a:	0197f7b3          	and	a5,a5,s9
+  ce640e:	078e                	slli	a5,a5,0x3
+  ce6410:	97d2                	add	a5,a5,s4
+  ce6412:	e398                	sd	a4,0(a5)
+  ce6414:	06a1                	addi	a3,a3,8
+  ce6416:	feb666e3          	bltu	a2,a1,ce6402 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x456>
+  ce641a:	260505e3          	beqz	a0,ce6e84 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0xed8>
+  ce641e:	cf043503          	ld	a0,-784(s0)
+  ce6422:	ce843a03          	ld	s4,-792(s0)
+  ce6426:	896a                	mv	s2,s10
+  ce6428:	8d2a                	mv	s10,a0
+  ce642a:	ce043a83          	ld	s5,-800(s0)
+  ce642e:	cf843d83          	ld	s11,-776(s0)
+  ce6432:	000da583          	lw	a1,0(s11)
+  ce6436:	557d                	li	a0,-1
+  ce6438:	00b05463          	blez	a1,ce6440 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x494>
+  ce643c:	3160106f          	j	ce7752 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a6>
+  ce6440:	03893583          	ld	a1,56(s2)
+  ce6444:	e981                	bnez	a1,ce6454 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x4a8>
+  ce6446:	03093583          	ld	a1,48(s2)
+  ce644a:	567d                	li	a2,-1
+  ce644c:	00c59463          	bne	a1,a2,ce6454 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x4a8>
+  ce6450:	3020106f          	j	ce7752 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a6>
+  ce6454:	03090c93          	addi	s9,s2,48
+  ce6458:	01090c13          	addi	s8,s2,16
+  ce645c:	cd817057          	vsetivli	zero,2,e64,m1,ta,ma
+  ce6460:	020c7407          	vle64.v	v8,(s8)
+  ce6464:	f2040513          	addi	a0,s0,-224
+  ce6468:	020cf487          	vle64.v	v9,(s9)
+  ce646c:	040a3583          	ld	a1,64(s4)
+  ce6470:	02057427          	vse64.v	v8,(a0)
+  ce6474:	f1040513          	addi	a0,s0,-240
+  ce6478:	020574a7          	vse64.v	v9,(a0)
+  ce647c:	0005d503          	lhu	a0,0(a1)
+  ce6480:	6dc1                	lui	s11,0x10
+  ce6482:	152d                	addi	a0,a0,-21
+  ce6484:	55ed                	li	a1,-5
+  ce6486:	1dfd                	addi	s11,s11,-1 # ffff <__gmpfr_default_rounding_mode+0xfc9f>
+  ce6488:	1ea5e863          	bltu	a1,a0,ce6678 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x6cc>
+  ce648c:	3b200593          	li	a1,946
+  ce6490:	855a                	mv	a0,s6
+  ce6492:	ffbea097          	auipc	ra,0xffbea
+  ce6496:	edc080e7          	jalr	-292(ra) # 8d036e <_Z21gimple_call_builtin_pPK6gimple17built_in_function>
+  ce649a:	e911                	bnez	a0,ce64ae <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x502>
+  ce649c:	4bc00593          	li	a1,1212
+  ce64a0:	855a                	mv	a0,s6
+  ce64a2:	ffbea097          	auipc	ra,0xffbea
+  ce64a6:	ecc080e7          	jalr	-308(ra) # 8d036e <_Z21gimple_call_builtin_pPK6gimple17built_in_function>
+  ce64aa:	1c050763          	beqz	a0,ce6678 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x6cc>
+  ce64ae:	090b3503          	ld	a0,144(s6)
+  ce64b2:	21cd40ef          	jal	dba6ce <_Z13integer_zeropPK9tree_node>
+  ce64b6:	12050863          	beqz	a0,ce65e6 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x63a>
+  ce64ba:	4981                	li	s3,0
+  ce64bc:	098b3503          	ld	a0,152(s6)
+  ce64c0:	00056583          	lwu	a1,0(a0)
+  ce64c4:	01b5f5b3          	and	a1,a1,s11
+  ce64c8:	fe558613          	addi	a2,a1,-27
+  ce64cc:	4689                	li	a3,2
+  ce64ce:	14d67063          	bgeu	a2,a3,ce660e <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x662>
+  ce64d2:	088b3483          	ld	s1,136(s6)
+  ce64d6:	0004e503          	lwu	a0,0(s1)
+  ce64da:	03051613          	slli	a2,a0,0x30
+  ce64de:	9241                	srli	a2,a2,0x30
+  ce64e0:	09b00593          	li	a1,155
+  ce64e4:	00b60663          	beq	a2,a1,ce64f0 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x544>
+  ce64e8:	08500693          	li	a3,133
+  ce64ec:	18d61663          	bne	a2,a3,ce6678 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x6cc>
+  ce64f0:	01b57533          	and	a0,a0,s11
+  ce64f4:	06b51b63          	bne	a0,a1,ce656a <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x5be>
+  ce64f8:	8526                	mv	a0,s1
+  ce64fa:	4581                	li	a1,0
+  ce64fc:	7a70d0ef          	jal	cf44a2 <_Z7SSA_VALP9tree_nodePb>
+  ce6500:	84aa                	mv	s1,a0
+  ce6502:	00056503          	lwu	a0,0(a0)
+  ce6506:	01b57533          	and	a0,a0,s11
+  ce650a:	09b00593          	li	a1,155
+  ce650e:	04b51e63          	bne	a0,a1,ce656a <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x5be>
+  ce6512:	000ae503          	lwu	a0,0(s5)
+  ce6516:	01b57533          	and	a0,a0,s11
+  ce651a:	0a700593          	li	a1,167
+  ce651e:	00b51663          	bne	a0,a1,ce652a <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x57e>
+  ce6522:	018ab503          	ld	a0,24(s5)
+  ce6526:	04950263          	beq	a0,s1,ce656a <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x5be>
+  ce652a:	0184bb83          	ld	s7,24(s1)
+  ce652e:	855e                	mv	a0,s7
+  ce6530:	ffdc3097          	auipc	ra,0xffdc3
+  ce6534:	86e080e7          	jalr	-1938(ra) # aa8d9e <_Z22gimple_assign_single_pPK6gimple>
+  ce6538:	c90d                	beqz	a0,ce656a <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x5be>
+  ce653a:	002bd503          	lhu	a0,2(s7)
+  ce653e:	027815b7          	lui	a1,0x2781
+  ce6542:	2c858593          	addi	a1,a1,712 # 27812c8 <gimple_rhs_class_table>
+  ce6546:	95aa                	add	a1,a1,a0
+  ce6548:	0005c583          	lbu	a1,0(a1)
+  ce654c:	4611                	li	a2,4
+  ce654e:	00c59863          	bne	a1,a2,ce655e <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x5b2>
+  ce6552:	050bb503          	ld	a0,80(s7)
+  ce6556:	00056503          	lwu	a0,0(a0)
+  ce655a:	01b57533          	and	a0,a0,s11
+  ce655e:	08500593          	li	a1,133
+  ce6562:	00b51463          	bne	a0,a1,ce656a <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x5be>
+  ce6566:	050bb483          	ld	s1,80(s7)
+  ce656a:	0004d583          	lhu	a1,0(s1)
+  ce656e:	09b00613          	li	a2,155
+  ce6572:	557d                	li	a0,-1
+  ce6574:	1ac580e3          	beq	a1,a2,ce6f14 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0xf68>
+  ce6578:	08500613          	li	a2,133
+  ce657c:	00c58463          	beq	a1,a2,ce6584 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x5d8>
+  ce6580:	1d20106f          	j	ce7752 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a6>
+  ce6584:	6c88                	ld	a0,24(s1)
+  ce6586:	f0040593          	addi	a1,s0,-256
+  ce658a:	ef040613          	addi	a2,s0,-272
+  ce658e:	ee040693          	addi	a3,s0,-288
+  ce6592:	edf40713          	addi	a4,s0,-289
+  ce6596:	ffed2097          	auipc	ra,0xffed2
+  ce659a:	c62080e7          	jalr	-926(ra) # bb81f8 <_Z23get_ref_base_and_extentP9tree_nodeP8poly_intILj2ElES3_S3_Pb>
+  ce659e:	ee843683          	ld	a3,-280(s0)
+  ce65a2:	ee043603          	ld	a2,-288(s0)
+  ce65a6:	85aa                	mv	a1,a0
+  ce65a8:	e691                	bnez	a3,ce65b4 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x608>
+  ce65aa:	557d                	li	a0,-1
+  ce65ac:	00a61463          	bne	a2,a0,ce65b4 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x608>
+  ce65b0:	1a00106f          	j	ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce65b4:	ef843703          	ld	a4,-264(s0)
+  ce65b8:	557d                	li	a0,-1
+  ce65ba:	00e68463          	beq	a3,a4,ce65c2 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x616>
+  ce65be:	1940106f          	j	ce7752 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a6>
+  ce65c2:	ef043683          	ld	a3,-272(s0)
+  ce65c6:	00d60463          	beq	a2,a3,ce65ce <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x622>
+  ce65ca:	1880106f          	j	ce7752 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a6>
+  ce65ce:	4621                	li	a2,8
+  ce65d0:	8556                	mv	a0,s5
+  ce65d2:	ffba5097          	auipc	ra,0xffba5
+  ce65d6:	d1a080e7          	jalr	-742(ra) # 88b2ec <_Z15operand_equal_pPK9tree_nodeS1_j>
+  ce65da:	85aa                	mv	a1,a0
+  ce65dc:	557d                	li	a0,-1
+  ce65de:	28059ce3          	bnez	a1,ce7076 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x10ca>
+  ce65e2:	1700106f          	j	ce7752 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a6>
+  ce65e6:	090b3503          	ld	a0,144(s6)
+  ce65ea:	00056583          	lwu	a1,0(a0)
+  ce65ee:	01b5f5b3          	and	a1,a1,s11
+  ce65f2:	466d                	li	a2,27
+  ce65f4:	02c59d63          	bne	a1,a2,ce662e <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x682>
+  ce65f8:	f2843583          	ld	a1,-216(s0)
+  ce65fc:	edb5                	bnez	a1,ce6678 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x6cc>
+  ce65fe:	02893603          	ld	a2,40(s2)
+  ce6602:	f2043583          	ld	a1,-224(s0)
+  ce6606:	f8b43823          	sd	a1,-112(s0)
+  ce660a:	e63d                	bnez	a2,ce6678 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x6cc>
+  ce660c:	a891                	j	ce6660 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x6b4>
+  ce660e:	09b00613          	li	a2,155
+  ce6612:	06c59363          	bne	a1,a2,ce6678 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x6cc>
+  ce6616:	4581                	li	a1,0
+  ce6618:	68b0d0ef          	jal	cf44a2 <_Z7SSA_VALP9tree_nodePb>
+  ce661c:	00056503          	lwu	a0,0(a0)
+  ce6620:	01b57533          	and	a0,a0,s11
+  ce6624:	1515                	addi	a0,a0,-27
+  ce6626:	4585                	li	a1,1
+  ce6628:	eaa5f5e3          	bgeu	a1,a0,ce64d2 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x526>
+  ce662c:	a0b1                	j	ce6678 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x6cc>
+  ce662e:	040a3583          	ld	a1,64(s4)
+  ce6632:	418c                	lw	a1,0(a1)
+  ce6634:	fffd8613          	addi	a2,s11,-1
+  ce6638:	8df1                	and	a1,a1,a2
+  ce663a:	35e9                	addiw	a1,a1,-6
+  ce663c:	460d                	li	a2,3
+  ce663e:	02b66d63          	bltu	a2,a1,ce6678 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x6cc>
+  ce6642:	02893583          	ld	a1,40(s2)
+  ce6646:	e98d                	bnez	a1,ce6678 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x6cc>
+  ce6648:	02093583          	ld	a1,32(s2)
+  ce664c:	4621                	li	a2,8
+  ce664e:	02c59563          	bne	a1,a2,ce6678 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x6cc>
+  ce6652:	f2843583          	ld	a1,-216(s0)
+  ce6656:	e18d                	bnez	a1,ce6678 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x6cc>
+  ce6658:	f2043583          	ld	a1,-224(s0)
+  ce665c:	f8b43823          	sd	a1,-112(s0)
+  ce6660:	02093983          	ld	s3,32(s2)
+  ce6664:	899d                	andi	a1,a1,7
+  ce6666:	e4058be3          	beqz	a1,ce64bc <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x510>
+  ce666a:	00056503          	lwu	a0,0(a0)
+  ce666e:	01b57533          	and	a0,a0,s11
+  ce6672:	45ed                	li	a1,27
+  ce6674:	e4b504e3          	beq	a0,a1,ce64bc <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x510>
+  ce6678:	040a3503          	ld	a0,64(s4)
+  ce667c:	00056503          	lwu	a0,0(a0)
+  ce6680:	01b57533          	and	a0,a0,s11
+  ce6684:	153d                	addi	a0,a0,-17
+  ce6686:	4591                	li	a1,4
+  ce6688:	12b56c63          	bltu	a0,a1,ce67c0 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x814>
+  ce668c:	000b6603          	lwu	a2,0(s6)
+  ce6690:	0ff67693          	zext.b	a3,a2
+  ce6694:	4719                	li	a4,6
+  ce6696:	12e69563          	bne	a3,a4,ce67c0 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x814>
+  ce669a:	8241                	srli	a2,a2,0x10
+  ce669c:	027816b7          	lui	a3,0x2781
+  ce66a0:	2c868693          	addi	a3,a3,712 # 27812c8 <gimple_rhs_class_table>
+  ce66a4:	9636                	add	a2,a2,a3
+  ce66a6:	00064603          	lbu	a2,0(a2)
+  ce66aa:	4711                	li	a4,4
+  ce66ac:	10e61a63          	bne	a2,a4,ce67c0 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x814>
+  ce66b0:	050b3603          	ld	a2,80(s6)
+  ce66b4:	00066783          	lwu	a5,0(a2)
+  ce66b8:	01b7f7b3          	and	a5,a5,s11
+  ce66bc:	96be                	add	a3,a3,a5
+  ce66be:	0006c683          	lbu	a3,0(a3)
+  ce66c2:	0ee69f63          	bne	a3,a4,ce67c0 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x814>
+  ce66c6:	03a00693          	li	a3,58
+  ce66ca:	0ed79b63          	bne	a5,a3,ce67c0 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x814>
+  ce66ce:	6a10                	ld	a2,16(a2)
+  ce66d0:	c601                	beqz	a2,ce66d8 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x72c>
+  ce66d2:	4250                	lw	a2,4(a2)
+  ce66d4:	0e061663          	bnez	a2,ce67c0 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x814>
+  ce66d8:	048b3603          	ld	a2,72(s6)
+  ce66dc:	00264603          	lbu	a2,2(a2)
+  ce66e0:	8a21                	andi	a2,a2,8
+  ce66e2:	ee79                	bnez	a2,ce67c0 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x814>
+  ce66e4:	4519                	li	a0,6
+  ce66e6:	00ab8463          	beq	s7,a0,ce66ee <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x742>
+  ce66ea:	6b30106f          	j	ce859c <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x25f0>
+  ce66ee:	f3840513          	addi	a0,s0,-200
+  ce66f2:	ee1530ef          	jal	c3a5d2 <_Z11ao_ref_baseP6ao_ref>
+  ce66f6:	862a                	mv	a2,a0
+  ce66f8:	f4840513          	addi	a0,s0,-184
+  ce66fc:	f5840693          	addi	a3,s0,-168
+  ce6700:	cd817057          	vsetivli	zero,2,e64,m1,ta,ma
+  ce6704:	02057407          	vle64.v	v8,(a0)
+  ce6708:	f6843503          	ld	a0,-152(s0)
+  ce670c:	f7043583          	ld	a1,-144(s0)
+  ce6710:	0206f487          	vle64.v	v9,(a3)
+  ce6714:	e5040693          	addi	a3,s0,-432
+  ce6718:	0206f427          	vse64.v	v8,(a3)
+  ce671c:	d0040693          	addi	a3,s0,-768
+  ce6720:	0206f4a7          	vse64.v	v9,(a3)
+  ce6724:	e591                	bnez	a1,ce6730 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x784>
+  ce6726:	56fd                	li	a3,-1
+  ce6728:	00d51463          	bne	a0,a3,ce6730 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x784>
+  ce672c:	0240106f          	j	ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce6730:	d0843683          	ld	a3,-760(s0)
+  ce6734:	00d58463          	beq	a1,a3,ce673c <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x790>
+  ce6738:	0180106f          	j	ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce673c:	d0043583          	ld	a1,-768(s0)
+  ce6740:	00b50463          	beq	a0,a1,ce6748 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x79c>
+  ce6744:	00c0106f          	j	ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce6748:	f2040593          	addi	a1,s0,-224
+  ce674c:	e5040693          	addi	a3,s0,-432
+  ce6750:	8556                	mv	a0,s5
+  ce6752:	0f1080ef          	jal	cef042 <_ZL37adjust_offsets_for_equal_base_addressP9tree_nodeP8poly_intILj2ElES0_S3_>
+  ce6756:	e119                	bnez	a0,ce675c <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x7b0>
+  ce6758:	7f90006f          	j	ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce675c:	090d3503          	ld	a0,144(s10)
+  ce6760:	c509                	beqz	a0,ce676a <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x7be>
+  ce6762:	4148                	lw	a0,4(a0)
+  ce6764:	c119                	beqz	a0,ce676a <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x7be>
+  ce6766:	74b0006f          	j	ce76b0 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1704>
+  ce676a:	f2040513          	addi	a0,s0,-224
+  ce676e:	f1040593          	addi	a1,s0,-240
+  ce6772:	e5040613          	addi	a2,s0,-432
+  ce6776:	d0040693          	addi	a3,s0,-768
+  ce677a:	2b80e0ef          	jal	cf4a32 <_Z16known_subrange_pI8poly_intILj2ElES1_S1_S1_EbRKT_RKT0_RKT1_RKT2_>
+  ce677e:	e119                	bnez	a0,ce6784 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x7d8>
+  ce6780:	7310006f          	j	ce76b0 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1704>
+  ce6784:	855a                	mv	a0,s6
+  ce6786:	ffc02097          	auipc	ra,0xffc02
+  ce678a:	744080e7          	jalr	1860(ra) # 8e8eca <_Z16gimple_clobber_pPK6gimple>
+  ce678e:	c119                	beqz	a0,ce6794 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x7e8>
+  ce6790:	7c10006f          	j	ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce6794:	040a3503          	ld	a0,64(s4)
+  ce6798:	518d40ef          	jal	dbacb0 <_Z14build_zero_cstP9tree_node>
+  ce679c:	892a                	mv	s2,a0
+  ce679e:	f3840513          	addi	a0,s0,-200
+  ce67a2:	d76540ef          	jal	c3ad18 <_Z16ao_ref_alias_setP6ao_ref>
+  ce67a6:	84aa                	mv	s1,a0
+  ce67a8:	f3840513          	addi	a0,s0,-200
+  ce67ac:	d12540ef          	jal	c3acbe <_Z21ao_ref_base_alias_setP6ao_ref>
+  ce67b0:	862a                	mv	a2,a0
+  ce67b2:	856a                	mv	a0,s10
+  ce67b4:	85a6                	mv	a1,s1
+  ce67b6:	86ca                	mv	a3,s2
+  ce67b8:	e83fc0ef          	jal	ce363a <_ZN15vn_walk_cb_data6finishEiiP9tree_node>
+  ce67bc:	7970006f          	j	ce7752 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a6>
+  ce67c0:	0ab56563          	bltu	a0,a1,ce686a <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x8be>
+  ce67c4:	02893503          	ld	a0,40(s2)
+  ce67c8:	f1843583          	ld	a1,-232(s0)
+  ce67cc:	08b51f63          	bne	a0,a1,ce686a <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x8be>
+  ce67d0:	02093503          	ld	a0,32(s2)
+  ce67d4:	f1043583          	ld	a1,-240(s0)
+  ce67d8:	08b51963          	bne	a0,a1,ce686a <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x8be>
+  ce67dc:	050a3503          	ld	a0,80(s4)
+  ce67e0:	00855583          	lhu	a1,8(a0)
+  ce67e4:	fcb58593          	addi	a1,a1,-53
+  ce67e8:	0025b593          	sltiu	a1,a1,2
+  ce67ec:	00359613          	slli	a2,a1,0x3
+  ce67f0:	059a                	slli	a1,a1,0x6
+  ce67f2:	8d91                	sub	a1,a1,a2
+  ce67f4:	95aa                	add	a1,a1,a0
+  ce67f6:	0085d603          	lhu	a2,8(a1)
+  ce67fa:	fcf60693          	addi	a3,a2,-49
+  ce67fe:	470d                	li	a4,3
+  ce6800:	00e6e663          	bltu	a3,a4,ce680c <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x860>
+  ce6804:	0a700693          	li	a3,167
+  ce6808:	00d61663          	bne	a2,a3,ce6814 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x868>
+  ce680c:	00e5c583          	lbu	a1,14(a1)
+  ce6810:	8985                	andi	a1,a1,1
+  ce6812:	eda1                	bnez	a1,ce686a <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x8be>
+  ce6814:	00456583          	lwu	a1,4(a0)
+  ce6818:	c195                	beqz	a1,ce683c <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x890>
+  ce681a:	0539                	addi	a0,a0,14
+  ce681c:	03700613          	li	a2,55
+  ce6820:	a029                	j	ce682a <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x87e>
+  ce6822:	15fd                	addi	a1,a1,-1
+  ce6824:	03850513          	addi	a0,a0,56
+  ce6828:	c991                	beqz	a1,ce683c <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x890>
+  ce682a:	ffa55683          	lhu	a3,-6(a0)
+  ce682e:	fec69ae3          	bne	a3,a2,ce6822 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x876>
+  ce6832:	00054683          	lbu	a3,0(a0)
+  ce6836:	8a85                	andi	a3,a3,1
+  ce6838:	d6ed                	beqz	a3,ce6822 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x876>
+  ce683a:	a805                	j	ce686a <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x8be>
+  ce683c:	855a                	mv	a0,s6
+  ce683e:	ffdc2097          	auipc	ra,0xffdc2
+  ce6842:	560080e7          	jalr	1376(ra) # aa8d9e <_Z22gimple_assign_single_pPK6gimple>
+  ce6846:	c115                	beqz	a0,ce686a <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x8be>
+  ce6848:	048b3503          	ld	a0,72(s6)
+  ce684c:	00254503          	lbu	a0,2(a0)
+  ce6850:	8921                	andi	a0,a0,8
+  ce6852:	ed01                	bnez	a0,ce686a <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x8be>
+  ce6854:	f1843503          	ld	a0,-232(s0)
+  ce6858:	e909                	bnez	a0,ce686a <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x8be>
+  ce685a:	f1043503          	ld	a0,-240(s0)
+  ce685e:	f2843583          	ld	a1,-216(s0)
+  ce6862:	f8a43423          	sd	a0,-120(s0)
+  ce6866:	20058ae3          	beqz	a1,ce727a <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x12ce>
+  ce686a:	02893503          	ld	a0,40(s2)
+  ce686e:	f1843583          	ld	a1,-232(s0)
+  ce6872:	02090993          	addi	s3,s2,32
+  ce6876:	22b51563          	bne	a0,a1,ce6aa0 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0xaf4>
+  ce687a:	02093503          	ld	a0,32(s2)
+  ce687e:	f1043583          	ld	a1,-240(s0)
+  ce6882:	20b51f63          	bne	a0,a1,ce6aa0 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0xaf4>
+  ce6886:	040a3503          	ld	a0,64(s4)
+  ce688a:	00056503          	lwu	a0,0(a0)
+  ce688e:	01b57533          	and	a0,a0,s11
+  ce6892:	152d                	addi	a0,a0,-21
+  ce6894:	55ed                	li	a1,-5
+  ce6896:	20a5e563          	bltu	a1,a0,ce6aa0 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0xaf4>
+  ce689a:	050a3503          	ld	a0,80(s4)
+  ce689e:	00855583          	lhu	a1,8(a0)
+  ce68a2:	fcb58593          	addi	a1,a1,-53
+  ce68a6:	0025b593          	sltiu	a1,a1,2
+  ce68aa:	00359613          	slli	a2,a1,0x3
+  ce68ae:	059a                	slli	a1,a1,0x6
+  ce68b0:	8d91                	sub	a1,a1,a2
+  ce68b2:	95aa                	add	a1,a1,a0
+  ce68b4:	0085d603          	lhu	a2,8(a1)
+  ce68b8:	fcf60693          	addi	a3,a2,-49
+  ce68bc:	470d                	li	a4,3
+  ce68be:	00e6e663          	bltu	a3,a4,ce68ca <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x91e>
+  ce68c2:	0a700693          	li	a3,167
+  ce68c6:	00d61763          	bne	a2,a3,ce68d4 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x928>
+  ce68ca:	00e5c583          	lbu	a1,14(a1)
+  ce68ce:	8985                	andi	a1,a1,1
+  ce68d0:	1c059863          	bnez	a1,ce6aa0 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0xaf4>
+  ce68d4:	00456583          	lwu	a1,4(a0)
+  ce68d8:	c195                	beqz	a1,ce68fc <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x950>
+  ce68da:	0539                	addi	a0,a0,14
+  ce68dc:	03700613          	li	a2,55
+  ce68e0:	a029                	j	ce68ea <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x93e>
+  ce68e2:	15fd                	addi	a1,a1,-1
+  ce68e4:	03850513          	addi	a0,a0,56
+  ce68e8:	c991                	beqz	a1,ce68fc <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x950>
+  ce68ea:	ffa55683          	lhu	a3,-6(a0)
+  ce68ee:	fec69ae3          	bne	a3,a2,ce68e2 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x936>
+  ce68f2:	00054683          	lbu	a3,0(a0)
+  ce68f6:	8a85                	andi	a3,a3,1
+  ce68f8:	d6ed                	beqz	a3,ce68e2 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x936>
+  ce68fa:	a25d                	j	ce6aa0 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0xaf4>
+  ce68fc:	855a                	mv	a0,s6
+  ce68fe:	ffdc2097          	auipc	ra,0xffdc2
+  ce6902:	4a0080e7          	jalr	1184(ra) # aa8d9e <_Z22gimple_assign_single_pPK6gimple>
+  ce6906:	18050d63          	beqz	a0,ce6aa0 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0xaf4>
+  ce690a:	048b3483          	ld	s1,72(s6)
+  ce690e:	0024c503          	lbu	a0,2(s1)
+  ce6912:	8921                	andi	a0,a0,8
+  ce6914:	18051663          	bnez	a0,ce6aa0 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0xaf4>
+  ce6918:	050b3503          	ld	a0,80(s6)
+  ce691c:	00056503          	lwu	a0,0(a0)
+  ce6920:	01b57533          	and	a0,a0,s11
+  ce6924:	09b00593          	li	a1,155
+  ce6928:	16b51c63          	bne	a0,a1,ce6aa0 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0xaf4>
+  ce692c:	4519                	li	a0,6
+  ce692e:	00ab8463          	beq	s7,a0,ce6936 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x98a>
+  ce6932:	4890106f          	j	ce85ba <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x260e>
+  ce6936:	8cca                	mv	s9,s2
+  ce6938:	f3840513          	addi	a0,s0,-200
+  ce693c:	c97530ef          	jal	c3a5d2 <_Z11ao_ref_baseP6ao_ref>
+  ce6940:	8baa                	mv	s7,a0
+  ce6942:	f4840513          	addi	a0,s0,-184
+  ce6946:	d0040593          	addi	a1,s0,-768
+  ce694a:	f5840613          	addi	a2,s0,-168
+  ce694e:	cd817057          	vsetivli	zero,2,e64,m1,ta,ma
+  ce6952:	02057407          	vle64.v	v8,(a0)
+  ce6956:	02067487          	vle64.v	v9,(a2)
+  ce695a:	f6843903          	ld	s2,-152(s0)
+  ce695e:	f7043c03          	ld	s8,-144(s0)
+  ce6962:	0205f427          	vse64.v	v8,(a1)
+  ce6966:	f0040513          	addi	a0,s0,-256
+  ce696a:	020574a7          	vse64.v	v9,(a0)
+  ce696e:	8526                	mv	a0,s1
+  ce6970:	1220e0ef          	jal	cf4a92 <_Z37reverse_storage_order_for_component_pP9tree_node>
+  ce6974:	5c051ee3          	bnez	a0,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce6978:	050b3b03          	ld	s6,80(s6)
+  ce697c:	8526                	mv	a0,s1
+  ce697e:	ffc6b097          	auipc	ra,0xffc6b
+  ce6982:	1e8080e7          	jalr	488(ra) # 951b66 <_Z23storage_order_barrier_pPK9tree_node>
+  ce6986:	5c0515e3          	bnez	a0,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce698a:	000c1563          	bnez	s8,ce6994 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x9e8>
+  ce698e:	557d                	li	a0,-1
+  ce6990:	5ca900e3          	beq	s2,a0,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce6994:	f0843503          	ld	a0,-248(s0)
+  ce6998:	5aac1ce3          	bne	s8,a0,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce699c:	f0043503          	ld	a0,-256(s0)
+  ce69a0:	5aa918e3          	bne	s2,a0,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce69a4:	f2040593          	addi	a1,s0,-224
+  ce69a8:	d0040693          	addi	a3,s0,-768
+  ce69ac:	8556                	mv	a0,s5
+  ce69ae:	865e                	mv	a2,s7
+  ce69b0:	692080ef          	jal	cef042 <_ZL37adjust_offsets_for_equal_base_addressP9tree_nodeP8poly_intILj2ElES0_S3_>
+  ce69b4:	58050ee3          	beqz	a0,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce69b8:	84ea                	mv	s1,s10
+  ce69ba:	090d3503          	ld	a0,144(s10)
+  ce69be:	c119                	beqz	a0,ce69c4 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0xa18>
+  ce69c0:	4148                	lw	a0,4(a0)
+  ce69c2:	e921                	bnez	a0,ce6a12 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0xa66>
+  ce69c4:	f2040513          	addi	a0,s0,-224
+  ce69c8:	f1040593          	addi	a1,s0,-240
+  ce69cc:	d0040613          	addi	a2,s0,-768
+  ce69d0:	f0040693          	addi	a3,s0,-256
+  ce69d4:	05e0e0ef          	jal	cf4a32 <_Z16known_subrange_pI8poly_intILj2ElES1_S1_S1_EbRKT_RKT0_RKT1_RKT2_>
+  ce69d8:	cd0d                	beqz	a0,ce6a12 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0xa66>
+  ce69da:	040a3b83          	ld	s7,64(s4)
+  ce69de:	000ba583          	lw	a1,0(s7)
+  ce69e2:	1dfd                	addi	s11,s11,-1
+  ce69e4:	0009b503          	ld	a0,0(s3)
+  ce69e8:	01b5f5b3          	and	a1,a1,s11
+  ce69ec:	35e9                	addiw	a1,a1,-6
+  ce69ee:	460d                	li	a2,3
+  ce69f0:	00b66963          	bltu	a2,a1,ce6a02 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0xa56>
+  ce69f4:	028cb583          	ld	a1,40(s9)
+  ce69f8:	ed89                	bnez	a1,ce6a12 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0xa66>
+  ce69fa:	036bd583          	lhu	a1,54(s7)
+  ce69fe:	00b51a63          	bne	a0,a1,ce6a12 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0xa66>
+  ce6a02:	891d                	andi	a0,a0,7
+  ce6a04:	e519                	bnez	a0,ce6a12 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0xa66>
+  ce6a06:	028cc503          	lbu	a0,40(s9)
+  ce6a0a:	891d                	andi	a0,a0,7
+  ce6a0c:	e119                	bnez	a0,ce6a12 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0xa66>
+  ce6a0e:	68a0106f          	j	ce8098 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x20ec>
+  ce6a12:	f1843503          	ld	a0,-232(s0)
+  ce6a16:	52051de3          	bnez	a0,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce6a1a:	f1043503          	ld	a0,-240(s0)
+  ce6a1e:	f2843583          	ld	a1,-216(s0)
+  ce6a22:	f8a43423          	sd	a0,-120(s0)
+  ce6a26:	520595e3          	bnez	a1,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce6a2a:	d0843503          	ld	a0,-760(s0)
+  ce6a2e:	520511e3          	bnez	a0,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce6a32:	f0843503          	ld	a0,-248(s0)
+  ce6a36:	50051de3          	bnez	a0,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce6a3a:	f2043903          	ld	s2,-224(s0)
+  ce6a3e:	d0043a03          	ld	s4,-768(s0)
+  ce6a42:	f0043983          	ld	s3,-256(s0)
+  ce6a46:	f2040513          	addi	a0,s0,-224
+  ce6a4a:	f1040593          	addi	a1,s0,-240
+  ce6a4e:	d0040613          	addi	a2,s0,-768
+  ce6a52:	f0040693          	addi	a3,s0,-256
+  ce6a56:	1240e0ef          	jal	cf4b7a <_Z22ranges_known_overlap_pI8poly_intILj2ElES1_S1_S1_EbRKT_RKT0_RKT1_RKT2_>
+  ce6a5a:	4e050be3          	beqz	a0,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce6a5e:	855a                	mv	a0,s6
+  ce6a60:	4581                	li	a1,0
+  ce6a62:	2410d0ef          	jal	cf44a2 <_Z7SSA_VALP9tree_nodePb>
+  ce6a66:	dca43823          	sd	a0,-560(s0)
+  ce6a6a:	dc043c23          	sd	zero,-552(s0)
+  ce6a6e:	df443023          	sd	s4,-544(s0)
+  ce6a72:	df343423          	sd	s3,-536(s0)
+  ce6a76:	f3840513          	addi	a0,s0,-200
+  ce6a7a:	a9e540ef          	jal	c3ad18 <_Z16ao_ref_alias_setP6ao_ref>
+  ce6a7e:	89aa                	mv	s3,a0
+  ce6a80:	f3840513          	addi	a0,s0,-200
+  ce6a84:	a3a540ef          	jal	c3acbe <_Z21ao_ref_base_alias_setP6ao_ref>
+  ce6a88:	f8843783          	ld	a5,-120(s0)
+  ce6a8c:	86aa                	mv	a3,a0
+  ce6a8e:	dd040593          	addi	a1,s0,-560
+  ce6a92:	8526                	mv	a0,s1
+  ce6a94:	864e                	mv	a2,s3
+  ce6a96:	874a                	mv	a4,s2
+  ce6a98:	d75fc0ef          	jal	ce380c <_ZN15vn_walk_cb_data16push_partial_defE7pd_dataiill>
+  ce6a9c:	4b70006f          	j	ce7752 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a6>
+  ce6aa0:	02893503          	ld	a0,40(s2)
+  ce6aa4:	f1843583          	ld	a1,-232(s0)
+  ce6aa8:	0eb51963          	bne	a0,a1,ce6b9a <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0xbee>
+  ce6aac:	02093503          	ld	a0,32(s2)
+  ce6ab0:	f1043583          	ld	a1,-240(s0)
+  ce6ab4:	0eb51363          	bne	a0,a1,ce6b9a <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0xbee>
+  ce6ab8:	040a3503          	ld	a0,64(s4)
+  ce6abc:	00056503          	lwu	a0,0(a0)
+  ce6ac0:	01b57533          	and	a0,a0,s11
+  ce6ac4:	152d                	addi	a0,a0,-21
+  ce6ac6:	55ed                	li	a1,-5
+  ce6ac8:	0ca5e963          	bltu	a1,a0,ce6b9a <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0xbee>
+  ce6acc:	050a3503          	ld	a0,80(s4)
+  ce6ad0:	00855583          	lhu	a1,8(a0)
+  ce6ad4:	fcb58593          	addi	a1,a1,-53
+  ce6ad8:	0025b593          	sltiu	a1,a1,2
+  ce6adc:	00359613          	slli	a2,a1,0x3
+  ce6ae0:	059a                	slli	a1,a1,0x6
+  ce6ae2:	8d91                	sub	a1,a1,a2
+  ce6ae4:	95aa                	add	a1,a1,a0
+  ce6ae6:	0085d603          	lhu	a2,8(a1)
+  ce6aea:	fcf60693          	addi	a3,a2,-49
+  ce6aee:	470d                	li	a4,3
+  ce6af0:	00e6e663          	bltu	a3,a4,ce6afc <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0xb50>
+  ce6af4:	0a700693          	li	a3,167
+  ce6af8:	00d61663          	bne	a2,a3,ce6b04 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0xb58>
+  ce6afc:	00e5c583          	lbu	a1,14(a1)
+  ce6b00:	8985                	andi	a1,a1,1
+  ce6b02:	edc1                	bnez	a1,ce6b9a <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0xbee>
+  ce6b04:	00456583          	lwu	a1,4(a0)
+  ce6b08:	c195                	beqz	a1,ce6b2c <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0xb80>
+  ce6b0a:	0539                	addi	a0,a0,14
+  ce6b0c:	03700613          	li	a2,55
+  ce6b10:	a029                	j	ce6b1a <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0xb6e>
+  ce6b12:	15fd                	addi	a1,a1,-1
+  ce6b14:	03850513          	addi	a0,a0,56
+  ce6b18:	c991                	beqz	a1,ce6b2c <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0xb80>
+  ce6b1a:	ffa55683          	lhu	a3,-6(a0)
+  ce6b1e:	fec69ae3          	bne	a3,a2,ce6b12 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0xb66>
+  ce6b22:	00054683          	lbu	a3,0(a0)
+  ce6b26:	8a85                	andi	a3,a3,1
+  ce6b28:	d6ed                	beqz	a3,ce6b12 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0xb66>
+  ce6b2a:	a885                	j	ce6b9a <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0xbee>
+  ce6b2c:	000b6503          	lwu	a0,0(s6)
+  ce6b30:	004005b7          	lui	a1,0x400
+  ce6b34:	0ff58613          	addi	a2,a1,255 # 4000ff <__gmpfr_default_rounding_mode+0x3ffd9f>
+  ce6b38:	8d71                	and	a0,a0,a2
+  ce6b3a:	05a1                	addi	a1,a1,8
+  ce6b3c:	04b51f63          	bne	a0,a1,ce6b9a <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0xbee>
+  ce6b40:	068b2503          	lw	a0,104(s6)
+  ce6b44:	ffc54097          	auipc	ra,0xffc54
+  ce6b48:	230080e7          	jalr	560(ra) # 93ad74 <_Z19internal_store_fn_p11internal_fn>
+  ce6b4c:	c539                	beqz	a0,ce6b9a <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0xbee>
+  ce6b4e:	89ea                	mv	s3,s10
+  ce6b50:	068b2d03          	lw	s10,104(s6)
+  ce6b54:	45e1                	li	a1,24
+  ce6b56:	557d                	li	a0,-1
+  ce6b58:	0ebd09e3          	beq	s10,a1,ce744a <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x149e>
+  ce6b5c:	45c1                	li	a1,16
+  ce6b5e:	3ebd1ae3          	bne	s10,a1,ce7752 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a6>
+  ce6b62:	4541                	li	a0,16
+  ce6b64:	ffc54097          	auipc	ra,0xffc54
+  ce6b68:	250080e7          	jalr	592(ra) # 93adb4 <_Z22internal_fn_mask_index11internal_fn>
+  ce6b6c:	050d                	addi	a0,a0,3
+  ce6b6e:	03ade5b7          	lui	a1,0x3ade
+  ce6b72:	1502                	slli	a0,a0,0x20
+  ce6b74:	8175                	srli	a0,a0,0x1d
+  ce6b76:	955a                	add	a0,a0,s6
+  ce6b78:	7928                	ld	a0,112(a0)
+  ce6b7a:	6c05b583          	ld	a1,1728(a1) # 3ade6c0 <vn_valueize>
+  ce6b7e:	9582                	jalr	a1
+  ce6b80:	8baa                	mv	s7,a0
+  ce6b82:	00056503          	lwu	a0,0(a0)
+  ce6b86:	01b57533          	and	a0,a0,s11
+  ce6b8a:	02000593          	li	a1,32
+  ce6b8e:	3cb511e3          	bne	a0,a1,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce6b92:	4c81                	li	s9,0
+  ce6b94:	4c01                	li	s8,0
+  ce6b96:	0ef0006f          	j	ce7484 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x14d8>
+  ce6b9a:	080d2583          	lw	a1,128(s10)
+  ce6b9e:	4609                	li	a2,2
+  ce6ba0:	557d                	li	a0,-1
+  ce6ba2:	3ac598e3          	bne	a1,a2,ce7752 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a6>
+  ce6ba6:	000b6583          	lwu	a1,0(s6)
+  ce6baa:	0ff5f613          	zext.b	a2,a1
+  ce6bae:	4699                	li	a3,6
+  ce6bb0:	06d61363          	bne	a2,a3,ce6c16 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0xc6a>
+  ce6bb4:	0105d613          	srli	a2,a1,0x10
+  ce6bb8:	027816b7          	lui	a3,0x2781
+  ce6bbc:	2c868693          	addi	a3,a3,712 # 27812c8 <gimple_rhs_class_table>
+  ce6bc0:	9636                	add	a2,a2,a3
+  ce6bc2:	00064603          	lbu	a2,0(a2)
+  ce6bc6:	4711                	li	a4,4
+  ce6bc8:	04e61763          	bne	a2,a4,ce6c16 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0xc6a>
+  ce6bcc:	15c6                	slli	a1,a1,0x31
+  ce6bce:	0405c463          	bltz	a1,ce6c16 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0xc6a>
+  ce6bd2:	050b3583          	ld	a1,80(s6)
+  ce6bd6:	0005e583          	lwu	a1,0(a1)
+  ce6bda:	01b5f633          	and	a2,a1,s11
+  ce6bde:	96b2                	add	a3,a3,a2
+  ce6be0:	0006c683          	lbu	a3,0(a3)
+  ce6be4:	4711                	li	a4,4
+  ce6be6:	02e69863          	bne	a3,a4,ce6c16 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0xc6a>
+  ce6bea:	00261693          	slli	a3,a2,0x2
+  ce6bee:	0272e737          	lui	a4,0x272e
+  ce6bf2:	80070713          	addi	a4,a4,-2048 # 272d800 <tree_code_type>
+  ce6bf6:	96ba                	add	a3,a3,a4
+  ce6bf8:	4294                	lw	a3,0(a3)
+  ce6bfa:	470d                	li	a4,3
+  ce6bfc:	54e68263          	beq	a3,a4,ce7140 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1194>
+  ce6c00:	0a700693          	li	a3,167
+  ce6c04:	52d60e63          	beq	a2,a3,ce7140 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1194>
+  ce6c08:	15c2                	slli	a1,a1,0x30
+  ce6c0a:	91c1                	srli	a1,a1,0x30
+  ce6c0c:	fcf58593          	addi	a1,a1,-49
+  ce6c10:	4619                	li	a2,6
+  ce6c12:	52b67763          	bgeu	a2,a1,ce7140 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1194>
+  ce6c16:	040a3583          	ld	a1,64(s4)
+  ce6c1a:	0005e583          	lwu	a1,0(a1)
+  ce6c1e:	01b5f5b3          	and	a1,a1,s11
+  ce6c22:	15ad                	addi	a1,a1,-21
+  ce6c24:	566d                	li	a2,-5
+  ce6c26:	32b666e3          	bltu	a2,a1,ce7752 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a6>
+  ce6c2a:	3af00593          	li	a1,943
+  ce6c2e:	855a                	mv	a0,s6
+  ce6c30:	ffbe9097          	auipc	ra,0xffbe9
+  ce6c34:	73e080e7          	jalr	1854(ra) # 8d036e <_Z21gimple_call_builtin_pPK6gimple17built_in_function>
+  ce6c38:	e931                	bnez	a0,ce6c8c <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0xce0>
+  ce6c3a:	4b900593          	li	a1,1209
+  ce6c3e:	855a                	mv	a0,s6
+  ce6c40:	ffbe9097          	auipc	ra,0xffbe9
+  ce6c44:	72e080e7          	jalr	1838(ra) # 8d036e <_Z21gimple_call_builtin_pPK6gimple17built_in_function>
+  ce6c48:	e131                	bnez	a0,ce6c8c <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0xce0>
+  ce6c4a:	3b100593          	li	a1,945
+  ce6c4e:	855a                	mv	a0,s6
+  ce6c50:	ffbe9097          	auipc	ra,0xffbe9
+  ce6c54:	71e080e7          	jalr	1822(ra) # 8d036e <_Z21gimple_call_builtin_pPK6gimple17built_in_function>
+  ce6c58:	e915                	bnez	a0,ce6c8c <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0xce0>
+  ce6c5a:	4bb00593          	li	a1,1211
+  ce6c5e:	855a                	mv	a0,s6
+  ce6c60:	ffbe9097          	auipc	ra,0xffbe9
+  ce6c64:	70e080e7          	jalr	1806(ra) # 8d036e <_Z21gimple_call_builtin_pPK6gimple17built_in_function>
+  ce6c68:	e115                	bnez	a0,ce6c8c <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0xce0>
+  ce6c6a:	3b000593          	li	a1,944
+  ce6c6e:	855a                	mv	a0,s6
+  ce6c70:	ffbe9097          	auipc	ra,0xffbe9
+  ce6c74:	6fe080e7          	jalr	1790(ra) # 8d036e <_Z21gimple_call_builtin_pPK6gimple17built_in_function>
+  ce6c78:	e911                	bnez	a0,ce6c8c <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0xce0>
+  ce6c7a:	4ba00593          	li	a1,1210
+  ce6c7e:	855a                	mv	a0,s6
+  ce6c80:	ffbe9097          	auipc	ra,0xffbe9
+  ce6c84:	6ee080e7          	jalr	1774(ra) # 8d036e <_Z21gimple_call_builtin_pPK6gimple17built_in_function>
+  ce6c88:	2c0504e3          	beqz	a0,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce6c8c:	088b3503          	ld	a0,136(s6)
+  ce6c90:	00055583          	lhu	a1,0(a0)
+  ce6c94:	09b00513          	li	a0,155
+  ce6c98:	00a58663          	beq	a1,a0,ce6ca4 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0xcf8>
+  ce6c9c:	08500613          	li	a2,133
+  ce6ca0:	2ac598e3          	bne	a1,a2,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce6ca4:	090b3583          	ld	a1,144(s6)
+  ce6ca8:	0005d583          	lhu	a1,0(a1)
+  ce6cac:	00a58663          	beq	a1,a0,ce6cb8 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0xd0c>
+  ce6cb0:	08500513          	li	a0,133
+  ce6cb4:	28a59ee3          	bne	a1,a0,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce6cb8:	098b3483          	ld	s1,152(s6)
+  ce6cbc:	8526                	mv	a0,s1
+  ce6cbe:	14bd70ef          	jal	dbe608 <_Z22tree_fits_poly_int64_pPK9tree_node>
+  ce6cc2:	1c050763          	beqz	a0,ce6e90 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0xee4>
+  ce6cc6:	8526                	mv	a0,s1
+  ce6cc8:	0a5d70ef          	jal	dbe56c <_Z18tree_to_poly_int64PK9tree_node>
+  ce6ccc:	090d3603          	ld	a2,144(s10)
+  ce6cd0:	d0a43023          	sd	a0,-768(s0)
+  ce6cd4:	d0b43423          	sd	a1,-760(s0)
+  ce6cd8:	557d                	li	a0,-1
+  ce6cda:	c601                	beqz	a2,ce6ce2 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0xd36>
+  ce6cdc:	424c                	lw	a1,4(a2)
+  ce6cde:	26059ae3          	bnez	a1,ce7752 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a6>
+  ce6ce2:	02893583          	ld	a1,40(s2)
+  ce6ce6:	f1843603          	ld	a2,-232(s0)
+  ce6cea:	557d                	li	a0,-1
+  ce6cec:	26c593e3          	bne	a1,a2,ce7752 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a6>
+  ce6cf0:	02093603          	ld	a2,32(s2)
+  ce6cf4:	f1043683          	ld	a3,-240(s0)
+  ce6cf8:	24d61de3          	bne	a2,a3,ce7752 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a6>
+  ce6cfc:	f2043683          	ld	a3,-224(s0)
+  ce6d00:	0076f713          	andi	a4,a3,7
+  ce6d04:	240717e3          	bnez	a4,ce7752 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a6>
+  ce6d08:	f2843703          	ld	a4,-216(s0)
+  ce6d0c:	00777793          	andi	a5,a4,7
+  ce6d10:	240791e3          	bnez	a5,ce7752 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a6>
+  ce6d14:	868d                	srai	a3,a3,0x3
+  ce6d16:	870d                	srai	a4,a4,0x3
+  ce6d18:	00b667b3          	or	a5,a2,a1
+  ce6d1c:	8b9d                	andi	a5,a5,7
+  ce6d1e:	eed43023          	sd	a3,-288(s0)
+  ce6d22:	eee43423          	sd	a4,-280(s0)
+  ce6d26:	220796e3          	bnez	a5,ce7752 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a6>
+  ce6d2a:	cf243c23          	sd	s2,-776(s0)
+  ce6d2e:	cf443423          	sd	s4,-792(s0)
+  ce6d32:	cfa43823          	sd	s10,-784(s0)
+  ce6d36:	cd817057          	vsetivli	zero,2,e64,m1,ta,ma
+  ce6d3a:	5e003457          	vmv.v.i	v8,0
+  ce6d3e:	ef040513          	addi	a0,s0,-272
+  ce6d42:	02057427          	vse64.v	v8,(a0)
+  ce6d46:	43f65513          	srai	a0,a2,0x3f
+  ce6d4a:	9175                	srli	a0,a0,0x3d
+  ce6d4c:	9532                	add	a0,a0,a2
+  ce6d4e:	43f5d613          	srai	a2,a1,0x3f
+  ce6d52:	9275                	srli	a2,a2,0x3d
+  ce6d54:	95b2                	add	a1,a1,a2
+  ce6d56:	8a5a                	mv	s4,s6
+  ce6d58:	088b3b83          	ld	s7,136(s6)
+  ce6d5c:	850d                	srai	a0,a0,0x3
+  ce6d5e:	858d                	srai	a1,a1,0x3
+  ce6d60:	eca43423          	sd	a0,-312(s0)
+  ce6d64:	ecb43823          	sd	a1,-304(s0)
+  ce6d68:	000be503          	lwu	a0,0(s7)
+  ce6d6c:	01b57533          	and	a0,a0,s11
+  ce6d70:	09b00493          	li	s1,155
+  ce6d74:	04951f63          	bne	a0,s1,ce6dd2 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0xe26>
+  ce6d78:	03ade537          	lui	a0,0x3ade
+  ce6d7c:	6c053583          	ld	a1,1728(a0) # 3ade6c0 <vn_valueize>
+  ce6d80:	855e                	mv	a0,s7
+  ce6d82:	9582                	jalr	a1
+  ce6d84:	8baa                	mv	s7,a0
+  ce6d86:	00056503          	lwu	a0,0(a0)
+  ce6d8a:	01b57533          	and	a0,a0,s11
+  ce6d8e:	04951263          	bne	a0,s1,ce6dd2 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0xe26>
+  ce6d92:	018bbd03          	ld	s10,24(s7)
+  ce6d96:	856a                	mv	a0,s10
+  ce6d98:	ffdc2097          	auipc	ra,0xffdc2
+  ce6d9c:	006080e7          	jalr	6(ra) # aa8d9e <_Z22gimple_assign_single_pPK6gimple>
+  ce6da0:	c90d                	beqz	a0,ce6dd2 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0xe26>
+  ce6da2:	002d5503          	lhu	a0,2(s10)
+  ce6da6:	027815b7          	lui	a1,0x2781
+  ce6daa:	2c858593          	addi	a1,a1,712 # 27812c8 <gimple_rhs_class_table>
+  ce6dae:	95aa                	add	a1,a1,a0
+  ce6db0:	0005c583          	lbu	a1,0(a1)
+  ce6db4:	4611                	li	a2,4
+  ce6db6:	00c59863          	bne	a1,a2,ce6dc6 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0xe1a>
+  ce6dba:	050d3503          	ld	a0,80(s10)
+  ce6dbe:	00056503          	lwu	a0,0(a0)
+  ce6dc2:	01b57533          	and	a0,a0,s11
+  ce6dc6:	08500593          	li	a1,133
+  ce6dca:	00b51463          	bne	a0,a1,ce6dd2 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0xe26>
+  ce6dce:	050d3b83          	ld	s7,80(s10)
+  ce6dd2:	000be503          	lwu	a0,0(s7)
+  ce6dd6:	01b57533          	and	a0,a0,s11
+  ce6dda:	08500593          	li	a1,133
+  ce6dde:	34b51be3          	bne	a0,a1,ce7934 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1988>
+  ce6de2:	008bb503          	ld	a0,8(s7)
+  ce6de6:	6508                	ld	a0,8(a0)
+  ce6de8:	00056583          	lwu	a1,0(a0)
+  ce6dec:	01b5f5b3          	and	a1,a1,s11
+  ce6df0:	15bd                	addi	a1,a1,-17
+  ce6df2:	460d                	li	a2,3
+  ce6df4:	00b66863          	bltu	a2,a1,ce6e04 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0xe58>
+  ce6df8:	00454503          	lbu	a0,4(a0)
+  ce6dfc:	08057513          	andi	a0,a0,128
+  ce6e00:	140518e3          	bnez	a0,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce6e04:	018bb503          	ld	a0,24(s7)
+  ce6e08:	ef040593          	addi	a1,s0,-272
+  ce6e0c:	ffed3097          	auipc	ra,0xffed3
+  ce6e10:	46e080e7          	jalr	1134(ra) # bba27a <_Z29get_addr_base_and_unit_offsetP9tree_nodeP8poly_intILj2ElE>
+  ce6e14:	12050ee3          	beqz	a0,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce6e18:	84aa                	mv	s1,a0
+  ce6e1a:	00056503          	lwu	a0,0(a0)
+  ce6e1e:	01b57933          	and	s2,a0,s11
+  ce6e22:	0a700513          	li	a0,167
+  ce6e26:	2ea916e3          	bne	s2,a0,ce7912 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1966>
+  ce6e2a:	0204bd03          	ld	s10,32(s1)
+  ce6e2e:	856a                	mv	a0,s10
+  ce6e30:	0f1d70ef          	jal	dbe720 <_Z23tree_fits_poly_uint64_pPK9tree_node>
+  ce6e34:	2c050fe3          	beqz	a0,ce7912 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1966>
+  ce6e38:	856a                	mv	a0,s10
+  ce6e3a:	005d70ef          	jal	dbe63e <_Z19tree_to_poly_uint64PK9tree_node>
+  ce6e3e:	892a                	mv	s2,a0
+  ce6e40:	0184bb83          	ld	s7,24(s1)
+  ce6e44:	000be503          	lwu	a0,0(s7)
+  ce6e48:	01b57533          	and	a0,a0,s11
+  ce6e4c:	09b00613          	li	a2,155
+  ce6e50:	8d2e                	mv	s10,a1
+  ce6e52:	00c51963          	bne	a0,a2,ce6e64 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0xeb8>
+  ce6e56:	03ade537          	lui	a0,0x3ade
+  ce6e5a:	6c053583          	ld	a1,1728(a0) # 3ade6c0 <vn_valueize>
+  ce6e5e:	855e                	mv	a0,s7
+  ce6e60:	9582                	jalr	a1
+  ce6e62:	8baa                	mv	s7,a0
+  ce6e64:	ef040513          	addi	a0,s0,-272
+  ce6e68:	cd817057          	vsetivli	zero,2,e64,m1,ta,ma
+  ce6e6c:	02057407          	vle64.v	v8,(a0)
+  ce6e70:	5e0944d7          	vmv.v.x	v9,s2
+  ce6e74:	3e9d64d7          	vslide1down.vx	v9,v9,s10
+  ce6e78:	02848457          	vadd.vv	v8,v8,v9
+  ce6e7c:	02057427          	vse64.v	v8,(a0)
+  ce6e80:	2b50006f          	j	ce7934 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1988>
+  ce6e84:	4585                	li	a1,1
+  ce6e86:	cf843603          	ld	a2,-776(s0)
+  ce6e8a:	c20c                	sw	a1,0(a2)
+  ce6e8c:	0c70006f          	j	ce7752 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a6>
+  ce6e90:	0004e503          	lwu	a0,0(s1)
+  ce6e94:	01b57533          	and	a0,a0,s11
+  ce6e98:	09b00593          	li	a1,155
+  ce6e9c:	0ab51ae3          	bne	a0,a1,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce6ea0:	8526                	mv	a0,s1
+  ce6ea2:	4581                	li	a1,0
+  ce6ea4:	5fe0d0ef          	jal	cf44a2 <_Z7SSA_VALP9tree_nodePb>
+  ce6ea8:	84aa                	mv	s1,a0
+  ce6eaa:	75ed70ef          	jal	dbe608 <_Z22tree_fits_poly_int64_pPK9tree_node>
+  ce6eae:	e0051ce3          	bnez	a0,ce6cc6 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0xd1a>
+  ce6eb2:	09f0006f          	j	ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce6eb6:	fff5869b          	addiw	a3,a1,-1
+  ce6eba:	57f1                	li	a5,-4
+  ce6ebc:	4601                	li	a2,0
+  ce6ebe:	d2d7ed63          	bltu	a5,a3,ce63f8 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x44c>
+  ce6ec2:	fff58693          	addi	a3,a1,-1
+  ce6ec6:	9281                	srli	a3,a3,0x20
+  ce6ec8:	d2069863          	bnez	a3,ce63f8 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x44c>
+  ce6ecc:	0015b813          	seqz	a6,a1
+  ce6ed0:	00375613          	srli	a2,a4,0x3
+  ce6ed4:	8309                	srli	a4,a4,0x2
+  ce6ed6:	488d                	li	a7,3
+  ce6ed8:	e5040493          	addi	s1,s0,-432
+  ce6edc:	982e                	add	a6,a6,a1
+  ce6ede:	40e006b3          	neg	a3,a4
+  ce6ee2:	00461313          	slli	t1,a2,0x4
+  ce6ee6:	00d87633          	and	a2,a6,a3
+  ce6eea:	40c007b3          	neg	a5,a2
+  ce6eee:	468d                	li	a3,3
+  ce6ef0:	2284f407          	vl2re64.v	v8,(s1)
+  ce6ef4:	0196f733          	and	a4,a3,s9
+  ce6ef8:	9696                	add	a3,a3,t0
+  ce6efa:	070e                	slli	a4,a4,0x3
+  ce6efc:	9752                	add	a4,a4,s4
+  ce6efe:	22870427          	vs2r.v	v8,(a4)
+  ce6f02:	00d78733          	add	a4,a5,a3
+  ce6f06:	949a                	add	s1,s1,t1
+  ce6f08:	ff1714e3          	bne	a4,a7,ce6ef0 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0xf44>
+  ce6f0c:	cec81663          	bne	a6,a2,ce63f8 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x44c>
+  ce6f10:	d0aff06f          	j	ce641a <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x46e>
+  ce6f14:	000ae583          	lwu	a1,0(s5)
+  ce6f18:	01b5f5b3          	and	a1,a1,s11
+  ce6f1c:	0a700613          	li	a2,167
+  ce6f20:	02c599e3          	bne	a1,a2,ce7752 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a6>
+  ce6f24:	d0040513          	addi	a0,s0,-768
+  ce6f28:	85d6                	mv	a1,s5
+  ce6f2a:	2b0da0ef          	jal	dc11da <_Z14mem_ref_offsetPK9tree_node>
+  ce6f2e:	450d                	li	a0,3
+  ce6f30:	eca42423          	sw	a0,-312(s0)
+  ce6f34:	e5040513          	addi	a0,s0,-432
+  ce6f38:	d0040593          	addi	a1,s0,-768
+  ce6f3c:	ec840613          	addi	a2,s0,-312
+  ce6f40:	b95590ef          	jal	c40ad4 <_ZlsILj2E16generic_wide_intI22fixed_wide_int_storageILi128EEEiE8poly_intIXT_EN11poly_resultIT0_S6_Xsr22poly_coeff_pair_traitsIS6_S6_EE11result_kindEE4typeEERKS4_IXT_ES6_ERKT1_>
+  ce6f44:	e6042583          	lw	a1,-416(s0)
+  ce6f48:	4505                	li	a0,1
+  ce6f4a:	00a593e3          	bne	a1,a0,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce6f4e:	e7842583          	lw	a1,-392(s0)
+  ce6f52:	7ea59f63          	bne	a1,a0,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce6f56:	e5040513          	addi	a0,s0,-432
+  ce6f5a:	cd927057          	vsetivli	zero,4,e64,m2,ta,ma
+  ce6f5e:	02057407          	vle64.v	v8,(a0)
+  ce6f62:	f2040513          	addi	a0,s0,-224
+  ce6f66:	cd817057          	vsetivli	zero,2,e64,m1,ta,ma
+  ce6f6a:	02057607          	vle64.v	v12,(a0)
+  ce6f6e:	cd917057          	vsetivli	zero,2,e64,m2,ta,ma
+  ce6f72:	3e813557          	vslidedown.vi	v10,v8,2
+  ce6f76:	c980f057          	vsetivli	zero,1,e64,m1,tu,ma
+  ce6f7a:	5e040557          	vmv.v.v	v10,v8
+  ce6f7e:	cd817057          	vsetivli	zero,2,e64,m1,ta,ma
+  ce6f82:	5e003457          	vmv.v.i	v8,0
+  ce6f86:	018ab583          	ld	a1,24(s5)
+  ce6f8a:	02c504d7          	vadd.vv	v9,v12,v10
+  ce6f8e:	020574a7          	vse64.v	v9,(a0)
+  ce6f92:	f0040513          	addi	a0,s0,-256
+  ce6f96:	02057427          	vse64.v	v8,(a0)
+  ce6f9a:	557d                	li	a0,-1
+  ce6f9c:	0c958d63          	beq	a1,s1,ce7076 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x10ca>
+  ce6fa0:	6c84                	ld	s1,24(s1)
+  ce6fa2:	0004e603          	lwu	a2,0(s1)
+  ce6fa6:	0ff67693          	zext.b	a3,a2
+  ce6faa:	4719                	li	a4,6
+  ce6fac:	7ae69363          	bne	a3,a4,ce7752 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a6>
+  ce6fb0:	8241                	srli	a2,a2,0x10
+  ce6fb2:	027816b7          	lui	a3,0x2781
+  ce6fb6:	2c868693          	addi	a3,a3,712 # 27812c8 <gimple_rhs_class_table>
+  ce6fba:	96b2                	add	a3,a3,a2
+  ce6fbc:	0006c683          	lbu	a3,0(a3)
+  ce6fc0:	4711                	li	a4,4
+  ce6fc2:	00e69763          	bne	a3,a4,ce6fd0 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1024>
+  ce6fc6:	68b0                	ld	a2,80(s1)
+  ce6fc8:	00066603          	lwu	a2,0(a2)
+  ce6fcc:	01b67633          	and	a2,a2,s11
+  ce6fd0:	04c00693          	li	a3,76
+  ce6fd4:	76d61f63          	bne	a2,a3,ce7752 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a6>
+  ce6fd8:	68b0                	ld	a2,80(s1)
+  ce6fda:	76b61c63          	bne	a2,a1,ce7752 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a6>
+  ce6fde:	8bca                	mv	s7,s2
+  ce6fe0:	6ca8                	ld	a0,88(s1)
+  ce6fe2:	00056583          	lwu	a1,0(a0)
+  ce6fe6:	01b5f5b3          	and	a1,a1,s11
+  ce6fea:	1595                	addi	a1,a1,-27
+  ce6fec:	4905                	li	s2,1
+  ce6fee:	76b96163          	bltu	s2,a1,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce6ff2:	7e00d0ef          	jal	cf47d2 <_ZN2wi12to_poly_wideEPK9tree_node>
+  ce6ff6:	eca43423          	sd	a0,-312(s0)
+  ce6ffa:	ecb43823          	sd	a1,-304(s0)
+  ce6ffe:	d0040513          	addi	a0,s0,-768
+  ce7002:	ec840593          	addi	a1,s0,-312
+  ce7006:	4601                	li	a2,0
+  ce7008:	76c0d0ef          	jal	cf4774 <_ZN8poly_intILj2E16generic_wide_intI22fixed_wide_int_storageILi128EEEE4fromIS0_IN2wi15unextended_treeEEEES4_RKS_ILj2ET_E6signop>
+  ce700c:	450d                	li	a0,3
+  ce700e:	f8a42423          	sw	a0,-120(s0)
+  ce7012:	e5040513          	addi	a0,s0,-432
+  ce7016:	d0040593          	addi	a1,s0,-768
+  ce701a:	f8840613          	addi	a2,s0,-120
+  ce701e:	ab7590ef          	jal	c40ad4 <_ZlsILj2E16generic_wide_intI22fixed_wide_int_storageILi128EEEiE8poly_intIXT_EN11poly_resultIT0_S6_Xsr22poly_coeff_pair_traitsIS6_S6_EE11result_kindEE4typeEERKS4_IXT_ES6_ERKT1_>
+  ce7022:	e6042503          	lw	a0,-416(s0)
+  ce7026:	73251563          	bne	a0,s2,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce702a:	e7842503          	lw	a0,-392(s0)
+  ce702e:	4585                	li	a1,1
+  ce7030:	72b51063          	bne	a0,a1,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce7034:	e5040513          	addi	a0,s0,-432
+  ce7038:	cd927057          	vsetivli	zero,4,e64,m2,ta,ma
+  ce703c:	02057407          	vle64.v	v8,(a0)
+  ce7040:	f0040593          	addi	a1,s0,-256
+  ce7044:	68a8                	ld	a0,80(s1)
+  ce7046:	cd917057          	vsetivli	zero,2,e64,m2,ta,ma
+  ce704a:	3e813557          	vslidedown.vi	v10,v8,2
+  ce704e:	c980f057          	vsetivli	zero,1,e64,m1,tu,ma
+  ce7052:	5e040557          	vmv.v.v	v10,v8
+  ce7056:	cd817057          	vsetivli	zero,2,e64,m1,ta,ma
+  ce705a:	0205f527          	vse64.v	v10,(a1)
+  ce705e:	00056583          	lwu	a1,0(a0)
+  ce7062:	01b5f5b3          	and	a1,a1,s11
+  ce7066:	09b00613          	li	a2,155
+  ce706a:	895e                	mv	s2,s7
+  ce706c:	00c59563          	bne	a1,a2,ce7076 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x10ca>
+  ce7070:	4581                	li	a1,0
+  ce7072:	4300d0ef          	jal	cf44a2 <_Z7SSA_VALP9tree_nodePb>
+  ce7076:	098b3483          	ld	s1,152(s6)
+  ce707a:	0004e503          	lwu	a0,0(s1)
+  ce707e:	01b57533          	and	a0,a0,s11
+  ce7082:	09b00593          	li	a1,155
+  ce7086:	00b51763          	bne	a0,a1,ce7094 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x10e8>
+  ce708a:	8526                	mv	a0,s1
+  ce708c:	4581                	li	a1,0
+  ce708e:	4140d0ef          	jal	cf44a2 <_Z7SSA_VALP9tree_nodePb>
+  ce7092:	84aa                	mv	s1,a0
+  ce7094:	8526                	mv	a0,s1
+  ce7096:	ffa7a097          	auipc	ra,0xffa7a
+  ce709a:	80e080e7          	jalr	-2034(ra) # 7608a4 <_ZN2wi14to_poly_offsetEPK9tree_node>
+  ce709e:	d0a43023          	sd	a0,-768(s0)
+  ce70a2:	d0b43423          	sd	a1,-760(s0)
+  ce70a6:	450d                	li	a0,3
+  ce70a8:	eca42423          	sw	a0,-312(s0)
+  ce70ac:	e5040513          	addi	a0,s0,-432
+  ce70b0:	d0040593          	addi	a1,s0,-768
+  ce70b4:	ec840613          	addi	a2,s0,-312
+  ce70b8:	5630c0ef          	jal	cf3e1a <_ZlsILj2E16generic_wide_intIN2wi13extended_treeILi128EEEEiE8poly_intIXT_EN11poly_resultIT0_S7_Xsr22poly_coeff_pair_traitsIS7_S7_EE11result_kindEE4typeEERKS5_IXT_ES7_ERKT1_>
+  ce70bc:	f2040513          	addi	a0,s0,-224
+  ce70c0:	f1040593          	addi	a1,s0,-240
+  ce70c4:	f0040613          	addi	a2,s0,-256
+  ce70c8:	e5040693          	addi	a3,s0,-432
+  ce70cc:	7340d0ef          	jal	cf4800 <_Z22ranges_maybe_overlap_pI8poly_intILj2ElES1_S1_S0_ILj2E16generic_wide_intI22fixed_wide_int_storageILi128EEEEEbRKT_RKT0_RKT1_RKT2_>
+  ce70d0:	68050163          	beqz	a0,ce7752 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a6>
+  ce70d4:	090d3503          	ld	a0,144(s10)
+  ce70d8:	c501                	beqz	a0,ce70e0 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1134>
+  ce70da:	4148                	lw	a0,4(a0)
+  ce70dc:	4e051563          	bnez	a0,ce75c6 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x161a>
+  ce70e0:	8526                	mv	a0,s1
+  ce70e2:	ffa79097          	auipc	ra,0xffa79
+  ce70e6:	7c2080e7          	jalr	1986(ra) # 7608a4 <_ZN2wi14to_poly_offsetEPK9tree_node>
+  ce70ea:	d0a43023          	sd	a0,-768(s0)
+  ce70ee:	d0b43423          	sd	a1,-760(s0)
+  ce70f2:	450d                	li	a0,3
+  ce70f4:	eca42423          	sw	a0,-312(s0)
+  ce70f8:	e5040513          	addi	a0,s0,-432
+  ce70fc:	d0040593          	addi	a1,s0,-768
+  ce7100:	ec840613          	addi	a2,s0,-312
+  ce7104:	5170c0ef          	jal	cf3e1a <_ZlsILj2E16generic_wide_intIN2wi13extended_treeILi128EEEEiE8poly_intIXT_EN11poly_resultIT0_S7_Xsr22poly_coeff_pair_traitsIS7_S7_EE11result_kindEE4typeEERKS5_IXT_ES7_ERKT1_>
+  ce7108:	f2040513          	addi	a0,s0,-224
+  ce710c:	f1040593          	addi	a1,s0,-240
+  ce7110:	f0040613          	addi	a2,s0,-256
+  ce7114:	e5040693          	addi	a3,s0,-432
+  ce7118:	7620d0ef          	jal	cf487a <_Z16known_subrange_pI8poly_intILj2ElES1_S1_S0_ILj2E16generic_wide_intI22fixed_wide_int_storageILi128EEEEEbRKT_RKT0_RKT1_RKT2_>
+  ce711c:	4a050563          	beqz	a0,ce75c6 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x161a>
+  ce7120:	84ca                	mv	s1,s2
+  ce7122:	8bda                	mv	s7,s6
+  ce7124:	090b3503          	ld	a0,144(s6)
+  ce7128:	5a6d30ef          	jal	dba6ce <_Z13integer_zeropPK9tree_node>
+  ce712c:	040a3583          	ld	a1,64(s4)
+  ce7130:	6c050f63          	beqz	a0,ce780e <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1862>
+  ce7134:	852e                	mv	a0,a1
+  ce7136:	37bd30ef          	jal	dbacb0 <_Z14build_zero_cstP9tree_node>
+  ce713a:	86aa                	mv	a3,a0
+  ce713c:	15b0006f          	j	ce7a96 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1aea>
+  ce7140:	cf243c23          	sd	s2,-776(s0)
+  ce7144:	cfa43823          	sd	s10,-784(s0)
+  ce7148:	4519                	li	a0,6
+  ce714a:	f0043023          	sd	zero,-256(s0)
+  ce714e:	00ab8463          	beq	s7,a0,ce7156 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x11aa>
+  ce7152:	42c0106f          	j	ce857e <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x25d2>
+  ce7156:	f3840513          	addi	a0,s0,-200
+  ce715a:	c78530ef          	jal	c3a5d2 <_Z11ao_ref_baseP6ao_ref>
+  ce715e:	f7043583          	ld	a1,-144(s0)
+  ce7162:	e591                	bnez	a1,ce716e <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x11c2>
+  ce7164:	f6843583          	ld	a1,-152(s0)
+  ce7168:	567d                	li	a2,-1
+  ce716a:	5ec58363          	beq	a1,a2,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce716e:	02aa8d63          	beq	s5,a0,ce71a8 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x11fc>
+  ce7172:	000ae583          	lwu	a1,0(s5)
+  ce7176:	01b5f633          	and	a2,a1,s11
+  ce717a:	0a700593          	li	a1,167
+  ce717e:	5cb61963          	bne	a2,a1,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce7182:	00056603          	lwu	a2,0(a0)
+  ce7186:	01b67633          	and	a2,a2,s11
+  ce718a:	5cb61363          	bne	a2,a1,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce718e:	018ab583          	ld	a1,24(s5)
+  ce7192:	6d10                	ld	a2,24(a0)
+  ce7194:	5ac59e63          	bne	a1,a2,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce7198:	020ab603          	ld	a2,32(s5)
+  ce719c:	710c                	ld	a1,32(a0)
+  ce719e:	8532                	mv	a0,a2
+  ce71a0:	596db0ef          	jal	dc2736 <_Z18tree_int_cst_equalPK9tree_nodeS1_>
+  ce71a4:	5a050663          	beqz	a0,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce71a8:	855a                	mv	a0,s6
+  ce71aa:	cf843583          	ld	a1,-776(s0)
+  ce71ae:	fe4550ef          	jal	c3c992 <_Z16stmt_kills_ref_pP6gimpleP6ao_ref>
+  ce71b2:	58050f63          	beqz	a0,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce71b6:	050a3503          	ld	a0,80(s4)
+  ce71ba:	c119                	beqz	a0,ce71c0 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1214>
+  ce71bc:	00456503          	lwu	a0,4(a0)
+  ce71c0:	03adebb7          	lui	s7,0x3ade
+  ce71c4:	6a8b8b93          	addi	s7,s7,1704 # 3ade6a8 <_ZL13next_value_id>
+  ce71c8:	068bb583          	ld	a1,104(s7)
+  ce71cc:	c199                	beqz	a1,ce71d2 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1226>
+  ce71ce:	0045e583          	lwu	a1,4(a1)
+  ce71d2:	050a0a93          	addi	s5,s4,80
+  ce71d6:	fff5861b          	addiw	a2,a1,-1
+  ce71da:	ffe5069b          	addiw	a3,a0,-2
+  ce71de:	892e                	mv	s2,a1
+  ce71e0:	8d32                	mv	s10,a2
+  ce71e2:	8db6                	mv	s11,a3
+  ce71e4:	0016849b          	addiw	s1,a3,1
+  ce71e8:	0004a513          	slti	a0,s1,0
+  ce71ec:	00154513          	xori	a0,a0,1
+  ce71f0:	04064063          	bltz	a2,ce7230 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1284>
+  ce71f4:	0204ce63          	bltz	s1,ce7230 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1284>
+  ce71f8:	000ab503          	ld	a0,0(s5)
+  ce71fc:	00349593          	slli	a1,s1,0x3
+  ce7200:	00649613          	slli	a2,s1,0x6
+  ce7204:	068bb683          	ld	a3,104(s7)
+  ce7208:	003d1713          	slli	a4,s10,0x3
+  ce720c:	8e0d                	sub	a2,a2,a1
+  ce720e:	006d1593          	slli	a1,s10,0x6
+  ce7212:	8d99                	sub	a1,a1,a4
+  ce7214:	9532                	add	a0,a0,a2
+  ce7216:	95b6                	add	a1,a1,a3
+  ce7218:	0521                	addi	a0,a0,8
+  ce721a:	05a1                	addi	a1,a1,8
+  ce721c:	c20fb0ef          	jal	ce263c <_ZL18vn_reference_op_eqPKvS0_>
+  ce7220:	fff90593          	addi	a1,s2,-1
+  ce7224:	fffd061b          	addiw	a2,s10,-1
+  ce7228:	fffd869b          	addiw	a3,s11,-1
+  ce722c:	f94d                	bnez	a0,ce71de <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1232>
+  ce722e:	4505                	li	a0,1
+  ce7230:	500d1e63          	bnez	s10,ce774c <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a0>
+  ce7234:	50050c63          	beqz	a0,ce774c <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a0>
+  ce7238:	068bb583          	ld	a1,104(s7)
+  ce723c:	0085d503          	lhu	a0,8(a1)
+  ce7240:	0a700613          	li	a2,167
+  ce7244:	50c51663          	bne	a0,a2,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce7248:	6d88                	ld	a0,24(a1)
+  ce724a:	698c                	ld	a1,16(a1)
+  ce724c:	e501                	bnez	a0,ce7254 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x12a8>
+  ce724e:	567d                	li	a2,-1
+  ce7250:	50c58063          	beq	a1,a2,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce7254:	000ab703          	ld	a4,0(s5)
+  ce7258:	00349613          	slli	a2,s1,0x3
+  ce725c:	049a                	slli	s1,s1,0x6
+  ce725e:	8c91                	sub	s1,s1,a2
+  ce7260:	9726                	add	a4,a4,s1
+  ce7262:	6f10                	ld	a2,24(a4)
+  ce7264:	6b14                	ld	a3,16(a4)
+  ce7266:	62a61563          	bne	a2,a0,ce7890 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x18e4>
+  ce726a:	62b69363          	bne	a3,a1,ce7890 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x18e4>
+  ce726e:	4d01                	li	s10,0
+  ce7270:	ce043423          	sd	zero,-792(s0)
+  ce7274:	5e0dd263          	bgez	s11,ce7858 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x18ac>
+  ce7278:	ad2d                	j	ce78b2 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1906>
+  ce727a:	f2043583          	ld	a1,-224(s0)
+  ce727e:	050b3503          	ld	a0,80(s6)
+  ce7282:	f8b43823          	sd	a1,-112(s0)
+  ce7286:	ffbeb097          	auipc	ra,0xffbeb
+  ce728a:	bfc080e7          	jalr	-1028(ra) # 8d1e82 <_Z23is_gimple_min_invariantPK9tree_node>
+  ce728e:	18050a63          	beqz	a0,ce7422 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1476>
+  ce7292:	4519                	li	a0,6
+  ce7294:	00ab8463          	beq	s7,a0,ce729c <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x12f0>
+  ce7298:	3400106f          	j	ce85d8 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x262c>
+  ce729c:	8c52                	mv	s8,s4
+  ce729e:	048b3483          	ld	s1,72(s6)
+  ce72a2:	f3840513          	addi	a0,s0,-200
+  ce72a6:	b2c530ef          	jal	c3a5d2 <_Z11ao_ref_baseP6ao_ref>
+  ce72aa:	8a2a                	mv	s4,a0
+  ce72ac:	f4840513          	addi	a0,s0,-184
+  ce72b0:	d0040593          	addi	a1,s0,-768
+  ce72b4:	f5840613          	addi	a2,s0,-168
+  ce72b8:	cd817057          	vsetivli	zero,2,e64,m1,ta,ma
+  ce72bc:	02057407          	vle64.v	v8,(a0)
+  ce72c0:	02067487          	vle64.v	v9,(a2)
+  ce72c4:	f6843903          	ld	s2,-152(s0)
+  ce72c8:	f7043983          	ld	s3,-144(s0)
+  ce72cc:	0205f427          	vse64.v	v8,(a1)
+  ce72d0:	f0040513          	addi	a0,s0,-256
+  ce72d4:	020574a7          	vse64.v	v9,(a0)
+  ce72d8:	8526                	mv	a0,s1
+  ce72da:	7b80d0ef          	jal	cf4a92 <_Z37reverse_storage_order_for_component_pP9tree_node>
+  ce72de:	460a0963          	beqz	s4,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce72e2:	46051763          	bnez	a0,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce72e6:	8526                	mv	a0,s1
+  ce72e8:	ffc6b097          	auipc	ra,0xffc6b
+  ce72ec:	87e080e7          	jalr	-1922(ra) # 951b66 <_Z23storage_order_barrier_pPK9tree_node>
+  ce72f0:	46051063          	bnez	a0,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce72f4:	f0843503          	ld	a0,-248(s0)
+  ce72f8:	44a99c63          	bne	s3,a0,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce72fc:	f0043503          	ld	a0,-256(s0)
+  ce7300:	44a91863          	bne	s2,a0,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce7304:	f2040593          	addi	a1,s0,-224
+  ce7308:	d0040693          	addi	a3,s0,-768
+  ce730c:	8556                	mv	a0,s5
+  ce730e:	8652                	mv	a2,s4
+  ce7310:	533070ef          	jal	cef042 <_ZL37adjust_offsets_for_equal_base_addressP9tree_nodeP8poly_intILj2ElES0_S3_>
+  ce7314:	42050e63          	beqz	a0,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce7318:	f2843503          	ld	a0,-216(s0)
+  ce731c:	42051a63          	bnez	a0,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce7320:	f2043503          	ld	a0,-224(s0)
+  ce7324:	d0843583          	ld	a1,-760(s0)
+  ce7328:	f8a43823          	sd	a0,-112(s0)
+  ce732c:	42059263          	bnez	a1,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce7330:	f0843503          	ld	a0,-248(s0)
+  ce7334:	40051e63          	bnez	a0,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce7338:	d0043483          	ld	s1,-768(s0)
+  ce733c:	090d3503          	ld	a0,144(s10)
+  ce7340:	f0043a83          	ld	s5,-256(s0)
+  ce7344:	c501                	beqz	a0,ce734c <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x13a0>
+  ce7346:	4148                	lw	a0,4(a0)
+  ce7348:	74051d63          	bnez	a0,ce7aa2 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1af6>
+  ce734c:	f9040513          	addi	a0,s0,-112
+  ce7350:	f8840593          	addi	a1,s0,-120
+  ce7354:	d0040613          	addi	a2,s0,-768
+  ce7358:	f0040693          	addi	a3,s0,-256
+  ce735c:	7ce0d0ef          	jal	cf4b2a <_Z16known_subrange_pIll8poly_intILj2ElES1_EbRKT_RKT0_RKT1_RKT2_>
+  ce7360:	74050163          	beqz	a0,ce7aa2 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1af6>
+  ce7364:	050b3503          	ld	a0,80(s6)
+  ce7368:	00056583          	lwu	a1,0(a0)
+  ce736c:	01b5f5b3          	and	a1,a1,s11
+  ce7370:	09b00613          	li	a2,155
+  ce7374:	00c59563          	bne	a1,a2,ce737e <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x13d2>
+  ce7378:	4581                	li	a1,0
+  ce737a:	1280d0ef          	jal	cf44a2 <_Z7SSA_VALP9tree_nodePb>
+  ce737e:	f9043583          	ld	a1,-112(s0)
+  ce7382:	8d85                	sub	a1,a1,s1
+  ce7384:	43f5d613          	srai	a2,a1,0x3f
+  ce7388:	9275                	srli	a2,a2,0x3d
+  ce738a:	95b2                	add	a1,a1,a2
+  ce738c:	818d                	srli	a1,a1,0x3
+  ce738e:	0005869b          	sext.w	a3,a1
+  ce7392:	e5040593          	addi	a1,s0,-432
+  ce7396:	04000613          	li	a2,64
+  ce739a:	ffbaf097          	auipc	ra,0xffbaf
+  ce739e:	c58080e7          	jalr	-936(ra) # 895ff2 <_Z18native_encode_exprPK9tree_nodePhii>
+  ce73a2:	3aa05763          	blez	a0,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce73a6:	8b2a                	mv	s6,a0
+  ce73a8:	f8843503          	ld	a0,-120(s0)
+  ce73ac:	003b159b          	slliw	a1,s6,0x3
+  ce73b0:	3aa5c063          	blt	a1,a0,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce73b4:	040c3a03          	ld	s4,64(s8)
+  ce73b8:	000a2583          	lw	a1,0(s4)
+  ce73bc:	fffd8913          	addi	s2,s11,-1
+  ce73c0:	0125f5b3          	and	a1,a1,s2
+  ce73c4:	35e9                	addiw	a1,a1,-6
+  ce73c6:	460d                	li	a2,3
+  ce73c8:	00b66d63          	bltu	a2,a1,ce73e2 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1436>
+  ce73cc:	036a5583          	lhu	a1,54(s4)
+  ce73d0:	00b50963          	beq	a0,a1,ce73e2 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1436>
+  ce73d4:	004a2583          	lw	a1,4(s4)
+  ce73d8:	15de                	slli	a1,a1,0x37
+  ce73da:	91fd                	srli	a1,a1,0x3f
+  ce73dc:	0f7d40ef          	jal	dbbcd2 <_Z30build_nonstandard_integer_typemi>
+  ce73e0:	8a2a                	mv	s4,a0
+  ce73e2:	03b1a537          	lui	a0,0x3b1a
+  ce73e6:	b9854503          	lbu	a0,-1128(a0) # 3b19b98 <global_options+0x100>
+  ce73ea:	8905                	andi	a0,a0,1
+  ce73ec:	580518e3          	bnez	a0,ce817c <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x21d0>
+  ce73f0:	f9043503          	ld	a0,-112(s0)
+  ce73f4:	40a4863b          	subw	a2,s1,a0
+  ce73f8:	8a1d                	andi	a2,a2,7
+  ce73fa:	e219                	bnez	a2,ce7400 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1454>
+  ce73fc:	69d0006f          	j	ce8298 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x22ec>
+  ce7400:	e5040513          	addi	a0,s0,-432
+  ce7404:	955a                	add	a0,a0,s6
+  ce7406:	00050023          	sb	zero,0(a0)
+  ce740a:	001b059b          	addiw	a1,s6,1
+  ce740e:	e5040513          	addi	a0,s0,-432
+  ce7412:	ffbb1097          	auipc	ra,0xffbb1
+  ce7416:	ab6080e7          	jalr	-1354(ra) # 897ec8 <_Z25shift_bytes_in_array_leftPhjj>
+  ce741a:	e5140593          	addi	a1,s0,-431
+  ce741e:	0820106f          	j	ce84a0 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x24f4>
+  ce7422:	050b3503          	ld	a0,80(s6)
+  ce7426:	00056583          	lwu	a1,0(a0)
+  ce742a:	01b5f5b3          	and	a1,a1,s11
+  ce742e:	09b00613          	li	a2,155
+  ce7432:	c2c59c63          	bne	a1,a2,ce686a <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x8be>
+  ce7436:	4581                	li	a1,0
+  ce7438:	06a0d0ef          	jal	cf44a2 <_Z7SSA_VALP9tree_nodePb>
+  ce743c:	ffbeb097          	auipc	ra,0xffbeb
+  ce7440:	a46080e7          	jalr	-1466(ra) # 8d1e82 <_Z23is_gimple_min_invariantPK9tree_node>
+  ce7444:	c2050363          	beqz	a0,ce686a <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x8be>
+  ce7448:	b5a9                	j	ce7292 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x12e6>
+  ce744a:	4561                	li	a0,24
+  ce744c:	ffc54097          	auipc	ra,0xffc54
+  ce7450:	8e6080e7          	jalr	-1818(ra) # 93ad32 <_Z21internal_fn_len_index11internal_fn>
+  ce7454:	84aa                	mv	s1,a0
+  ce7456:	050d                	addi	a0,a0,3
+  ce7458:	1502                	slli	a0,a0,0x20
+  ce745a:	8175                	srli	a0,a0,0x1d
+  ce745c:	955a                	add	a0,a0,s6
+  ce745e:	07053c03          	ld	s8,112(a0)
+  ce7462:	8562                	mv	a0,s8
+  ce7464:	5d2d30ef          	jal	dbaa36 <_Z16tree_fits_uhwi_pPK9tree_node>
+  ce7468:	2e050463          	beqz	a0,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce746c:	0491                	addi	s1,s1,4
+  ce746e:	1482                	slli	s1,s1,0x20
+  ce7470:	80f5                	srli	s1,s1,0x1d
+  ce7472:	94da                	add	s1,s1,s6
+  ce7474:	0704bc83          	ld	s9,112(s1)
+  ce7478:	8566                	mv	a0,s9
+  ce747a:	5a0d30ef          	jal	dbaa1a <_Z16tree_fits_shwi_pPK9tree_node>
+  ce747e:	2c050963          	beqz	a0,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce7482:	4b81                	li	s7,0
+  ce7484:	856a                	mv	a0,s10
+  ce7486:	ffc54097          	auipc	ra,0xffc54
+  ce748a:	95e080e7          	jalr	-1698(ra) # 93ade4 <_Z30internal_fn_stored_value_index11internal_fn>
+  ce748e:	050d                	addi	a0,a0,3
+  ce7490:	03ade4b7          	lui	s1,0x3ade
+  ce7494:	1502                	slli	a0,a0,0x20
+  ce7496:	8175                	srli	a0,a0,0x1d
+  ce7498:	955a                	add	a0,a0,s6
+  ce749a:	7928                	ld	a0,112(a0)
+  ce749c:	6c04b583          	ld	a1,1728(s1) # 3ade6c0 <vn_valueize>
+  ce74a0:	9582                	jalr	a1
+  ce74a2:	8a2a                	mv	s4,a0
+  ce74a4:	00056503          	lwu	a0,0(a0)
+  ce74a8:	01b57533          	and	a0,a0,s11
+  ce74ac:	02000593          	li	a1,32
+  ce74b0:	2ab51063          	bne	a0,a1,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce74b4:	6c04b583          	ld	a1,1728(s1)
+  ce74b8:	088b3503          	ld	a0,136(s6)
+  ce74bc:	9582                	jalr	a1
+  ce74be:	008a3583          	ld	a1,8(s4)
+  ce74c2:	7190                	ld	a2,32(a1)
+  ce74c4:	85aa                	mv	a1,a0
+  ce74c6:	f3840513          	addi	a0,s0,-200
+  ce74ca:	b35530ef          	jal	c3affe <_Z29ao_ref_init_from_ptr_and_sizeP6ao_refP9tree_nodeS2_>
+  ce74ce:	f3840513          	addi	a0,s0,-200
+  ce74d2:	900530ef          	jal	c3a5d2 <_Z11ao_ref_baseP6ao_ref>
+  ce74d6:	862a                	mv	a2,a0
+  ce74d8:	f4840513          	addi	a0,s0,-184
+  ce74dc:	f5840593          	addi	a1,s0,-168
+  ce74e0:	cd817057          	vsetivli	zero,2,e64,m1,ta,ma
+  ce74e4:	02057407          	vle64.v	v8,(a0)
+  ce74e8:	f6843503          	ld	a0,-152(s0)
+  ce74ec:	f7043483          	ld	s1,-144(s0)
+  ce74f0:	0205f487          	vle64.v	v9,(a1)
+  ce74f4:	e5040593          	addi	a1,s0,-432
+  ce74f8:	0205f427          	vse64.v	v8,(a1)
+  ce74fc:	d0040593          	addi	a1,s0,-768
+  ce7500:	0205f4a7          	vse64.v	v9,(a1)
+  ce7504:	e481                	bnez	s1,ce750c <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1560>
+  ce7506:	55fd                	li	a1,-1
+  ce7508:	24b50463          	beq	a0,a1,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce750c:	d0843583          	ld	a1,-760(s0)
+  ce7510:	24b49063          	bne	s1,a1,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce7514:	d0043583          	ld	a1,-768(s0)
+  ce7518:	22b51c63          	bne	a0,a1,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce751c:	f2040593          	addi	a1,s0,-224
+  ce7520:	e5040693          	addi	a3,s0,-432
+  ce7524:	8556                	mv	a0,s5
+  ce7526:	31d070ef          	jal	cef042 <_ZL37adjust_offsets_for_equal_base_addressP9tree_nodeP8poly_intILj2ElES0_S3_>
+  ce752a:	22050363          	beqz	a0,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce752e:	f1843503          	ld	a0,-232(s0)
+  ce7532:	20051f63          	bnez	a0,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce7536:	f1043503          	ld	a0,-240(s0)
+  ce753a:	f2843583          	ld	a1,-216(s0)
+  ce753e:	f8a43423          	sd	a0,-120(s0)
+  ce7542:	20059763          	bnez	a1,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce7546:	e5843503          	ld	a0,-424(s0)
+  ce754a:	20051363          	bnez	a0,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce754e:	20049163          	bnez	s1,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce7552:	f2043503          	ld	a0,-224(s0)
+  ce7556:	cea43c23          	sd	a0,-776(s0)
+  ce755a:	e5043d83          	ld	s11,-432(s0)
+  ce755e:	f2040513          	addi	a0,s0,-224
+  ce7562:	f1040593          	addi	a1,s0,-240
+  ce7566:	e5040613          	addi	a2,s0,-432
+  ce756a:	d0040693          	addi	a3,s0,-768
+  ce756e:	ffa79097          	auipc	ra,0xffa79
+  ce7572:	198080e7          	jalr	408(ra) # 760706 <_Z22ranges_maybe_overlap_pI8poly_intILj2ElES1_S1_S1_EbRKT_RKT0_RKT1_RKT2_>
+  ce7576:	1c050e63          	beqz	a0,ce7752 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a6>
+  ce757a:	f2040513          	addi	a0,s0,-224
+  ce757e:	f1040593          	addi	a1,s0,-240
+  ce7582:	e5040613          	addi	a2,s0,-432
+  ce7586:	d0040693          	addi	a3,s0,-768
+  ce758a:	5f00d0ef          	jal	cf4b7a <_Z22ranges_known_overlap_pI8poly_intILj2ElES1_S1_S1_EbRKT_RKT0_RKT1_RKT2_>
+  ce758e:	1c050163          	beqz	a0,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce7592:	090b3503          	ld	a0,144(s6)
+  ce7596:	6508                	ld	a0,8(a0)
+  ce7598:	ffa75097          	auipc	ra,0xffa75
+  ce759c:	96a080e7          	jalr	-1686(ra) # 75bf02 <_Z19get_deref_alias_setP9tree_node>
+  ce75a0:	008a3a83          	ld	s5,8(s4)
+  ce75a4:	008ab583          	ld	a1,8(s5)
+  ce75a8:	6d8c                	ld	a1,24(a1)
+  ce75aa:	cea43823          	sd	a0,-784(s0)
+  ce75ae:	852e                	mv	a0,a1
+  ce75b0:	23ed30ef          	jal	dba7ee <_Z12tree_to_uhwiPK9tree_node>
+  ce75b4:	4a0b8ce3          	beqz	s7,ce826c <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x22c0>
+  ce75b8:	8b2a                	mv	s6,a0
+  ce75ba:	4d01                	li	s10,0
+  ce75bc:	4c01                	li	s8,0
+  ce75be:	4c81                	li	s9,0
+  ce75c0:	4485                	li	s1,1
+  ce75c2:	597d                	li	s2,-1
+  ce75c4:	ad45                	j	ce7c74 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1cc8>
+  ce75c6:	02893503          	ld	a0,40(s2)
+  ce75ca:	f1843583          	ld	a1,-232(s0)
+  ce75ce:	18b51163          	bne	a0,a1,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce75d2:	02093503          	ld	a0,32(s2)
+  ce75d6:	f1043583          	ld	a1,-240(s0)
+  ce75da:	16b51b63          	bne	a0,a1,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce75de:	090b3503          	ld	a0,144(s6)
+  ce75e2:	0ecd30ef          	jal	dba6ce <_Z13integer_zeropPK9tree_node>
+  ce75e6:	16050563          	beqz	a0,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce75ea:	8526                	mv	a0,s1
+  ce75ec:	01cd70ef          	jal	dbe608 <_Z22tree_fits_poly_int64_pPK9tree_node>
+  ce75f0:	16050063          	beqz	a0,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce75f4:	8526                	mv	a0,s1
+  ce75f6:	777d60ef          	jal	dbe56c <_Z18tree_to_poly_int64PK9tree_node>
+  ce75fa:	14059b63          	bnez	a1,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce75fe:	55fd                	li	a1,-1
+  ce7600:	8191                	srli	a1,a1,0x4
+  ce7602:	14a5c763          	blt	a1,a0,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce7606:	f2843583          	ld	a1,-216(s0)
+  ce760a:	14059363          	bnez	a1,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce760e:	f2043583          	ld	a1,-224(s0)
+  ce7612:	f0843603          	ld	a2,-248(s0)
+  ce7616:	f8b43823          	sd	a1,-112(s0)
+  ce761a:	12061b63          	bnez	a2,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce761e:	f1843603          	ld	a2,-232(s0)
+  ce7622:	12061763          	bnez	a2,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce7626:	f1043603          	ld	a2,-240(s0)
+  ce762a:	f0043483          	ld	s1,-256(s0)
+  ce762e:	56fd                	li	a3,-1
+  ce7630:	f8c43423          	sd	a2,-120(s0)
+  ce7634:	10d60e63          	beq	a2,a3,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce7638:	86ae                	mv	a3,a1
+  ce763a:	0095c363          	blt	a1,s1,ce7640 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1694>
+  ce763e:	86a6                	mv	a3,s1
+  ce7640:	40d48733          	sub	a4,s1,a3
+  ce7644:	10c77663          	bgeu	a4,a2,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce7648:	00351913          	slli	s2,a0,0x3
+  ce764c:	8d95                	sub	a1,a1,a3
+  ce764e:	1125f163          	bgeu	a1,s2,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce7652:	4501                	li	a0,0
+  ce7654:	4581                	li	a1,0
+  ce7656:	6ffd30ef          	jal	dbb554 <_Z17build_constructorP9tree_nodeP3vecI15constructor_elt5va_gc8vl_embedE>
+  ce765a:	f9043703          	ld	a4,-112(s0)
+  ce765e:	f8843783          	ld	a5,-120(s0)
+  ce7662:	e2a43823          	sd	a0,-464(s0)
+  ce7666:	e2043c23          	sd	zero,-456(s0)
+  ce766a:	e4943023          	sd	s1,-448(s0)
+  ce766e:	e5243423          	sd	s2,-440(s0)
+  ce7672:	e3040593          	addi	a1,s0,-464
+  ce7676:	856a                	mv	a0,s10
+  ce7678:	4601                	li	a2,0
+  ce767a:	4681                	li	a3,0
+  ce767c:	990fc0ef          	jal	ce380c <_ZN15vn_walk_cb_data16push_partial_defE7pd_dataiill>
+  ce7680:	a8c9                	j	ce7752 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a6>
+  ce7682:	89ea                	mv	s3,s10
+  ce7684:	8d56                	mv	s10,s5
+  ce7686:	8cca                	mv	s9,s2
+  ce7688:	010a3903          	ld	s2,16(s4)
+  ce768c:	00ca2a83          	lw	s5,12(s4)
+  ce7690:	00090863          	beqz	s2,ce76a0 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x16f4>
+  ce7694:	00492503          	lw	a0,4(s2)
+  ce7698:	40aa853b          	subw	a0,s5,a0
+  ce769c:	00aa2623          	sw	a0,12(s4)
+  ce76a0:	000b4503          	lbu	a0,0(s6)
+  ce76a4:	1555                	addi	a0,a0,-11
+  ce76a6:	55ed                	li	a1,-5
+  ce76a8:	0eb57463          	bgeu	a0,a1,ce7790 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17e4>
+  ce76ac:	4501                	li	a0,0
+  ce76ae:	a0dd                	j	ce7794 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17e8>
+  ce76b0:	02893503          	ld	a0,40(s2)
+  ce76b4:	f1843583          	ld	a1,-232(s0)
+  ce76b8:	8d4d                	or	a0,a0,a1
+  ce76ba:	e959                	bnez	a0,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce76bc:	02093503          	ld	a0,32(s2)
+  ce76c0:	f1043583          	ld	a1,-240(s0)
+  ce76c4:	08b51663          	bne	a0,a1,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce76c8:	f2843583          	ld	a1,-216(s0)
+  ce76cc:	f8a43423          	sd	a0,-120(s0)
+  ce76d0:	e1c1                	bnez	a1,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce76d2:	f2043583          	ld	a1,-224(s0)
+  ce76d6:	e5843603          	ld	a2,-424(s0)
+  ce76da:	f8b43823          	sd	a1,-112(s0)
+  ce76de:	ea2d                	bnez	a2,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce76e0:	d0843603          	ld	a2,-760(s0)
+  ce76e4:	e635                	bnez	a2,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce76e6:	56fd                	li	a3,-1
+  ce76e8:	06d50463          	beq	a0,a3,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce76ec:	d0043603          	ld	a2,-768(s0)
+  ce76f0:	06d60063          	beq	a2,a3,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce76f4:	e5043683          	ld	a3,-432(s0)
+  ce76f8:	872e                	mv	a4,a1
+  ce76fa:	00d5c363          	blt	a1,a3,ce7700 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1754>
+  ce76fe:	8736                	mv	a4,a3
+  ce7700:	40e687b3          	sub	a5,a3,a4
+  ce7704:	04a7f663          	bgeu	a5,a0,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce7708:	8d99                	sub	a1,a1,a4
+  ce770a:	04c5f363          	bgeu	a1,a2,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce770e:	050b3503          	ld	a0,80(s6)
+  ce7712:	e0a43823          	sd	a0,-496(s0)
+  ce7716:	e0043c23          	sd	zero,-488(s0)
+  ce771a:	e2d43023          	sd	a3,-480(s0)
+  ce771e:	e2c43423          	sd	a2,-472(s0)
+  ce7722:	f3840513          	addi	a0,s0,-200
+  ce7726:	df2530ef          	jal	c3ad18 <_Z16ao_ref_alias_setP6ao_ref>
+  ce772a:	892a                	mv	s2,a0
+  ce772c:	f3840513          	addi	a0,s0,-200
+  ce7730:	d8e530ef          	jal	c3acbe <_Z21ao_ref_base_alias_setP6ao_ref>
+  ce7734:	f9043703          	ld	a4,-112(s0)
+  ce7738:	f8843783          	ld	a5,-120(s0)
+  ce773c:	86aa                	mv	a3,a0
+  ce773e:	e1040593          	addi	a1,s0,-496
+  ce7742:	856a                	mv	a0,s10
+  ce7744:	864a                	mv	a2,s2
+  ce7746:	8c6fc0ef          	jal	ce380c <_ZN15vn_walk_cb_data16push_partial_defE7pd_dataiill>
+  ce774a:	a021                	j	ce7752 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a6>
+  ce774c:	10090063          	beqz	s2,ce784c <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x18a0>
+  ce7750:	557d                	li	a0,-1
+  ce7752:	cd040113          	addi	sp,s0,-816
+  ce7756:	32813083          	ld	ra,808(sp)
+  ce775a:	32013403          	ld	s0,800(sp)
+  ce775e:	31813483          	ld	s1,792(sp)
+  ce7762:	31013903          	ld	s2,784(sp)
+  ce7766:	30813983          	ld	s3,776(sp)
+  ce776a:	30013a03          	ld	s4,768(sp)
+  ce776e:	2f813a83          	ld	s5,760(sp)
+  ce7772:	2f013b03          	ld	s6,752(sp)
+  ce7776:	2e813b83          	ld	s7,744(sp)
+  ce777a:	2e013c03          	ld	s8,736(sp)
+  ce777e:	2d813c83          	ld	s9,728(sp)
+  ce7782:	2d013d03          	ld	s10,720(sp)
+  ce7786:	2c813d83          	ld	s11,712(sp)
+  ce778a:	33010113          	addi	sp,sp,816
+  ce778e:	8082                	ret
+  ce7790:	040b3503          	ld	a0,64(s6)
+  ce7794:	f24fd0ef          	jal	ce4eb8 <_ZL12vuse_ssa_valP9tree_node>
+  ce7798:	00aa3823          	sd	a0,16(s4)
+  ce779c:	c519                	beqz	a0,ce77aa <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17fe>
+  ce779e:	00ca2583          	lw	a1,12(s4)
+  ce77a2:	4148                	lw	a0,4(a0)
+  ce77a4:	952e                	add	a0,a0,a1
+  ce77a6:	00aa2623          	sw	a0,12(s4)
+  ce77aa:	e4043823          	sd	zero,-432(s0)
+  ce77ae:	e5040593          	addi	a1,s0,-432
+  ce77b2:	8552                	mv	a0,s4
+  ce77b4:	e26fe0ef          	jal	ce5dda <_ZL21vn_reference_lookup_1P14vn_reference_sPS0_>
+  ce77b8:	e5043503          	ld	a0,-432(s0)
+  ce77bc:	015a2623          	sw	s5,12(s4)
+  ce77c0:	012a3823          	sd	s2,16(s4)
+  ce77c4:	c121                	beqz	a0,ce7804 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1858>
+  ce77c6:	892a                	mv	s2,a0
+  ce77c8:	0004e503          	lwu	a0,0(s1)
+  ce77cc:	01857533          	and	a0,a0,s8
+  ce77d0:	09b00593          	li	a1,155
+  ce77d4:	00b51763          	bne	a0,a1,ce77e2 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1836>
+  ce77d8:	8526                	mv	a0,s1
+  ce77da:	4581                	li	a1,0
+  ce77dc:	4c70c0ef          	jal	cf44a2 <_Z7SSA_VALP9tree_nodePb>
+  ce77e0:	84aa                	mv	s1,a0
+  ce77e2:	05893503          	ld	a0,88(s2)
+  ce77e6:	cd19                	beqz	a0,ce7804 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1858>
+  ce77e8:	85a6                	mv	a1,s1
+  ce77ea:	4601                	li	a2,0
+  ce77ec:	ffba4097          	auipc	ra,0xffba4
+  ce77f0:	b00080e7          	jalr	-1280(ra) # 88b2ec <_Z15operand_equal_pPK9tree_nodeS1_j>
+  ce77f4:	85aa                	mv	a1,a0
+  ce77f6:	854a                	mv	a0,s2
+  ce77f8:	8966                	mv	s2,s9
+  ce77fa:	8aea                	mv	s5,s10
+  ce77fc:	8d4e                	mv	s10,s3
+  ce77fe:	f9b1                	bnez	a1,ce7752 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a6>
+  ce7800:	c33fe06f          	j	ce6432 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x486>
+  ce7804:	8966                	mv	s2,s9
+  ce7806:	8aea                	mv	s5,s10
+  ce7808:	8d4e                	mv	s10,s3
+  ce780a:	c29fe06f          	j	ce6432 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x486>
+  ce780e:	8b52                	mv	s6,s4
+  ce7810:	4188                	lw	a0,0(a1)
+  ce7812:	fffd8613          	addi	a2,s11,-1
+  ce7816:	8d71                	and	a0,a0,a2
+  ce7818:	3569                	addiw	a0,a0,-6
+  ce781a:	460d                	li	a2,3
+  ce781c:	02a66463          	bltu	a2,a0,ce7844 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1898>
+  ce7820:	7488                	ld	a0,40(s1)
+  ce7822:	e911                	bnez	a0,ce7836 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x188a>
+  ce7824:	7088                	ld	a0,32(s1)
+  ce7826:	4621                	li	a2,8
+  ce7828:	00c51763          	bne	a0,a2,ce7836 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x188a>
+  ce782c:	f9044503          	lbu	a0,-112(s0)
+  ce7830:	891d                	andi	a0,a0,7
+  ce7832:	4c050e63          	beqz	a0,ce7d0e <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1d62>
+  ce7836:	0345e503          	lwu	a0,52(a1)
+  ce783a:	01b57533          	and	a0,a0,s11
+  ce783e:	4605                	li	a2,1
+  ce7840:	1cc51163          	bne	a0,a2,ce7a02 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1a56>
+  ce7844:	7188                	ld	a0,32(a1)
+  ce7846:	01052a03          	lw	s4,16(a0)
+  ce784a:	a2f1                	j	ce7a16 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1a6a>
+  ce784c:	4d01                	li	s10,0
+  ce784e:	ce043423          	sd	zero,-792(s0)
+  ce7852:	8da6                	mv	s11,s1
+  ce7854:	0404cf63          	bltz	s1,ce78b2 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1906>
+  ce7858:	000ab583          	ld	a1,0(s5)
+  ce785c:	001d8513          	addi	a0,s11,1
+  ce7860:	003d9613          	slli	a2,s11,0x3
+  ce7864:	006d9693          	slli	a3,s11,0x6
+  ce7868:	8e91                	sub	a3,a3,a2
+  ce786a:	95b6                	add	a1,a1,a3
+  ce786c:	05a1                	addi	a1,a1,8
+  ce786e:	03700613          	li	a2,55
+  ce7872:	a031                	j	ce787e <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x18d2>
+  ce7874:	157d                	addi	a0,a0,-1
+  ce7876:	fc858593          	addi	a1,a1,-56
+  ce787a:	02a05c63          	blez	a0,ce78b2 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1906>
+  ce787e:	0005d683          	lhu	a3,0(a1)
+  ce7882:	fec699e3          	bne	a3,a2,ce7874 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x18c8>
+  ce7886:	0065c683          	lbu	a3,6(a1)
+  ce788a:	8a85                	andi	a3,a3,1
+  ce788c:	d6e5                	beqz	a3,ce7874 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x18c8>
+  ce788e:	b5c9                	j	ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce7890:	00875703          	lhu	a4,8(a4)
+  ce7894:	0a700793          	li	a5,167
+  ce7898:	eaf71ce3          	bne	a4,a5,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce789c:	e601                	bnez	a2,ce78a4 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x18f8>
+  ce789e:	577d                	li	a4,-1
+  ce78a0:	eae688e3          	beq	a3,a4,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce78a4:	40b68d33          	sub	s10,a3,a1
+  ce78a8:	8e09                	sub	a2,a2,a0
+  ce78aa:	cec43423          	sd	a2,-792(s0)
+  ce78ae:	fa0dd5e3          	bgez	s11,ce7858 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x18ac>
+  ce78b2:	050b3503          	ld	a0,80(s6)
+  ce78b6:	f0040593          	addi	a1,s0,-256
+  ce78ba:	cea43023          	sd	a0,-800(s0)
+  ce78be:	262010ef          	jal	ce8b20 <_ZL27copy_reference_ops_from_refP9tree_nodeP3vecI22vn_reference_op_struct7va_heap6vl_ptrE>
+  ce78c2:	ce843503          	ld	a0,-792(s0)
+  ce78c6:	01a56533          	or	a0,a0,s10
+  ce78ca:	cca43c23          	sd	a0,-808(s0)
+  ce78ce:	4c050963          	beqz	a0,ce7da0 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1df4>
+  ce78d2:	f0043903          	ld	s2,-256(s0)
+  ce78d6:	e6090de3          	beqz	s2,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce78da:	00492503          	lw	a0,4(s2)
+  ce78de:	4589                	li	a1,2
+  ce78e0:	02b56763          	bltu	a0,a1,ce790e <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1962>
+  ce78e4:	1579                	addi	a0,a0,-2
+  ce78e6:	1502                	slli	a0,a0,0x20
+  ce78e8:	01d55593          	srli	a1,a0,0x1d
+  ce78ec:	8169                	srli	a0,a0,0x1a
+  ce78ee:	8d0d                	sub	a0,a0,a1
+  ce78f0:	00a904b3          	add	s1,s2,a0
+  ce78f4:	0084d503          	lhu	a0,8(s1)
+  ce78f8:	0a700593          	li	a1,167
+  ce78fc:	00b51963          	bne	a0,a1,ce790e <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1962>
+  ce7900:	6c88                	ld	a0,24(s1)
+  ce7902:	6894                	ld	a3,16(s1)
+  ce7904:	46051763          	bnez	a0,ce7d72 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1dc6>
+  ce7908:	567d                	li	a2,-1
+  ce790a:	46c69463          	bne	a3,a2,ce7d72 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1dc6>
+  ce790e:	557d                	li	a0,-1
+  ce7910:	a795                	j	ce8074 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x20c8>
+  ce7912:	090a                	slli	s2,s2,0x2
+  ce7914:	0272e537          	lui	a0,0x272e
+  ce7918:	80050513          	addi	a0,a0,-2048 # 272d800 <tree_code_type>
+  ce791c:	954a                	add	a0,a0,s2
+  ce791e:	4108                	lw	a0,0(a0)
+  ce7920:	458d                	li	a1,3
+  ce7922:	e2b517e3          	bne	a0,a1,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce7926:	4501                	li	a0,0
+  ce7928:	85a6                	mv	a1,s1
+  ce792a:	ffbab097          	auipc	ra,0xffbab
+  ce792e:	33e080e7          	jalr	830(ra) # 892c68 <_Z24build_fold_addr_expr_locmP9tree_node>
+  ce7932:	8baa                	mv	s7,a0
+  ce7934:	000bd583          	lhu	a1,0(s7)
+  ce7938:	09b00513          	li	a0,155
+  ce793c:	00a58663          	beq	a1,a0,ce7948 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x199c>
+  ce7940:	08500613          	li	a2,133
+  ce7944:	e0c596e3          	bne	a1,a2,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce7948:	090a3b03          	ld	s6,144(s4)
+  ce794c:	f0040593          	addi	a1,s0,-256
+  ce7950:	cd817057          	vsetivli	zero,2,e64,m1,ta,ma
+  ce7954:	5e003457          	vmv.v.i	v8,0
+  ce7958:	0205f427          	vse64.v	v8,(a1)
+  ce795c:	000b6583          	lwu	a1,0(s6)
+  ce7960:	01b5f633          	and	a2,a1,s11
+  ce7964:	00a61a63          	bne	a2,a0,ce7978 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x19cc>
+  ce7968:	03ade537          	lui	a0,0x3ade
+  ce796c:	6c053583          	ld	a1,1728(a0) # 3ade6c0 <vn_valueize>
+  ce7970:	855a                	mv	a0,s6
+  ce7972:	9582                	jalr	a1
+  ce7974:	8b2a                	mv	s6,a0
+  ce7976:	410c                	lw	a1,0(a0)
+  ce7978:	01b5f533          	and	a0,a1,s11
+  ce797c:	08500d13          	li	s10,133
+  ce7980:	1da51463          	bne	a0,s10,ce7b48 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1b9c>
+  ce7984:	008b3503          	ld	a0,8(s6)
+  ce7988:	6508                	ld	a0,8(a0)
+  ce798a:	00056583          	lwu	a1,0(a0)
+  ce798e:	01b5f5b3          	and	a1,a1,s11
+  ce7992:	15bd                	addi	a1,a1,-17
+  ce7994:	460d                	li	a2,3
+  ce7996:	00b66863          	bltu	a2,a1,ce79a6 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x19fa>
+  ce799a:	00454503          	lbu	a0,4(a0)
+  ce799e:	08057513          	andi	a0,a0,128
+  ce79a2:	da0517e3          	bnez	a0,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce79a6:	018b3503          	ld	a0,24(s6)
+  ce79aa:	f0040593          	addi	a1,s0,-256
+  ce79ae:	ffed3097          	auipc	ra,0xffed3
+  ce79b2:	8cc080e7          	jalr	-1844(ra) # bba27a <_Z29get_addr_base_and_unit_offsetP9tree_nodeP8poly_intILj2ElE>
+  ce79b6:	d8050de3          	beqz	a0,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce79ba:	8b2a                	mv	s6,a0
+  ce79bc:	00056503          	lwu	a0,0(a0)
+  ce79c0:	01b57933          	and	s2,a0,s11
+  ce79c4:	0a700513          	li	a0,167
+  ce79c8:	14a91b63          	bne	s2,a0,ce7b1e <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1b72>
+  ce79cc:	020b3483          	ld	s1,32(s6)
+  ce79d0:	8526                	mv	a0,s1
+  ce79d2:	54fd60ef          	jal	dbe720 <_Z23tree_fits_poly_uint64_pPK9tree_node>
+  ce79d6:	14050463          	beqz	a0,ce7b1e <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1b72>
+  ce79da:	8526                	mv	a0,s1
+  ce79dc:	463d60ef          	jal	dbe63e <_Z19tree_to_poly_uint64PK9tree_node>
+  ce79e0:	f0040613          	addi	a2,s0,-256
+  ce79e4:	cd817057          	vsetivli	zero,2,e64,m1,ta,ma
+  ce79e8:	02067407          	vle64.v	v8,(a2)
+  ce79ec:	018b3b03          	ld	s6,24(s6)
+  ce79f0:	5e0544d7          	vmv.v.x	v9,a0
+  ce79f4:	3e95e4d7          	vslide1down.vx	v9,v9,a1
+  ce79f8:	02848457          	vadd.vv	v8,v8,v9
+  ce79fc:	02067427          	vse64.v	v8,(a2)
+  ce7a00:	a2a1                	j	ce7b48 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1b9c>
+  ce7a02:	050a                	slli	a0,a0,0x2
+  ce7a04:	036815b7          	lui	a1,0x3681
+  ce7a08:	03858593          	addi	a1,a1,56 # 3681038 <mode_size>
+  ce7a0c:	952e                	add	a0,a0,a1
+  ce7a0e:	00055503          	lhu	a0,0(a0)
+  ce7a12:	01b57a33          	and	s4,a0,s11
+  ce7a16:	001a0a9b          	addiw	s5,s4,1
+  ce7a1a:	020a9613          	slli	a2,s5,0x20
+  ce7a1e:	9201                	srli	a2,a2,0x20
+  ce7a20:	00f60513          	addi	a0,a2,15
+  ce7a24:	9941                	andi	a0,a0,-16
+  ce7a26:	40a104b3          	sub	s1,sp,a0
+  ce7a2a:	8126                	mv	sp,s1
+  ce7a2c:	090bb503          	ld	a0,144(s7)
+  ce7a30:	690c                	ld	a1,16(a0)
+  ce7a32:	8526                	mv	a0,s1
+  ce7a34:	ff97f097          	auipc	ra,0xff97f
+  ce7a38:	98c080e7          	jalr	-1652(ra) # 6663c0 <memset@plt>
+  ce7a3c:	03b1a537          	lui	a0,0x3b1a
+  ce7a40:	b9854583          	lbu	a1,-1128(a0) # 3b19b98 <global_options+0x100>
+  ce7a44:	f9043503          	ld	a0,-112(s0)
+  ce7a48:	8985                	andi	a1,a1,1
+  ce7a4a:	ed81                	bnez	a1,ce7a62 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1ab6>
+  ce7a4c:	891d                	andi	a0,a0,7
+  ce7a4e:	c51d                	beqz	a0,ce7a7c <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1ad0>
+  ce7a50:	4621                	li	a2,8
+  ce7a52:	8e09                	sub	a2,a2,a0
+  ce7a54:	8526                	mv	a0,s1
+  ce7a56:	85d6                	mv	a1,s5
+  ce7a58:	ffbb0097          	auipc	ra,0xffbb0
+  ce7a5c:	470080e7          	jalr	1136(ra) # 897ec8 <_Z25shift_bytes_in_array_leftPhjj>
+  ce7a60:	a821                	j	ce7a78 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1acc>
+  ce7a62:	954e                	add	a0,a0,s3
+  ce7a64:	891d                	andi	a0,a0,7
+  ce7a66:	c919                	beqz	a0,ce7a7c <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1ad0>
+  ce7a68:	4621                	li	a2,8
+  ce7a6a:	8e09                	sub	a2,a2,a0
+  ce7a6c:	8526                	mv	a0,s1
+  ce7a6e:	85d6                	mv	a1,s5
+  ce7a70:	ffbb0097          	auipc	ra,0xffbb0
+  ce7a74:	554080e7          	jalr	1364(ra) # 897fc4 <_Z26shift_bytes_in_array_rightPhjj>
+  ce7a78:	0485                	addi	s1,s1,1
+  ce7a7a:	a011                	j	ce7a7e <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1ad2>
+  ce7a7c:	8a56                	mv	s4,s5
+  ce7a7e:	040b3503          	ld	a0,64(s6)
+  ce7a82:	85a6                	mv	a1,s1
+  ce7a84:	8652                	mv	a2,s4
+  ce7a86:	ffbb0097          	auipc	ra,0xffbb0
+  ce7a8a:	9b6080e7          	jalr	-1610(ra) # 89743c <_Z21native_interpret_exprP9tree_nodePKhi>
+  ce7a8e:	86aa                	mv	a3,a0
+  ce7a90:	557d                	li	a0,-1
+  ce7a92:	cc0680e3          	beqz	a3,ce7752 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a6>
+  ce7a96:	856a                	mv	a0,s10
+  ce7a98:	4581                	li	a1,0
+  ce7a9a:	4601                	li	a2,0
+  ce7a9c:	b9ffb0ef          	jal	ce363a <_ZN15vn_walk_cb_data6finishEiiP9tree_node>
+  ce7aa0:	b94d                	j	ce7752 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a6>
+  ce7aa2:	f8843503          	ld	a0,-120(s0)
+  ce7aa6:	55fd                	li	a1,-1
+  ce7aa8:	cab504e3          	beq	a0,a1,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce7aac:	caba82e3          	beq	s5,a1,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce7ab0:	f9043583          	ld	a1,-112(s0)
+  ce7ab4:	862e                	mv	a2,a1
+  ce7ab6:	0095c363          	blt	a1,s1,ce7abc <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1b10>
+  ce7aba:	8626                	mv	a2,s1
+  ce7abc:	40c486b3          	sub	a3,s1,a2
+  ce7ac0:	c8a6f8e3          	bgeu	a3,a0,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce7ac4:	8d91                	sub	a1,a1,a2
+  ce7ac6:	c955f5e3          	bgeu	a1,s5,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce7aca:	050b3503          	ld	a0,80(s6)
+  ce7ace:	00056583          	lwu	a1,0(a0)
+  ce7ad2:	01b5f5b3          	and	a1,a1,s11
+  ce7ad6:	09b00613          	li	a2,155
+  ce7ada:	00c59563          	bne	a1,a2,ce7ae4 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1b38>
+  ce7ade:	4581                	li	a1,0
+  ce7ae0:	1c30c0ef          	jal	cf44a2 <_Z7SSA_VALP9tree_nodePb>
+  ce7ae4:	dea43823          	sd	a0,-528(s0)
+  ce7ae8:	de043c23          	sd	zero,-520(s0)
+  ce7aec:	e0943023          	sd	s1,-512(s0)
+  ce7af0:	e1543423          	sd	s5,-504(s0)
+  ce7af4:	f3840513          	addi	a0,s0,-200
+  ce7af8:	a20530ef          	jal	c3ad18 <_Z16ao_ref_alias_setP6ao_ref>
+  ce7afc:	84aa                	mv	s1,a0
+  ce7afe:	f3840513          	addi	a0,s0,-200
+  ce7b02:	9bc530ef          	jal	c3acbe <_Z21ao_ref_base_alias_setP6ao_ref>
+  ce7b06:	f9043703          	ld	a4,-112(s0)
+  ce7b0a:	f8843783          	ld	a5,-120(s0)
+  ce7b0e:	86aa                	mv	a3,a0
+  ce7b10:	df040593          	addi	a1,s0,-528
+  ce7b14:	856a                	mv	a0,s10
+  ce7b16:	8626                	mv	a2,s1
+  ce7b18:	cf5fb0ef          	jal	ce380c <_ZN15vn_walk_cb_data16push_partial_defE7pd_dataiill>
+  ce7b1c:	b91d                	j	ce7752 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a6>
+  ce7b1e:	02100513          	li	a0,33
+  ce7b22:	00a90c63          	beq	s2,a0,ce7b3a <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1b8e>
+  ce7b26:	090a                	slli	s2,s2,0x2
+  ce7b28:	0272e537          	lui	a0,0x272e
+  ce7b2c:	80050513          	addi	a0,a0,-2048 # 272d800 <tree_code_type>
+  ce7b30:	954a                	add	a0,a0,s2
+  ce7b32:	4108                	lw	a0,0(a0)
+  ce7b34:	458d                	li	a1,3
+  ce7b36:	c0b51de3          	bne	a0,a1,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce7b3a:	4501                	li	a0,0
+  ce7b3c:	85da                	mv	a1,s6
+  ce7b3e:	ffbab097          	auipc	ra,0xffbab
+  ce7b42:	12a080e7          	jalr	298(ra) # 892c68 <_Z24build_fold_addr_expr_locmP9tree_node>
+  ce7b46:	8b2a                	mv	s6,a0
+  ce7b48:	000b5503          	lhu	a0,0(s6)
+  ce7b4c:	01a50b63          	beq	a0,s10,ce7b62 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1bb6>
+  ce7b50:	09b00593          	li	a1,155
+  ce7b54:	beb51ee3          	bne	a0,a1,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce7b58:	855a                	mv	a0,s6
+  ce7b5a:	4581                	li	a1,0
+  ce7b5c:	1470c0ef          	jal	cf44a2 <_Z7SSA_VALP9tree_nodePb>
+  ce7b60:	8b2a                	mv	s6,a0
+  ce7b62:	000ae503          	lwu	a0,0(s5)
+  ce7b66:	01b57533          	and	a0,a0,s11
+  ce7b6a:	0a700593          	li	a1,167
+  ce7b6e:	02b51f63          	bne	a0,a1,ce7bac <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1c00>
+  ce7b72:	018ab503          	ld	a0,24(s5)
+  ce7b76:	bd751de3          	bne	a0,s7,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce7b7a:	020ab483          	ld	s1,32(s5)
+  ce7b7e:	8526                	mv	a0,s1
+  ce7b80:	3a1d60ef          	jal	dbe720 <_Z23tree_fits_poly_uint64_pPK9tree_node>
+  ce7b84:	bc0506e3          	beqz	a0,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce7b88:	8526                	mv	a0,s1
+  ce7b8a:	2b5d60ef          	jal	dbe63e <_Z19tree_to_poly_uint64PK9tree_node>
+  ce7b8e:	ee040613          	addi	a2,s0,-288
+  ce7b92:	cd817057          	vsetivli	zero,2,e64,m1,ta,ma
+  ce7b96:	02067407          	vle64.v	v8,(a2)
+  ce7b9a:	5e0544d7          	vmv.v.x	v9,a0
+  ce7b9e:	3e95e4d7          	vslide1down.vx	v9,v9,a1
+  ce7ba2:	02848457          	vadd.vv	v8,v8,v9
+  ce7ba6:	02067427          	vse64.v	v8,(a2)
+  ce7baa:	a03d                	j	ce7bd8 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1c2c>
+  ce7bac:	050a                	slli	a0,a0,0x2
+  ce7bae:	0272e5b7          	lui	a1,0x272e
+  ce7bb2:	80058593          	addi	a1,a1,-2048 # 272d800 <tree_code_type>
+  ce7bb6:	952e                	add	a0,a0,a1
+  ce7bb8:	4108                	lw	a0,0(a0)
+  ce7bba:	458d                	li	a1,3
+  ce7bbc:	b8b51ae3          	bne	a0,a1,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce7bc0:	000be503          	lwu	a0,0(s7)
+  ce7bc4:	01b57533          	and	a0,a0,s11
+  ce7bc8:	08500593          	li	a1,133
+  ce7bcc:	b8b512e3          	bne	a0,a1,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce7bd0:	018bb503          	ld	a0,24(s7)
+  ce7bd4:	b7551ee3          	bne	a0,s5,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce7bd8:	ef040513          	addi	a0,s0,-272
+  ce7bdc:	d0040593          	addi	a1,s0,-768
+  ce7be0:	ee040613          	addi	a2,s0,-288
+  ce7be4:	ec840693          	addi	a3,s0,-312
+  ce7be8:	ffa79097          	auipc	ra,0xffa79
+  ce7bec:	b1e080e7          	jalr	-1250(ra) # 760706 <_Z22ranges_maybe_overlap_pI8poly_intILj2ElES1_S1_S1_EbRKT_RKT0_RKT1_RKT2_>
+  ce7bf0:	b60501e3          	beqz	a0,ce7752 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a6>
+  ce7bf4:	ee040513          	addi	a0,s0,-288
+  ce7bf8:	ec840593          	addi	a1,s0,-312
+  ce7bfc:	ef040613          	addi	a2,s0,-272
+  ce7c00:	d0040693          	addi	a3,s0,-768
+  ce7c04:	62f0c0ef          	jal	cf4a32 <_Z16known_subrange_pI8poly_intILj2ElES1_S1_S1_EbRKT_RKT0_RKT1_RKT2_>
+  ce7c08:	85aa                	mv	a1,a0
+  ce7c0a:	557d                	li	a0,-1
+  ce7c0c:	b40583e3          	beqz	a1,ce7752 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a6>
+  ce7c10:	cf043503          	ld	a0,-784(s0)
+  ce7c14:	6548                	ld	a0,136(a0)
+  ce7c16:	ce843583          	ld	a1,-792(s0)
+  ce7c1a:	05058a93          	addi	s5,a1,80
+  ce7c1e:	e519                	bnez	a0,ce7c2c <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1c80>
+  ce7c20:	8556                	mv	a0,s5
+  ce7c22:	eb2e50ef          	jal	ccd2d4 <_ZNK3vecI22vn_reference_op_struct7va_heap6vl_ptrE4copyEv>
+  ce7c26:	cf043583          	ld	a1,-784(s0)
+  ce7c2a:	e5c8                	sd	a0,136(a1)
+  ce7c2c:	ce843503          	ld	a0,-792(s0)
+  ce7c30:	6924                	ld	s1,80(a0)
+  ce7c32:	c489                	beqz	s1,ce7c3c <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1c90>
+  ce7c34:	40c8                	lw	a0,4(s1)
+  ce7c36:	4585                	li	a1,1
+  ce7c38:	66a5e363          	bltu	a1,a0,ce829e <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x22f2>
+  ce7c3c:	4589                	li	a1,2
+  ce7c3e:	4605                	li	a2,1
+  ce7c40:	8556                	mv	a0,s5
+  ce7c42:	7a10c0ef          	jal	cf4be2 <_ZN3vecI22vn_reference_op_struct7va_heap6vl_ptrE17safe_grow_clearedEjb>
+  ce7c46:	03ade537          	lui	a0,0x3ade
+  ce7c4a:	6a850513          	addi	a0,a0,1704 # 3ade6a8 <_ZL13next_value_id>
+  ce7c4e:	652c                	ld	a1,72(a0)
+  ce7c50:	64959963          	bne	a1,s1,ce82a2 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x22f6>
+  ce7c54:	000ab583          	ld	a1,0(s5)
+  ce7c58:	e52c                	sd	a1,72(a0)
+  ce7c5a:	a5a1                	j	ce82a2 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x22f6>
+  ce7c5c:	9cda                	add	s9,s9,s6
+  ce7c5e:	0d05                	addi	s10,s10,1
+  ce7c60:	02049513          	slli	a0,s1,0x20
+  ce7c64:	9101                	srli	a0,a0,0x20
+  ce7c66:	036ac583          	lbu	a1,54(s5)
+  ce7c6a:	00b55533          	srl	a0,a0,a1
+  ce7c6e:	0485                	addi	s1,s1,1
+  ce7c70:	58051863          	bnez	a0,ce8200 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x2254>
+  ce7c74:	fff4859b          	addiw	a1,s1,-1
+  ce7c78:	855e                	mv	a0,s7
+  ce7c7a:	1e0d30ef          	jal	dbae5a <_Z14vector_cst_eltPK9tree_nodej>
+  ce7c7e:	251d20ef          	jal	dba6ce <_Z13integer_zeropPK9tree_node>
+  ce7c82:	dd69                	beqz	a0,ce7c5c <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1cb0>
+  ce7c84:	060c8d63          	beqz	s9,ce7cfe <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1d52>
+  ce7c88:	f1043583          	ld	a1,-240(s0)
+  ce7c8c:	f1843683          	ld	a3,-232(s0)
+  ce7c90:	fff5c513          	not	a0,a1
+  ce7c94:	8d55                	or	a0,a0,a3
+  ce7c96:	c525                	beqz	a0,ce7cfe <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1d52>
+  ce7c98:	072c8363          	beq	s9,s2,ce7cfe <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1d52>
+  ce7c9c:	f2043603          	ld	a2,-224(s0)
+  ce7ca0:	01bc0533          	add	a0,s8,s11
+  ce7ca4:	8832                	mv	a6,a2
+  ce7ca6:	00a64363          	blt	a2,a0,ce7cac <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1d00>
+  ce7caa:	882a                	mv	a6,a0
+  ce7cac:	f2843703          	ld	a4,-216(s0)
+  ce7cb0:	43f75793          	srai	a5,a4,0x3f
+  ce7cb4:	8ff9                	and	a5,a5,a4
+  ce7cb6:	40f007b3          	neg	a5,a5
+  ce7cba:	04f6e263          	bltu	a3,a5,ce7cfe <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1d52>
+  ce7cbe:	410506b3          	sub	a3,a0,a6
+  ce7cc2:	02b6fe63          	bgeu	a3,a1,ce7cfe <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1d52>
+  ce7cc6:	02e04c63          	bgtz	a4,ce7cfe <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1d52>
+  ce7cca:	410605b3          	sub	a1,a2,a6
+  ce7cce:	0395f863          	bgeu	a1,s9,ce7cfe <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1d52>
+  ce7cd2:	f8843783          	ld	a5,-120(s0)
+  ce7cd6:	db443823          	sd	s4,-592(s0)
+  ce7cda:	db843c23          	sd	s8,-584(s0)
+  ce7cde:	dca43023          	sd	a0,-576(s0)
+  ce7ce2:	dd943423          	sd	s9,-568(s0)
+  ce7ce6:	db040593          	addi	a1,s0,-592
+  ce7cea:	854e                	mv	a0,s3
+  ce7cec:	cf043603          	ld	a2,-784(s0)
+  ce7cf0:	86b2                	mv	a3,a2
+  ce7cf2:	cf843703          	ld	a4,-776(s0)
+  ce7cf6:	b17fb0ef          	jal	ce380c <_ZN15vn_walk_cb_data16push_partial_defE7pd_dataiill>
+  ce7cfa:	a4051ce3          	bnez	a0,ce7752 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a6>
+  ce7cfe:	4c81                	li	s9,0
+  ce7d00:	0d05                	addi	s10,s10,1
+  ce7d02:	02049513          	slli	a0,s1,0x20
+  ce7d06:	9101                	srli	a0,a0,0x20
+  ce7d08:	02ab0c33          	mul	s8,s6,a0
+  ce7d0c:	bfa9                	j	ce7c66 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1cba>
+  ce7d0e:	e6040513          	addi	a0,s0,-416
+  ce7d12:	cd817057          	vsetivli	zero,2,e64,m1,ta,ma
+  ce7d16:	5e003457          	vmv.v.i	v8,0
+  ce7d1a:	e5040613          	addi	a2,s0,-432
+  ce7d1e:	090bb683          	ld	a3,144(s7)
+  ce7d22:	02057427          	vse64.v	v8,(a0)
+  ce7d26:	08100513          	li	a0,129
+  ce7d2a:	02067427          	vse64.v	v8,(a2)
+  ce7d2e:	4605                	li	a2,1
+  ce7d30:	e6a42823          	sw	a0,-400(s0)
+  ce7d34:	e6b43c23          	sd	a1,-392(s0)
+  ce7d38:	e8040023          	sb	zero,-384(s0)
+  ce7d3c:	e8c42223          	sw	a2,-380(s0)
+  ce7d40:	e8d43423          	sd	a3,-376(s0)
+  ce7d44:	e5040513          	addi	a0,s0,-432
+  ce7d48:	4585                	li	a1,1
+  ce7d4a:	4605                	li	a2,1
+  ce7d4c:	8cbfc0ef          	jal	ce4616 <_ZL25vn_nary_build_or_lookup_1P15gimple_match_opbb>
+  ce7d50:	a00500e3          	beqz	a0,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce7d54:	86aa                	mv	a3,a0
+  ce7d56:	00056503          	lwu	a0,0(a0)
+  ce7d5a:	002105b7          	lui	a1,0x210
+  ce7d5e:	15fd                	addi	a1,a1,-1 # 20ffff <__gmpfr_default_rounding_mode+0x20fc9f>
+  ce7d60:	8de9                	and	a1,a1,a0
+  ce7d62:	00200537          	lui	a0,0x200
+  ce7d66:	09b50613          	addi	a2,a0,155 # 20009b <__gmpfr_default_rounding_mode+0x1ffd3b>
+  ce7d6a:	557d                	li	a0,-1
+  ce7d6c:	9ec583e3          	beq	a1,a2,ce7752 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a6>
+  ce7d70:	b31d                	j	ce7a96 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1aea>
+  ce7d72:	96ea                	add	a3,a3,s10
+  ce7d74:	0284b903          	ld	s2,40(s1)
+  ce7d78:	ce843603          	ld	a2,-792(s0)
+  ce7d7c:	9532                	add	a0,a0,a2
+  ce7d7e:	e894                	sd	a3,16(s1)
+  ce7d80:	ec88                	sd	a0,24(s1)
+  ce7d82:	00893503          	ld	a0,8(s2)
+  ce7d86:	85ea                	mv	a1,s10
+  ce7d88:	0a3d10ef          	jal	db962a <_Z13build_int_cstP9tree_node8poly_intILj2ElE>
+  ce7d8c:	862a                	mv	a2,a0
+  ce7d8e:	04900513          	li	a0,73
+  ce7d92:	4685                	li	a3,1
+  ce7d94:	85ca                	mv	a1,s2
+  ce7d96:	ffba5097          	auipc	ra,0xffba5
+  ce7d9a:	c0a080e7          	jalr	-1014(ra) # 88c9a0 <_Z15int_const_binop9tree_codePK9tree_nodeS2_i>
+  ce7d9e:	f488                	sd	a0,40(s1)
+  ce7da0:	cf043503          	ld	a0,-784(s0)
+  ce7da4:	6548                	ld	a0,136(a0)
+  ce7da6:	e519                	bnez	a0,ce7db4 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1e08>
+  ce7da8:	8556                	mv	a0,s5
+  ce7daa:	d2ae50ef          	jal	ccd2d4 <_ZNK3vecI22vn_reference_op_struct7va_heap6vl_ptrE4copyEv>
+  ce7dae:	cf043583          	ld	a1,-784(s0)
+  ce7db2:	e5c8                	sd	a0,136(a1)
+  ce7db4:	f0043903          	ld	s2,-256(s0)
+  ce7db8:	000abb03          	ld	s6,0(s5)
+  ce7dbc:	0d85                	addi	s11,s11,1
+  ce7dbe:	00090563          	beqz	s2,ce7dc8 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1e1c>
+  ce7dc2:	00492503          	lw	a0,4(s2)
+  ce7dc6:	a011                	j	ce7dca <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1e1e>
+  ce7dc8:	4501                	li	a0,0
+  ce7dca:	01b5053b          	addw	a0,a0,s11
+  ce7dce:	000b0563          	beqz	s6,ce7dd8 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1e2c>
+  ce7dd2:	004b2583          	lw	a1,4(s6)
+  ce7dd6:	a011                	j	ce7dda <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1e2e>
+  ce7dd8:	4581                	li	a1,0
+  ce7dda:	00a5f763          	bgeu	a1,a0,ce7de8 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1e3c>
+  ce7dde:	00090a63          	beqz	s2,ce7df2 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1e46>
+  ce7de2:	00492503          	lw	a0,4(s2)
+  ce7de6:	a039                	j	ce7df4 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1e48>
+  ce7de8:	00090d63          	beqz	s2,ce7e02 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1e56>
+  ce7dec:	00492503          	lw	a0,4(s2)
+  ce7df0:	a811                	j	ce7e04 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1e58>
+  ce7df2:	4501                	li	a0,0
+  ce7df4:	01b505bb          	addw	a1,a0,s11
+  ce7df8:	4605                	li	a2,1
+  ce7dfa:	8556                	mv	a0,s5
+  ce7dfc:	0c80c0ef          	jal	cf3ec4 <_ZN3vecI22vn_reference_op_struct7va_heap6vl_ptrE9safe_growEjb>
+  ce7e00:	a039                	j	ce7e0e <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1e62>
+  ce7e02:	4501                	li	a0,0
+  ce7e04:	000b0563          	beqz	s6,ce7e0e <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1e62>
+  ce7e08:	956e                	add	a0,a0,s11
+  ce7e0a:	00ab2223          	sw	a0,4(s6)
+  ce7e0e:	04090c63          	beqz	s2,ce7e66 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1eba>
+  ce7e12:	00492503          	lw	a0,4(s2)
+  ce7e16:	c921                	beqz	a0,ce7e66 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1eba>
+  ce7e18:	4501                	li	a0,0
+  ce7e1a:	00890593          	addi	a1,s2,8
+  ce7e1e:	000ab603          	ld	a2,0(s5)
+  ce7e22:	020d9693          	slli	a3,s11,0x20
+  ce7e26:	7998                	ld	a4,48(a1)
+  ce7e28:	01d6d793          	srli	a5,a3,0x1d
+  ce7e2c:	82e9                	srli	a3,a3,0x1a
+  ce7e2e:	8e9d                	sub	a3,a3,a5
+  ce7e30:	9636                	add	a2,a2,a3
+  ce7e32:	fe18                	sd	a4,56(a2)
+  ce7e34:	02058693          	addi	a3,a1,32
+  ce7e38:	cd817057          	vsetivli	zero,2,e64,m1,ta,ma
+  ce7e3c:	0206f407          	vle64.v	v8,(a3)
+  ce7e40:	02860693          	addi	a3,a2,40
+  ce7e44:	0206f427          	vse64.v	v8,(a3)
+  ce7e48:	cd927057          	vsetivli	zero,4,e64,m2,ta,ma
+  ce7e4c:	0205f407          	vle64.v	v8,(a1)
+  ce7e50:	0621                	addi	a2,a2,8
+  ce7e52:	02067427          	vse64.v	v8,(a2)
+  ce7e56:	00496603          	lwu	a2,4(s2)
+  ce7e5a:	0505                	addi	a0,a0,1
+  ce7e5c:	03858593          	addi	a1,a1,56
+  ce7e60:	0d85                	addi	s11,s11,1
+  ce7e62:	fac56ee3          	bltu	a0,a2,ce7e1e <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1e72>
+  ce7e66:	d0040593          	addi	a1,s0,-768
+  ce7e6a:	8556                	mv	a0,s5
+  ce7e6c:	4601                	li	a2,0
+  ce7e6e:	8b4fd0ef          	jal	ce4f22 <_ZL15valueize_refs_1P3vecI22vn_reference_op_struct7va_heap6vl_ptrEPbb>
+  ce7e72:	048bb503          	ld	a0,72(s7)
+  ce7e76:	01651663          	bne	a0,s6,ce7e82 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1ed6>
+  ce7e7a:	000ab503          	ld	a0,0(s5)
+  ce7e7e:	04abb423          	sd	a0,72(s7)
+  ce7e82:	8552                	mv	a0,s4
+  ce7e84:	c3ffd0ef          	jal	ce5ac2 <_ZL25vn_reference_compute_hashP14vn_reference_s>
+  ce7e88:	00aa2623          	sw	a0,12(s4)
+  ce7e8c:	8552                	mv	a0,s4
+  ce7e8e:	c28fb0ef          	jal	ce32b6 <_Z29fully_constant_vn_reference_pP14vn_reference_s>
+  ce7e92:	cf043583          	ld	a1,-784(s0)
+  ce7e96:	69cc                	ld	a1,144(a1)
+  ce7e98:	c951                	beqz	a0,ce7f2c <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1f80>
+  ce7e9a:	8d2a                	mv	s10,a0
+  ce7e9c:	c5a5                	beqz	a1,ce7f04 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1f58>
+  ce7e9e:	41c8                	lw	a0,4(a1)
+  ce7ea0:	c135                	beqz	a0,ce7f04 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1f58>
+  ce7ea2:	f1843503          	ld	a0,-232(s0)
+  ce7ea6:	e541                	bnez	a0,ce7f2e <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1f82>
+  ce7ea8:	f1043503          	ld	a0,-240(s0)
+  ce7eac:	cf843603          	ld	a2,-776(s0)
+  ce7eb0:	7610                	ld	a2,40(a2)
+  ce7eb2:	f8a43423          	sd	a0,-120(s0)
+  ce7eb6:	ee25                	bnez	a2,ce7f2e <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1f82>
+  ce7eb8:	cf843603          	ld	a2,-776(s0)
+  ce7ebc:	7210                	ld	a2,32(a2)
+  ce7ebe:	06a61863          	bne	a2,a0,ce7f2e <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1f82>
+  ce7ec2:	d5840593          	addi	a1,s0,-680
+  ce7ec6:	cd817057          	vsetivli	zero,2,e64,m1,ta,ma
+  ce7eca:	5e003457          	vmv.v.i	v8,0
+  ce7ece:	0205f427          	vse64.v	v8,(a1)
+  ce7ed2:	d5a43823          	sd	s10,-688(s0)
+  ce7ed6:	d6a43423          	sd	a0,-664(s0)
+  ce7eda:	f3840513          	addi	a0,s0,-200
+  ce7ede:	e3b520ef          	jal	c3ad18 <_Z16ao_ref_alias_setP6ao_ref>
+  ce7ee2:	84aa                	mv	s1,a0
+  ce7ee4:	f3840513          	addi	a0,s0,-200
+  ce7ee8:	dd7520ef          	jal	c3acbe <_Z21ao_ref_base_alias_setP6ao_ref>
+  ce7eec:	f8843783          	ld	a5,-120(s0)
+  ce7ef0:	86aa                	mv	a3,a0
+  ce7ef2:	d5040593          	addi	a1,s0,-688
+  ce7ef6:	cf043503          	ld	a0,-784(s0)
+  ce7efa:	8626                	mv	a2,s1
+  ce7efc:	4701                	li	a4,0
+  ce7efe:	90ffb0ef          	jal	ce380c <_ZN15vn_walk_cb_data16push_partial_defE7pd_dataiill>
+  ce7f02:	a2bd                	j	ce8070 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x20c4>
+  ce7f04:	f3840513          	addi	a0,s0,-200
+  ce7f08:	e11520ef          	jal	c3ad18 <_Z16ao_ref_alias_setP6ao_ref>
+  ce7f0c:	84aa                	mv	s1,a0
+  ce7f0e:	f3840513          	addi	a0,s0,-200
+  ce7f12:	dad520ef          	jal	c3acbe <_Z21ao_ref_base_alias_setP6ao_ref>
+  ce7f16:	862a                	mv	a2,a0
+  ce7f18:	cf043503          	ld	a0,-784(s0)
+  ce7f1c:	85a6                	mv	a1,s1
+  ce7f1e:	86ea                	mv	a3,s10
+  ce7f20:	f1afb0ef          	jal	ce363a <_ZN15vn_walk_cb_data6finishEiiP9tree_node>
+  ce7f24:	14091863          	bnez	s2,ce8074 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x20c8>
+  ce7f28:	82bff06f          	j	ce7752 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a6>
+  ce7f2c:	c981                	beqz	a1,ce7f3c <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1f90>
+  ce7f2e:	41c8                	lw	a0,4(a1)
+  ce7f30:	c511                	beqz	a0,ce7f3c <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1f90>
+  ce7f32:	557d                	li	a0,-1
+  ce7f34:	14091063          	bnez	s2,ce8074 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x20c8>
+  ce7f38:	81bff06f          	j	ce7752 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a6>
+  ce7f3c:	cd843503          	ld	a0,-808(s0)
+  ce7f40:	00a034b3          	snez	s1,a0
+  ce7f44:	d0040513          	addi	a0,s0,-768
+  ce7f48:	ce043583          	ld	a1,-800(s0)
+  ce7f4c:	d2d520ef          	jal	c3ac78 <_Z11ao_ref_initP6ao_refP9tree_node>
+  ce7f50:	c481                	beqz	s1,ce7f58 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1fac>
+  ce7f52:	4b01                	li	s6,0
+  ce7f54:	4601                	li	a2,0
+  ce7f56:	a819                	j	ce7f6c <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1fc0>
+  ce7f58:	d0040513          	addi	a0,s0,-768
+  ce7f5c:	dbd520ef          	jal	c3ad18 <_Z16ao_ref_alias_setP6ao_ref>
+  ce7f60:	8b2a                	mv	s6,a0
+  ce7f62:	d0040513          	addi	a0,s0,-768
+  ce7f66:	d59520ef          	jal	c3acbe <_Z21ao_ref_base_alias_setP6ao_ref>
+  ce7f6a:	862a                	mv	a2,a0
+  ce7f6c:	040a3683          	ld	a3,64(s4)
+  ce7f70:	e5040513          	addi	a0,s0,-432
+  ce7f74:	85da                	mv	a1,s6
+  ce7f76:	8756                	mv	a4,s5
+  ce7f78:	841fa0ef          	jal	ce27b8 <_Z29ao_ref_init_from_vn_referenceP6ao_refiiP9tree_nodeRK3vecI22vn_reference_op_struct7va_heap6vl_ptrE>
+  ce7f7c:	85aa                	mv	a1,a0
+  ce7f7e:	557d                	li	a0,-1
+  ce7f80:	c9e5                	beqz	a1,ce8070 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x20c4>
+  ce7f82:	cf843583          	ld	a1,-776(s0)
+  ce7f86:	7190                	ld	a2,32(a1)
+  ce7f88:	7598                	ld	a4,40(a1)
+  ce7f8a:	e7843783          	ld	a5,-392(s0)
+  ce7f8e:	e7043683          	ld	a3,-400(s0)
+  ce7f92:	e7040593          	addi	a1,s0,-400
+  ce7f96:	0af71663          	bne	a4,a5,ce8042 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x2096>
+  ce7f9a:	0ad61463          	bne	a2,a3,ce8042 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x2096>
+  ce7f9e:	4501                	li	a0,0
+  ce7fa0:	cf843703          	ld	a4,-776(s0)
+  ce7fa4:	03970613          	addi	a2,a4,57
+  ce7fa8:	cd817057          	vsetivli	zero,2,e64,m1,ta,ma
+  ce7fac:	0205f407          	vle64.v	v8,(a1)
+  ce7fb0:	e8940593          	addi	a1,s0,-375
+  ce7fb4:	cc087057          	vsetivli	zero,16,e8,m1,ta,ma
+  ce7fb8:	02058487          	vle8.v	v9,(a1)
+  ce7fbc:	e8040593          	addi	a1,s0,-384
+  ce7fc0:	cd817057          	vsetivli	zero,2,e64,m1,ta,ma
+  ce7fc4:	0205f507          	vle64.v	v10,(a1)
+  ce7fc8:	e6040593          	addi	a1,s0,-416
+  ce7fcc:	0209f427          	vse64.v	v8,(s3)
+  ce7fd0:	e5040693          	addi	a3,s0,-432
+  ce7fd4:	0205f407          	vle64.v	v8,(a1)
+  ce7fd8:	020a0593          	addi	a1,s4,32
+  ce7fdc:	cc087057          	vsetivli	zero,16,e8,m1,ta,ma
+  ce7fe0:	020604a7          	vse8.v	v9,(a2)
+  ce7fe4:	cd817057          	vsetivli	zero,2,e64,m1,ta,ma
+  ce7fe8:	0206f487          	vle64.v	v9,(a3)
+  ce7fec:	030a0613          	addi	a2,s4,48
+  ce7ff0:	020cf527          	vse64.v	v10,(s9)
+  ce7ff4:	020c7427          	vse64.v	v8,(s8)
+  ce7ff8:	020774a7          	vse64.v	v9,(a4)
+  ce7ffc:	0205f427          	vse64.v	v8,(a1)
+  ce8000:	02067527          	vse64.v	v10,(a2)
+  ce8004:	cf043683          	ld	a3,-784(s0)
+  ce8008:	1006a583          	lw	a1,256(a3)
+  ce800c:	0406bc23          	sd	zero,88(a3)
+  ce8010:	5679                	li	a2,-2
+  ce8012:	0006b423          	sd	zero,8(a3)
+  ce8016:	04c59d63          	bne	a1,a2,ce8070 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x20c4>
+  ce801a:	f3840513          	addi	a0,s0,-200
+  ce801e:	cfb520ef          	jal	c3ad18 <_Z16ao_ref_alias_setP6ao_ref>
+  ce8022:	cf043a03          	ld	s4,-784(s0)
+  ce8026:	10aa2023          	sw	a0,256(s4)
+  ce802a:	f3840513          	addi	a0,s0,-200
+  ce802e:	c91520ef          	jal	c3acbe <_Z21ao_ref_base_alias_setP6ao_ref>
+  ce8032:	85aa                	mv	a1,a0
+  ce8034:	4501                	li	a0,0
+  ce8036:	10ba2223          	sw	a1,260(s4)
+  ce803a:	02091d63          	bnez	s2,ce8074 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x20c8>
+  ce803e:	f14ff06f          	j	ce7752 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a6>
+  ce8042:	e8843483          	ld	s1,-376(s0)
+  ce8046:	02979563          	bne	a5,s1,ce8070 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x20c4>
+  ce804a:	e8043483          	ld	s1,-384(s0)
+  ce804e:	02969163          	bne	a3,s1,ce8070 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x20c4>
+  ce8052:	00e7cf63          	blt	a5,a4,ce8070 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x20c4>
+  ce8056:	00d65d63          	bge	a2,a3,ce8070 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x20c4>
+  ce805a:	cd817057          	vsetivli	zero,2,e64,m1,ta,ma
+  ce805e:	0209f407          	vle64.v	v8,(s3)
+  ce8062:	e8040513          	addi	a0,s0,-384
+  ce8066:	02057427          	vse64.v	v8,(a0)
+  ce806a:	0205f427          	vse64.v	v8,(a1)
+  ce806e:	bf05                	j	ce7f9e <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1ff2>
+  ce8070:	ee090163          	beqz	s2,ce7752 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a6>
+  ce8074:	84aa                	mv	s1,a0
+  ce8076:	00092503          	lw	a0,0(s2)
+  ce807a:	00054a63          	bltz	a0,ce808e <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x20e2>
+  ce807e:	854a                	mv	a0,s2
+  ce8080:	ff97e097          	auipc	ra,0xff97e
+  ce8084:	0f0080e7          	jalr	240(ra) # 666170 <free@plt>
+  ce8088:	8526                	mv	a0,s1
+  ce808a:	ec8ff06f          	j	ce7752 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a6>
+  ce808e:	00092223          	sw	zero,4(s2)
+  ce8092:	8526                	mv	a0,s1
+  ce8094:	ebeff06f          	j	ce7752 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a6>
+  ce8098:	008b3503          	ld	a0,8(s6)
+  ce809c:	410c                	lw	a1,0(a0)
+  ce809e:	01b5f5b3          	and	a1,a1,s11
+  ce80a2:	35e9                	addiw	a1,a1,-6
+  ce80a4:	4a8d                	li	s5,3
+  ce80a6:	00baea63          	bltu	s5,a1,ce80ba <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x210e>
+  ce80aa:	ff9f3097          	auipc	ra,0xff9f3
+  ce80ae:	0c4080e7          	jalr	196(ra) # 6db16e <_Z25type_has_mode_precision_pPK9tree_node>
+  ce80b2:	0e050b63          	beqz	a0,ce81a8 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x21fc>
+  ce80b6:	040a3b83          	ld	s7,64(s4)
+  ce80ba:	e6040513          	addi	a0,s0,-416
+  ce80be:	cd817057          	vsetivli	zero,2,e64,m1,ta,ma
+  ce80c2:	5e003457          	vmv.v.i	v8,0
+  ce80c6:	02057427          	vse64.v	v8,(a0)
+  ce80ca:	e5040513          	addi	a0,s0,-432
+  ce80ce:	02057427          	vse64.v	v8,(a0)
+  ce80d2:	855a                	mv	a0,s6
+  ce80d4:	4581                	li	a1,0
+  ce80d6:	3cc0c0ef          	jal	cf44a2 <_Z7SSA_VALP9tree_nodePb>
+  ce80da:	020cb683          	ld	a3,32(s9)
+  ce80de:	028cb583          	ld	a1,40(s9)
+  ce80e2:	892a                	mv	s2,a0
+  ce80e4:	4609                	li	a2,2
+  ce80e6:	8536                	mv	a0,a3
+  ce80e8:	ffba8097          	auipc	ra,0xffba8
+  ce80ec:	d30080e7          	jalr	-720(ra) # 88fe18 <_Z13size_int_kind8poly_intILj2ElE14size_type_kind>
+  ce80f0:	8a2a                	mv	s4,a0
+  ce80f2:	f2043503          	ld	a0,-224(s0)
+  ce80f6:	f2843583          	ld	a1,-216(s0)
+  ce80fa:	d0043603          	ld	a2,-768(s0)
+  ce80fe:	d0843683          	ld	a3,-760(s0)
+  ce8102:	8d11                	sub	a0,a0,a2
+  ce8104:	8d95                	sub	a1,a1,a3
+  ce8106:	4609                	li	a2,2
+  ce8108:	ffba8097          	auipc	ra,0xffba8
+  ce810c:	d10080e7          	jalr	-752(ra) # 88fe18 <_Z13size_int_kind8poly_intILj2ElE14size_type_kind>
+  ce8110:	03200593          	li	a1,50
+  ce8114:	e6b42823          	sw	a1,-400(s0)
+  ce8118:	e7743c23          	sd	s7,-392(s0)
+  ce811c:	e8040023          	sb	zero,-384(s0)
+  ce8120:	e9542223          	sw	s5,-380(s0)
+  ce8124:	e9243423          	sd	s2,-376(s0)
+  ce8128:	e9443823          	sd	s4,-368(s0)
+  ce812c:	e8a43c23          	sd	a0,-360(s0)
+  ce8130:	e5040513          	addi	a0,s0,-432
+  ce8134:	4585                	li	a1,1
+  ce8136:	4605                	li	a2,1
+  ce8138:	cdefc0ef          	jal	ce4616 <_ZL25vn_nary_build_or_lookup_1P15gimple_match_opbb>
+  ce813c:	8a2a                	mv	s4,a0
+  ce813e:	e0050963          	beqz	a0,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce8142:	000a6503          	lwu	a0,0(s4)
+  ce8146:	002105b7          	lui	a1,0x210
+  ce814a:	15fd                	addi	a1,a1,-1 # 20ffff <__gmpfr_default_rounding_mode+0x20fc9f>
+  ce814c:	8d6d                	and	a0,a0,a1
+  ce814e:	002005b7          	lui	a1,0x200
+  ce8152:	09b58593          	addi	a1,a1,155 # 20009b <__gmpfr_default_rounding_mode+0x1ffd3b>
+  ce8156:	deb50d63          	beq	a0,a1,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce815a:	f3840513          	addi	a0,s0,-200
+  ce815e:	bbb520ef          	jal	c3ad18 <_Z16ao_ref_alias_setP6ao_ref>
+  ce8162:	892a                	mv	s2,a0
+  ce8164:	f3840513          	addi	a0,s0,-200
+  ce8168:	b57520ef          	jal	c3acbe <_Z21ao_ref_base_alias_setP6ao_ref>
+  ce816c:	862a                	mv	a2,a0
+  ce816e:	8526                	mv	a0,s1
+  ce8170:	85ca                	mv	a1,s2
+  ce8172:	86d2                	mv	a3,s4
+  ce8174:	cc6fb0ef          	jal	ce363a <_ZN15vn_walk_cb_data6finishEiiP9tree_node>
+  ce8178:	ddaff06f          	j	ce7752 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a6>
+  ce817c:	000a2583          	lw	a1,0(s4)
+  ce8180:	f8843503          	ld	a0,-120(s0)
+  ce8184:	0125f5b3          	and	a1,a1,s2
+  ce8188:	35e9                	addiw	a1,a1,-6
+  ce818a:	460d                	li	a2,3
+  ce818c:	0cb66963          	bltu	a2,a1,ce825e <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x22b2>
+  ce8190:	034a6583          	lwu	a1,52(s4)
+  ce8194:	01b5f5b3          	and	a1,a1,s11
+  ce8198:	4605                	li	a2,1
+  ce819a:	28c59963          	bne	a1,a2,ce842c <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x2480>
+  ce819e:	020a3583          	ld	a1,32(s4)
+  ce81a2:	0105b903          	ld	s2,16(a1)
+  ce81a6:	ac69                	j	ce8440 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x2494>
+  ce81a8:	028cb503          	ld	a0,40(s9)
+  ce81ac:	f0843583          	ld	a1,-248(s0)
+  ce81b0:	dab51063          	bne	a0,a1,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce81b4:	020cb503          	ld	a0,32(s9)
+  ce81b8:	f0043583          	ld	a1,-256(s0)
+  ce81bc:	d8b51a63          	bne	a0,a1,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce81c0:	e6040513          	addi	a0,s0,-416
+  ce81c4:	cd817057          	vsetivli	zero,2,e64,m1,ta,ma
+  ce81c8:	5e003457          	vmv.v.i	v8,0
+  ce81cc:	040a3903          	ld	s2,64(s4)
+  ce81d0:	02057427          	vse64.v	v8,(a0)
+  ce81d4:	e5040513          	addi	a0,s0,-432
+  ce81d8:	02057427          	vse64.v	v8,(a0)
+  ce81dc:	855a                	mv	a0,s6
+  ce81de:	4581                	li	a1,0
+  ce81e0:	2c20c0ef          	jal	cf44a2 <_Z7SSA_VALP9tree_nodePb>
+  ce81e4:	03700593          	li	a1,55
+  ce81e8:	4605                	li	a2,1
+  ce81ea:	e6b42823          	sw	a1,-400(s0)
+  ce81ee:	e7243c23          	sd	s2,-392(s0)
+  ce81f2:	e8040023          	sb	zero,-384(s0)
+  ce81f6:	e8c42223          	sw	a2,-380(s0)
+  ce81fa:	e8a43423          	sd	a0,-376(s0)
+  ce81fe:	bf0d                	j	ce8130 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x2184>
+  ce8200:	300c8c63          	beqz	s9,ce8518 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x256c>
+  ce8204:	f1043583          	ld	a1,-240(s0)
+  ce8208:	f1843603          	ld	a2,-232(s0)
+  ce820c:	fff5c513          	not	a0,a1
+  ce8210:	00a666b3          	or	a3,a2,a0
+  ce8214:	4501                	li	a0,0
+  ce8216:	d2068e63          	beqz	a3,ce7752 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a6>
+  ce821a:	56fd                	li	a3,-1
+  ce821c:	d2dc8b63          	beq	s9,a3,ce7752 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a6>
+  ce8220:	f2043683          	ld	a3,-224(s0)
+  ce8224:	9de2                	add	s11,s11,s8
+  ce8226:	8736                	mv	a4,a3
+  ce8228:	01b6c363          	blt	a3,s11,ce822e <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x2282>
+  ce822c:	876e                	mv	a4,s11
+  ce822e:	f2843783          	ld	a5,-216(s0)
+  ce8232:	43f7d513          	srai	a0,a5,0x3f
+  ce8236:	8d7d                	and	a0,a0,a5
+  ce8238:	40a004b3          	neg	s1,a0
+  ce823c:	4501                	li	a0,0
+  ce823e:	d0966a63          	bltu	a2,s1,ce7752 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a6>
+  ce8242:	40ed8633          	sub	a2,s11,a4
+  ce8246:	d0b67663          	bgeu	a2,a1,ce7752 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a6>
+  ce824a:	4501                	li	a0,0
+  ce824c:	d0f04363          	bgtz	a5,ce7752 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a6>
+  ce8250:	8e99                	sub	a3,a3,a4
+  ce8252:	d9040593          	addi	a1,s0,-624
+  ce8256:	3196e063          	bltu	a3,s9,ce8556 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x25aa>
+  ce825a:	cf8ff06f          	j	ce7752 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a6>
+  ce825e:	43f55593          	srai	a1,a0,0x3f
+  ce8262:	91f5                	srli	a1,a1,0x3d
+  ce8264:	95aa                	add	a1,a1,a0
+  ce8266:	4035d913          	srai	s2,a1,0x3
+  ce826a:	aad9                	j	ce8440 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x2494>
+  ce826c:	4561                	li	a0,24
+  ce826e:	38ad1463          	bne	s10,a0,ce85f6 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x264a>
+  ce8272:	8562                	mv	a0,s8
+  ce8274:	57ad20ef          	jal	dba7ee <_Z12tree_to_uhwiPK9tree_node>
+  ce8278:	8b2a                	mv	s6,a0
+  ce827a:	8566                	mv	a0,s9
+  ce827c:	61cd20ef          	jal	dba898 <_Z12tree_to_shwiPK9tree_node>
+  ce8280:	03b1a5b7          	lui	a1,0x3b1a
+  ce8284:	b985c583          	lbu	a1,-1128(a1) # 3b19b98 <global_options+0x100>
+  ce8288:	40ab0cb3          	sub	s9,s6,a0
+  ce828c:	8985                	andi	a1,a1,1
+  ce828e:	0c8e                	slli	s9,s9,0x3
+  ce8290:	26059663          	bnez	a1,ce84fc <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x2550>
+  ce8294:	4c01                	li	s8,0
+  ce8296:	ac8d                	j	ce8508 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x255c>
+  ce8298:	e5040593          	addi	a1,s0,-432
+  ce829c:	a411                	j	ce84a0 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x24f4>
+  ce829e:	4509                	li	a0,2
+  ce82a0:	c0c8                	sw	a0,4(s1)
+  ce82a2:	ee040a13          	addi	s4,s0,-288
+  ce82a6:	ef040d93          	addi	s11,s0,-272
+  ce82aa:	cd817057          	vsetivli	zero,2,e64,m1,ta,ma
+  ce82ae:	020a7407          	vle64.v	v8,(s4)
+  ce82b2:	020df487          	vle64.v	v9,(s11)
+  ce82b6:	f0040d13          	addi	s10,s0,-256
+  ce82ba:	0a848457          	vsub.vv	v8,v8,v9
+  ce82be:	020d7487          	vle64.v	v9,(s10)
+  ce82c2:	ce843483          	ld	s1,-792(s0)
+  ce82c6:	0404b903          	ld	s2,64(s1)
+  ce82ca:	03adf537          	lui	a0,0x3adf
+  ce82ce:	3a053503          	ld	a0,928(a0) # 3adf3a0 <global_trees+0x1f8>
+  ce82d2:	02848457          	vadd.vv	v8,v8,v9
+  ce82d6:	428025d7          	vmv.x.s	a1,v8
+  ce82da:	3e80b457          	vslidedown.vi	v8,v8,1
+  ce82de:	42802657          	vmv.x.s	a2,v8
+  ce82e2:	348d10ef          	jal	db962a <_Z13build_int_cstP9tree_node8poly_intILj2ElE>
+  ce82e6:	cd817057          	vsetivli	zero,2,e64,m1,ta,ma
+  ce82ea:	020a7407          	vle64.v	v8,(s4)
+  ce82ee:	020df487          	vle64.v	v9,(s11)
+  ce82f2:	68ac                	ld	a1,80(s1)
+  ce82f4:	0a848457          	vsub.vv	v8,v8,v9
+  ce82f8:	020d7487          	vle64.v	v9,(s10)
+  ce82fc:	0a700613          	li	a2,167
+  ce8300:	01058693          	addi	a3,a1,16
+  ce8304:	e590                	sd	a2,8(a1)
+  ce8306:	0325b023          	sd	s2,32(a1)
+  ce830a:	f588                	sd	a0,40(a1)
+  ce830c:	03058513          	addi	a0,a1,48
+  ce8310:	02848457          	vadd.vv	v8,v8,v9
+  ce8314:	5e0034d7          	vmv.v.i	v9,0
+  ce8318:	020574a7          	vse64.v	v9,(a0)
+  ce831c:	0206f427          	vse64.v	v8,(a3)
+  ce8320:	000b1503          	lh	a0,0(s6)
+  ce8324:	68ac                	ld	a1,80(s1)
+  ce8326:	567d                	li	a2,-1
+  ce8328:	008b3683          	ld	a3,8(s6)
+  ce832c:	04a59023          	sh	a0,64(a1)
+  ce8330:	04059123          	sh	zero,66(a1)
+  ce8334:	04059223          	sh	zero,68(a1)
+  ce8338:	04059323          	sh	zero,70(a1)
+  ce833c:	e5b0                	sd	a2,72(a1)
+  ce833e:	0405b823          	sd	zero,80(a1)
+  ce8342:	edb4                	sd	a3,88(a1)
+  ce8344:	0765b023          	sd	s6,96(a1)
+  ce8348:	06858513          	addi	a0,a1,104
+  ce834c:	020574a7          	vse64.v	v9,(a0)
+  ce8350:	8526                	mv	a0,s1
+  ce8352:	f70fd0ef          	jal	ce5ac2 <_ZL25vn_reference_compute_hashP14vn_reference_s>
+  ce8356:	c4c8                	sw	a0,12(s1)
+  ce8358:	8526                	mv	a0,s1
+  ce835a:	f5dfa0ef          	jal	ce32b6 <_Z29fully_constant_vn_reference_pP14vn_reference_s>
+  ce835e:	c511                	beqz	a0,ce836a <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x23be>
+  ce8360:	86aa                	mv	a3,a0
+  ce8362:	cf043503          	ld	a0,-784(s0)
+  ce8366:	f32ff06f          	j	ce7a98 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x1aec>
+  ce836a:	ce843503          	ld	a0,-792(s0)
+  ce836e:	6134                	ld	a3,64(a0)
+  ce8370:	e5040513          	addi	a0,s0,-432
+  ce8374:	4581                	li	a1,0
+  ce8376:	4601                	li	a2,0
+  ce8378:	8756                	mv	a4,s5
+  ce837a:	c3efa0ef          	jal	ce27b8 <_Z29ao_ref_init_from_vn_referenceP6ao_refiiP9tree_nodeRK3vecI22vn_reference_op_struct7va_heap6vl_ptrE>
+  ce837e:	bc050963          	beqz	a0,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce8382:	cf843503          	ld	a0,-776(s0)
+  ce8386:	7508                	ld	a0,40(a0)
+  ce8388:	e7843583          	ld	a1,-392(s0)
+  ce838c:	bcb51263          	bne	a0,a1,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce8390:	cf843503          	ld	a0,-776(s0)
+  ce8394:	710c                	ld	a1,32(a0)
+  ce8396:	e7043603          	ld	a2,-400(s0)
+  ce839a:	557d                	li	a0,-1
+  ce839c:	bac59b63          	bne	a1,a2,ce7752 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a6>
+  ce83a0:	cf843603          	ld	a2,-776(s0)
+  ce83a4:	03960513          	addi	a0,a2,57
+  ce83a8:	e8940593          	addi	a1,s0,-375
+  ce83ac:	cc087057          	vsetivli	zero,16,e8,m1,ta,ma
+  ce83b0:	02058407          	vle8.v	v8,(a1)
+  ce83b4:	e8040593          	addi	a1,s0,-384
+  ce83b8:	cd817057          	vsetivli	zero,2,e64,m1,ta,ma
+  ce83bc:	0205f487          	vle64.v	v9,(a1)
+  ce83c0:	e7040593          	addi	a1,s0,-400
+  ce83c4:	0205f507          	vle64.v	v10,(a1)
+  ce83c8:	e6040593          	addi	a1,s0,-416
+  ce83cc:	cc087057          	vsetivli	zero,16,e8,m1,ta,ma
+  ce83d0:	02050427          	vse8.v	v8,(a0)
+  ce83d4:	e5040513          	addi	a0,s0,-432
+  ce83d8:	cd817057          	vsetivli	zero,2,e64,m1,ta,ma
+  ce83dc:	0205f407          	vle64.v	v8,(a1)
+  ce83e0:	ce843a03          	ld	s4,-792(s0)
+  ce83e4:	020a0593          	addi	a1,s4,32
+  ce83e8:	0209f527          	vse64.v	v10,(s3)
+  ce83ec:	02057507          	vle64.v	v10,(a0)
+  ce83f0:	030a0513          	addi	a0,s4,48
+  ce83f4:	020cf4a7          	vse64.v	v9,(s9)
+  ce83f8:	020c7427          	vse64.v	v8,(s8)
+  ce83fc:	02067527          	vse64.v	v10,(a2)
+  ce8400:	0205f427          	vse64.v	v8,(a1)
+  ce8404:	020574a7          	vse64.v	v9,(a0)
+  ce8408:	cf043603          	ld	a2,-784(s0)
+  ce840c:	10062503          	lw	a0,256(a2)
+  ce8410:	04063c23          	sd	zero,88(a2)
+  ce8414:	55f9                	li	a1,-2
+  ce8416:	00063423          	sd	zero,8(a2)
+  ce841a:	0eb51f63          	bne	a0,a1,ce8518 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x256c>
+  ce841e:	4501                	li	a0,0
+  ce8420:	cf043583          	ld	a1,-784(s0)
+  ce8424:	1005b023          	sd	zero,256(a1)
+  ce8428:	b2aff06f          	j	ce7752 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a6>
+  ce842c:	058a                	slli	a1,a1,0x2
+  ce842e:	03681637          	lui	a2,0x3681
+  ce8432:	03860613          	addi	a2,a2,56 # 3681038 <mode_size>
+  ce8436:	95b2                	add	a1,a1,a2
+  ce8438:	0005d583          	lhu	a1,0(a1)
+  ce843c:	01b5f933          	and	s2,a1,s11
+  ce8440:	f9043583          	ld	a1,-112(s0)
+  ce8444:	94d6                	add	s1,s1,s5
+  ce8446:	00a58633          	add	a2,a1,a0
+  ce844a:	40c48633          	sub	a2,s1,a2
+  ce844e:	00767a93          	andi	s5,a2,7
+  ce8452:	000a8e63          	beqz	s5,ce846e <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x24c2>
+  ce8456:	e5040513          	addi	a0,s0,-432
+  ce845a:	85da                	mv	a1,s6
+  ce845c:	8656                	mv	a2,s5
+  ce845e:	ffbb0097          	auipc	ra,0xffbb0
+  ce8462:	b66080e7          	jalr	-1178(ra) # 897fc4 <_Z26shift_bytes_in_array_rightPhjj>
+  ce8466:	f9043583          	ld	a1,-112(s0)
+  ce846a:	f8843503          	ld	a0,-120(s0)
+  ce846e:	952e                	add	a0,a0,a1
+  ce8470:	9556                	add	a0,a0,s5
+  ce8472:	40a485b3          	sub	a1,s1,a0
+  ce8476:	01d59513          	slli	a0,a1,0x1d
+  ce847a:	9101                	srli	a0,a0,0x20
+  ce847c:	01250633          	add	a2,a0,s2
+  ce8480:	00cb7663          	bgeu	s6,a2,ce848c <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x24e0>
+  ce8484:	4b01                	li	s6,0
+  ce8486:	e5040593          	addi	a1,s0,-432
+  ce848a:	a819                	j	ce84a0 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x24f4>
+  ce848c:	0035d613          	srli	a2,a1,0x3
+  ce8490:	e5040593          	addi	a1,s0,-432
+  ce8494:	412585b3          	sub	a1,a1,s2
+  ce8498:	95da                	add	a1,a1,s6
+  ce849a:	8d89                	sub	a1,a1,a0
+  ce849c:	01260b3b          	addw	s6,a2,s2
+  ce84a0:	8552                	mv	a0,s4
+  ce84a2:	865a                	mv	a2,s6
+  ce84a4:	ffbaf097          	auipc	ra,0xffbaf
+  ce84a8:	f98080e7          	jalr	-104(ra) # 89743c <_Z21native_interpret_exprP9tree_nodePKhi>
+  ce84ac:	aa050263          	beqz	a0,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce84b0:	84aa                	mv	s1,a0
+  ce84b2:	040c3903          	ld	s2,64(s8)
+  ce84b6:	032a0263          	beq	s4,s2,ce84da <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x252e>
+  ce84ba:	8526                	mv	a0,s1
+  ce84bc:	85ca                	mv	a1,s2
+  ce84be:	3fcdc0ef          	jal	dc48ba <_Z15int_fits_type_pPK9tree_nodeS1_>
+  ce84c2:	a8050763          	beqz	a0,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce84c6:	4501                	li	a0,0
+  ce84c8:	85ca                	mv	a1,s2
+  ce84ca:	8626                	mv	a2,s1
+  ce84cc:	ffba7097          	auipc	ra,0xffba7
+  ce84d0:	458080e7          	jalr	1112(ra) # 88f924 <_Z16fold_convert_locmP9tree_nodeS0_>
+  ce84d4:	84aa                	mv	s1,a0
+  ce84d6:	a6050d63          	beqz	a0,ce7750 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a4>
+  ce84da:	f3840513          	addi	a0,s0,-200
+  ce84de:	83b520ef          	jal	c3ad18 <_Z16ao_ref_alias_setP6ao_ref>
+  ce84e2:	892a                	mv	s2,a0
+  ce84e4:	f3840513          	addi	a0,s0,-200
+  ce84e8:	fd6520ef          	jal	c3acbe <_Z21ao_ref_base_alias_setP6ao_ref>
+  ce84ec:	862a                	mv	a2,a0
+  ce84ee:	856a                	mv	a0,s10
+  ce84f0:	85ca                	mv	a1,s2
+  ce84f2:	86a6                	mv	a3,s1
+  ce84f4:	946fb0ef          	jal	ce363a <_ZN15vn_walk_cb_data6finishEiiP9tree_node>
+  ce84f8:	a5aff06f          	j	ce7752 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a6>
+  ce84fc:	018ab503          	ld	a0,24(s5)
+  ce8500:	2eed20ef          	jal	dba7ee <_Z12tree_to_uhwiPK9tree_node>
+  ce8504:	40ac8c33          	sub	s8,s9,a0
+  ce8508:	f1843703          	ld	a4,-232(s0)
+  ce850c:	f1043583          	ld	a1,-240(s0)
+  ce8510:	e719                	bnez	a4,ce851e <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x2572>
+  ce8512:	557d                	li	a0,-1
+  ce8514:	00a59563          	bne	a1,a0,ce851e <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x2572>
+  ce8518:	4501                	li	a0,0
+  ce851a:	a38ff06f          	j	ce7752 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a6>
+  ce851e:	f2043603          	ld	a2,-224(s0)
+  ce8522:	86b2                	mv	a3,a2
+  ce8524:	01b64363          	blt	a2,s11,ce852a <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x257e>
+  ce8528:	86ee                	mv	a3,s11
+  ce852a:	f2843783          	ld	a5,-216(s0)
+  ce852e:	43f7d513          	srai	a0,a5,0x3f
+  ce8532:	8d7d                	and	a0,a0,a5
+  ce8534:	40a004b3          	neg	s1,a0
+  ce8538:	4501                	li	a0,0
+  ce853a:	a0976c63          	bltu	a4,s1,ce7752 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a6>
+  ce853e:	40dd8733          	sub	a4,s11,a3
+  ce8542:	a0b77863          	bgeu	a4,a1,ce7752 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a6>
+  ce8546:	4501                	li	a0,0
+  ce8548:	a0f04563          	bgtz	a5,ce7752 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a6>
+  ce854c:	8e15                	sub	a2,a2,a3
+  ce854e:	d7040593          	addi	a1,s0,-656
+  ce8552:	a1967063          	bgeu	a2,s9,ce7752 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a6>
+  ce8556:	f8843783          	ld	a5,-120(s0)
+  ce855a:	0145b023          	sd	s4,0(a1)
+  ce855e:	0185b423          	sd	s8,8(a1)
+  ce8562:	01b5b823          	sd	s11,16(a1)
+  ce8566:	0195bc23          	sd	s9,24(a1)
+  ce856a:	854e                	mv	a0,s3
+  ce856c:	cf043603          	ld	a2,-784(s0)
+  ce8570:	86b2                	mv	a3,a2
+  ce8572:	cf843703          	ld	a4,-776(s0)
+  ce8576:	a96fb0ef          	jal	ce380c <_ZN15vn_walk_cb_data16push_partial_defE7pd_dataiill>
+  ce857a:	9d8ff06f          	j	ce7752 <_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags+0x17a6>
+  ce857e:	02521537          	lui	a0,0x2521
+  ce8582:	a7b50513          	addi	a0,a0,-1413 # 2520a7b <num_to_text+0x41867>
+  ce8586:	02521637          	lui	a2,0x2521
+  ce858a:	e4460613          	addi	a2,a2,-444 # 2520e44 <num_to_text+0x41c30>
+  ce858e:	6585                	lui	a1,0x1
+  ce8590:	dd058593          	addi	a1,a1,-560 # dd0 <__gmpfr_default_rounding_mode+0xa70>
+  ce8594:	015e6097          	auipc	ra,0x15e6
+  ce8598:	ab4080e7          	jalr	-1356(ra) # 22ce048 <_Z11fancy_abortPKciS0_>
+  ce859c:	02521537          	lui	a0,0x2521
+  ce85a0:	a7b50513          	addi	a0,a0,-1413 # 2520a7b <num_to_text+0x41867>
+  ce85a4:	02521637          	lui	a2,0x2521
+  ce85a8:	e4460613          	addi	a2,a2,-444 # 2520e44 <num_to_text+0x41c30>
+  ce85ac:	6585                	lui	a1,0x1
+  ce85ae:	c1f58593          	addi	a1,a1,-993 # c1f <__gmpfr_default_rounding_mode+0x8bf>
+  ce85b2:	015e6097          	auipc	ra,0x15e6
+  ce85b6:	a96080e7          	jalr	-1386(ra) # 22ce048 <_Z11fancy_abortPKciS0_>
+  ce85ba:	02521537          	lui	a0,0x2521
+  ce85be:	a7b50513          	addi	a0,a0,-1413 # 2520a7b <num_to_text+0x41867>
+  ce85c2:	02521637          	lui	a2,0x2521
+  ce85c6:	e4460613          	addi	a2,a2,-444 # 2520e44 <num_to_text+0x41c30>
+  ce85ca:	6585                	lui	a1,0x1
+  ce85cc:	cf958593          	addi	a1,a1,-775 # cf9 <__gmpfr_default_rounding_mode+0x999>
+  ce85d0:	015e6097          	auipc	ra,0x15e6
+  ce85d4:	a78080e7          	jalr	-1416(ra) # 22ce048 <_Z11fancy_abortPKciS0_>
+  ce85d8:	02521537          	lui	a0,0x2521
+  ce85dc:	a7b50513          	addi	a0,a0,-1413 # 2520a7b <num_to_text+0x41867>
+  ce85e0:	02521637          	lui	a2,0x2521
+  ce85e4:	e4460613          	addi	a2,a2,-444 # 2520e44 <num_to_text+0x41c30>
+  ce85e8:	6585                	lui	a1,0x1
+  ce85ea:	c6358593          	addi	a1,a1,-925 # c63 <__gmpfr_default_rounding_mode+0x903>
+  ce85ee:	015e6097          	auipc	ra,0x15e6
+  ce85f2:	a5a080e7          	jalr	-1446(ra) # 22ce048 <_Z11fancy_abortPKciS0_>
+  ce85f6:	02521537          	lui	a0,0x2521
+  ce85fa:	a7b50513          	addi	a0,a0,-1413 # 2520a7b <num_to_text+0x41867>
+  ce85fe:	02521637          	lui	a2,0x2521
+  ce8602:	e4460613          	addi	a2,a2,-444 # 2520e44 <num_to_text+0x41c30>
+  ce8606:	6585                	lui	a1,0x1
+  ce8608:	dbb58593          	addi	a1,a1,-581 # dbb <__gmpfr_default_rounding_mode+0xa5b>
+  ce860c:	015e6097          	auipc	ra,0x15e6
+  ce8610:	a3c080e7          	jalr	-1476(ra) # 22ce048 <_Z11fancy_abortPKciS0_>

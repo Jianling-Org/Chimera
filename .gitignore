@@ -1,0 +1,143 @@
+# =============================================================================
+# Chimera - Git Ignore Rules
+# =============================================================================
+#
+# This file excludes generated artifacts, local development environments,
+# machine-specific configurations, and externally supplied resources.
+#
+# Source code, documentation, configuration templates, and reproducible
+# test fixtures should remain under version control.
+#
+# User-specific runtime resources are stored outside the repository
+# (e.g., ~/.chimera).
+#
+# =============================================================================
+
+
+# -----------------------------------------------------------------------------
+# 1. Build and Packaging Artifacts
+# -----------------------------------------------------------------------------
+
+/build/
+/dist/
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+
+
+# -----------------------------------------------------------------------------
+# 2. Python Bytecode and Caches
+# -----------------------------------------------------------------------------
+
+__pycache__/
+*.py[cod]
+*$py.class
+
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.pytype/
+.hypothesis/
+.tox/
+.nox/
+
+.ipynb_checkpoints/
+
+
+# -----------------------------------------------------------------------------
+# 3. Test Coverage and Profiling Artifacts
+# -----------------------------------------------------------------------------
+
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+
+
+# -----------------------------------------------------------------------------
+# 4. Python Virtual Environments
+# -----------------------------------------------------------------------------
+
+/.venv/
+/venv/
+/env/
+/ENV/
+
+
+# -----------------------------------------------------------------------------
+# 5. Environment Variables and Local Secrets
+# -----------------------------------------------------------------------------
+
+.env
+.env.*
+
+# Allow version-controlled environment templates.
+!.env.example
+!.env.sample
+!.env.template
+
+
+# -----------------------------------------------------------------------------
+# 6. Native Compilation Artifacts
+# -----------------------------------------------------------------------------
+
+# Object files
+*.o
+*.obj
+
+# Static libraries
+*.a
+*.lib
+
+# Shared libraries and Python extensions
+*.so
+*.so.*
+*.dylib
+*.dll
+*.pyd
+
+# Executables and debug symbols
+*.exe
+*.pdb
+*.ilk
+*.dSYM/
+
+
+# -----------------------------------------------------------------------------
+# 7. External Dependencies and Local Data
+# -----------------------------------------------------------------------------
+
+# External resources are supplied separately and are not part of the
+# source distribution.
+
+/third_party/
+
+# -----------------------------------------------------------------------------
+# 8. Editors and IDEs
+# -----------------------------------------------------------------------------
+
+/.vscode/
+/.idea/
+
+
+# -----------------------------------------------------------------------------
+# 9. Local AI Development Tools
+# -----------------------------------------------------------------------------
+
+/.agents/
+/.codex/
+/.devshim/
+/.qoder/
+/.workbuddy/
+/.zcode/
+/.superpowers/
+
+superpowers/
+
+
+# -----------------------------------------------------------------------------
+# 10. Local Development Notes and Scratch Directories
+# -----------------------------------------------------------------------------
+
+/AGENTS.md
+/CONTEXT.md

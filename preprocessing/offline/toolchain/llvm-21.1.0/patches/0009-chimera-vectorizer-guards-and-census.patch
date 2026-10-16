@@ -1,0 +1,289 @@
+From abc2ce8d946447af987917e77e10e07b0e7299f6 Mon Sep 17 00:00:00 2001
+From: Chimera Patch Builder <chimera@example.invalid>
+Date: Thu, 3 Sep 2026 09:44:49 +0800
+Subject: [PATCH] chimera: auto-vectorization class gate and census
+ (attribute-driven; LV/SLP decision-point counting)
+
+Functions carrying the new "chimera-no-vectorize" function attribute form
+the auto-vectorization gate:
+
+* InlineFunction refuses to merge a gated callee into an ungated caller.  The
+  reverse direction is allowed: an ungated callee merged into a gated caller
+  remains protected by the caller's function-level vectorizer gate.  This
+  preserves the discovery build's function topology on the supported
+  non-LTO gate route.
+
+* LoopVectorizePass and SLPVectorizerPass suppress gated functions before
+  forming any vector code.  The later single-face census patch relocates this
+  guard to each final positive decision point so only profitable implicit
+  vector opportunities enter the strict formed/blocked TSV.
+---
+ llvm/lib/Transforms/Utils/InlineFunction.cpp  | 11 +++++
+ .../Transforms/Vectorize/LoopVectorize.cpp    | 30 ++++++++++++
+ .../Transforms/Vectorize/SLPVectorizer.cpp    | 30 ++++++++++++
+ .../Inline/chimera-no-inline-gate.ll          | 21 ++++++++
+ .../chimera-no-vectorize-gate.ll              | 48 +++++++++++++++++++
+ 5 files changed, 171 insertions(+)
+ create mode 100644 llvm/test/Transforms/Inline/chimera-no-inline-gate.ll
+ create mode 100644 llvm/test/Transforms/LoopVectorize/chimera-no-vectorize-gate.ll
+
+diff --git a/llvm/lib/Transforms/Utils/InlineFunction.cpp b/llvm/lib/Transforms/Utils/InlineFunction.cpp
+index 6929d14bc..22870078d 100644
+--- a/llvm/lib/Transforms/Utils/InlineFunction.cpp
++++ b/llvm/lib/Transforms/Utils/InlineFunction.cpp
+@@ -2474,6 +2474,15 @@ llvm::InlineResult llvm::InlineFunction(CallBase &CB, InlineFunctionInfo &IFI,
+                                         OptimizationRemarkEmitter *ORE) {
+   assert(CB.getParent() && CB.getFunction() && "Instruction not in function!");
+ 
++  // Chimera gate: do not let a gated callee escape into an ungated caller.
++  // Inlining an ungated callee into a gated caller is intentional: the caller
++  // remains gated, so its vectorizers still reject implicit vector formation.
++  if (Function *ChimeraInlineCallee = CB.getCalledFunction();
++      ChimeraInlineCallee &&
++      ChimeraInlineCallee->hasFnAttribute("chimera-no-vectorize") &&
++      !CB.getCaller()->hasFnAttribute("chimera-no-vectorize"))
++    return InlineResult::failure("chimera-no-vectorize callee");
++
+   // FIXME: we don't inline callbr yet.
+   if (isa<CallBrInst>(CB))
+     return InlineResult::failure("We don't inline callbr yet.");
+diff --git a/llvm/lib/Transforms/Vectorize/LoopVectorize.cpp b/llvm/lib/Transforms/Vectorize/LoopVectorize.cpp
+index 5b5482893..d4d3eeb2b 100644
+--- a/llvm/lib/Transforms/Vectorize/LoopVectorize.cpp
++++ b/llvm/lib/Transforms/Vectorize/LoopVectorize.cpp
+@@ -130,6 +130,7 @@
+ #include "llvm/Support/CommandLine.h"
+ #include "llvm/Support/Debug.h"
+ #include "llvm/Support/ErrorHandling.h"
++#include "llvm/Support/FileSystem.h"
+ #include "llvm/Support/InstructionCost.h"
+ #include "llvm/Support/MathExtras.h"
+ #include "llvm/Support/NativeFormatting.h"
+@@ -146,6 +147,7 @@
+ #include <algorithm>
+ #include <cassert>
+ #include <cstdint>
++#include <cstdlib>
+ #include <functional>
+ #include <iterator>
+ #include <limits>
+@@ -10427,6 +10429,33 @@ LoopVectorizeResult LoopVectorizePass::runImpl(Function &F) {
+ 
+ PreservedAnalyses LoopVectorizePass::run(Function &F,
+                                          FunctionAnalysisManager &AM) {
++  // Chimera auto-vectorization census: one line per function per run; formed
++  // is a function-level 0/1 (whether this run rewrote anything in the
++  // function) so it does not depend on LLVM statistics, which release builds
++  // compile out.  Gated functions early-out before any attempt and record
++  // formed=0; the gated flag carries the attribution.
++  const bool ChimeraGated = F.hasFnAttribute("chimera-no-vectorize");
++  bool ChimeraChanged = false;
++  struct ChimeraVecCensus {
++    Function &F;
++    bool Gated;
++    const bool *Changed;
++    ~ChimeraVecCensus() {
++      const char *StatsPath = std::getenv("CHIMERA_GATE_STATS");
++      if (!StatsPath)
++        return;
++      std::error_code EC;
++      raw_fd_ostream StatsOS(StatsPath, EC, sys::fs::OF_Append);
++      if (EC)
++        return;
++      const uint64_t Formed =
++          (!Gated && Changed && *Changed) ? uint64_t(1) : uint64_t(0);
++      StatsOS << "vectorizer-census\t" << F.getName() << "\tLV\t" << Formed
++              << "\t" << (Gated ? 1 : 0) << "\n";
++    }
++  } ChimeraVecCensusGuard{F, ChimeraGated, &ChimeraChanged};
++  if (ChimeraGated)
++    return PreservedAnalyses::all();
+   LI = &AM.getResult<LoopAnalysis>(F);
+   // There are no loops in the function. Return before computing other
+   // expensive analyses.
+@@ -10447,6 +10476,7 @@ PreservedAnalyses LoopVectorizePass::run(Function &F,
+   if (PSI && PSI->hasProfileSummary())
+     BFI = &AM.getResult<BlockFrequencyAnalysis>(F);
+   LoopVectorizeResult Result = runImpl(F);
++  ChimeraChanged = Result.MadeAnyChange;
+   if (!Result.MadeAnyChange)
+     return PreservedAnalyses::all();
+   PreservedAnalyses PA;
+diff --git a/llvm/lib/Transforms/Vectorize/SLPVectorizer.cpp b/llvm/lib/Transforms/Vectorize/SLPVectorizer.cpp
+index 8b1a3d953..597a704eb 100644
+--- a/llvm/lib/Transforms/Vectorize/SLPVectorizer.cpp
++++ b/llvm/lib/Transforms/Vectorize/SLPVectorizer.cpp
+@@ -82,6 +82,7 @@
+ #include "llvm/Support/Debug.h"
+ #include "llvm/Support/DebugCounter.h"
+ #include "llvm/Support/ErrorHandling.h"
++#include "llvm/Support/FileSystem.h"
+ #include "llvm/Support/GraphWriter.h"
+ #include "llvm/Support/InstructionCost.h"
+ #include "llvm/Support/KnownBits.h"
+@@ -94,6 +95,7 @@
+ #include <algorithm>
+ #include <cassert>
+ #include <cstdint>
++#include <cstdlib>
+ #include <iterator>
+ #include <memory>
+ #include <optional>
+@@ -20852,6 +20854,33 @@ void BoUpSLP::computeMinimumValueSizes() {
+ }
+ 
+ PreservedAnalyses SLPVectorizerPass::run(Function &F, FunctionAnalysisManager &AM) {
++  // Chimera auto-vectorization census: one line per function per run; formed
++  // is a function-level 0/1 (whether this run rewrote anything in the
++  // function) so it does not depend on LLVM statistics, which release builds
++  // compile out.  Gated functions early-out before any attempt and record
++  // formed=0; the gated flag carries the attribution.
++  const bool ChimeraGated = F.hasFnAttribute("chimera-no-vectorize");
++  bool ChimeraChanged = false;
++  struct ChimeraVecCensus {
++    Function &F;
++    bool Gated;
++    const bool *Changed;
++    ~ChimeraVecCensus() {
++      const char *StatsPath = std::getenv("CHIMERA_GATE_STATS");
++      if (!StatsPath)
++        return;
++      std::error_code EC;
++      raw_fd_ostream StatsOS(StatsPath, EC, sys::fs::OF_Append);
++      if (EC)
++        return;
++      const uint64_t Formed =
++          (!Gated && Changed && *Changed) ? uint64_t(1) : uint64_t(0);
++      StatsOS << "vectorizer-census\t" << F.getName() << "\tSLP\t" << Formed
++              << "\t" << (Gated ? 1 : 0) << "\n";
++    }
++  } ChimeraVecCensusGuard{F, ChimeraGated, &ChimeraChanged};
++  if (ChimeraGated)
++    return PreservedAnalyses::all();
+   auto *SE = &AM.getResult<ScalarEvolutionAnalysis>(F);
+   auto *TTI = &AM.getResult<TargetIRAnalysis>(F);
+   auto *TLI = AM.getCachedResult<TargetLibraryAnalysis>(F);
+@@ -20863,6 +20892,7 @@ PreservedAnalyses SLPVectorizerPass::run(Function &F, FunctionAnalysisManager &A
+   auto *ORE = &AM.getResult<OptimizationRemarkEmitterAnalysis>(F);
+ 
+   bool Changed = runImpl(F, SE, TTI, TLI, AA, LI, DT, AC, DB, ORE);
++  ChimeraChanged = Changed;
+   if (!Changed)
+     return PreservedAnalyses::all();
+ 
+diff --git a/llvm/test/Transforms/Inline/chimera-no-inline-gate.ll b/llvm/test/Transforms/Inline/chimera-no-inline-gate.ll
+new file mode 100644
+index 000000000..e31d655b8
+--- /dev/null
++++ b/llvm/test/Transforms/Inline/chimera-no-inline-gate.ll
+@@ -0,0 +1,54 @@
++; RUN: opt -passes="always-inline" -S < %s | FileCheck %s
++;
++; A gated callee must not inline into an open caller.  All other directions
++; are allowed so a gated caller keeps the discovery build's function shape.
++
++; CHECK-LABEL: define void @open_to_gated(
++; CHECK: call void @gated_callee()
++; CHECK: ret void
++; CHECK-LABEL: define void @gated_to_open(
++; CHECK-NOT: call void @open_callee()
++; CHECK: ret void
++; CHECK-LABEL: define void @gated_to_gated(
++; CHECK-NOT: call void @gated_callee()
++; CHECK: ret void
++; CHECK-LABEL: define void @open_to_open(
++; CHECK-NOT: call void @open_callee()
++; CHECK: ret void
++define internal void @gated_callee() #0 {
++entry:
++  ret void
++}
++
++define internal void @open_callee() #1 {
++entry:
++  ret void
++}
++
++define void @open_to_gated() {
++entry:
++  call void @gated_callee()
++  ret void
++}
++
++define void @gated_to_open() #2 {
++entry:
++  call void @open_callee()
++  ret void
++}
++
++define void @gated_to_gated() #2 {
++entry:
++  call void @gated_callee()
++  ret void
++}
++
++define void @open_to_open() {
++entry:
++  call void @open_callee()
++  ret void
++}
++
++attributes #0 = { alwaysinline "chimera-no-vectorize" }
++attributes #1 = { alwaysinline }
++attributes #2 = { "chimera-no-vectorize" }
+diff --git a/llvm/test/Transforms/LoopVectorize/chimera-no-vectorize-gate.ll b/llvm/test/Transforms/LoopVectorize/chimera-no-vectorize-gate.ll
+new file mode 100644
+index 000000000..a0a97dfa8
+--- /dev/null
++++ b/llvm/test/Transforms/LoopVectorize/chimera-no-vectorize-gate.ll
+@@ -0,0 +1,48 @@
++; RUN: opt -passes="default<O2>" -S < %s | FileCheck %s
++;
++; Chimera gate: the function carrying "chimera-no-vectorize" must keep its
++; trivially-vectorizable loop scalar (the patched LoopVectorize/SLPVectorizer
++; early-out), while the identical non-gated function is vectorized as usual.
++
++target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:32:32-p278:32:32-i64:64-i128:128-i512:512-f80:128-n8:16:32:64-S128"
++target triple = "x86_64-unknown-linux-gnu"
++
++; CHECK-LABEL: define void @gated(
++; CHECK-NOT: vector.body
++; CHECK: ret void
++define void @gated(ptr nocapture %p, i64 %n) #0 {
++entry:
++  br label %loop
++loop:
++  %i = phi i64 [ 0, %entry ], [ %next, %loop ]
++  %gep = getelementptr i32, ptr %p, i64 %i
++  %v = load i32, ptr %gep, align 4
++  %s = add nsw i32 %v, 1
++  store i32 %s, ptr %gep, align 4
++  %next = add nuw i64 %i, 1
++  %c = icmp slt i64 %next, %n
++  br i1 %c, label %loop, label %exit
++exit:
++  ret void
++}
++
++; CHECK-LABEL: define void @open(
++; CHECK: vector.body
++; CHECK: ret void
++define void @open(ptr nocapture %p, i64 %n) {
++entry:
++  br label %loop
++loop:
++  %i = phi i64 [ 0, %entry ], [ %next, %loop ]
++  %gep = getelementptr i32, ptr %p, i64 %i
++  %v = load i32, ptr %gep, align 4
++  %s = add nsw i32 %v, 1
++  store i32 %s, ptr %gep, align 4
++  %next = add nuw i64 %i, 1
++  %c = icmp slt i64 %next, %n
++  br i1 %c, label %loop, label %exit
++exit:
++  ret void
++}
++
++attributes #0 = { "chimera-no-vectorize" }
+-- 
+2.40.0.windows.1

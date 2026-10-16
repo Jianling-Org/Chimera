@@ -1,0 +1,209 @@
+From 9defbebe92d9e3cd7cd702adb1f51fab98cbb944 Mon Sep 17 00:00:00 2001
+From: Chimera Patch Builder <chimera@example.invalid>
+Date: Thu, 3 Sep 2026 17:44:19 +0800
+Subject: [PATCH] codegen: suppress vector store merging under
+ chimera-no-vectorize
+
+MergeConsecutiveStores fuses adjacent scalar stores into wider stores;
+when the merged width maps to a vector type the result is a
+VLEN-sensitive vector store.  For functions carrying the
+chimera-no-vectorize attribute, keep AllowVectors off so merged stores
+stay in scalar (wide-integer or element-wise) form.  Scalar-wide merges
+are untouched - they are not vector generation.
+
+All three merge helpers route their vector decision through the census:
+tryStoreMergeOfConstants / tryStoreMergeOfLoads compute the would-be
+decision under the gate, and tryStoreMergeOfExtracts - which upstream
+never consulted AllowVectors and would have kept forming vector stores
+under the gate - is gated as well (a codegen change for gated functions
+only; stock behavior is untouched).
+
+The decision points double as the census: merge-census records
+formed/blocked per function per combine pass into CHIMERA_GATE_STATS.
+"formed" = an ungated decision chose vector; "blocked" = a gated
+decision would have chosen vector.  A function whose merging never
+reaches a vector-capable decision records nothing.  Blocks are
+attributed to the chimera gate only - NoImplicitFloat-only functions
+record nothing.
+---
+ llvm/lib/CodeGen/SelectionDAG/DAGCombiner.cpp | 87 ++++++++++++++++---
+ 1 file changed, 75 insertions(+), 12 deletions(-)
+
+diff --git a/llvm/lib/CodeGen/SelectionDAG/DAGCombiner.cpp b/llvm/lib/CodeGen/SelectionDAG/DAGCombiner.cpp
+index 91fd2d843..4e6b9f3a6 100644
+--- a/llvm/lib/CodeGen/SelectionDAG/DAGCombiner.cpp
++++ b/llvm/lib/CodeGen/SelectionDAG/DAGCombiner.cpp
+@@ -60,6 +60,7 @@
+ #include "llvm/Support/Debug.h"
+ #include "llvm/Support/DebugCounter.h"
+ #include "llvm/Support/ErrorHandling.h"
++#include "llvm/Support/FileSystem.h"
+ #include "llvm/Support/KnownBits.h"
+ #include "llvm/Support/MathExtras.h"
+ #include "llvm/Support/raw_ostream.h"
+@@ -68,6 +69,7 @@
+ #include <algorithm>
+ #include <cassert>
+ #include <cstdint>
++#include <cstdlib>
+ #include <functional>
+ #include <iterator>
+ #include <optional>
+@@ -199,6 +201,16 @@ namespace {
+     /// stores candidates.
+     SmallPtrSet<SDNode *, 4> ChainsWithoutMergeableStores;
+ 
++    /// Chimera store-merge census: whether any vector-merge decision point
++    /// chose vector code (ungated) or would have chosen it (gated
++    /// counterfactual) during this combine pass.  Logged once at the end of
++    /// Run(); a function without such decisions records nothing.
++    /// ChimeraMergeGated mirrors the chimera-no-vectorize attribute so the
++    /// census attributes blocks to the gate only, not to NoImplicitFloat.
++    bool ChimeraMergeFormed = false;
++    bool ChimeraMergeBlocked = false;
++    bool ChimeraMergeGated = false;
++
+     /// When an instruction is simplified, add all users of the instruction to
+     /// the work lists because they might get more simplified now.
+     void AddUsersToWorklist(SDNode *N) {
+@@ -825,7 +837,7 @@ namespace {
+     /// vector store rather than a sequence of scalar stores.
+     bool tryStoreMergeOfExtracts(SmallVectorImpl<MemOpLink> &StoreNodes,
+                                  unsigned NumConsecutiveStores, EVT MemVT,
+-                                 SDNode *Root);
++                                 SDNode *Root, bool AllowVectors);
+ 
+     /// This is a helper function for mergeConsecutiveStores. It is used for
+     /// store chains that are composed entirely of loaded values.
+@@ -1885,6 +1897,21 @@ void DAGCombiner::Run(CombineLevel AtLevel) {
+   // If the root changed (e.g. it was a dead load, update the root).
+   DAG.setRoot(Dummy.getValue());
+   DAG.RemoveDeadNodes();
++
++  // Chimera store-merge census: one line per combine pass when any
++  // vector-merge decision fired (formed = ungated decision chose vector,
++  // blocked = gated decision would have chosen vector).  A function whose
++  // merging never reached a vector-capable decision records nothing.
++  if (ChimeraMergeFormed || ChimeraMergeBlocked) {
++    if (const char *StatsPath = std::getenv("CHIMERA_GATE_STATS")) {
++      std::error_code EC;
++      raw_fd_ostream StatsOS(StatsPath, EC, sys::fs::OF_Append);
++      if (!EC)
++        StatsOS << "merge-census\t"
++                << DAG.getMachineFunction().getFunction().getName() << "\t"
++                << (ChimeraMergeBlocked ? "blocked" : "formed") << "\n";
++    }
++  }
+ }
+ 
+ SDValue DAGCombiner::visit(SDNode *N) {
+@@ -21776,11 +21803,12 @@ bool DAGCombiner::tryStoreMergeOfConstants(
+         }
+       }
+ 
+-      // We only use vectors if the target allows it and the function is not
+-      // marked with the noimplicitfloat attribute.
+-      if (TLI.storeOfVectorConstantIsCheap(!NonZero, MemVT, i + 1, FirstStoreAS) &&
+-          AllowVectors) {
+-        // Find a legal type for the vector store.
++      // Find a legal type for the vector store.  The scan runs regardless of
++      // AllowVectors so the Chimera gate's census can record the decision the
++      // combiner would have taken; AllowVectors still vetoes the vector use
++      // below.
++      if (TLI.storeOfVectorConstantIsCheap(!NonZero, MemVT, i + 1,
++                                           FirstStoreAS)) {
+         unsigned Elts = (i + 1) * NumMemElts;
+         EVT Ty = EVT::getVectorVT(Context, MemVT.getScalarType(), Elts);
+         if (TLI.isTypeLegal(Ty) && TLI.isTypeLegal(MemVT) &&
+@@ -21792,7 +21820,12 @@ bool DAGCombiner::tryStoreMergeOfConstants(
+       }
+     }
+ 
+-    bool UseVector = (LastLegalVectorType > LastLegalType) && AllowVectors;
++    bool ChimeraWouldUseVector = LastLegalVectorType > LastLegalType;
++    if (ChimeraMergeGated)
++      ChimeraMergeBlocked |= ChimeraWouldUseVector;
++    else if (AllowVectors)
++      ChimeraMergeFormed |= ChimeraWouldUseVector;
++    bool UseVector = ChimeraWouldUseVector && AllowVectors;
+     unsigned NumElem = (UseVector) ? LastLegalVectorType : LastLegalType;
+     bool UseTrunc = LastIntegerTrunc && !UseVector;
+ 
+@@ -21838,7 +21871,7 @@ bool DAGCombiner::tryStoreMergeOfConstants(
+ 
+ bool DAGCombiner::tryStoreMergeOfExtracts(
+     SmallVectorImpl<MemOpLink> &StoreNodes, unsigned NumConsecutiveStores,
+-    EVT MemVT, SDNode *RootNode) {
++    EVT MemVT, SDNode *RootNode, bool AllowVectors) {
+   LLVMContext &Context = *DAG.getContext();
+   const DataLayout &DL = DAG.getDataLayout();
+   unsigned NumMemElts = MemVT.isVector() ? MemVT.getVectorNumElements() : 1;
+@@ -21896,6 +21929,19 @@ bool DAGCombiner::tryStoreMergeOfExtracts(
+       continue;
+     }
+ 
++    // Chimera gate: this path merges extracted vector elements into one
++    // vector store.  Under the gate the merge is suppressed, but the
++    // decision (candidates legal and dependency-free) is recorded for the
++    // census.  Suppressing here changes gated codegen: the scalar stores
++    // remain instead of the merged vector store.  NoImplicitFloat-only
++    // suppression does not reach this helper veto: the upstream extracts
++    // path never consulted AllowVectors, and stock behavior is preserved.
++    if (ChimeraMergeGated) {
++      ChimeraMergeBlocked = true;
++      return MadeChange;
++    }
++    ChimeraMergeFormed = true;
++
+     MadeChange |= mergeStoresOfConstantsOrVecElts(
+         StoreNodes, MemVT, NumStoresToMerge, /*IsConstantSrc*/ false,
+         /*UseVector*/ true, /*UseTrunc*/ false);
+@@ -22062,9 +22108,14 @@ bool DAGCombiner::tryStoreMergeOfLoads(SmallVectorImpl<MemOpLink> &StoreNodes,
+     }
+ 
+     // Only use vector types if the vector type is larger than the integer
+-    // type. If they are the same, use integers.
+-    bool UseVectorTy =
+-        LastLegalVectorType > LastLegalIntegerType && AllowVectors;
++    // type. If they are the same, use integers.  Under the Chimera gate the
++    // would-be decision is still computed for the census.
++    bool ChimeraWouldUseVectorTy = LastLegalVectorType > LastLegalIntegerType;
++    if (ChimeraMergeGated)
++      ChimeraMergeBlocked |= ChimeraWouldUseVectorTy;
++    else if (AllowVectors)
++      ChimeraMergeFormed |= ChimeraWouldUseVectorTy;
++    bool UseVectorTy = ChimeraWouldUseVectorTy && AllowVectors;
+     unsigned LastLegalType =
+         std::max(LastLegalVectorType, LastLegalIntegerType);
+ 
+@@ -22249,6 +22300,18 @@ bool DAGCombiner::mergeConsecutiveStores(StoreSDNode *St) {
+ 
+   bool AllowVectors = !DAG.getMachineFunction().getFunction().hasFnAttribute(
+       Attribute::NoImplicitFloat);
++  // Chimera gate: per-function suppression of the vector form of store
++  // merging.  Scalar-wide merges are untouched (they are not vector
++  // generation).  The vector-merge decisions themselves are recorded as
++  // census events by the decision sites (formed = ungated decision chose
++  // vector, blocked = gated decision would have chosen vector) and logged
++  // once per combine pass at the end of Run().
++  AllowVectors =
++      AllowVectors && !DAG.getMachineFunction().getFunction().hasFnAttribute(
++                          "chimera-no-vectorize");
++  ChimeraMergeGated =
++      DAG.getMachineFunction().getFunction().hasFnAttribute(
++          "chimera-no-vectorize");
+   bool IsNonTemporalStore = St->isNonTemporal();
+   bool IsNonTemporalLoad = StoreSrc == StoreSource::Load &&
+                            cast<LoadSDNode>(StoredVal)->isNonTemporal();
+@@ -22278,7 +22341,7 @@ bool DAGCombiner::mergeConsecutiveStores(StoreSDNode *St) {
+ 
+     case StoreSource::Extract:
+       MadeChange |= tryStoreMergeOfExtracts(StoreNodes, NumConsecutiveStores,
+-                                            MemVT, RootNode);
++                                            MemVT, RootNode, AllowVectors);
+       break;
+ 
+     case StoreSource::Load:
+-- 
+2.40.0.windows.1
+

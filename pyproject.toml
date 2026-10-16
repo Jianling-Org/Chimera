@@ -1,0 +1,48 @@
+[build-system]
+requires = ["scikit-build-core>=1.0"]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "chimera"
+version = "1.0.0"
+description = "Chimera portable binary preparation and migration runtime"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = ["pyelftools>=0.31"]
+
+[project.scripts]
+chimera-dev = "chimera.dev:main"
+chimera-pkg = "chimera.pkg:main"
+chimera-user = "chimera.user:main"
+
+[tool.scikit-build]
+cmake.source-dir = "runtime"
+wheel.py-api = "py3"
+# The release wheel carries target-platform LLVM/plugins and ELF resources;
+# keep it platform-tagged even though the Python modules are pure Python.
+wheel.platlib = true
+build-dir = "build/scikit-build/{wheel_tag}"
+editable.rebuild = true
+sdist.include = ["runtime/**"]
+[tool.scikit-build.cmake.define]
+CHIMERA_BUILD_RUNTIME = "OFF"
+CHIMERA_INSTALL_RUNTIME_SOURCE = "ON"
+CHIMERA_INSTALL_TOOLCHAIN_SOURCE = "OFF"
+CHIMERA_INSTALL_THIRD_PARTY = "OFF"
+CHIMERA_BUILD_TESTS = "OFF"
+
+[tool.scikit-build.wheel.packages]
+"chimera" = "cli/chimera"
+"chimera/preprocess/offline/analysis" = "preprocessing/offline/analysis"
+"chimera/preprocess/offline/config" = "preprocessing/offline/config"
+"chimera/preprocess/offline/analysis_profile" = "preprocessing/offline/analysis_profile"
+"chimera/runtime/manifest" = "runtime/artifacts/manifest/chimera/manifest"
+"chimera/runtime/scene_contracts" = "runtime/artifacts/scene_contracts/chimera/scene_contracts"
+"chimera/runtime/validate" = "runtime/artifacts/validate/chimera/validate"
+"chimera/runtime/bpf" = "runtime/bpf/loader/chimera/bpf"
+"chimera/runtime/env_verify" = "runtime/env/verify/chimera/env_verify"
+"chimera/runtime/launcher" = "runtime/launcher/run/chimera/launcher"
+"chimera/runtime/preload" = "runtime/launcher/preload/chimera/preload"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

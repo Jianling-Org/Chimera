@@ -1,0 +1,189 @@
+From c553359ef908b0dda3c45c5762b30073899da491 Mon Sep 17 00:00:00 2001
+From: Chimera Patch Builder <chimera@example.invalid>
+Date: Thu, 13 Aug 2026 11:00:00 +0800
+Subject: [PATCH 5/7] riscv: propagate tuple spill PCSections to children
+
+Chimera LLVM patch 5 of 7. Tuple expansion remains unconditional; only Chimera
+PCSections propagation is enabled by the "chimera-stack-object" attribute.
+---
+ llvm/lib/Target/RISCV/RISCVRegisterInfo.cpp   | 39 +++++++++++----
+ .../RISCV/chimera-rvv-tuple-spill-stock.mir   | 42 +++++++++++++++++
+ .../CodeGen/RISCV/chimera-rvv-tuple-spill.mir | 47 +++++++++++++++++++
+ 3 files changed, 119 insertions(+), 9 deletions(-)
+ create mode 100644 llvm/test/CodeGen/RISCV/chimera-rvv-tuple-spill-stock.mir
+ create mode 100644 llvm/test/CodeGen/RISCV/chimera-rvv-tuple-spill.mir
+
+diff --git a/llvm/lib/Target/RISCV/RISCVRegisterInfo.cpp b/llvm/lib/Target/RISCV/RISCVRegisterInfo.cpp
+index 540412366..25f62efdb 100644
+--- a/llvm/lib/Target/RISCV/RISCVRegisterInfo.cpp
++++ b/llvm/lib/Target/RISCV/RISCVRegisterInfo.cpp
+@@ -10,6 +10,8 @@
+ //
+ //===----------------------------------------------------------------------===//
+ 
++#include "llvm/IR/Function.h"
++#include "llvm/IR/Metadata.h"
+ #include "RISCVRegisterInfo.h"
+ #include "RISCV.h"
+ #include "RISCVSubtarget.h"
+@@ -29,6 +31,14 @@
+ 
+ using namespace llvm;
+ 
++static MDNode *cloneDistinctPCSections(const MDNode &MD) {
++  SmallVector<Metadata *, 8> Ops;
++  for (const MDOperand &Op : MD.operands())
++    Ops.push_back(Op.get());
++
++  return MDNode::getDistinct(MD.getContext(), Ops);
++}
++
+ static cl::opt<bool> DisableCostPerUse("riscv-disable-cost-per-use",
+                                        cl::init(false), cl::Hidden);
+ static cl::opt<bool>
+@@ -455,11 +465,17 @@ void RISCVRegisterInfo::lowerVSPILL(MachineBasicBlock::iterator II) const {
+     // super register, that prevents machine verifier complaining when part of
+     // subreg is undef, see comment in MachineVerifier::checkLiveness for more
+     // detail.
+-    BuildMI(MBB, II, DL, TII->get(Opcode))
+-        .addReg(TRI->getSubReg(SrcReg, SubRegIdx + I))
+-        .addReg(Base, getKillRegState(I == NF - 1))
+-        .addMemOperand(NewMMO)
+-        .addReg(SrcReg, RegState::Implicit);
++
++    MachineInstrBuilder MIB = BuildMI(MBB, II, DL, TII->get(Opcode))
++                                  .addReg(TRI->getSubReg(SrcReg, SubRegIdx + I))
++                                  .addReg(Base, getKillRegState(I == NF - 1))
++                                  .addMemOperand(NewMMO)
++                                  .addReg(SrcReg, RegState::Implicit);
++
++    if (MF.getFunction().hasFnAttribute("chimera-stack-object"))
++      if (MDNode *PCSections = II->getPCSections())
++        MIB.setPCSections(cloneDistinctPCSections(*PCSections));
++
+     if (I != NF - 1)
+       BuildMI(MBB, II, DL, TII->get(RISCV::ADD), NewBase)
+           .addReg(Base, getKillRegState(I != 0 || IsBaseKill))
+@@ -533,10 +549,15 @@ void RISCVRegisterInfo::lowerVRELOAD(MachineBasicBlock::iterator II) const {
+   TypeSize NewSize = OldLoc.getValue().divideCoefficientBy(NF);
+   auto *NewMMO = MF.getMachineMemOperand(OldMMO, OldMMO->getOffset(), NewSize);
+   for (unsigned I = 0; I < NF; ++I) {
+-    BuildMI(MBB, II, DL, TII->get(Opcode),
+-            TRI->getSubReg(DestReg, SubRegIdx + I))
+-        .addReg(Base, getKillRegState(I == NF - 1))
+-        .addMemOperand(NewMMO);
++    MachineInstrBuilder MIB = BuildMI(MBB, II, DL, TII->get(Opcode),
++                                      TRI->getSubReg(DestReg, SubRegIdx + I))
++                                  .addReg(Base, getKillRegState(I == NF - 1))
++                                  .addMemOperand(NewMMO);
++
++    if (MF.getFunction().hasFnAttribute("chimera-stack-object"))
++      if (MDNode *PCSections = II->getPCSections())
++        MIB.setPCSections(cloneDistinctPCSections(*PCSections));
++
+     if (I != NF - 1)
+       BuildMI(MBB, II, DL, TII->get(RISCV::ADD), NewBase)
+           .addReg(Base, getKillRegState(I != 0 || IsBaseKill))
+diff --git a/llvm/test/CodeGen/RISCV/chimera-rvv-tuple-spill-stock.mir b/llvm/test/CodeGen/RISCV/chimera-rvv-tuple-spill-stock.mir
+new file mode 100644
+index 000000000..acde6589c
+--- /dev/null
++++ b/llvm/test/CodeGen/RISCV/chimera-rvv-tuple-spill-stock.mir
+@@ -0,0 +1,42 @@
++# RUN: llc -mtriple=riscv64 -mattr=+v -stop-after=prologepilog %s -o - \
++# RUN:   | FileCheck %s
++# RUN: llc -mtriple=riscv64 -mattr=+v -stop-after=prologepilog %s -o - \
++# RUN:   | not grep -E 'PseudoV(SPILL|RELOAD)|(VS1R_V|VL1RE8_V).*pcsections'
++# RUN: llc -mtriple=riscv64 -mattr=+v -filetype=asm %s -o - \
++# RUN:   | not grep -E '\.Lpcsection|\.chimera\.stackobj_map'
++
++# Tuple expansion is unconditional, but a function without the Chimera opt-in
++# attribute must not propagate even an input pseudo's PCSections to children.
++
++--- |
++  target triple = "riscv64"
++
++  define void @stock_tuple_spill(ptr %base, i64 %vl) {
++    ret void
++  }
++
++  !0 = distinct !{!".chimera.stackobj_map!A", !1}
++  !1 = !{i32 -2147483648}
++...
++---
++name: stock_tuple_spill
++tracksRegLiveness: true
++stack:
++  - { id: 0, offset: 0, size: 64, alignment: 8,
++      stack-id: scalable-vector }
++body: |
++  bb.0:
++    liveins: $x10, $x11
++
++    %0:gpr = COPY $x10
++    %1:gprnox0 = COPY $x11
++    $v0_v1_v2_v3_v4_v5_v6 = PseudoVLSEG7E64_V_M1 undef $v0_v1_v2_v3_v4_v5_v6, %0, %1, 6, 0
++    PseudoVSPILL7_M1 killed renamable $v0_v1_v2_v3_v4_v5_v6, %stack.0, pcsections !0 :: (store (<vscale x 7 x s64>) into %stack.0, align 8)
++    renamable $v7_v8_v9_v10_v11_v12_v13 = PseudoVRELOAD7_M1 %stack.0, pcsections !0 :: (load (<vscale x 7 x s64>) from %stack.0, align 8)
++    VS1R_V killed $v8, %0:gpr
++    PseudoRET
++...
++
++# CHECK-LABEL: name: stock_tuple_spill
++# CHECK-COUNT-7: VS1R_V
++# CHECK-COUNT-7: VL1RE8_V
+diff --git a/llvm/test/CodeGen/RISCV/chimera-rvv-tuple-spill.mir b/llvm/test/CodeGen/RISCV/chimera-rvv-tuple-spill.mir
+new file mode 100644
+index 000000000..f4b7c9196
+--- /dev/null
++++ b/llvm/test/CodeGen/RISCV/chimera-rvv-tuple-spill.mir
+@@ -0,0 +1,47 @@
++# RUN: llc -mtriple=riscv64 -mattr=+v -stop-after=prologepilog %s -o - | FileCheck %s --check-prefix=CHILD
++# RUN: llc -mtriple=riscv64 -mattr=+v -stop-after=prologepilog %s -o - | FileCheck %s --check-prefix=NONCHILD
++# RUN: llc -mtriple=riscv64 -mattr=+v -stop-after=prologepilog %s -o - \
++# RUN:   | not grep -E 'PseudoV(SPILL|RELOAD)| = ADD .*pcsections'
++
++# A tuple pseudo has one SOID. Its seven store and seven load children each
++# need a distinct top-level PCSections node. Address ADDs and an unrelated
++# VS1R_V must not inherit metadata, and the two pseudos must disappear.
++
++--- |
++  target triple = "riscv64"
++
++  define void @tuple_spill(ptr %base, i64 %vl) #0 {
++    ret void
++  }
++
++  attributes #0 = { "chimera-stack-object" }
++
++  !0 = distinct !{!".chimera.stackobj_map!A", !1}
++  !1 = !{i32 -2147483648}
++...
++---
++name: tuple_spill
++tracksRegLiveness: true
++stack:
++  - { id: 0, offset: 0, size: 64, alignment: 8,
++      stack-id: scalable-vector }
++body: |
++  bb.0:
++    liveins: $x10, $x11
++
++    %0:gpr = COPY $x10
++    %1:gprnox0 = COPY $x11
++    $v0_v1_v2_v3_v4_v5_v6 = PseudoVLSEG7E64_V_M1 undef $v0_v1_v2_v3_v4_v5_v6, %0, %1, 6, 0
++    PseudoVSPILL7_M1 killed renamable $v0_v1_v2_v3_v4_v5_v6, %stack.0, pcsections !0 :: (store (<vscale x 7 x s64>) into %stack.0, align 8)
++    renamable $v7_v8_v9_v10_v11_v12_v13 = PseudoVRELOAD7_M1 %stack.0, pcsections !0 :: (load (<vscale x 7 x s64>) from %stack.0, align 8)
++    VS1R_V killed $v8, %0:gpr
++    PseudoRET
++...
++
++# CHILD-LABEL: name: tuple_spill
++# CHILD-COUNT-7: VS1R_V {{.*}}pcsections <
++# CHILD-COUNT-7: VL1RE8_V {{.*}}pcsections <
++
++# NONCHILD-LABEL: name: tuple_spill
++# NONCHILD-COUNT-12: = ADD {{.*}}{{$}}
++# NONCHILD: VS1R_V killed $v8, killed renamable $x10{{$}}
+-- 
+2.53.0

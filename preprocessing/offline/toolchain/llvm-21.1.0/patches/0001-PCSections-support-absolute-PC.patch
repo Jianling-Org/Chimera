@@ -1,0 +1,79 @@
+From dc7743a6fda1fbdbedab2adcf8ae7c269a7bdc07 Mon Sep 17 00:00:00 2001
+From: Chimera Patch Builder <chimera@example.invalid>
+Date: Thu, 13 Aug 2026 11:00:00 +0800
+Subject: [PATCH 1/7] llvm: support absolute PCSections addresses
+
+Chimera LLVM patch 1 of 7.
+---
+ llvm/lib/CodeGen/AsmPrinter/AsmPrinter.cpp    |  9 ++++++--
+ .../CodeGen/Generic/pcsections-absolute.ll    | 25 +++++++++++++++++++++
+ 2 files changed, 32 insertions(+), 2 deletions(-)
+ create mode 100644 llvm/test/CodeGen/Generic/pcsections-absolute.ll
+
+diff --git a/llvm/lib/CodeGen/AsmPrinter/AsmPrinter.cpp b/llvm/lib/CodeGen/AsmPrinter/AsmPrinter.cpp
+index 76a1d8c..abed0d7 100644
+--- a/llvm/lib/CodeGen/AsmPrinter/AsmPrinter.cpp
++++ b/llvm/lib/CodeGen/AsmPrinter/AsmPrinter.cpp
+@@ -1688,6 +1688,7 @@ void AsmPrinter::emitPCSections(const MachineFunction &MF) {
+     // constants may appear, which will simply be emitted into the current
+     // section (the user of MD_pcsections decides the format of encoded data).
+     assert(isa<MDString>(MD.getOperand(0)) && "first operand not a string");
++    bool AbsolutePC = false;
+     bool ConstULEB128 = false;
+     for (const MDOperand &MDO : MD.operands()) {
+       if (auto *S = dyn_cast<MDString>(MDO)) {
+@@ -1698,15 +1699,19 @@ void AsmPrinter::emitPCSections(const MachineFunction &MF) {
+         const size_t OptStart = SecWithOpt.find('!'); // likely npos
+         const StringRef Sec = SecWithOpt.substr(0, OptStart);
+         const StringRef Opts = SecWithOpt.substr(OptStart); // likely empty
++        AbsolutePC = Opts.contains('A');
+         ConstULEB128 = Opts.contains('C');
+ #ifndef NDEBUG
+         for (char O : Opts)
+-          assert((O == '!' || O == 'C') && "Invalid !pcsections options");
++          assert((O == 'A' || O == '!' || O == 'C') &&
++                 "Invalid !pcsections options");
+ #endif
+         SwitchSection(Sec);
+         const MCSymbol *Prev = Syms.front();
+         for (const MCSymbol *Sym : Syms) {
+-          if (Sym == Prev || !Deltas) {
++          if (AbsolutePC) {
++            OutStreamer->emitSymbolValue(Sym, getPointerSize());
++          } else if (Sym == Prev || !Deltas) {
+             // Use the entry itself as the base of the relative offset.
+             MCSymbol *Base = MF.getContext().createTempSymbol("pcsection_base");
+             OutStreamer->emitLabel(Base);
+diff --git a/llvm/test/CodeGen/Generic/pcsections-absolute.ll b/llvm/test/CodeGen/Generic/pcsections-absolute.ll
+new file mode 100644
+index 0000000..2586c36
+--- /dev/null
++++ b/llvm/test/CodeGen/Generic/pcsections-absolute.ll
+@@ -0,0 +1,25 @@
++; REQUIRES: riscv-registered-target
++; RUN: llc -mtriple=riscv64 -filetype=asm < %s | FileCheck %s --check-prefix=RV64
++; RUN: llc -mtriple=riscv32 -filetype=asm < %s | FileCheck %s --check-prefix=RV32
++
++; !A emits the instruction symbol value using the target pointer size.
++; This generic behavior is intentionally not restricted to Chimera or RV64.
++
++define i32 @absolute_pc(i32 %x) {
++entry:
++  %y = add i32 %x, 1, !pcsections !0
++  ret i32 %y
++}
++
++; RV64-LABEL: absolute_pc:
++; RV64: .section .llvm_pcsections,"awo",@progbits,.text
++; RV64: .quad .Lpcsection
++; RV64-NEXT: .word 7
++
++; RV32-LABEL: absolute_pc:
++; RV32: .section .llvm_pcsections,"awo",@progbits,.text
++; RV32: .word .Lpcsection
++; RV32-NEXT: .word 7
++
++!0 = distinct !{!".llvm_pcsections!A", !1}
++!1 = !{i32 7}
+-- 
+2.55.0.windows.3

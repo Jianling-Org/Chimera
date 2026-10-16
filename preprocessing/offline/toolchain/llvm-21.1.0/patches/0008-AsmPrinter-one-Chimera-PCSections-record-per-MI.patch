@@ -1,0 +1,106 @@
+From 6b2e9a4c1f83d05e7a6c9b2d4e8f13a5c7e0d94b2 Mon Sep 17 00:00:00 2001
+From: Chimera Patch Builder <chimera@example.invalid>
+Date: Thu, 27 Aug 2026 23:10:00 +0800
+Subject: [PATCH 8/8] llvm: one Chimera PCSections record per MachineInstr
+
+Chimera LLVM patch 8 of 8.
+
+Upstream PCSections emission groups every MachineInstr label that
+shares one metadata node into a single entry: N PC values followed by
+one aux payload. Chimera sections instead require a fixed per-record
+wire format ([absolute PC][aux], a 12-byte stride on RV64).
+
+One metadata node legitimately reaches codegen attached to several
+MachineInstrs: SelectionDAG expands a single IR instruction into
+multiple MIs (a constant-materializing store alone yields two), and
+LTO-time inlining or loop unrolling clones instructions that keep the
+original node. The grouped emission broke the record stride, and the
+final section size stopped being a multiple of the record size.
+
+Register each instruction under a fresh distinct copy of the node
+whenever it references a section named `.chimera.*`, so every entry
+holds exactly one PC followed by its aux payload. Non-Chimera sections
+keep the upstream grouping semantics.
+---
+ llvm/lib/CodeGen/AsmPrinter/AsmPrinter.cpp            | 25 ++++++++++++++++++++++++-
+ .../chimera-pcsections-per-mi-records.ll              | 34 +++++++++++++++++++++++++++
+ 2 files changed, 59 insertions(+), 1 deletion(-)
+ create mode 100644 llvm/test/CodeGen/Generic/chimera-pcsections-per-mi-records.ll
+
+diff --git a/llvm/lib/CodeGen/AsmPrinter/AsmPrinter.cpp b/llvm/lib/CodeGen/AsmPrinter/AsmPrinter.cpp
+index efbabd9..3ed0663 100644
+--- a/llvm/lib/CodeGen/AsmPrinter/AsmPrinter.cpp
++++ b/llvm/lib/CodeGen/AsmPrinter/AsmPrinter.cpp
+@@ -1728,7 +1728,31 @@ void AsmPrinter::emitPCSectionsLabel(const MachineFunction &MF,
+                                      const MDNode &MD) {
+   MCSymbol *S = MF.getContext().createTempSymbol("pcsection");
+   OutStreamer->emitLabel(S);
+-  PCSectionsSymbols[&MD].emplace_back(S);
++
++  // Chimera PC sections use a fixed per-record wire format
++  // ([absolute PC][aux constants]). One metadata node may reach codegen
++  // attached to several MachineInstrs: SelectionDAG expands one IR
++  // instruction into multiple MIs (a constant materialization plus the
++  // store itself), and LTO-time inlining or unrolling clones
++  // instructions that share the node. Upstream emission groups all PCs
++  // of one node into a single entry (N*pointer-size bytes followed by
++  // one aux payload), which breaks the fixed record stride. Register
++  // every instruction under a fresh distinct copy of the node so each
++  // entry holds exactly one PC. Non-Chimera sections keep the upstream
++  // grouping semantics.
++  const MDNode *Key = &MD;
++  for (const MDOperand &MDO : MD.operands()) {
++    auto *Sec = dyn_cast<MDString>(MDO);
++    if (Sec && Sec->getString().starts_with(".chimera.")) {
++      SmallVector<Metadata *, 8> Ops;
++      for (const MDOperand &Op : MD.operands())
++        Ops.push_back(Op.get());
++      Key = MDNode::getDistinct(MF.getFunction().getContext(), Ops);
++      break;
++    }
++  }
++
++  PCSectionsSymbols[Key].emplace_back(S);
+ }
+ 
+ void AsmPrinter::emitPCSections(const MachineFunction &MF) {
+diff --git a/llvm/test/CodeGen/Generic/chimera-pcsections-per-mi-records.ll b/llvm/test/CodeGen/Generic/chimera-pcsections-per-mi-records.ll
+new file mode 100644
+index 0000000..a6ccada
+--- /dev/null
++++ b/llvm/test/CodeGen/Generic/chimera-pcsections-per-mi-records.ll
+@@ -0,0 +1,34 @@
++; REQUIRES: riscv-registered-target
++; RUN: llc -mtriple=riscv64 -filetype=asm < %s | FileCheck %s
++
++; One IR instruction carrying !pcsections can expand into several
++; MachineInstrs (a constant materialization plus the store), and
++; LTO-time inlining or unrolling clones instructions that share one
++; metadata node. Chimera sections must still emit one [absolute
++; PC][aux] record per instruction instead of grouping every PC of a
++; shared node ahead of a single aux payload; the wire format keeps
++; its fixed 12-byte stride on RV64.
++
++define void @expanded_and_shared(ptr %p) {
++entry:
++  store volatile i32 1, ptr %p, !pcsections !0
++  store volatile i32 2, ptr %p, !pcsections !0
++  ret void
++}
++
++; The two stores share !0 and each expands to an li/sw pair: four
++; records, every record one .quad PC immediately followed by its
++; .word aux.
++
++; CHECK: .section .chimera.stackobj_map,"o",@progbits,.text
++; CHECK-NEXT: .quad .Lpcsection
++; CHECK-NEXT: .word 7
++; CHECK-NEXT: .quad .Lpcsection
++; CHECK-NEXT: .word 7
++; CHECK-NEXT: .quad .Lpcsection
++; CHECK-NEXT: .word 7
++; CHECK-NEXT: .quad .Lpcsection
++; CHECK-NEXT: .word 7
++
++!0 = distinct !{!".chimera.stackobj_map!A", !1}
++!1 = !{i32 7}

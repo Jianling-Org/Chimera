@@ -1,0 +1,100 @@
+From 3ead5187eecaf64a9ca419aa16a5dd78d9b9c4da Mon Sep 17 00:00:00 2001
+From: Chimera Patch Builder <chimera@example.invalid>
+Date: Thu, 13 Aug 2026 11:00:00 +0800
+Subject: [PATCH 6/7] riscv: transfer deferred call PCSections in LowerCall
+
+Chimera LLVM patch 6 of 7.
+---
+ llvm/lib/Target/RISCV/RISCVISelLowering.cpp   | 18 +++++++++
+ .../RISCV/chimera-pcsections-call-tail.ll     | 37 +++++++++++++++++++
+ 2 files changed, 55 insertions(+)
+ create mode 100644 llvm/test/CodeGen/RISCV/chimera-pcsections-call-tail.ll
+
+diff --git a/llvm/lib/Target/RISCV/RISCVISelLowering.cpp b/llvm/lib/Target/RISCV/RISCVISelLowering.cpp
+index 5fb16f5..55c6dc0 100644
+--- a/llvm/lib/Target/RISCV/RISCVISelLowering.cpp
++++ b/llvm/lib/Target/RISCV/RISCVISelLowering.cpp
+@@ -22735,6 +22735,18 @@ SDValue RISCVTargetLowering::LowerCall(CallLoweringInfo &CLI,
+   // Emit the call.
+   SDVTList NodeTys = DAG.getVTList(MVT::Other, MVT::Glue);
+ 
++  // Chimera's IR pass defers PCSections metadata on calls because generic
++  // SelectionDAG lowering cannot reliably associate all calls (e.g. void/tail
++  // calls) with the actual target call SDNode. Attach it here, where the RISC-V
++  // call SDNode is known exactly.
++  auto AddChimeraPCSections = [&](SDNode *N) {
++    if (!CLI.CB)
++      return;
++
++    if (MDNode *MD = CLI.CB->getMetadata("chimera.pcsections"))
++      DAG.addPCSections(N, MD);
++  };
++
+   // Use software guarded branch for large code model non-indirect calls
+   // Tail call to external symbol will have a null CLI.CB and we need another
+   // way to determine the callsite type
+@@ -22749,6 +22761,9 @@ SDValue RISCVTargetLowering::LowerCall(CallLoweringInfo &CLI,
+     unsigned CallOpc =
+         NeedSWGuarded ? RISCVISD::SW_GUARDED_TAIL : RISCVISD::TAIL;
+     SDValue Ret = DAG.getNode(CallOpc, DL, NodeTys, Ops);
++
++    AddChimeraPCSections(Ret.getNode());
++
+     if (CLI.CFIType)
+       Ret.getNode()->setCFIType(CLI.CFIType->getZExtValue());
+     DAG.addNoMergeSiteInfo(Ret.getNode(), CLI.NoMerge);
+@@ -22757,6 +22772,9 @@ SDValue RISCVTargetLowering::LowerCall(CallLoweringInfo &CLI,
+ 
+   unsigned CallOpc = NeedSWGuarded ? RISCVISD::SW_GUARDED_CALL : RISCVISD::CALL;
+   Chain = DAG.getNode(CallOpc, DL, NodeTys, Ops);
++
++  AddChimeraPCSections(Chain.getNode());
++
+   if (CLI.CFIType)
+     Chain.getNode()->setCFIType(CLI.CFIType->getZExtValue());
+   DAG.addNoMergeSiteInfo(Chain.getNode(), CLI.NoMerge);
+diff --git a/llvm/test/CodeGen/RISCV/chimera-pcsections-call-tail.ll b/llvm/test/CodeGen/RISCV/chimera-pcsections-call-tail.ll
+new file mode 100644
+index 0000000..b43a51d
+--- /dev/null
++++ b/llvm/test/CodeGen/RISCV/chimera-pcsections-call-tail.ll
+@@ -0,0 +1,37 @@
++; RUN: llc -mtriple=riscv64 -filetype=asm < %s | FileCheck %s
++
++; LowerCall transfers deferred metadata to the exact CALL or TAIL SDNode.
++; This patch deliberately contains no inline-asm transfer logic.
++
++declare void @callee()
++
++define void @deferred_call() {
++entry:
++  call void @callee(), !chimera.pcsections !0
++  ret void
++}
++
++define void @deferred_tail() {
++entry:
++  musttail call void @callee(), !chimera.pcsections !2
++  ret void
++}
++
++; CHECK-LABEL: deferred_call:
++; CHECK: [[CALL_PC:.Lpcsection[0-9]+]]:
++; CHECK-NEXT: call callee
++; CHECK: .section .chimera.call_targets,"o",@progbits,.text
++; CHECK: .quad [[CALL_PC]]
++; CHECK-NEXT: .word 11
++
++; CHECK-LABEL: deferred_tail:
++; CHECK: [[TAIL_PC:.Lpcsection[0-9]+]]:
++; CHECK-NEXT: tail callee
++; CHECK: .section .chimera.call_targets,"o",@progbits,.text
++; CHECK: .quad [[TAIL_PC]]
++; CHECK-NEXT: .word 22
++
++!0 = distinct !{!".chimera.call_targets!A", !1}
++!1 = !{i32 11}
++!2 = distinct !{!".chimera.call_targets!A", !3}
++!3 = !{i32 22}
+-- 
+2.55.0.windows.3

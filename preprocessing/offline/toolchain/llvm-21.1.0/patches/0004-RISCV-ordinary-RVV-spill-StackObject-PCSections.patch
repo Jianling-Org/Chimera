@@ -1,0 +1,336 @@
+From e1e950f90c67e90166035c9ad2614c39af1810e7 Mon Sep 17 00:00:00 2001
+From: Chimera Patch Builder <chimera@example.invalid>
+Date: Thu, 13 Aug 2026 11:00:00 +0800
+Subject: [PATCH 4/7] riscv: mark ordinary RVV spills with StackObject
+ PCSections
+
+Chimera LLVM patch 4 of 7. Chimera behavior is enabled per function by the
+"chimera-stack-object" string attribute; stock RISC-V codegen is unchanged.
+---
+ llvm/lib/Target/RISCV/RISCVInstrInfo.cpp             | 83 +++++++++++++--
+ .../CodeGen/RISCV/chimera-rvv-spill-rv32.ll          | 23 ++++
+ .../CodeGen/RISCV/chimera-rvv-spill-stock-rv32.ll    | 29 +++++
+ .../CodeGen/RISCV/chimera-rvv-spill-stock-rv64.ll    | 28 +++++
+ llvm/test/CodeGen/RISCV/chimera-rvv-spill.ll         | 95 +++++++++++++++++
+ 5 files changed, 248 insertions(+), 10 deletions(-)
+ create mode 100644 llvm/test/CodeGen/RISCV/chimera-rvv-spill-rv32.ll
+ create mode 100644 llvm/test/CodeGen/RISCV/chimera-rvv-spill-stock-rv32.ll
+ create mode 100644 llvm/test/CodeGen/RISCV/chimera-rvv-spill-stock-rv64.ll
+ create mode 100644 llvm/test/CodeGen/RISCV/chimera-rvv-spill.ll
+
+diff --git a/llvm/lib/Target/RISCV/RISCVInstrInfo.cpp b/llvm/lib/Target/RISCV/RISCVInstrInfo.cpp
+index d3ade31..66cfb9b 100644
+--- a/llvm/lib/Target/RISCV/RISCVInstrInfo.cpp
++++ b/llvm/lib/Target/RISCV/RISCVInstrInfo.cpp
+@@ -9,7 +9,9 @@
+ // This file contains the RISC-V implementation of the TargetInstrInfo class.
+ //
+ //===----------------------------------------------------------------------===//
+-
++#include "llvm/IR/Constants.h"
++#include "llvm/IR/Function.h"
++#include "llvm/IR/MDBuilder.h"
+ #include "RISCVInstrInfo.h"
+ #include "MCTargetDesc/RISCVBaseInfo.h"
+ #include "MCTargetDesc/RISCVMatInt.h"
+@@ -50,6 +52,59 @@ STATISTIC(NumVRegSpilled,
+ STATISTIC(NumVRegReloaded,
+           "Number of registers within vector register groups reloaded");
+ 
++namespace {
++
++constexpr uint32_t ChimeraBackendSOIDBase = 0x80000000u;
++constexpr uint32_t ChimeraInvalidSOID = 0xffffffffu;
++
++static bool hasChimeraStackObject(const MachineFunction &MF) {
++  return MF.getFunction().hasFnAttribute("chimera-stack-object");
++}
++
++static MDNode *createChimeraStackObjectPCSections(MachineFunction &MF,
++                                                  int FrameIndex) {
++  if (MF.getSubtarget<RISCVSubtarget>().getXLen() != 64)
++    report_fatal_error("Chimera backend StackObject map requires XLEN=64");
++
++  // Compiler-created spill objects use the upper half of the StackObjectID
++  // space:
++  //
++  //   SOID = 0x80000000 | FrameIndex
++  //
++  // 0xffffffff remains reserved as invalid.
++  if (FrameIndex < 0 ||
++      static_cast<uint64_t>(FrameIndex) >= 0x7fffffffu)
++    report_fatal_error("Chimera backend StackObjectID overflow");
++
++  const uint32_t SOID =
++      ChimeraBackendSOIDBase | static_cast<uint32_t>(FrameIndex);
++  if (SOID == ChimeraInvalidSOID)
++    report_fatal_error("invalid Chimera backend StackObjectID");
++
++  LLVMContext &Ctx = MF.getFunction().getContext();
++  Constant *SOIDConstant = ConstantInt::get(Type::getInt32Ty(Ctx), SOID);
++
++  SmallVector<Constant *, 1> Aux;
++  Aux.push_back(SOIDConstant);
++
++  SmallVector<MDBuilder::PCSection, 1> Sections;
++  Sections.push_back({".chimera.stackobj_map!A", std::move(Aux)});
++
++  MDBuilder MDB(Ctx);
++  MDNode *MD = MDB.createPCSections(Sections);
++
++  // PCSectionsSymbols is keyed by MDNode*. Identical metadata on two
++  // MachineInstrs must not be uniqued into one node, otherwise multiple PCs
++  // could share one auxiliary SOID.
++  SmallVector<Metadata *, 4> Ops;
++  for (const MDOperand &Op : MD->operands())
++    Ops.push_back(Op.get());
++
++  return MDNode::getDistinct(Ctx, Ops);
++}
++
++} // namespace
++
+ static cl::opt<bool> PreferWholeRegisterMove(
+     "riscv-prefer-whole-register-move", cl::init(false), cl::Hidden,
+     cl::desc("Prefer whole register move for vector registers."));
+@@ -704,11 +759,15 @@ void RISCVInstrInfo::storeRegToStackSlot(MachineBasicBlock &MBB,
+         TypeSize::getScalable(MFI.getObjectSize(FI)), MFI.getObjectAlign(FI));
+ 
+     MFI.setStackID(FI, TargetStackID::ScalableVector);
+-    BuildMI(MBB, I, DebugLoc(), get(Opcode))
+-        .addReg(SrcReg, getKillRegState(IsKill))
+-        .addFrameIndex(FI)
+-        .addMemOperand(MMO)
+-        .setMIFlag(Flags);
++    MachineInstrBuilder MIB = BuildMI(MBB, I, DebugLoc(), get(Opcode))
++                                  .addReg(SrcReg, getKillRegState(IsKill))
++                                  .addFrameIndex(FI)
++                                  .addMemOperand(MMO)
++                                  .setMIFlag(Flags);
++
++    if (hasChimeraStackObject(*MF))
++      MIB.setPCSections(createChimeraStackObjectPCSections(*MF, FI));
++
+     NumVRegSpilled += TRI->getRegSizeInBits(*RC) / RISCV::RVVBitsPerBlock;
+   } else {
+     MachineMemOperand *MMO = MF->getMachineMemOperand(
+@@ -788,10 +847,14 @@ void RISCVInstrInfo::loadRegFromStackSlot(
+         TypeSize::getScalable(MFI.getObjectSize(FI)), MFI.getObjectAlign(FI));
+ 
+     MFI.setStackID(FI, TargetStackID::ScalableVector);
+-    BuildMI(MBB, I, DL, get(Opcode), DstReg)
+-        .addFrameIndex(FI)
+-        .addMemOperand(MMO)
+-        .setMIFlag(Flags);
++    MachineInstrBuilder MIB = BuildMI(MBB, I, DL, get(Opcode), DstReg)
++                                  .addFrameIndex(FI)
++                                  .addMemOperand(MMO)
++                                  .setMIFlag(Flags);
++
++    if (hasChimeraStackObject(*MF))
++      MIB.setPCSections(createChimeraStackObjectPCSections(*MF, FI));
++
+     NumVRegReloaded += TRI->getRegSizeInBits(*RC) / RISCV::RVVBitsPerBlock;
+   } else {
+     MachineMemOperand *MMO = MF->getMachineMemOperand(
+diff --git a/llvm/test/CodeGen/RISCV/chimera-rvv-spill-rv32.ll b/llvm/test/CodeGen/RISCV/chimera-rvv-spill-rv32.ll
+new file mode 100644
+index 0000000..80c0aa1
+--- /dev/null
++++ b/llvm/test/CodeGen/RISCV/chimera-rvv-spill-rv32.ll
+@@ -0,0 +1,23 @@
++; RUN: not --crash llc -mtriple=riscv32 -mattr=+v < %s -o /dev/null 2>&1 | FileCheck %s
++
++; Chimera's backend carrier has a fixed RV64 wire contract. Creating backend
++; StackObject metadata on RV32 must fail explicitly rather than emit bad data.
++
++declare void @clobber()
++declare <vscale x 1 x i32> @llvm.riscv.vle.nxv1i32(
++    <vscale x 1 x i32>, ptr, i32)
++declare void @llvm.riscv.vse.nxv1i32(
++    <vscale x 1 x i32>, ptr, i32)
++
++define void @reject_rv32(ptr %in, ptr %out, i32 %vl) #0 {
++  %v = call <vscale x 1 x i32> @llvm.riscv.vle.nxv1i32(
++      <vscale x 1 x i32> poison, ptr %in, i32 %vl)
++  call void @clobber()
++  call void @llvm.riscv.vse.nxv1i32(
++      <vscale x 1 x i32> %v, ptr %out, i32 %vl)
++  ret void
++}
++
++; CHECK: LLVM ERROR: Chimera backend StackObject map requires XLEN=64
++
++attributes #0 = { "chimera-stack-object" }
+diff --git a/llvm/test/CodeGen/RISCV/chimera-rvv-spill-stock-rv32.ll b/llvm/test/CodeGen/RISCV/chimera-rvv-spill-stock-rv32.ll
+new file mode 100644
+index 0000000..6d25501
+--- /dev/null
++++ b/llvm/test/CodeGen/RISCV/chimera-rvv-spill-stock-rv32.ll
+@@ -0,0 +1,29 @@
++; RUN: llc -mtriple=riscv32 -mattr=+v -stop-after=prologepilog < %s \
++; RUN:   | FileCheck %s
++; RUN: llc -mtriple=riscv32 -mattr=+v -stop-after=prologepilog < %s \
++; RUN:   | not grep -E 'pcsections|chimera\.stackobj_map'
++; RUN: llc -mtriple=riscv32 -mattr=+v -filetype=asm < %s \
++; RUN:   | not grep -E '\.Lpcsection|\.chimera\.stackobj_map'
++
++; A stock RV32 function has no Chimera opt-in attribute. RVV spill/reload must
++; codegen normally and must not reach Chimera's RV64-only diagnostic or emit
++; any Chimera PCSections data.
++
++; CHECK-LABEL: name: stock_spill_rv32
++; CHECK: VS1R_V
++; CHECK: VL1RE8_V
++
++declare void @clobber()
++declare <vscale x 1 x i32> @llvm.riscv.vle.nxv1i32(
++    <vscale x 1 x i32>, ptr, i32)
++declare void @llvm.riscv.vse.nxv1i32(
++    <vscale x 1 x i32>, ptr, i32)
++
++define void @stock_spill_rv32(ptr %in, ptr %out, i32 %vl) {
++  %v = call <vscale x 1 x i32> @llvm.riscv.vle.nxv1i32(
++      <vscale x 1 x i32> poison, ptr %in, i32 %vl)
++  call void @clobber()
++  call void @llvm.riscv.vse.nxv1i32(
++      <vscale x 1 x i32> %v, ptr %out, i32 %vl)
++  ret void
++}
+diff --git a/llvm/test/CodeGen/RISCV/chimera-rvv-spill-stock-rv64.ll b/llvm/test/CodeGen/RISCV/chimera-rvv-spill-stock-rv64.ll
+new file mode 100644
+index 0000000..eb20b82
+--- /dev/null
++++ b/llvm/test/CodeGen/RISCV/chimera-rvv-spill-stock-rv64.ll
+@@ -0,0 +1,28 @@
++; RUN: llc -mtriple=riscv64 -mattr=+v -stop-after=prologepilog < %s \
++; RUN:   | FileCheck %s
++; RUN: llc -mtriple=riscv64 -mattr=+v -stop-after=prologepilog < %s \
++; RUN:   | not grep -E 'pcsections|chimera\.stackobj_map'
++; RUN: llc -mtriple=riscv64 -mattr=+v -filetype=asm < %s \
++; RUN:   | not grep -E '\.Lpcsection|\.chimera\.stackobj_map'
++
++; A stock RV64 function has no Chimera opt-in attribute. It still spills and
++; reloads RVV registers, but must not emit Chimera PCSections or map sections.
++
++; CHECK-LABEL: name: stock_spill_rv64
++; CHECK: VS1R_V
++; CHECK: VL1RE8_V
++
++declare void @clobber()
++declare <vscale x 1 x i64> @llvm.riscv.vle.nxv1i64(
++    <vscale x 1 x i64>, ptr, i64)
++declare void @llvm.riscv.vse.nxv1i64(
++    <vscale x 1 x i64>, ptr, i64)
++
++define void @stock_spill_rv64(ptr %in, ptr %out, i64 %vl) {
++  %v = call <vscale x 1 x i64> @llvm.riscv.vle.nxv1i64(
++      <vscale x 1 x i64> poison, ptr %in, i64 %vl)
++  call void @clobber()
++  call void @llvm.riscv.vse.nxv1i64(
++      <vscale x 1 x i64> %v, ptr %out, i64 %vl)
++  ret void
++}
+diff --git a/llvm/test/CodeGen/RISCV/chimera-rvv-spill.ll b/llvm/test/CodeGen/RISCV/chimera-rvv-spill.ll
+new file mode 100644
+index 0000000..77541cc
+--- /dev/null
++++ b/llvm/test/CodeGen/RISCV/chimera-rvv-spill.ll
+@@ -0,0 +1,95 @@
++; RUN: llc -mtriple=riscv64 -mattr=+v -stop-after=prologepilog < %s | FileCheck %s
++; RUN: llc -mtriple=riscv64 -mattr=+v -stop-after=prologepilog < %s \
++; RUN:   | not grep -E 'PseudoV(L|S)E.*pcsections'
++
++; Values live over a call force ordinary RVV spill/reload creation. Preserve
++; the four register classes verified by the original RISC-V experiment.
++
++declare void @clobber()
++
++declare <vscale x 1 x i64> @llvm.riscv.vle.nxv1i64(
++    <vscale x 1 x i64>, ptr, i64)
++declare void @llvm.riscv.vse.nxv1i64(
++    <vscale x 1 x i64>, ptr, i64)
++
++declare <vscale x 2 x i64> @llvm.riscv.vle.nxv2i64(
++    <vscale x 2 x i64>, ptr, i64)
++declare void @llvm.riscv.vse.nxv2i64(
++    <vscale x 2 x i64>, ptr, i64)
++
++declare <vscale x 4 x i64> @llvm.riscv.vle.nxv4i64(
++    <vscale x 4 x i64>, ptr, i64)
++declare void @llvm.riscv.vse.nxv4i64(
++    <vscale x 4 x i64>, ptr, i64)
++
++declare <vscale x 8 x i64> @llvm.riscv.vle.nxv8i64(
++    <vscale x 8 x i64>, ptr, i64)
++declare void @llvm.riscv.vse.nxv8i64(
++    <vscale x 8 x i64>, ptr, i64)
++
++define void @spill_vr(ptr %in, ptr %out, i64 %vl) #0 {
++  %in.next = getelementptr i8, ptr %in, i64 64
++  %out.next = getelementptr i8, ptr %out, i64 64
++  %v0 = call <vscale x 1 x i64> @llvm.riscv.vle.nxv1i64(
++      <vscale x 1 x i64> poison, ptr %in, i64 %vl)
++  %v1 = call <vscale x 1 x i64> @llvm.riscv.vle.nxv1i64(
++      <vscale x 1 x i64> poison, ptr %in.next, i64 %vl)
++  call void @clobber()
++  call void @llvm.riscv.vse.nxv1i64(
++      <vscale x 1 x i64> %v0, ptr %out, i64 %vl)
++  call void @llvm.riscv.vse.nxv1i64(
++      <vscale x 1 x i64> %v1, ptr %out.next, i64 %vl)
++  ret void
++}
++
++define void @spill_vrm2(ptr %in, ptr %out, i64 %vl) #0 {
++  %v = call <vscale x 2 x i64> @llvm.riscv.vle.nxv2i64(
++      <vscale x 2 x i64> poison, ptr %in, i64 %vl)
++  call void @clobber()
++  call void @llvm.riscv.vse.nxv2i64(
++      <vscale x 2 x i64> %v, ptr %out, i64 %vl)
++  ret void
++}
++
++define void @spill_vrm4(ptr %in, ptr %out, i64 %vl) #0 {
++  %v = call <vscale x 4 x i64> @llvm.riscv.vle.nxv4i64(
++      <vscale x 4 x i64> poison, ptr %in, i64 %vl)
++  call void @clobber()
++  call void @llvm.riscv.vse.nxv4i64(
++      <vscale x 4 x i64> %v, ptr %out, i64 %vl)
++  ret void
++}
++
++define void @spill_vrm8(ptr %in, ptr %out, i64 %vl) #0 {
++  %v = call <vscale x 8 x i64> @llvm.riscv.vle.nxv8i64(
++      <vscale x 8 x i64> poison, ptr %in, i64 %vl)
++  call void @clobber()
++  call void @llvm.riscv.vse.nxv8i64(
++      <vscale x 8 x i64> %v, ptr %out, i64 %vl)
++  ret void
++}
++
++; The source/destination vle/vse are unrelated RVV memory operations and do
++; not receive Chimera metadata. Only compiler-created spills and reloads do.
++; MIR prints PCSections as an opaque pointer. Do not treat that address as a
++; stable identity; payload and final-map correctness are checked at ELF level.
++
++; CHECK-LABEL: name: spill_vr
++; CHECK: PseudoVLE{{.*}}
++; CHECK-COUNT-2: VS1R_V {{.*}}pcsections <
++; CHECK-COUNT-2: VL1RE8_V {{.*}}pcsections <
++; CHECK: PseudoVSE{{.*}}
++
++; CHECK-LABEL: name: spill_vrm2
++; CHECK: VS2R_V {{.*}}pcsections <
++; CHECK: VL2RE8_V {{.*}}pcsections <
++
++; CHECK-LABEL: name: spill_vrm4
++; CHECK: VS4R_V {{.*}}pcsections <
++; CHECK: VL4RE8_V {{.*}}pcsections <
++
++; CHECK-LABEL: name: spill_vrm8
++; CHECK: VS8R_V {{.*}}pcsections <
++; CHECK: VL8RE8_V {{.*}}pcsections <
++
++attributes #0 = { "chimera-stack-object" }
+-- 
+2.55.0.windows.3

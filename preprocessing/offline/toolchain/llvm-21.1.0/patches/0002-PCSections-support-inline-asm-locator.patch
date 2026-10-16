@@ -1,0 +1,492 @@
+From b35046543b98c4f708277b2dcc22151c664aafbc Mon Sep 17 00:00:00 2001
+From: Chimera Patch Builder <chimera@example.invalid>
+Date: Thu, 13 Aug 2026 11:00:00 +0800
+Subject: [PATCH 2/7] llvm: support PCSections inline-asm locators
+
+Chimera LLVM patch 2 of 7.
+---
+ llvm/include/llvm/CodeGen/AsmPrinter.h        |  18 ++
+ llvm/lib/CodeGen/AsmPrinter/AsmPrinter.cpp    | 114 +++++++++-
+ .../AsmPrinter/AsmPrinterInlineAsm.cpp        | 195 +++++++++++++++++-
+ .../SelectionDAG/SelectionDAGBuilder.cpp      |  12 ++
+ .../RISCV/chimera-pcsections-inline-asm.ll    |  26 +++
+ 5 files changed, 359 insertions(+), 6 deletions(-)
+ create mode 100644 llvm/test/CodeGen/RISCV/chimera-pcsections-inline-asm.ll
+
+diff --git a/llvm/include/llvm/CodeGen/AsmPrinter.h b/llvm/include/llvm/CodeGen/AsmPrinter.h
+index faab250..c848fb6 100644
+--- a/llvm/include/llvm/CodeGen/AsmPrinter.h
++++ b/llvm/include/llvm/CodeGen/AsmPrinter.h
+@@ -196,6 +196,10 @@ private:
+   /// List of symbols to be inserted into PC sections.
+   DenseMap<const MDNode *, SmallVector<const MCSymbol *>> PCSectionsSymbols;
+ 
++  /// Unique counter for textual labels injected into inline asm
++  /// for PCSections option L.
++  mutable uint64_t InlineAsmPCSectionLabelCounter = 0;
++
+   static char ID;
+ 
+ protected:
+@@ -449,6 +453,20 @@ public:
+   /// Emits a label as reference for PC sections.
+   void emitPCSectionsLabel(const MachineFunction &MF, const MDNode &MD);
+ 
++  /// Return true if any PC section in MD has the given option.
++  bool hasPCSectionOption(const MDNode &MD, char Option) const;
++
++  /// Build a PCSections MDNode containing either the sections that
++  /// have Option or the sections that do not have Option.
++  ///
++  /// Returns nullptr when no section remains.
++  MDNode *filterPCSectionsByOption(const MDNode &MD, char Option,
++                                   bool KeepMatching) const;
++
++  /// Register a symbol as the location represented by PCSections MD,
++  /// without emitting the symbol at the current streamer position.
++  void recordPCSectionsLabel(const MDNode &MD, const MCSymbol *Symbol);
++
+   /// Emits the PC sections collected from instructions.
+   void emitPCSections(const MachineFunction &MF);
+ 
+diff --git a/llvm/lib/CodeGen/AsmPrinter/AsmPrinter.cpp b/llvm/lib/CodeGen/AsmPrinter/AsmPrinter.cpp
+index abed0d7..efbabd9 100644
+--- a/llvm/lib/CodeGen/AsmPrinter/AsmPrinter.cpp
++++ b/llvm/lib/CodeGen/AsmPrinter/AsmPrinter.cpp
+@@ -1654,6 +1654,76 @@ void AsmPrinter::emitStackUsage(const MachineFunction &MF) {
+     *StackUsageStream << "static\n";
+ }
+ 
++bool AsmPrinter::hasPCSectionOption(const MDNode &MD, char Option) const {
++  unsigned I = 0;
++  while (I < MD.getNumOperands()) {
++    auto *Section = dyn_cast<MDString>(MD.getOperand(I).get());
++    if (!Section)
++      report_fatal_error("malformed PCSections metadata");
++
++    StringRef Name = Section->getString();
++    size_t OptStart = Name.find('!');
++    if (OptStart != StringRef::npos) {
++      StringRef Opts = Name.substr(OptStart + 1);
++      if (Opts.contains(Option))
++        return true;
++    }
++
++    ++I;
++    // Optional auxiliary tuple belonging to this section.
++    if (I < MD.getNumOperands() && isa<MDNode>(MD.getOperand(I).get()))
++      ++I;
++  }
++
++  return false;
++}
++
++MDNode *AsmPrinter::filterPCSectionsByOption(const MDNode &MD, char Option,
++                                             bool KeepMatching) const {
++  SmallVector<Metadata *, 8> Ops;
++  unsigned I = 0;
++  while (I < MD.getNumOperands()) {
++    auto *Section = dyn_cast<MDString>(MD.getOperand(I).get());
++    if (!Section)
++      report_fatal_error("malformed PCSections metadata");
++
++    StringRef Name = Section->getString();
++    size_t OptStart = Name.find('!');
++    bool HasOption = false;
++    if (OptStart != StringRef::npos) {
++      StringRef Opts = Name.substr(OptStart + 1);
++      HasOption = Opts.contains(Option);
++    }
++
++    Metadata *Aux = nullptr;
++    ++I;
++    if (I < MD.getNumOperands() && isa<MDNode>(MD.getOperand(I).get())) {
++      Aux = MD.getOperand(I).get();
++      ++I;
++    }
++
++    if (HasOption != KeepMatching)
++      continue;
++
++    Ops.push_back(Section);
++    if (Aux)
++      Ops.push_back(Aux);
++  }
++
++  if (Ops.empty())
++    return nullptr;
++
++  // Keep the top-level PCSections node distinct. Different instruction
++  // locations must not accidentally share the same metadata identity in
++  // PCSectionsSymbols.
++  return MDNode::getDistinct(MD.getContext(), Ops);
++}
++
++void AsmPrinter::recordPCSectionsLabel(const MDNode &MD,
++                                       const MCSymbol *Symbol) {
++  PCSectionsSymbols[&MD].emplace_back(Symbol);
++}
++
+ void AsmPrinter::emitPCSectionsLabel(const MachineFunction &MF,
+                                      const MDNode &MD) {
+   MCSymbol *S = MF.getContext().createTempSymbol("pcsection");
+@@ -1690,6 +1760,7 @@ void AsmPrinter::emitPCSections(const MachineFunction &MF) {
+     assert(isa<MDString>(MD.getOperand(0)) && "first operand not a string");
+     bool AbsolutePC = false;
+     bool ConstULEB128 = false;
++    bool InlineAsmLocator = false;
+     for (const MDOperand &MDO : MD.operands()) {
+       if (auto *S = dyn_cast<MDString>(MDO)) {
+         // Found string, start of new section!
+@@ -1701,9 +1772,10 @@ void AsmPrinter::emitPCSections(const MachineFunction &MF) {
+         const StringRef Opts = SecWithOpt.substr(OptStart); // likely empty
+         AbsolutePC = Opts.contains('A');
+         ConstULEB128 = Opts.contains('C');
++        InlineAsmLocator = Opts.contains('L');
+ #ifndef NDEBUG
+         for (char O : Opts)
+-          assert((O == 'A' || O == '!' || O == 'C') &&
++          assert((O == 'A' || O == '!' || O == 'C' || O == 'L') &&
+                  "Invalid !pcsections options");
+ #endif
+         SwitchSection(Sec);
+@@ -1732,10 +1804,26 @@ void AsmPrinter::emitPCSections(const MachineFunction &MF) {
+         // Emit auxiliary data after PC.
+         assert(isa<MDNode>(MDO) && "expecting either string or tuple");
+         const auto *AuxMDs = cast<MDNode>(MDO);
+-        for (const MDOperand &AuxMDO : AuxMDs->operands()) {
++
++        // Option L reserves the first auxiliary constant as an internal
++        // inline-asm instruction locator.
++        //
++        // The locator controls label placement only and must not be emitted
++        // into the final PCSections payload.
++        unsigned AuxBegin = 0;
++        if (InlineAsmLocator) {
++          if (AuxMDs->getNumOperands() == 0)
++            report_fatal_error("PCSections option L requires "
++                               "an inline-asm locator");
++          AuxBegin = 1;
++        }
++
++        const DataLayout &DL = F.getDataLayout();
++        for (unsigned AuxI = AuxBegin; AuxI < AuxMDs->getNumOperands();
++             ++AuxI) {
++          const MDOperand &AuxMDO = AuxMDs->getOperand(AuxI);
+           assert(isa<ConstantAsMetadata>(AuxMDO) && "expecting a constant");
+           const Constant *C = cast<ConstantAsMetadata>(AuxMDO)->getValue();
+-          const DataLayout &DL = F.getDataLayout();
+           const uint64_t Size = DL.getTypeStoreSize(C->getType());
+ 
+           if (auto *CI = dyn_cast<ConstantInt>(C);
+@@ -1852,8 +1940,24 @@ void AsmPrinter::emitFunctionBody() {
+       if (MCSymbol *S = MI.getPreInstrSymbol())
+         OutStreamer->emitLabel(S);
+ 
+-      if (MDNode *MD = MI.getPCSections())
+-        emitPCSectionsLabel(*MF, *MD);
++      if (MDNode *MD = MI.getPCSections()) {
++        // PCSections option L means that the actual label belongs to an
++        // instruction inside an INLINEASM block.
++        //
++        // Do not emit those sections at the INLINEASM MachineInstr boundary.
++        // The inline-asm emitter will emit their label at the selected internal
++        // instruction.
++        //
++        // Other PCSections attached to the same INLINEASM must retain their
++        // normal block-start semantics.
++        if (MI.isInlineAsm() && hasPCSectionOption(*MD, 'L')) {
++          if (MDNode *NormalMD = filterPCSectionsByOption(
++                  *MD, 'L', /*KeepMatching=*/false))
++            emitPCSectionsLabel(*MF, *NormalMD);
++        } else {
++          emitPCSectionsLabel(*MF, *MD);
++        }
++      }
+ 
+       for (auto &Handler : Handlers)
+         Handler->beginInstruction(&MI);
+diff --git a/llvm/lib/CodeGen/AsmPrinter/AsmPrinterInlineAsm.cpp b/llvm/lib/CodeGen/AsmPrinter/AsmPrinterInlineAsm.cpp
+index c364ffc..f3e541b 100644
+--- a/llvm/lib/CodeGen/AsmPrinter/AsmPrinterInlineAsm.cpp
++++ b/llvm/lib/CodeGen/AsmPrinter/AsmPrinterInlineAsm.cpp
+@@ -9,7 +9,7 @@
+ // This file implements the inline assembler pieces of the AsmPrinter class.
+ //
+ //===----------------------------------------------------------------------===//
+-
++#include "llvm/IR/Metadata.h"
+ #include "llvm/ADT/SmallString.h"
+ #include "llvm/ADT/SmallVector.h"
+ #include "llvm/ADT/StringExtras.h"
+@@ -327,6 +327,145 @@ static void EmitInlineAsmStr(const char *AsmStr, const MachineInstr *MI,
+   OS << '\n' << (char)0;  // null terminate string.
+ }
+ 
++static unsigned getInlineAsmPCSectionLocator(const MDNode &MD) {
++  std::optional<unsigned> Locator;
++  unsigned I = 0;
++  while (I < MD.getNumOperands()) {
++    auto *Section = dyn_cast<MDString>(MD.getOperand(I).get());
++    if (!Section)
++      report_fatal_error("malformed PCSections metadata");
++
++    StringRef Name = Section->getString();
++    size_t OptStart = Name.find('!');
++    bool HasLocator = false;
++    if (OptStart != StringRef::npos) {
++      StringRef Opts = Name.substr(OptStart + 1);
++      HasLocator = Opts.contains('L');
++    }
++
++    ++I;
++
++    const MDNode *Aux = nullptr;
++    if (I < MD.getNumOperands() && isa<MDNode>(MD.getOperand(I).get())) {
++      Aux = cast<MDNode>(MD.getOperand(I).get());
++      ++I;
++    }
++
++    if (!HasLocator)
++      continue;
++
++    // Current L semantics allow exactly one internal inline-asm location per
++    // MachineInstr.
++    if (Locator)
++      report_fatal_error("multiple PCSections L entries "
++                         "on one inline-asm instruction");
++
++    if (!Aux || Aux->getNumOperands() == 0)
++      report_fatal_error("PCSections option L requires "
++                         "an inline-asm locator");
++
++    auto *CAM = dyn_cast<ConstantAsMetadata>(Aux->getOperand(0));
++    if (!CAM)
++      report_fatal_error("PCSections inline-asm locator must be a constant");
++
++    auto *CI = dyn_cast<ConstantInt>(CAM->getValue());
++    if (!CI || !CI->getType()->isIntegerTy(32))
++      report_fatal_error("PCSections inline-asm locator must be i32");
++
++    Locator = static_cast<unsigned>(CI->getZExtValue());
++  }
++
++  if (!Locator)
++    report_fatal_error("missing PCSections inline-asm locator");
++
++  return *Locator;
++}
++
++static std::optional<size_t>
++findInlineAsmInstructionOffset(StringRef Asm, const MCAsmInfo &MAI,
++                               unsigned TargetIndex) {
++  const StringRef Separator = MAI.getSeparatorString();
++  const StringRef Comment = MAI.getCommentString();
++
++  unsigned InstructionIndex = 0;
++  size_t StatementStart = 0;
++
++  auto ProcessStatement = [&](size_t StatementEnd) -> std::optional<size_t> {
++    if (StatementEnd < StatementStart)
++      return std::nullopt;
++
++    StringRef Statement = Asm.slice(StatementStart, StatementEnd);
++    StringRef Trimmed = Statement.trim();
++    if (Trimmed.empty())
++      return std::nullopt;
++
++    // Labels are not actual instructions.
++    //
++    // This matches the locator semantics used by Chimera's inline-asm
++    // analysis.
++    if (Trimmed.ends_with(":"))
++      return std::nullopt;
++
++    // Relevant Chimera inline asm only permits .option directives. They do not
++    // count toward the instruction index.
++    if (Trimmed.starts_with(".option"))
++      return std::nullopt;
++
++    if (InstructionIndex == TargetIndex)
++      return StatementStart;
++
++    ++InstructionIndex;
++    return std::nullopt;
++  };
++
++  size_t Pos = 0;
++
++  // EmitInlineAsmStr() null terminates StringData. Do not inspect the
++  // terminating NUL as asm text.
++  while (Pos < Asm.size() && Asm[Pos] != '\0') {
++    // A comment consumes the remainder of the line.
++    //
++    // First process any instruction preceding the comment.
++    if (!Comment.empty() && Asm.substr(Pos).starts_with(Comment)) {
++      if (auto Offset = ProcessStatement(Pos))
++        return Offset;
++
++      size_t Newline = Asm.find('\n', Pos);
++      if (Newline == StringRef::npos)
++        return std::nullopt;
++
++      Pos = Newline + 1;
++      StatementStart = Pos;
++      continue;
++    }
++
++    if (Asm[Pos] == '\n') {
++      if (auto Offset = ProcessStatement(Pos))
++        return Offset;
++
++      ++Pos;
++      StatementStart = Pos;
++      continue;
++    }
++
++    if (!Separator.empty() && Asm.substr(Pos).starts_with(Separator)) {
++      if (auto Offset = ProcessStatement(Pos))
++        return Offset;
++
++      Pos += Separator.size();
++      StatementStart = Pos;
++      continue;
++    }
++
++    ++Pos;
++  }
++
++  if (auto Offset = ProcessStatement(Pos))
++    return Offset;
++
++  return std::nullopt;
++}
++
+ /// This method formats and emits the specified machine instruction that is an
+ /// inline asm.
+ void AsmPrinter::emitInlineAsm(const MachineInstr *MI) const {
+@@ -361,6 +500,45 @@ void AsmPrinter::emitInlineAsm(const MachineInstr *MI) const {
+   AsmPrinter *AP = const_cast<AsmPrinter*>(this);
+   EmitInlineAsmStr(AsmStr, MI, MMI, MAI, AP, LocCookie, OS);
+ 
++  const MDNode *InlinePCSectionMD = nullptr;
++  SmallString<64> InlinePCSectionLabelName;
++
++  if (const MDNode *PCMD = MI->getPCSections();
++      PCMD && hasPCSectionOption(*PCMD, 'L')) {
++    const unsigned TargetIndex = getInlineAsmPCSectionLocator(*PCMD);
++
++    std::optional<size_t> Offset = findInlineAsmInstructionOffset(
++        StringRef(StringData.data(), StringData.size()), *MAI, TargetIndex);
++
++    if (!Offset)
++      report_fatal_error("PCSections inline-asm locator "
++                         "does not identify an instruction");
++
++    MDNode *LocatorMD = filterPCSectionsByOption(*PCMD, 'L',
++                                                 /*KeepMatching=*/true);
++    if (!LocatorMD)
++      report_fatal_error("failed to extract PCSections L metadata");
++
++    InlinePCSectionMD = LocatorMD;
++
++    // Do not create an MCSymbol yet.
++    //
++    // Let the inline-asm parser create and define the symbol from the textual
++    // label.
++    {
++      raw_svector_ostream NameOS(InlinePCSectionLabelName);
++      NameOS << MAI->getPrivateGlobalPrefix() << "chimera_pcsection_"
++             << getFunctionNumber() << "_" << InlineAsmPCSectionLabelCounter++;
++    }
++
++    SmallString<96> LabelText;
++    raw_svector_ostream LabelOS(LabelText);
++    LabelOS << '\n' << InlinePCSectionLabelName << MAI->getLabelSuffix()
++            << '\n';
++
++    StringData.insert(StringData.begin() + *Offset, LabelText.begin(),
++                      LabelText.end());
++  }
+   // Emit warnings if we use reserved registers on the clobber list, as
+   // that might lead to undefined behaviour.
+   SmallVector<Register, 8> RestrRegs;
+@@ -412,6 +590,21 @@ void AsmPrinter::emitInlineAsm(const MachineInstr *MI) const {
+   emitInlineAsm(StringData, getSubtargetInfo(), TM.Options.MCOptions, LocMD,
+                 MI->getInlineAsmDialect());
+ 
++  // The integrated assembler has now parsed the injected label.
++  //
++  // Look the symbol up only after parsing, so the returned MCSymbol is the
++  // exact symbol defined by the parser.
++  if (InlinePCSectionMD) {
++    MCSymbol *Symbol =
++        OutContext.getOrCreateSymbol(InlinePCSectionLabelName.str());
++
++    if (!Symbol->isDefined())
++      report_fatal_error("inline-asm PCSections label "
++                         "was not defined by assembler");
++
++    AP->recordPCSectionsLabel(*InlinePCSectionMD, Symbol);
++  }
++
+   // Emit the #NOAPP end marker.  This has to happen even if verbose-asm isn't
+   // enabled, so we use emitRawComment.
+   OutStreamer->emitRawComment(MAI->getInlineAsmEnd());
+diff --git a/llvm/lib/CodeGen/SelectionDAG/SelectionDAGBuilder.cpp b/llvm/lib/CodeGen/SelectionDAG/SelectionDAGBuilder.cpp
+index 4954e23..36251a2 100644
+--- a/llvm/lib/CodeGen/SelectionDAG/SelectionDAGBuilder.cpp
++++ b/llvm/lib/CodeGen/SelectionDAG/SelectionDAGBuilder.cpp
+@@ -10363,6 +10363,18 @@ void SelectionDAGBuilder::visitInlineAsm(const CallBase &Call,
+   unsigned ISDOpc = IsCallBr ? ISD::INLINEASM_BR : ISD::INLINEASM;
+   Chain = DAG.getNode(ISDOpc, getCurSDLoc(),
+                       DAG.getVTList(MVT::Other, MVT::Glue), AsmNodeOperands);
++
++  // Chimera deferred PCSections.
++  //
++  // Generic !pcsections propagation in SelectionDAGBuilder::visit() relies on
++  // NodeMap. A void inline-asm call has no SSA result, therefore it may not
++  // have a NodeMap entry corresponding to the actual ISD::INLINEASM node.
++  //
++  // Attach deferred Chimera PCSections metadata here, where the exact
++  // INLINEASM / INLINEASM_BR SDNode is known.
++  if (MDNode *MD = Call.getMetadata("chimera.pcsections"))
++    DAG.addPCSections(Chain.getNode(), MD);
++
+   Glue = Chain.getValue(1);
+ 
+   // Do additional work to generate outputs.
+diff --git a/llvm/test/CodeGen/RISCV/chimera-pcsections-inline-asm.ll b/llvm/test/CodeGen/RISCV/chimera-pcsections-inline-asm.ll
+new file mode 100644
+index 0000000..caead67
+--- /dev/null
++++ b/llvm/test/CodeGen/RISCV/chimera-pcsections-inline-asm.ll
+@@ -0,0 +1,26 @@
++; RUN: llc -mtriple=riscv64 -mattr=+v -filetype=asm < %s | FileCheck %s
++
++; A void inline-asm call has no useful NodeMap result. The deferred metadata
++; must be transferred by visitInlineAsm() to the exact INLINEASM SDNode. The
++; !L locator places the label at instruction 1 and is omitted from payload.
++
++define void @inline_locator(ptr %p) {
++entry:
++  call void asm sideeffect
++      "addi t0, $0, 16\0A\09vle8.v v8, (t0)",
++      "r"(ptr %p), !chimera.pcsections !0
++  ret void
++}
++
++; CHECK-LABEL: inline_locator:
++; CHECK: #APP
++; CHECK: addi t0,
++; CHECK: .Lchimera_pcsection_{{[0-9]+}}_{{[0-9]+}}:
++; CHECK-NEXT: vle8.v v8, (t0)
++; CHECK: .section .chimera.stackobj_map
++; CHECK: .quad .Lchimera_pcsection_{{[0-9]+}}_{{[0-9]+}}
++; CHECK-NOT: .word 1
++; CHECK-NEXT: .word 23
++
++!0 = distinct !{!".chimera.stackobj_map!AL", !1}
++!1 = !{i32 1, i32 23}
+-- 
+2.55.0.windows.3

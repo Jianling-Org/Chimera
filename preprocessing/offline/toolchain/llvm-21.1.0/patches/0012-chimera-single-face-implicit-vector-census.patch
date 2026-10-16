@@ -1,0 +1,561 @@
+From 43f56de28b9d3e56cc9d230c8f8d258ea55e20ce Mon Sep 17 00:00:00 2001
+From: Chimera Patch Builder <chimera@example.invalid>
+Date: Fri, 4 Sep 2026 14:00:00 +0800
+Subject: [PATCH] chimera: count and gate positive implicit-vector decisions
+
+Replace the old cross-build census with one strict, function-level TSV
+stream.  A decision is recorded only after legality and profitability choose
+vector code.  Gated decisions are recorded as blocked and return before the
+commit; ungated decisions are recorded as formed immediately before commit.
+
+The late census id attribute lets SelectionDAG memop lowering retain the
+post-inlining function identity without perturbing inlining decisions.
+---
+ llvm/include/llvm/IR/ChimeraImplicitVectorCensus.h | 135 ++++++++++++++++++++
+ llvm/lib/CodeGen/SelectionDAG/DAGCombiner.cpp      |  69 ++++------
+ llvm/lib/Target/RISCV/RISCVISelLowering.cpp        |  30 ++---
+ llvm/lib/Transforms/Vectorize/LoopVectorize.cpp     |  52 +++-----
+ llvm/lib/Transforms/Vectorize/SLPVectorizer.cpp     |  56 ++++-----
+ 5 files changed, 217 insertions(+), 125 deletions(-)
+ create mode 100644 llvm/include/llvm/IR/ChimeraImplicitVectorCensus.h
+
+diff --git a/llvm/include/llvm/IR/ChimeraImplicitVectorCensus.h b/llvm/include/llvm/IR/ChimeraImplicitVectorCensus.h
+new file mode 100644
+index 000000000..75516f3c3
+--- /dev/null
++++ b/llvm/include/llvm/IR/ChimeraImplicitVectorCensus.h
+@@ -0,0 +1,140 @@
++//===- ChimeraImplicitVectorCensus.h --------------------------*- C++ -*-===//
++//
++// Header-only support shared by IR vectorizers and code generation.
++//
++//===----------------------------------------------------------------------===//
++
++#ifndef LLVM_IR_CHIMERAIMPLICITVECTORCENSUS_H
++#define LLVM_IR_CHIMERAIMPLICITVECTORCENSUS_H
++
++#include "llvm/ADT/SmallString.h"
++#include "llvm/ADT/StringRef.h"
++#include "llvm/IR/Attributes.h"
++#include "llvm/IR/Function.h"
++#include "llvm/Support/ErrorHandling.h"
++#include "llvm/Support/FileSystem.h"
++#include "llvm/Support/raw_ostream.h"
++
++#include <cstdlib>
++#include <string>
++
++namespace llvm {
++
++inline constexpr StringLiteral kChimeraNoVectorizeAttr =
++    "chimera-no-vectorize";
++inline constexpr StringLiteral kChimeraCensusFunctionIdAttr =
++    "chimera-census-function-id";
++
++enum class ChimeraImplicitVectorMechanism { LV, SLP, MEMOP, MERGE };
++
++inline StringRef
++chimeraImplicitVectorMechanismName(ChimeraImplicitVectorMechanism M) {
++  switch (M) {
++  case ChimeraImplicitVectorMechanism::LV:
++    return "LV";
++  case ChimeraImplicitVectorMechanism::SLP:
++    return "SLP";
++  case ChimeraImplicitVectorMechanism::MEMOP:
++    return "MEMOP";
++  case ChimeraImplicitVectorMechanism::MERGE:
++    return "MERGE";
++  }
++  llvm_unreachable("unknown Chimera implicit-vector mechanism");
++}
++
++inline void chimeraReplaceAll(std::string &Value, StringRef From,
++                              StringRef To) {
++  for (std::string::size_type Pos = Value.find(From.str());
++       Pos != std::string::npos; Pos = Value.find(From.str(), Pos + To.size()))
++    Value.replace(Pos, From.size(), To.str());
++}
++
++inline std::string chimeraCanonicalFunctionName(StringRef Name) {
++  std::string Result = Name.str();
++  // The constructor/destructor discriminator is followed by arbitrary
++  // parameter encodings, not only the empty-parameter ``E`` terminator.
++  chimeraReplaceAll(Result, "C1", "C2");
++  chimeraReplaceAll(Result, "D1", "D2");
++  return Result;
++}
++
++inline bool chimeraImplicitVectorCensusEnabled() {
++  const char *Path = std::getenv("CHIMERA_GATE_STATS");
++  return Path && *Path;
++}
++
++inline void chimeraAppendImplicitVectorCensus(
++    ChimeraImplicitVectorMechanism Mechanism, StringRef FunctionId,
++    StringRef Action) {
++  const char *Path = std::getenv("CHIMERA_GATE_STATS");
++  if (!Path || !*Path)
++    return;
++  if (Action != "formed" && Action != "blocked")
++    report_fatal_error("invalid Chimera implicit-vector census action");
++  if (FunctionId.empty())
++    report_fatal_error("empty Chimera implicit-vector census function id");
++
++  SmallString<256> Line;
++  raw_svector_ostream LineOS(Line);
++  LineOS << "implicit-vector-census\t"
++         << chimeraImplicitVectorMechanismName(Mechanism) << "\t"
++         << chimeraCanonicalFunctionName(FunctionId) << "\t" << Action
++         << "\n";
++  std::error_code EC;
++  raw_fd_ostream StatsOS(Path, EC, sys::fs::OF_Append);
++  if (EC)
++    report_fatal_error(StringRef("cannot append Chimera implicit-vector census: " +
++                                 EC.message()));
++  StatsOS << Line;
++}
++
++inline bool chimeraRecordImplicitVectorDecision(
++    const Function &F, ChimeraImplicitVectorMechanism Mechanism) {
++  const bool Gated = F.hasFnAttribute(kChimeraNoVectorizeAttr);
++  chimeraAppendImplicitVectorCensus(Mechanism, F.getName(),
++                                    Gated ? "blocked" : "formed");
++  return Gated;
++}
++
++inline std::string
++chimeraCensusFunctionId(const AttributeList &FunctionAttributes) {
++  Attribute Id =
++      FunctionAttributes.getFnAttr(kChimeraCensusFunctionIdAttr);
++  if (!Id.isValid()) {
++    if (chimeraImplicitVectorCensusEnabled())
++      report_fatal_error("missing chimera census function id");
++    return {};
++  }
++  return chimeraCanonicalFunctionName(Id.getValueAsString());
++}
++
++inline bool chimeraRecordImplicitVectorDecision(
++    const AttributeList &FunctionAttributes,
++    ChimeraImplicitVectorMechanism Mechanism) {
++  const bool Gated =
++      FunctionAttributes.hasFnAttr(kChimeraNoVectorizeAttr);
++  if (chimeraImplicitVectorCensusEnabled())
++    chimeraAppendImplicitVectorCensus(
++        Mechanism, chimeraCensusFunctionId(FunctionAttributes),
++        Gated ? "blocked" : "formed");
++  return Gated;
++}
++
++inline void chimeraAssertImplicitVectorCommitAllowed(
++    const Function &F, ChimeraImplicitVectorMechanism Mechanism) {
++  if (F.hasFnAttribute(kChimeraNoVectorizeAttr))
++    report_fatal_error("gated function reached implicit-vector commit for " +
++                       chimeraImplicitVectorMechanismName(Mechanism));
++}
++
++inline void chimeraAssertImplicitVectorCommitAllowed(
++    const AttributeList &FunctionAttributes,
++    ChimeraImplicitVectorMechanism Mechanism) {
++  if (FunctionAttributes.hasFnAttr(kChimeraNoVectorizeAttr))
++    report_fatal_error("gated function reached implicit-vector commit for " +
++                       chimeraImplicitVectorMechanismName(Mechanism));
++}
++
++} // namespace llvm
++
++#endif // LLVM_IR_CHIMERAIMPLICITVECTORCENSUS_H
+diff --git a/llvm/lib/Transforms/Vectorize/LoopVectorize.cpp b/llvm/lib/Transforms/Vectorize/LoopVectorize.cpp
+index d4d3eeb2b..fa1694cd7 100644
+--- a/llvm/lib/Transforms/Vectorize/LoopVectorize.cpp
++++ b/llvm/lib/Transforms/Vectorize/LoopVectorize.cpp
+@@ -101,6 +101,7 @@
+ #include "llvm/IR/BasicBlock.h"
+ #include "llvm/IR/CFG.h"
+ #include "llvm/IR/Constant.h"
++#include "llvm/IR/ChimeraImplicitVectorCensus.h"
+ #include "llvm/IR/Constants.h"
+ #include "llvm/IR/DataLayout.h"
+ #include "llvm/IR/DebugInfo.h"
+@@ -9459,6 +9460,16 @@ static bool processLoopInVPlanNativePath(
+ 
+   VPlan &BestPlan = LVP.getPlanFor(VF.Width);
+ 
++  Function &ChimeraFunction = *L->getHeader()->getParent();
++  if (chimeraRecordImplicitVectorDecision(
++          ChimeraFunction, ChimeraImplicitVectorMechanism::LV))
++    return false;
++  // Keep this check adjacent to the actual commit.  A future control-flow
++  // change that bypasses the rejection must fail the compilation instead of
++  // silently producing gated vector code.
++  chimeraAssertImplicitVectorCommitAllowed(
++      ChimeraFunction, ChimeraImplicitVectorMechanism::LV);
++
+   {
+     GeneratedRTChecks Checks(PSE, DT, LI, TTI, F->getDataLayout(), CM.CostKind);
+     InnerLoopVectorizer LB(L, PSE, LI, DT, TLI, TTI, AC, ORE, VF.Width,
+@@ -10245,6 +10255,13 @@ bool LoopVectorizePass::processLoop(Loop *L) {
+       });
+     } else {
+       // If we decided that it is *legal* to vectorize the loop, then do it.
++      Function &ChimeraFunction = *L->getHeader()->getParent();
++      if (chimeraRecordImplicitVectorDecision(
++              ChimeraFunction, ChimeraImplicitVectorMechanism::LV))
++        return false;
++      chimeraAssertImplicitVectorCommitAllowed(
++          ChimeraFunction, ChimeraImplicitVectorMechanism::LV);
++
+ 
+       VPlan &BestPlan = LVP.getPlanFor(VF.Width);
+       // Consider vectorizing the epilogue too if it's profitable.
+@@ -10429,33 +10446,6 @@ LoopVectorizeResult LoopVectorizePass::runImpl(Function &F) {
+ 
+ PreservedAnalyses LoopVectorizePass::run(Function &F,
+                                          FunctionAnalysisManager &AM) {
+-  // Chimera auto-vectorization census: one line per function per run; formed
+-  // is a function-level 0/1 (whether this run rewrote anything in the
+-  // function) so it does not depend on LLVM statistics, which release builds
+-  // compile out.  Gated functions early-out before any attempt and record
+-  // formed=0; the gated flag carries the attribution.
+-  const bool ChimeraGated = F.hasFnAttribute("chimera-no-vectorize");
+-  bool ChimeraChanged = false;
+-  struct ChimeraVecCensus {
+-    Function &F;
+-    bool Gated;
+-    const bool *Changed;
+-    ~ChimeraVecCensus() {
+-      const char *StatsPath = std::getenv("CHIMERA_GATE_STATS");
+-      if (!StatsPath)
+-        return;
+-      std::error_code EC;
+-      raw_fd_ostream StatsOS(StatsPath, EC, sys::fs::OF_Append);
+-      if (EC)
+-        return;
+-      const uint64_t Formed =
+-          (!Gated && Changed && *Changed) ? uint64_t(1) : uint64_t(0);
+-      StatsOS << "vectorizer-census\t" << F.getName() << "\tLV\t" << Formed
+-              << "\t" << (Gated ? 1 : 0) << "\n";
+-    }
+-  } ChimeraVecCensusGuard{F, ChimeraGated, &ChimeraChanged};
+-  if (ChimeraGated)
+-    return PreservedAnalyses::all();
+   LI = &AM.getResult<LoopAnalysis>(F);
+   // There are no loops in the function. Return before computing other
+   // expensive analyses.
+@@ -10476,7 +10466,6 @@ PreservedAnalyses LoopVectorizePass::run(Function &F,
+   if (PSI && PSI->hasProfileSummary())
+     BFI = &AM.getResult<BlockFrequencyAnalysis>(F);
+   LoopVectorizeResult Result = runImpl(F);
+-  ChimeraChanged = Result.MadeAnyChange;
+   if (!Result.MadeAnyChange)
+     return PreservedAnalyses::all();
+   PreservedAnalyses PA;
+diff --git a/llvm/lib/Transforms/Vectorize/SLPVectorizer.cpp b/llvm/lib/Transforms/Vectorize/SLPVectorizer.cpp
+index 597a704eb..1061c6864 100644
+--- a/llvm/lib/Transforms/Vectorize/SLPVectorizer.cpp
++++ b/llvm/lib/Transforms/Vectorize/SLPVectorizer.cpp
+@@ -46,6 +46,7 @@
+ #include "llvm/Analysis/VectorUtils.h"
+ #include "llvm/IR/Attributes.h"
+ #include "llvm/IR/BasicBlock.h"
++#include "llvm/IR/ChimeraImplicitVectorCensus.h"
+ #include "llvm/IR/Constant.h"
+ #include "llvm/IR/Constants.h"
+ #include "llvm/IR/DataLayout.h"
+@@ -20854,33 +20855,6 @@ void BoUpSLP::computeMinimumValueSizes() {
+ }
+ 
+ PreservedAnalyses SLPVectorizerPass::run(Function &F, FunctionAnalysisManager &AM) {
+-  // Chimera auto-vectorization census: one line per function per run; formed
+-  // is a function-level 0/1 (whether this run rewrote anything in the
+-  // function) so it does not depend on LLVM statistics, which release builds
+-  // compile out.  Gated functions early-out before any attempt and record
+-  // formed=0; the gated flag carries the attribution.
+-  const bool ChimeraGated = F.hasFnAttribute("chimera-no-vectorize");
+-  bool ChimeraChanged = false;
+-  struct ChimeraVecCensus {
+-    Function &F;
+-    bool Gated;
+-    const bool *Changed;
+-    ~ChimeraVecCensus() {
+-      const char *StatsPath = std::getenv("CHIMERA_GATE_STATS");
+-      if (!StatsPath)
+-        return;
+-      std::error_code EC;
+-      raw_fd_ostream StatsOS(StatsPath, EC, sys::fs::OF_Append);
+-      if (EC)
+-        return;
+-      const uint64_t Formed =
+-          (!Gated && Changed && *Changed) ? uint64_t(1) : uint64_t(0);
+-      StatsOS << "vectorizer-census\t" << F.getName() << "\tSLP\t" << Formed
+-              << "\t" << (Gated ? 1 : 0) << "\n";
+-    }
+-  } ChimeraVecCensusGuard{F, ChimeraGated, &ChimeraChanged};
+-  if (ChimeraGated)
+-    return PreservedAnalyses::all();
+   auto *SE = &AM.getResult<ScalarEvolutionAnalysis>(F);
+   auto *TTI = &AM.getResult<TargetIRAnalysis>(F);
+   auto *TLI = AM.getCachedResult<TargetLibraryAnalysis>(F);
+@@ -20892,7 +20866,6 @@ PreservedAnalyses SLPVectorizerPass::run(Function &F, FunctionAnalysisManager &A
+   auto *ORE = &AM.getResult<OptimizationRemarkEmitterAnalysis>(F);
+ 
+   bool Changed = runImpl(F, SE, TTI, TLI, AA, LI, DT, AC, DB, ORE);
+-  ChimeraChanged = Changed;
+   if (!Changed)
+     return PreservedAnalyses::all();
+ 
+@@ -21031,6 +21004,12 @@ SLPVectorizerPass::vectorizeStoreChain(ArrayRef<Value *> Chain, BoUpSLP &R,
+                      << "Stores SLP vectorized with cost " << NV("Cost", Cost)
+                      << " and with tree size "
+                      << NV("TreeSize", R.getTreeSize()));
++    Function &ChimeraFunction = *cast<Instruction>(Chain[0])->getFunction();
++    if (chimeraRecordImplicitVectorDecision(
++            ChimeraFunction, ChimeraImplicitVectorMechanism::SLP))
++      return false;
++    chimeraAssertImplicitVectorCommitAllowed(
++        ChimeraFunction, ChimeraImplicitVectorMechanism::SLP);
+ 
+     R.vectorizeTree();
+     return true;
+@@ -21682,6 +21661,12 @@ bool SLPVectorizerPass::tryToVectorizeList(ArrayRef<Value *> VL, BoUpSLP &R,
+                                  << " and with tree size "
+                                  << ore::NV("TreeSize", R.getTreeSize()));
+ 
++        Function &ChimeraFunction = *cast<Instruction>(Ops[0])->getFunction();
++        if (chimeraRecordImplicitVectorDecision(
++                ChimeraFunction, ChimeraImplicitVectorMechanism::SLP))
++          continue;
++        chimeraAssertImplicitVectorCommitAllowed(
++            ChimeraFunction, ChimeraImplicitVectorMechanism::SLP);
+         R.vectorizeTree();
+         // Move to the next bundle.
+         I += VF - 1;
+@@ -22698,6 +22683,13 @@ class HorizontalReduction {
+         if (IsCmpSelMinMax)
+           InsertPt = GetCmpForMinMaxReduction(RdxRootInst);
+ 
++        Function &ChimeraFunction = *RdxRootInst->getFunction();
++        if (chimeraRecordImplicitVectorDecision(
++                ChimeraFunction, ChimeraImplicitVectorMechanism::SLP))
++          return nullptr;
++        chimeraAssertImplicitVectorCommitAllowed(
++            ChimeraFunction, ChimeraImplicitVectorMechanism::SLP);
++
+         // Vectorize a tree.
+         Value *VectorizedRoot = V.vectorizeTree(
+             LocalExternallyUsedValues, InsertPt, VectorValuesAndScales);
+diff --git a/llvm/lib/Target/RISCV/RISCVISelLowering.cpp b/llvm/lib/Target/RISCV/RISCVISelLowering.cpp
+index 3a7028746..d6f4cb599 100644
+--- a/llvm/lib/Target/RISCV/RISCVISelLowering.cpp
++++ b/llvm/lib/Target/RISCV/RISCVISelLowering.cpp
+@@ -29,6 +29,7 @@
+ #include "llvm/CodeGen/SelectionDAGAddressAnalysis.h"
+ #include "llvm/CodeGen/TargetLoweringObjectFileImpl.h"
+ #include "llvm/CodeGen/ValueTypes.h"
++#include "llvm/IR/ChimeraImplicitVectorCensus.h"
+ #include "llvm/IR/DiagnosticInfo.h"
+ #include "llvm/IR/DiagnosticPrinter.h"
+ #include "llvm/IR/IRBuilder.h"
+@@ -23881,25 +23882,6 @@ EVT RISCVTargetLowering::getOptimalMemOpType(
+   if (FuncAttributes.hasFnAttr(Attribute::NoImplicitFloat))
+     return MVT::Other;
+ 
+-  // Chimera gate: per-function suppression of the vector form of this memop.
+-  // The attribute is the only switch (no target-feature stripping), so
+-  // functions with RVV intrinsics/inline asm are gated the same way as plain
+-  // ones.  The generic expansion falls back to scalar sequences or a libcall.
+-  // The gate fires after the shape/legality checks below so the census can
+-  // record the counterfactual decision: "blocked" means this query would
+-  // have formed a vector type; queries that would have stayed scalar record
+-  // nothing.  This lowering query carries no MachineFunction, so the census
+-  // records the decision event without a function name.
+-  const bool ChimeraGated = FuncAttributes.hasFnAttr("chimera-no-vectorize");
+-  auto ChimeraLogMemopCensus = [](const char *Event) {
+-    if (const char *StatsPath = std::getenv("CHIMERA_GATE_STATS")) {
+-      std::error_code EC;
+-      raw_fd_ostream StatsOS(StatsPath, EC, sys::fs::OF_Append);
+-      if (!EC)
+-        StatsOS << "memop-census\t" << Event << "\n";
+-    }
+-  };
+-
+   // We use LMUL1 memory operations here for a non-obvious reason.  Our caller
+   // has an expansion threshold, and we want the number of hardware memory
+   // operations to correspond roughly to that threshold.  LMUL>1 operations
+@@ -23924,8 +23906,8 @@ EVT RISCVTargetLowering::getOptimalMemOpType(
+-  if (ChimeraGated) {
+-    ChimeraLogMemopCensus("blocked");
++  if (chimeraRecordImplicitVectorDecision(
++          FuncAttributes, ChimeraImplicitVectorMechanism::MEMOP))
+     return MVT::Other;
+-  }
+-  ChimeraLogMemopCensus("formed");
++  chimeraAssertImplicitVectorCommitAllowed(
++      FuncAttributes, ChimeraImplicitVectorMechanism::MEMOP);
+   return MVT::getVectorVT(PreferredVT, MinVLenInBytes/PreferredVT.getStoreSize());
+ }
+ 
+diff --git a/llvm/lib/CodeGen/SelectionDAG/DAGCombiner.cpp b/llvm/lib/CodeGen/SelectionDAG/DAGCombiner.cpp
+index 4e6b9f3a6..9b3e792ea 100644
+--- a/llvm/lib/CodeGen/SelectionDAG/DAGCombiner.cpp
++++ b/llvm/lib/CodeGen/SelectionDAG/DAGCombiner.cpp
+@@ -43,6 +43,7 @@
+ #include "llvm/CodeGen/ValueTypes.h"
+ #include "llvm/CodeGenTypes/MachineValueType.h"
+ #include "llvm/IR/Attributes.h"
++#include "llvm/IR/ChimeraImplicitVectorCensus.h"
+ #include "llvm/IR/Constant.h"
+ #include "llvm/IR/DataLayout.h"
+ #include "llvm/IR/DerivedTypes.h"
+@@ -201,16 +202,6 @@ namespace {
+     /// stores candidates.
+     SmallPtrSet<SDNode *, 4> ChainsWithoutMergeableStores;
+ 
+-    /// Chimera store-merge census: whether any vector-merge decision point
+-    /// chose vector code (ungated) or would have chosen it (gated
+-    /// counterfactual) during this combine pass.  Logged once at the end of
+-    /// Run(); a function without such decisions records nothing.
+-    /// ChimeraMergeGated mirrors the chimera-no-vectorize attribute so the
+-    /// census attributes blocks to the gate only, not to NoImplicitFloat.
+-    bool ChimeraMergeFormed = false;
+-    bool ChimeraMergeBlocked = false;
+-    bool ChimeraMergeGated = false;
+-
+     /// When an instruction is simplified, add all users of the instruction to
+     /// the work lists because they might get more simplified now.
+     void AddUsersToWorklist(SDNode *N) {
+@@ -837,7 +828,7 @@ namespace {
+     /// vector store rather than a sequence of scalar stores.
+     bool tryStoreMergeOfExtracts(SmallVectorImpl<MemOpLink> &StoreNodes,
+                                  unsigned NumConsecutiveStores, EVT MemVT,
+-                                 SDNode *Root, bool AllowVectors);
++                                 SDNode *Root);
+ 
+     /// This is a helper function for mergeConsecutiveStores. It is used for
+     /// store chains that are composed entirely of loaded values.
+@@ -1897,21 +1888,6 @@ void DAGCombiner::Run(CombineLevel AtLevel) {
+   // If the root changed (e.g. it was a dead load, update the root).
+   DAG.setRoot(Dummy.getValue());
+   DAG.RemoveDeadNodes();
+-
+-  // Chimera store-merge census: one line per combine pass when any
+-  // vector-merge decision fired (formed = ungated decision chose vector,
+-  // blocked = gated decision would have chosen vector).  A function whose
+-  // merging never reached a vector-capable decision records nothing.
+-  if (ChimeraMergeFormed || ChimeraMergeBlocked) {
+-    if (const char *StatsPath = std::getenv("CHIMERA_GATE_STATS")) {
+-      std::error_code EC;
+-      raw_fd_ostream StatsOS(StatsPath, EC, sys::fs::OF_Append);
+-      if (!EC)
+-        StatsOS << "merge-census\t"
+-                << DAG.getMachineFunction().getFunction().getName() << "\t"
+-                << (ChimeraMergeBlocked ? "blocked" : "formed") << "\n";
+-    }
+-  }
+ }
+ 
+ SDValue DAGCombiner::visit(SDNode *N) {
+@@ -21820,11 +21796,16 @@ bool DAGCombiner::tryStoreMergeOfConstants(
+       }
+     }
+ 
+-    bool ChimeraWouldUseVector = LastLegalVectorType > LastLegalType;
+-    if (ChimeraMergeGated)
+-      ChimeraMergeBlocked |= ChimeraWouldUseVector;
+-    else if (AllowVectors)
+-      ChimeraMergeFormed |= ChimeraWouldUseVector;
+-    bool UseVector = ChimeraWouldUseVector && AllowVectors;
++    bool UseVector = false;
++    if (LastLegalVectorType > LastLegalType) {
++      Function &F = DAG.getMachineFunction().getFunction();
++      if (AllowVectors &&
++          !chimeraRecordImplicitVectorDecision(
++              F, ChimeraImplicitVectorMechanism::MERGE)) {
++        chimeraAssertImplicitVectorCommitAllowed(
++            F, ChimeraImplicitVectorMechanism::MERGE);
++        UseVector = true;
++      }
++    }
+     unsigned NumElem = (UseVector) ? LastLegalVectorType : LastLegalType;
+     bool UseTrunc = LastIntegerTrunc && !UseVector;
+@@ -21871,7 +21852,7 @@ bool DAGCombiner::tryStoreMergeOfExtracts(
+ 
+ bool DAGCombiner::tryStoreMergeOfExtracts(
+     SmallVectorImpl<MemOpLink> &StoreNodes, unsigned NumConsecutiveStores,
+-    EVT MemVT, SDNode *RootNode, bool AllowVectors) {
++    EVT MemVT, SDNode *RootNode) {
+   LLVMContext &Context = *DAG.getContext();
+   const DataLayout &DL = DAG.getDataLayout();
+   unsigned NumMemElts = MemVT.isVector() ? MemVT.getVectorNumElements() : 1;
+@@ -21929,11 +21911,12 @@ bool DAGCombiner::tryStoreMergeOfExtracts(
+     // remain instead of the merged vector store.  NoImplicitFloat-only
+     // suppression does not reach this helper veto: the upstream extracts
+     // path never consulted AllowVectors, and stock behavior is preserved.
+-    if (ChimeraMergeGated) {
+-      ChimeraMergeBlocked = true;
++    Function &F = DAG.getMachineFunction().getFunction();
++    if (chimeraRecordImplicitVectorDecision(
++            F, ChimeraImplicitVectorMechanism::MERGE))
+       return MadeChange;
+-    }
+-    ChimeraMergeFormed = true;
++    chimeraAssertImplicitVectorCommitAllowed(
++        F, ChimeraImplicitVectorMechanism::MERGE);
+ 
+     MadeChange |= mergeStoresOfConstantsOrVecElts(
+         StoreNodes, MemVT, NumStoresToMerge, /*IsConstantSrc*/ false,
+@@ -22108,12 +22091,17 @@ bool DAGCombiner::tryStoreMergeOfLoads(SmallVectorImpl<MemOpLink> &StoreNodes,
+     // Only use vector types if the vector type is larger than the integer
+     // type. If they are the same, use integers.  Under the Chimera gate the
+     // would-be decision is still computed for the census.
+-    bool ChimeraWouldUseVectorTy = LastLegalVectorType > LastLegalIntegerType;
+-    if (ChimeraMergeGated)
+-      ChimeraMergeBlocked |= ChimeraWouldUseVectorTy;
+-    else if (AllowVectors)
+-      ChimeraMergeFormed |= ChimeraWouldUseVectorTy;
+-    bool UseVectorTy = ChimeraWouldUseVectorTy && AllowVectors;
++    bool UseVectorTy = false;
++    if (LastLegalVectorType > LastLegalIntegerType) {
++      Function &F = DAG.getMachineFunction().getFunction();
++      if (AllowVectors &&
++          !chimeraRecordImplicitVectorDecision(
++              F, ChimeraImplicitVectorMechanism::MERGE)) {
++        chimeraAssertImplicitVectorCommitAllowed(
++            F, ChimeraImplicitVectorMechanism::MERGE);
++        UseVectorTy = true;
++      }
++    }
+     unsigned LastLegalType =
+         std::max(LastLegalVectorType, LastLegalIntegerType);
+ 
+@@ -22301,17 +22289,7 @@ bool DAGCombiner::mergeConsecutiveStores(StoreSDNode *St) {
+   bool AllowVectors = !DAG.getMachineFunction().getFunction().hasFnAttribute(
+       Attribute::NoImplicitFloat);
+-  // Chimera gate: per-function suppression of the vector form of store
+-  // merging.  Scalar-wide merges are untouched (they are not vector
+-  // generation).  The vector-merge decisions themselves are recorded as
+-  // census events by the decision sites (formed = ungated decision chose
+-  // vector, blocked = gated decision would have chosen vector) and logged
+-  // once per combine pass at the end of Run().
+-  AllowVectors =
+-      AllowVectors && !DAG.getMachineFunction().getFunction().hasFnAttribute(
+-                          "chimera-no-vectorize");
+-  ChimeraMergeGated =
+-      DAG.getMachineFunction().getFunction().hasFnAttribute(
+-          "chimera-no-vectorize");
++  // The Chimera gate is evaluated at each final vector decision; this flag
++  // retains its upstream NoImplicitFloat meaning.
+   bool IsNonTemporalStore = St->isNonTemporal();
+   bool IsNonTemporalLoad = StoreSrc == StoreSource::Load &&
+                            cast<LoadSDNode>(StoredVal)->isNonTemporal();
+@@ -22341,7 +22318,7 @@ bool DAGCombiner::mergeConsecutiveStores(StoreSDNode *St) {
+ 
+     case StoreSource::Extract:
+       MadeChange |= tryStoreMergeOfExtracts(StoreNodes, NumConsecutiveStores,
+-                                            MemVT, RootNode, AllowVectors);
++                                            MemVT, RootNode);
+       break;
+ 
+     case StoreSource::Load:
+-- 
+2.40.0.windows.1

@@ -1,0 +1,67 @@
+[config]
+data_root = "~/.chimera/data"
+workspace_root = "~/.chimera/workspaces"
+scalar_root = "~/.chimera/scalar"
+workspace_name = "auto"
+
+# Translator 单独提供；将下方绝对路径替换为真实入口，见 doc/external-dependencies.md。
+[[config.translators]]
+source = "riscv64;rvv;vlen=1024"
+target = "riscv64;rvv;vlen=256"
+translator_path = "/path/to/chimera-translator/rvv_sbt_rvv.py"
+
+[[config.translators]]
+source = "riscv64;rvv;vlen=256"
+target = "riscv64;rvv;vlen=1024"
+translator_path = "/path/to/chimera-translator/rvv_sbt_rvv1024.py"
+
+[config.tools]
+python = "python3"
+cc = "gcc"
+cc_flags = [
+  "-march=rv64imafdc_zba_zbb_zbc_zbs_zfa_zfh_zicond_zicsr_zifencei_zihintpause_zihpm_zkt_zvbb_zvbc_zve32f_zve32x_zve64d_zve64f_zve64x_zvfh_zvfhmin_zvkb_zvkg_zvkned_zvknha_zvknhb_zvksed_zvksh_zvkt_zicbop_zihintntl",
+  "-mabi=lp64d",
+]
+objdump = "objdump"
+nm = "nm"
+cmake = "cmake"
+
+[config.target_files]
+sysroot = "/"
+library_roots = ["/usr/lib/riscv64-linux-gnu", "/lib"]
+
+[config.runtime]
+bpf_map = "/sys/fs/bpf/pid_uprobe_map"
+ai_thread_control = "/proc/set_ai_thread"
+
+[profile]
+name = "linux-riscv64-rvv-1024-256-bidirectional"
+target_os = "linux"
+target_arch = "riscv64"
+target_arch_extension = "rvv"
+runtime_scene = "linux_riscv64_rvv_v1"
+runtime_abi = 1
+
+[[profile.workflow.steps]]
+step = "prepare-workspace"
+[[profile.workflow.steps]]
+step = "build-runtime"
+[[profile.workflow.steps]]
+step = "disassemble"
+[[profile.workflow.steps]]
+step = "build-program-model"
+[[profile.workflow.steps]]
+step = "safety"
+parameters = { min_vlen_bits = 256, compiler_metadata = [] }
+[[profile.workflow.steps]]
+step = "translate"
+parameters = { source = "riscv64;rvv;vlen=1024", target = "riscv64;rvv;vlen=256" }
+[[profile.workflow.steps]]
+step = "translate"
+parameters = { source = "riscv64;rvv;vlen=256", target = "riscv64;rvv;vlen=1024" }
+[[profile.workflow.steps]]
+step = "offset-map"
+[[profile.workflow.steps]]
+step = "patch-safepoints"
+[[profile.workflow.steps]]
+step = "finalize-workspace"

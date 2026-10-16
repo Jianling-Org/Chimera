@@ -1,0 +1,1036 @@
+
+/root/yangzheng/gcc-rebuild/chimera-staged-20260919-132951/build-gate4/gcc/cc1：     文件格式 elf64-littleriscv
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+0000000000da2782 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb>:
+  da2782:	7161                	addi	sp,sp,-432
+  da2784:	f706                	sd	ra,424(sp)
+  da2786:	f322                	sd	s0,416(sp)
+  da2788:	ef26                	sd	s1,408(sp)
+  da278a:	eb4a                	sd	s2,400(sp)
+  da278c:	e74e                	sd	s3,392(sp)
+  da278e:	e352                	sd	s4,384(sp)
+  da2790:	fed6                	sd	s5,376(sp)
+  da2792:	fada                	sd	s6,368(sp)
+  da2794:	f6de                	sd	s7,360(sp)
+  da2796:	f2e2                	sd	s8,352(sp)
+  da2798:	eee6                	sd	s9,344(sp)
+  da279a:	eaea                	sd	s10,336(sp)
+  da279c:	e6ee                	sd	s11,328(sp)
+  da279e:	1b00                	addi	s0,sp,432
+  da27a0:	8936                	mv	s2,a3
+  da27a2:	ecb43023          	sd	a1,-320(s0)
+  da27a6:	eca43c23          	sd	a0,-296(s0)
+  da27aa:	ecc43423          	sd	a2,-312(s0)
+  da27ae:	6208                	ld	a0,0(a2)
+  da27b0:	6108                	ld	a0,0(a0)
+  da27b2:	650c                	ld	a1,8(a0)
+  da27b4:	658c                	ld	a1,8(a1)
+  da27b6:	0c85ba83          	ld	s5,200(a1)
+  da27ba:	0d8ae603          	lwu	a2,216(s5)
+  da27be:	0edac583          	lbu	a1,237(s5)
+  da27c2:	ecc43823          	sd	a2,-304(s0)
+  da27c6:	00060b9b          	sext.w	s7,a2
+  da27ca:	fffb861b          	addiw	a2,s7,-1
+  da27ce:	eac43823          	sd	a2,-336(s0)
+  da27d2:	c5b1                	beqz	a1,da281e <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x9c>
+  da27d4:	450d                	li	a0,3
+  da27d6:	00ab8863          	beq	s7,a0,da27e6 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x64>
+  da27da:	eb043583          	ld	a1,-336(s0)
+  da27de:	00bbc533          	xor	a0,s7,a1
+  da27e2:	00a5fd63          	bgeu	a1,a0,da27fc <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x7a>
+  da27e6:	ec843583          	ld	a1,-312(s0)
+  da27ea:	0085e503          	lwu	a0,8(a1)
+  da27ee:	0005bc03          	ld	s8,0(a1)
+  da27f2:	00153593          	seqz	a1,a0
+  da27f6:	050e                	slli	a0,a0,0x3
+  da27f8:	4c85                	li	s9,1
+  da27fa:	c1d9                	beqz	a1,da2880 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0xfe>
+  da27fc:	e5040113          	addi	sp,s0,-432
+  da2800:	70ba                	ld	ra,424(sp)
+  da2802:	741a                	ld	s0,416(sp)
+  da2804:	64fa                	ld	s1,408(sp)
+  da2806:	695a                	ld	s2,400(sp)
+  da2808:	69ba                	ld	s3,392(sp)
+  da280a:	6a1a                	ld	s4,384(sp)
+  da280c:	7af6                	ld	s5,376(sp)
+  da280e:	7b56                	ld	s6,368(sp)
+  da2810:	7bb6                	ld	s7,360(sp)
+  da2812:	7c16                	ld	s8,352(sp)
+  da2814:	6cf6                	ld	s9,344(sp)
+  da2816:	6d56                	ld	s10,336(sp)
+  da2818:	6db6                	ld	s11,328(sp)
+  da281a:	615d                	addi	sp,sp,432
+  da281c:	8082                	ret
+  da281e:	5164                	lw	s1,100(a0)
+  da2820:	ed843503          	ld	a0,-296(s0)
+  da2824:	85d6                	mv	a1,s5
+  da2826:	e8ca30ef          	jal	d45eb2 <_Z22compare_step_with_zeroP8vec_infoP14_stmt_vec_info>
+  da282a:	faa055e3          	blez	a0,da27d4 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x52>
+  da282e:	4505                	li	a0,1
+  da2830:	faa492e3          	bne	s1,a0,da27d4 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x52>
+  da2834:	ec843503          	ld	a0,-312(s0)
+  da2838:	6108                	ld	a0,0(a0)
+  da283a:	6108                	ld	a0,0(a0)
+  da283c:	7d08                	ld	a0,56(a0)
+  da283e:	ed043583          	ld	a1,-304(s0)
+  da2842:	4601                	li	a2,0
+  da2844:	4681                	li	a3,0
+  da2846:	0135f097          	auipc	ra,0x135f
+  da284a:	dd4080e7          	jalr	-556(ra) # 210161a <_Z25vect_load_lanes_supportedP9tree_nodembP3vecIi7va_heap6vl_ptrE>
+  da284e:	11500593          	li	a1,277
+  da2852:	f8b501e3          	beq	a0,a1,da27d4 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x52>
+  da2856:	ec843503          	ld	a0,-312(s0)
+  da285a:	00856503          	lwu	a0,8(a0)
+  da285e:	dd59                	beqz	a0,da27fc <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x7a>
+  da2860:	ec843583          	ld	a1,-312(s0)
+  da2864:	0005bc03          	ld	s8,0(a1)
+  da2868:	050e                	slli	a0,a0,0x3
+  da286a:	4585                	li	a1,1
+  da286c:	862a                	mv	a2,a0
+  da286e:	86e2                	mv	a3,s8
+  da2870:	6298                	ld	a4,0(a3)
+  da2872:	5378                	lw	a4,100(a4)
+  da2874:	f6b710e3          	bne	a4,a1,da27d4 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x52>
+  da2878:	1661                	addi	a2,a2,-8
+  da287a:	06a1                	addi	a3,a3,8
+  da287c:	fa75                	bnez	a2,da2870 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0xee>
+  da287e:	4c81                	li	s9,0
+  da2880:	00ac0db3          	add	s11,s8,a0
+  da2884:	80000337          	lui	t1,0x80000
+  da2888:	001b8593          	addi	a1,s7,1
+  da288c:	00194613          	xori	a2,s2,1
+  da2890:	ed043683          	ld	a3,-304(s0)
+  da2894:	068e                	slli	a3,a3,0x3
+  da2896:	c2202573          	csrr	a0,vlenb
+  da289a:	eb043703          	ld	a4,-336(s0)
+  da289e:	00ebc733          	xor	a4,s7,a4
+  da28a2:	e6e43023          	sd	a4,-416(s0)
+  da28a6:	55555837          	lui	a6,0x55555
+  da28aa:	333338b7          	lui	a7,0x33333
+  da28ae:	0f0f12b7          	lui	t0,0xf0f1
+  da28b2:	010103b7          	lui	t2,0x1010
+  da28b6:	4989                	li	s3,2
+  da28b8:	027317b7          	lui	a5,0x2731
+  da28bc:	077cb4b7          	lui	s1,0x77cb
+  da28c0:	ffe3071b          	addiw	a4,t1,-2 # 7ffffffe <__BSS_END__+0x7c4e2d4e>
+  da28c4:	f0e43823          	sd	a4,-240(s0)
+  da28c8:	137d                	addi	t1,t1,-1
+  da28ca:	0015d59b          	srliw	a1,a1,0x1
+  da28ce:	00ccf633          	and	a2,s9,a2
+  da28d2:	e8c43c23          	sd	a2,-360(s0)
+  da28d6:	06a1                	addi	a3,a3,8
+  da28d8:	e6d43823          	sd	a3,-400(s0)
+  da28dc:	00251613          	slli	a2,a0,0x2
+  da28e0:	eac43423          	sd	a2,-344(s0)
+  da28e4:	00155613          	srli	a2,a0,0x1
+  da28e8:	f2c43023          	sd	a2,-224(s0)
+  da28ec:	00255913          	srli	s2,a0,0x2
+  da28f0:	55580613          	addi	a2,a6,1365 # 55555555 <__BSS_END__+0x51a382a5>
+  da28f4:	f0c43423          	sd	a2,-248(s0)
+  da28f8:	33388613          	addi	a2,a7,819 # 33333333 <__BSS_END__+0x2f816083>
+  da28fc:	f0c43023          	sd	a2,-256(s0)
+  da2900:	f0f28613          	addi	a2,t0,-241 # f0f0f0f <__BSS_END__+0xb5d3c5f>
+  da2904:	eec43c23          	sd	a2,-264(s0)
+  da2908:	10138613          	addi	a2,t2,257 # 1010101 <_Z28gimple_simplify_BIT_XOR_EXPRP15gimple_match_opPP6gimplePFP9tree_nodeS5_E11code_helperS5_S5_S5_+0xb863>
+  da290c:	eec43823          	sd	a2,-272(s0)
+  da2910:	1c87b603          	ld	a2,456(a5) # 27311c8 <tree_code_length+0x1314>
+  da2914:	eec43423          	sd	a2,-280(s0)
+  da2918:	53148613          	addi	a2,s1,1329 # 77cb531 <__BSS_END__+0x3cae281>
+  da291c:	f2c43823          	sd	a2,-208(s0)
+  da2920:	f4a43023          	sd	a0,-192(s0)
+  da2924:	810d                	srli	a0,a0,0x3
+  da2926:	f0a43c23          	sd	a0,-232(s0)
+  da292a:	f2643c23          	sd	t1,-200(s0)
+  da292e:	006bf533          	and	a0,s7,t1
+  da2932:	e6a43423          	sd	a0,-408(s0)
+  da2936:	41200533          	neg	a0,s2
+  da293a:	e4a43c23          	sd	a0,-424(s0)
+  da293e:	02000b13          	li	s6,32
+  da2942:	e9543823          	sd	s5,-368(s0)
+  da2946:	e9743423          	sd	s7,-376(s0)
+  da294a:	e9943023          	sd	s9,-384(s0)
+  da294e:	e7b43c23          	sd	s11,-392(s0)
+  da2952:	eab43023          	sd	a1,-352(s0)
+  da2956:	a881                	j	da29a6 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x224>
+  da2958:	ff8c4097          	auipc	ra,0xff8c4
+  da295c:	818080e7          	jalr	-2024(ra) # 666170 <free@plt>
+  da2960:	f5043603          	ld	a2,-176(s0)
+  da2964:	02063023          	sd	zero,32(a2)
+  da2968:	00063023          	sd	zero,0(a2)
+  da296c:	03a63423          	sd	s10,40(a2)
+  da2970:	45c1                	li	a1,16
+  da2972:	4501                	li	a0,0
+  da2974:	84b2                	mv	s1,a2
+  da2976:	015a9097          	auipc	ra,0x15a9
+  da297a:	038080e7          	jalr	56(ra) # 234b9ae <xrealloc>
+  da297e:	e088                	sd	a0,0(s1)
+  da2980:	4585                	li	a1,1
+  da2982:	e10c                	sd	a1,0(a0)
+  da2984:	6088                	ld	a0,0(s1)
+  da2986:	00456583          	lwu	a1,4(a0)
+  da298a:	00359613          	slli	a2,a1,0x3
+  da298e:	0585                	addi	a1,a1,1
+  da2990:	962a                	add	a2,a2,a0
+  da2992:	c14c                	sw	a1,4(a0)
+  da2994:	01b63423          	sd	s11,8(a2)
+  da2998:	e7843d83          	ld	s11,-392(s0)
+  da299c:	ea043583          	ld	a1,-352(s0)
+  da29a0:	0c21                	addi	s8,s8,8
+  da29a2:	e5bc0de3          	beq	s8,s11,da27fc <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x7a>
+  da29a6:	000c3783          	ld	a5,0(s8)
+  da29aa:	6388                	ld	a0,0(a5)
+  da29ac:	c119                	beqz	a0,da29b2 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x230>
+  da29ae:	4148                	lw	a0,4(a0)
+  da29b0:	f965                	bnez	a0,da29a0 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x21e>
+  da29b2:	0647ea03          	lwu	s4,100(a5)
+  da29b6:	00ba3533          	sltu	a0,s4,a1
+  da29ba:	00154513          	xori	a0,a0,1
+  da29be:	00acf533          	and	a0,s9,a0
+  da29c2:	fd79                	bnez	a0,da29a0 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x21e>
+  da29c4:	4485                	li	s1,1
+  da29c6:	f4f43823          	sd	a5,-176(s0)
+  da29ca:	080a0b63          	beqz	s4,da2a60 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x2de>
+  da29ce:	003a1593          	slli	a1,s4,0x3
+  da29d2:	05a1                	addi	a1,a1,8
+  da29d4:	4501                	li	a0,0
+  da29d6:	015a9097          	auipc	ra,0x15a9
+  da29da:	fd8080e7          	jalr	-40(ra) # 234b9ae <xrealloc>
+  da29de:	f5043783          	ld	a5,-176(s0)
+  da29e2:	8d2a                	mv	s10,a0
+  da29e4:	f3843503          	ld	a0,-200(s0)
+  da29e8:	00aa7533          	and	a0,s4,a0
+  da29ec:	00ad2023          	sw	a0,0(s10)
+  da29f0:	000d2223          	sw	zero,4(s10)
+  da29f4:	53e8                	lw	a0,100(a5)
+  da29f6:	c535                	beqz	a0,da2a62 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x2e0>
+  da29f8:	738c                	ld	a1,32(a5)
+  da29fa:	004d6503          	lwu	a0,4(s10)
+  da29fe:	458c                	lw	a1,8(a1)
+  da2a00:	00150613          	addi	a2,a0,1
+  da2a04:	00351693          	slli	a3,a0,0x3
+  da2a08:	96ea                	add	a3,a3,s10
+  da2a0a:	00cd2223          	sw	a2,4(s10)
+  da2a0e:	0006a423          	sw	zero,8(a3)
+  da2a12:	c6cc                	sw	a1,12(a3)
+  da2a14:	53f4                	lw	a3,100(a5)
+  da2a16:	0536e763          	bltu	a3,s3,da2a64 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x2e2>
+  da2a1a:	0509                	addi	a0,a0,2
+  da2a1c:	4585                	li	a1,1
+  da2a1e:	4631                	li	a2,12
+  da2a20:	4485                	li	s1,1
+  da2a22:	7394                	ld	a3,32(a5)
+  da2a24:	fff50713          	addi	a4,a0,-1
+  da2a28:	1702                	slli	a4,a4,0x20
+  da2a2a:	8375                	srli	a4,a4,0x1d
+  da2a2c:	96b2                	add	a3,a3,a2
+  da2a2e:	4294                	lw	a3,0(a3)
+  da2a30:	976a                	add	a4,a4,s10
+  da2a32:	00ad2223          	sw	a0,4(s10)
+  da2a36:	00072423          	sw	zero,8(a4)
+  da2a3a:	c754                	sw	a3,12(a4)
+  da2a3c:	7394                	ld	a3,32(a5)
+  da2a3e:	96b2                	add	a3,a3,a2
+  da2a40:	ffc6a703          	lw	a4,-4(a3)
+  da2a44:	4294                	lw	a3,0(a3)
+  da2a46:	0585                	addi	a1,a1,1
+  da2a48:	2705                	addiw	a4,a4,1
+  da2a4a:	8f35                	xor	a4,a4,a3
+  da2a4c:	0647e683          	lwu	a3,100(a5)
+  da2a50:	0505                	addi	a0,a0,1
+  da2a52:	00173713          	seqz	a4,a4
+  da2a56:	8cf9                	and	s1,s1,a4
+  da2a58:	0611                	addi	a2,a2,4
+  da2a5a:	fcd5e4e3          	bltu	a1,a3,da2a22 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x2a0>
+  da2a5e:	a019                	j	da2a64 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x2e2>
+  da2a60:	4d01                	li	s10,0
+  da2a62:	4681                	li	a3,0
+  da2a64:	e9843503          	ld	a0,-360(s0)
+  da2a68:	8d65                	and	a0,a0,s1
+  da2a6a:	cd31                	beqz	a0,da2ac6 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x344>
+  da2a6c:	ec843503          	ld	a0,-312(s0)
+  da2a70:	4508                	lw	a0,8(a0)
+  da2a72:	0006859b          	sext.w	a1,a3
+  da2a76:	0025b593          	sltiu	a1,a1,2
+  da2a7a:	157d                	addi	a0,a0,-1
+  da2a7c:	00a03533          	snez	a0,a0
+  da2a80:	8d6d                	and	a0,a0,a1
+  da2a82:	e131                	bnez	a0,da2ac6 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x344>
+  da2a84:	fff6851b          	addiw	a0,a3,-1
+  da2a88:	8ea9                	xor	a3,a3,a0
+  da2a8a:	2681                	sext.w	a3,a3
+  da2a8c:	02d57d63          	bgeu	a0,a3,da2ac6 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x344>
+  da2a90:	eb043583          	ld	a1,-336(s0)
+  da2a94:	e6043603          	ld	a2,-416(s0)
+  da2a98:	02c5f763          	bgeu	a1,a2,da2ac6 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x344>
+  da2a9c:	738c                	ld	a1,32(a5)
+  da2a9e:	458c                	lw	a1,8(a1)
+  da2aa0:	8de9                	and	a1,a1,a0
+  da2aa2:	01757533          	and	a0,a0,s7
+  da2aa6:	8d4d                	or	a0,a0,a1
+  da2aa8:	e10d                	bnez	a0,da2aca <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x348>
+  da2aaa:	ea043583          	ld	a1,-352(s0)
+  da2aae:	ee0d09e3          	beqz	s10,da29a0 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x21e>
+  da2ab2:	000d2503          	lw	a0,0(s10)
+  da2ab6:	0e054ae3          	bltz	a0,da33aa <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0xc28>
+  da2aba:	856a                	mv	a0,s10
+  da2abc:	ff8c3097          	auipc	ra,0xff8c3
+  da2ac0:	6b4080e7          	jalr	1716(ra) # 666170 <free@plt>
+  da2ac4:	bde1                	j	da299c <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x21a>
+  da2ac6:	020b8263          	beqz	s7,da2aea <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x368>
+  da2aca:	4501                	li	a0,0
+  da2acc:	e7043583          	ld	a1,-400(s0)
+  da2ad0:	015a9097          	auipc	ra,0x15a9
+  da2ad4:	ede080e7          	jalr	-290(ra) # 234b9ae <xrealloc>
+  da2ad8:	85aa                	mv	a1,a0
+  da2ada:	e6843503          	ld	a0,-408(s0)
+  da2ade:	c188                	sw	a0,0(a1)
+  da2ae0:	0005a223          	sw	zero,4(a1)
+  da2ae4:	000a9663          	bnez	s5,da2af0 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x36e>
+  da2ae8:	a0b9                	j	da2b36 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x3b4>
+  da2aea:	4581                	li	a1,0
+  da2aec:	040a8563          	beqz	s5,da2b36 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x3b4>
+  da2af0:	41d0                	lw	a2,4(a1)
+  da2af2:	8556                	mv	a0,s5
+  da2af4:	a819                	j	da2b0a <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x388>
+  da2af6:	86b2                	mv	a3,a2
+  da2af8:	00168613          	addi	a2,a3,1
+  da2afc:	1682                	slli	a3,a3,0x20
+  da2afe:	82f5                	srli	a3,a3,0x1d
+  da2b00:	96ae                	add	a3,a3,a1
+  da2b02:	e688                	sd	a0,8(a3)
+  da2b04:	c1d0                	sw	a2,4(a1)
+  da2b06:	6968                	ld	a0,208(a0)
+  da2b08:	c51d                	beqz	a0,da2b36 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x3b4>
+  da2b0a:	ff5506e3          	beq	a0,s5,da2af6 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x374>
+  da2b0e:	0e052683          	lw	a3,224(a0)
+  da2b12:	ff36e2e3          	bltu	a3,s3,da2af6 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x374>
+  da2b16:	4705                	li	a4,1
+  da2b18:	00160693          	addi	a3,a2,1
+  da2b1c:	1602                	slli	a2,a2,0x20
+  da2b1e:	8275                	srli	a2,a2,0x1d
+  da2b20:	962e                	add	a2,a2,a1
+  da2b22:	00063423          	sd	zero,8(a2)
+  da2b26:	c1d4                	sw	a3,4(a1)
+  da2b28:	0e052783          	lw	a5,224(a0)
+  da2b2c:	2705                	addiw	a4,a4,1
+  da2b2e:	8636                	mv	a2,a3
+  da2b30:	fef764e3          	bltu	a4,a5,da2b18 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x396>
+  da2b34:	b7d1                	j	da2af8 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x376>
+  da2b36:	0e0aa503          	lw	a0,224(s5)
+  da2b3a:	c105                	beqz	a0,da2b5a <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x3d8>
+  da2b3c:	41d0                	lw	a2,4(a1)
+  da2b3e:	4501                	li	a0,0
+  da2b40:	02061693          	slli	a3,a2,0x20
+  da2b44:	0605                	addi	a2,a2,1
+  da2b46:	82f5                	srli	a3,a3,0x1d
+  da2b48:	96ae                	add	a3,a3,a1
+  da2b4a:	0006b423          	sd	zero,8(a3)
+  da2b4e:	c1d0                	sw	a2,4(a1)
+  da2b50:	0e0aa683          	lw	a3,224(s5)
+  da2b54:	2505                	addiw	a0,a0,1
+  da2b56:	fed565e3          	bltu	a0,a3,da2b40 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x3be>
+  da2b5a:	ef843023          	sd	s8,-288(s0)
+  da2b5e:	4605                	li	a2,1
+  da2b60:	f8c43423          	sd	a2,-120(s0)
+  da2b64:	f8043823          	sd	zero,-112(s0)
+  da2b68:	ed043503          	ld	a0,-304(s0)
+  da2b6c:	053d                	addi	a0,a0,15
+  da2b6e:	9941                	andi	a0,a0,-16
+  da2b70:	40a10733          	sub	a4,sp,a0
+  da2b74:	813a                	mv	sp,a4
+  da2b76:	f8c42223          	sw	a2,-124(s0)
+  da2b7a:	f8042023          	sw	zero,-128(s0)
+  da2b7e:	f8840693          	addi	a3,s0,-120
+  da2b82:	f8440793          	addi	a5,s0,-124
+  da2b86:	f8040813          	addi	a6,s0,-128
+  da2b8a:	ed843503          	ld	a0,-296(s0)
+  da2b8e:	865e                	mv	a2,s7
+  da2b90:	ec043883          	ld	a7,-320(s0)
+  da2b94:	ab8f80ef          	jal	d9ae4c <_ZL19vect_build_slp_treeP8vec_info3vecIP14_stmt_vec_info7va_heap6vl_ptrEjP8poly_intILj2EmEPbPjSB_P8hash_mapIS6_P9_slp_tree21simple_hashmap_traitsI10bst_traitsSE_EE>
+  da2b98:	8daa                	mv	s11,a0
+  da2b9a:	7108                	ld	a0,32(a0)
+  da2b9c:	060518e3          	bnez	a0,da340c <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0xc8a>
+  da2ba0:	468d                	li	a3,3
+  da2ba2:	f5043603          	ld	a2,-176(s0)
+  da2ba6:	7c0c8863          	beqz	s9,da3376 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0xbf4>
+  da2baa:	064dab83          	lw	s7,100(s11)
+  da2bae:	5268                	lw	a0,100(a2)
+  da2bb0:	001b8593          	addi	a1,s7,1
+  da2bb4:	0015dc9b          	srliw	s9,a1,0x1
+  da2bb8:	7d957463          	bgeu	a0,s9,da3380 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0xbfe>
+  da2bbc:	001d3513          	seqz	a0,s10
+  da2bc0:	008d0593          	addi	a1,s10,8
+  da2bc4:	157d                	addi	a0,a0,-1
+  da2bc6:	8d6d                	and	a0,a0,a1
+  da2bc8:	f4a43423          	sd	a0,-184(s0)
+  da2bcc:	f2b43423          	sd	a1,-216(s0)
+  da2bd0:	0591                	addi	a1,a1,4
+  da2bd2:	eab43c23          	sd	a1,-328(s0)
+  da2bd6:	8c6e                	mv	s8,s11
+  da2bd8:	a0e9                	j	da2ca2 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x520>
+  da2bda:	08bdb023          	sd	a1,128(s11)
+  da2bde:	03adf537          	lui	a0,0x3adf
+  da2be2:	09b53423          	sd	s11,136(a0) # 3adf088 <_ZL14slp_first_node>
+  da2be6:	4485                	li	s1,1
+  da2be8:	049da623          	sw	s1,76(s11)
+  da2bec:	049db823          	sd	s1,80(s11)
+  da2bf0:	040dbc23          	sd	zero,88(s11)
+  da2bf4:	060db023          	sd	zero,96(s11)
+  da2bf8:	010d8513          	addi	a0,s11,16
+  da2bfc:	cd817057          	vsetivli	zero,2,e64,m1,ta,ma
+  da2c00:	5e003457          	vmv.v.i	v8,0
+  da2c04:	02057427          	vse64.v	v8,(a0)
+  da2c08:	020d8513          	addi	a0,s11,32
+  da2c0c:	02057427          	vse64.v	v8,(a0)
+  da2c10:	030d8513          	addi	a0,s11,48
+  da2c14:	02057427          	vse64.v	v8,(a0)
+  da2c18:	03cd8513          	addi	a0,s11,60
+  da2c1c:	060da423          	sw	zero,104(s11)
+  da2c20:	060d8623          	sb	zero,108(s11)
+  da2c24:	060daa23          	sw	zero,116(s11)
+  da2c28:	060dbc23          	sd	zero,120(s11)
+  da2c2c:	cc087057          	vsetivli	zero,16,e8,m1,ta,ma
+  da2c30:	02050427          	vse8.v	v8,(a0)
+  da2c34:	cd817057          	vsetivli	zero,2,e64,m1,ta,ma
+  da2c38:	020df427          	vse64.v	v8,(s11)
+  da2c3c:	45c1                	li	a1,16
+  da2c3e:	4501                	li	a0,0
+  da2c40:	015a9097          	auipc	ra,0x15a9
+  da2c44:	d6e080e7          	jalr	-658(ra) # 234b9ae <xrealloc>
+  da2c48:	00adb023          	sd	a0,0(s11)
+  da2c4c:	e104                	sd	s1,0(a0)
+  da2c4e:	000db503          	ld	a0,0(s11)
+  da2c52:	468d                	li	a3,3
+  da2c54:	06dda023          	sw	a3,96(s11)
+  da2c58:	04300593          	li	a1,67
+  da2c5c:	06bda423          	sw	a1,104(s11)
+  da2c60:	00456583          	lwu	a1,4(a0)
+  da2c64:	00359613          	slli	a2,a1,0x3
+  da2c68:	0585                	addi	a1,a1,1
+  da2c6a:	962a                	add	a2,a2,a0
+  da2c6c:	c14c                	sw	a1,4(a0)
+  da2c6e:	01863423          	sd	s8,8(a2)
+  da2c72:	039db423          	sd	s9,40(s11)
+  da2c76:	f5043603          	ld	a2,-176(s0)
+  da2c7a:	7e08                	ld	a0,56(a2)
+  da2c7c:	02adbc23          	sd	a0,56(s11)
+  da2c80:	004cab83          	lw	s7,4(s9)
+  da2c84:	077da223          	sw	s7,100(s11)
+  da2c88:	6e08                	ld	a0,24(a2)
+  da2c8a:	014db423          	sd	s4,8(s11)
+  da2c8e:	00adbc23          	sd	a0,24(s11)
+  da2c92:	5268                	lw	a0,100(a2)
+  da2c94:	001b8593          	addi	a1,s7,1
+  da2c98:	0015dc9b          	srliw	s9,a1,0x1
+  da2c9c:	8c6e                	mv	s8,s11
+  da2c9e:	6f957163          	bgeu	a0,s9,da3380 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0xbfe>
+  da2ca2:	001bf513          	andi	a0,s7,1
+  da2ca6:	00db8463          	beq	s7,a3,da2cae <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x52c>
+  da2caa:	72051363          	bnez	a0,da33d0 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0xc4e>
+  da2cae:	ed41                	bnez	a0,da2d46 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x5c4>
+  da2cb0:	f2043483          	ld	s1,-224(s0)
+  da2cb4:	080b8c63          	beqz	s7,da2d4c <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x5ca>
+  da2cb8:	020b9513          	slli	a0,s7,0x20
+  da2cbc:	f0843603          	ld	a2,-248(s0)
+  da2cc0:	02061593          	slli	a1,a2,0x20
+  da2cc4:	9101                	srli	a0,a0,0x20
+  da2cc6:	95b2                	add	a1,a1,a2
+  da2cc8:	157d                	addi	a0,a0,-1
+  da2cca:	00155613          	srli	a2,a0,0x1
+  da2cce:	8d51                	or	a0,a0,a2
+  da2cd0:	00255613          	srli	a2,a0,0x2
+  da2cd4:	8d51                	or	a0,a0,a2
+  da2cd6:	00455613          	srli	a2,a0,0x4
+  da2cda:	8d51                	or	a0,a0,a2
+  da2cdc:	00855613          	srli	a2,a0,0x8
+  da2ce0:	8d51                	or	a0,a0,a2
+  da2ce2:	01055613          	srli	a2,a0,0x10
+  da2ce6:	8d51                	or	a0,a0,a2
+  da2ce8:	02055613          	srli	a2,a0,0x20
+  da2cec:	8d51                	or	a0,a0,a2
+  da2cee:	fff54513          	not	a0,a0
+  da2cf2:	00155613          	srli	a2,a0,0x1
+  da2cf6:	8df1                	and	a1,a1,a2
+  da2cf8:	f0043683          	ld	a3,-256(s0)
+  da2cfc:	02069613          	slli	a2,a3,0x20
+  da2d00:	9636                	add	a2,a2,a3
+  da2d02:	8d0d                	sub	a0,a0,a1
+  da2d04:	00c575b3          	and	a1,a0,a2
+  da2d08:	8109                	srli	a0,a0,0x2
+  da2d0a:	8d71                	and	a0,a0,a2
+  da2d0c:	ef843683          	ld	a3,-264(s0)
+  da2d10:	02069613          	slli	a2,a3,0x20
+  da2d14:	952e                	add	a0,a0,a1
+  da2d16:	00455593          	srli	a1,a0,0x4
+  da2d1a:	952e                	add	a0,a0,a1
+  da2d1c:	ef043703          	ld	a4,-272(s0)
+  da2d20:	02071593          	slli	a1,a4,0x20
+  da2d24:	9636                	add	a2,a2,a3
+  da2d26:	8d71                	and	a0,a0,a2
+  da2d28:	95ba                	add	a1,a1,a4
+  da2d2a:	02b50533          	mul	a0,a0,a1
+  da2d2e:	9161                	srli	a0,a0,0x38
+  da2d30:	04000593          	li	a1,64
+  da2d34:	40a58533          	sub	a0,a1,a0
+  da2d38:	000d0d63          	beqz	s10,da2d52 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x5d0>
+  da2d3c:	004d6583          	lwu	a1,4(s10)
+  da2d40:	f2843603          	ld	a2,-216(s0)
+  da2d44:	a809                	j	da2d56 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x5d4>
+  da2d46:	4a81                	li	s5,0
+  da2d48:	4a01                	li	s4,0
+  da2d4a:	a0e9                	j	da2e14 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x692>
+  da2d4c:	4501                	li	a0,0
+  da2d4e:	fe0d17e3          	bnez	s10,da2d3c <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x5ba>
+  da2d52:	4601                	li	a2,0
+  da2d54:	4581                	li	a1,0
+  da2d56:	56fd                	li	a3,-1
+  da2d58:	00a696bb          	sllw	a3,a3,a0
+  da2d5c:	00359513          	slli	a0,a1,0x3
+  da2d60:	9532                	add	a0,a0,a2
+  da2d62:	fff6ca93          	not	s5,a3
+  da2d66:	f4843683          	ld	a3,-184(s0)
+  da2d6a:	00a68d63          	beq	a3,a0,da2d84 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x602>
+  da2d6e:	8e15                	sub	a2,a2,a3
+  da2d70:	1661                	addi	a2,a2,-8
+  da2d72:	820d                	srli	a2,a2,0x3
+  da2d74:	95b2                	add	a1,a1,a2
+  da2d76:	058e                	slli	a1,a1,0x3
+  da2d78:	818d                	srli	a1,a1,0x3
+  da2d7a:	0095f763          	bgeu	a1,s1,da2d88 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x606>
+  da2d7e:	8656                	mv	a2,s5
+  da2d80:	85b6                	mv	a1,a3
+  da2d82:	a8ad                	j	da2dfc <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x67a>
+  da2d84:	8a56                	mv	s4,s5
+  da2d86:	a079                	j	da2e14 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x692>
+  da2d88:	00158693          	addi	a3,a1,1
+  da2d8c:	fff48713          	addi	a4,s1,-1
+  da2d90:	8f75                	and	a4,a4,a3
+  da2d92:	8626                	mv	a2,s1
+  da2d94:	ea843783          	ld	a5,-344(s0)
+  da2d98:	c311                	beqz	a4,da2d9c <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x61a>
+  da2d9a:	863a                	mv	a2,a4
+  da2d9c:	8e91                	sub	a3,a3,a2
+  da2d9e:	0d007757          	vsetvli	a4,zero,e32,m1,ta,ma
+  da2da2:	5e0fb557          	vmv.v.i	v10,-1
+  da2da6:	0d107757          	vsetvli	a4,zero,e32,m2,ta,ma
+  da2daa:	5e0fb457          	vmv.v.i	v8,-1
+  da2dae:	fff5c713          	not	a4,a1
+  da2db2:	00369593          	slli	a1,a3,0x3
+  da2db6:	09107057          	vsetvli	zero,zero,e32,m2,tu,ma
+  da2dba:	420ae557          	vmv.s.x	v10,s5
+  da2dbe:	f4843683          	ld	a3,-184(s0)
+  da2dc2:	95b6                	add	a1,a1,a3
+  da2dc4:	9ea03457          	vmv1r.v	v8,v10
+  da2dc8:	963a                	add	a2,a2,a4
+  da2dca:	eb843683          	ld	a3,-328(s0)
+  da2dce:	9e80b557          	vmv2r.v	v10,v8
+  da2dd2:	0d107057          	vsetvli	zero,zero,e32,m2,ta,ma
+  da2dd6:	2206e607          	vlseg2e32.v	v12,(a3)
+  da2dda:	9626                	add	a2,a2,s1
+  da2ddc:	2ecfb757          	vnot.v	v14,v12
+  da2de0:	26c50557          	vand.vv	v10,v12,v10
+  da2de4:	26870457          	vand.vv	v8,v8,v14
+  da2de8:	96be                	add	a3,a3,a5
+  da2dea:	f665                	bnez	a2,da2dd2 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x650>
+  da2dec:	06842457          	vredand.vs	v8,v8,v8
+  da2df0:	06a524d7          	vredand.vs	v9,v10,v10
+  da2df4:	42802ad7          	vmv.x.s	s5,v8
+  da2df8:	42902657          	vmv.x.s	a2,v9
+  da2dfc:	8a56                	mv	s4,s5
+  da2dfe:	8ab2                	mv	s5,a2
+  da2e00:	41d0                	lw	a2,4(a1)
+  da2e02:	05a1                	addi	a1,a1,8
+  da2e04:	fff64693          	not	a3,a2
+  da2e08:	00da7a33          	and	s4,s4,a3
+  da2e0c:	01567ab3          	and	s5,a2,s5
+  da2e10:	fea598e3          	bne	a1,a0,da2e00 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x67e>
+  da2e14:	003c9593          	slli	a1,s9,0x3
+  da2e18:	05a1                	addi	a1,a1,8
+  da2e1a:	4501                	li	a0,0
+  da2e1c:	015a9097          	auipc	ra,0x15a9
+  da2e20:	b92080e7          	jalr	-1134(ra) # 234b9ae <xrealloc>
+  da2e24:	00450d93          	addi	s11,a0,4
+  da2e28:	01952023          	sw	s9,0(a0)
+  da2e2c:	f4a43c23          	sd	a0,-168(s0)
+  da2e30:	00052223          	sw	zero,4(a0)
+  da2e34:	4140053b          	negw	a0,s4
+  da2e38:	00aa73b3          	and	t2,s4,a0
+  da2e3c:	4150053b          	negw	a0,s5
+  da2e40:	00aafe33          	and	t3,s5,a0
+  da2e44:	00038a63          	beqz	t2,da2e58 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x6d6>
+  da2e48:	00139313          	slli	t1,t2,0x1
+  da2e4c:	fff3051b          	addiw	a0,t1,-1
+  da2e50:	01757533          	and	a0,a0,s7
+  da2e54:	14050463          	beqz	a0,da2f9c <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x81a>
+  da2e58:	100e0963          	beqz	t3,da2f6a <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x7e8>
+  da2e5c:	001e1893          	slli	a7,t3,0x1
+  da2e60:	fff8851b          	addiw	a0,a7,-1
+  da2e64:	01757533          	and	a0,a0,s7
+  da2e68:	58051363          	bnez	a0,da33ee <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0xc6c>
+  da2e6c:	4150053b          	negw	a0,s5
+  da2e70:	00aaf533          	and	a0,s5,a0
+  da2e74:	f3043583          	ld	a1,-208(s0)
+  da2e78:	02b50533          	mul	a0,a0,a1
+  da2e7c:	01b5551b          	srliw	a0,a0,0x1b
+  da2e80:	027305b7          	lui	a1,0x2730
+  da2e84:	e7458593          	addi	a1,a1,-396 # 272fe74 <gt_pch_rs_gt_c_c_decl_h+0x5c>
+  da2e88:	952e                	add	a0,a0,a1
+  da2e8a:	00054503          	lbu	a0,0(a0)
+  da2e8e:	001bd59b          	srliw	a1,s7,0x1
+  da2e92:	00a5d2bb          	srlw	t0,a1,a0
+  da2e96:	f5843c83          	ld	s9,-168(s0)
+  da2e9a:	32028963          	beqz	t0,da31cc <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0xa4a>
+  da2e9e:	f4043f83          	ld	t6,-192(s0)
+  da2ea2:	002fd313          	srli	t1,t6,0x2
+  da2ea6:	4521                	li	a0,8
+  da2ea8:	00656363          	bltu	a0,t1,da2eae <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x72c>
+  da2eac:	4321                	li	t1,8
+  da2eae:	4601                	li	a2,0
+  da2eb0:	4f01                	li	t5,0
+  da2eb2:	008c8793          	addi	a5,s9,8
+  da2eb6:	fffe0813          	addi	a6,t3,-1
+  da2eba:	8ef2                	mv	t4,t3
+  da2ebc:	f1043a03          	ld	s4,-240(s0)
+  da2ec0:	f1843a83          	ld	s5,-232(s0)
+  da2ec4:	a029                	j	da2ece <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x74c>
+  da2ec6:	2f05                	addiw	t5,t5,1
+  da2ec8:	9ec6                	add	t4,t4,a7
+  da2eca:	085f0d63          	beq	t5,t0,da2f64 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x7e2>
+  da2ece:	026e7563          	bgeu	t3,t1,da2ef8 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x776>
+  da2ed2:	4381                	li	t2,0
+  da2ed4:	84b2                	mv	s1,a2
+  da2ed6:	007e8533          	add	a0,t4,t2
+  da2eda:	407e05b3          	sub	a1,t3,t2
+  da2ede:	0014861b          	addiw	a2,s1,1
+  da2ee2:	1482                	slli	s1,s1,0x20
+  da2ee4:	15fd                	addi	a1,a1,-1
+  da2ee6:	80f5                	srli	s1,s1,0x1d
+  da2ee8:	94be                	add	s1,s1,a5
+  da2eea:	0004a023          	sw	zero,0(s1)
+  da2eee:	c0c8                	sw	a0,4(s1)
+  da2ef0:	0505                	addi	a0,a0,1
+  da2ef2:	84b2                	mv	s1,a2
+  da2ef4:	f5ed                	bnez	a1,da2ede <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x75c>
+  da2ef6:	bfc1                	j	da2ec6 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x744>
+  da2ef8:	0008051b          	sext.w	a0,a6
+  da2efc:	fff64593          	not	a1,a2
+  da2f00:	4381                	li	t2,0
+  da2f02:	fca5e9e3          	bltu	a1,a0,da2ed4 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x752>
+  da2f06:	02085513          	srli	a0,a6,0x20
+  da2f0a:	f569                	bnez	a0,da2ed4 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x752>
+  da2f0c:	001f1513          	slli	a0,t5,0x1
+  da2f10:	034a86b3          	mul	a3,s5,s4
+  da2f14:	002fd593          	srli	a1,t6,0x2
+  da2f18:	0505                	addi	a0,a0,1
+  da2f1a:	01c6f3b3          	and	t2,a3,t3
+  da2f1e:	03c506b3          	mul	a3,a0,t3
+  da2f22:	007604bb          	addw	s1,a2,t2
+  da2f26:	851e                	mv	a0,t2
+  da2f28:	0d007757          	vsetvli	a4,zero,e32,m1,ta,ma
+  da2f2c:	5208a457          	vid.v	v8
+  da2f30:	0d007057          	vsetvli	zero,zero,e32,m1,ta,ma
+  da2f34:	0286c4d7          	vadd.vx	v9,v8,a3
+  da2f38:	02061713          	slli	a4,a2,0x20
+  da2f3c:	0285c457          	vadd.vx	v8,v8,a1
+  da2f40:	41250533          	sub	a0,a0,s2
+  da2f44:	0d907057          	vsetvli	zero,zero,e64,m2,ta,ma
+  da2f48:	4a932557          	vzext.vf2	v10,v9
+  da2f4c:	8375                	srli	a4,a4,0x1d
+  da2f4e:	96ab4557          	vsll.vx	v10,v10,s6
+  da2f52:	973e                	add	a4,a4,a5
+  da2f54:	22870527          	vs2r.v	v10,(a4)
+  da2f58:	964a                	add	a2,a2,s2
+  da2f5a:	f979                	bnez	a0,da2f30 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x7ae>
+  da2f5c:	8626                	mv	a2,s1
+  da2f5e:	f7c384e3          	beq	t2,t3,da2ec6 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x744>
+  da2f62:	bf95                	j	da2ed6 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x754>
+  da2f64:	00cda023          	sw	a2,0(s11)
+  da2f68:	a495                	j	da31cc <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0xa4a>
+  da2f6a:	cd817057          	vsetivli	zero,2,e64,m1,ta,ma
+  da2f6e:	5e003457          	vmv.v.i	v8,0
+  da2f72:	f6040513          	addi	a0,s0,-160
+  da2f76:	02057427          	vse64.v	v8,(a0)
+  da2f7a:	f6043823          	sd	zero,-144(s0)
+  da2f7e:	03699537          	lui	a0,0x3699
+  da2f82:	11050513          	addi	a0,a0,272 # 3699110 <bitmap_default_obstack>
+  da2f86:	f6a43c23          	sd	a0,-136(s0)
+  da2f8a:	f4843583          	ld	a1,-184(s0)
+  da2f8e:	100d0563          	beqz	s10,da3098 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x916>
+  da2f92:	004d6503          	lwu	a0,4(s10)
+  da2f96:	f2843a03          	ld	s4,-216(s0)
+  da2f9a:	a209                	j	da309c <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x91a>
+  da2f9c:	4505                	li	a0,1
+  da2f9e:	00a38563          	beq	t2,a0,da2fa8 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x826>
+  da2fa2:	4505                	li	a0,1
+  da2fa4:	eaae0ce3          	beq	t3,a0,da2e5c <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x6da>
+  da2fa8:	4140053b          	negw	a0,s4
+  da2fac:	00aa7533          	and	a0,s4,a0
+  da2fb0:	f3043583          	ld	a1,-208(s0)
+  da2fb4:	02b50533          	mul	a0,a0,a1
+  da2fb8:	01b5551b          	srliw	a0,a0,0x1b
+  da2fbc:	027305b7          	lui	a1,0x2730
+  da2fc0:	e7458593          	addi	a1,a1,-396 # 272fe74 <gt_pch_rs_gt_c_c_decl_h+0x5c>
+  da2fc4:	952e                	add	a0,a0,a1
+  da2fc6:	00054503          	lbu	a0,0(a0)
+  da2fca:	001bd59b          	srliw	a1,s7,0x1
+  da2fce:	00a5d2bb          	srlw	t0,a1,a0
+  da2fd2:	f5843c83          	ld	s9,-168(s0)
+  da2fd6:	1e028b63          	beqz	t0,da31cc <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0xa4a>
+  da2fda:	4521                	li	a0,8
+  da2fdc:	88ca                	mv	a7,s2
+  da2fde:	01256363          	bltu	a0,s2,da2fe4 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x862>
+  da2fe2:	48a1                	li	a7,8
+  da2fe4:	4e81                	li	t4,0
+  da2fe6:	4501                	li	a0,0
+  da2fe8:	4f01                	li	t5,0
+  da2fea:	008c8493          	addi	s1,s9,8
+  da2fee:	fff38813          	addi	a6,t2,-1
+  da2ff2:	f4043f83          	ld	t6,-192(s0)
+  da2ff6:	f1043a03          	ld	s4,-240(s0)
+  da2ffa:	f1843a83          	ld	s5,-232(s0)
+  da2ffe:	a029                	j	da3008 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x886>
+  da3000:	2f05                	addiw	t5,t5,1
+  da3002:	9e9a                	add	t4,t4,t1
+  da3004:	165f0e63          	beq	t5,t0,da3180 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x9fe>
+  da3008:	0313f563          	bgeu	t2,a7,da3032 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x8b0>
+  da300c:	4e01                	li	t3,0
+  da300e:	85aa                	mv	a1,a0
+  da3010:	01ce8633          	add	a2,t4,t3
+  da3014:	41c386b3          	sub	a3,t2,t3
+  da3018:	0015851b          	addiw	a0,a1,1
+  da301c:	1582                	slli	a1,a1,0x20
+  da301e:	16fd                	addi	a3,a3,-1
+  da3020:	81f5                	srli	a1,a1,0x1d
+  da3022:	95a6                	add	a1,a1,s1
+  da3024:	0005a023          	sw	zero,0(a1)
+  da3028:	c1d0                	sw	a2,4(a1)
+  da302a:	0605                	addi	a2,a2,1
+  da302c:	85aa                	mv	a1,a0
+  da302e:	f6ed                	bnez	a3,da3018 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x896>
+  da3030:	bfc1                	j	da3000 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x87e>
+  da3032:	0008059b          	sext.w	a1,a6
+  da3036:	fff54613          	not	a2,a0
+  da303a:	4e01                	li	t3,0
+  da303c:	fcb669e3          	bltu	a2,a1,da300e <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x88c>
+  da3040:	02085593          	srli	a1,a6,0x20
+  da3044:	f5e9                	bnez	a1,da300e <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x88c>
+  da3046:	03e30633          	mul	a2,t1,t5
+  da304a:	034a85b3          	mul	a1,s5,s4
+  da304e:	0075fe33          	and	t3,a1,t2
+  da3052:	002fd693          	srli	a3,t6,0x2
+  da3056:	01c505bb          	addw	a1,a0,t3
+  da305a:	8772                	mv	a4,t3
+  da305c:	0d0077d7          	vsetvli	a5,zero,e32,m1,ta,ma
+  da3060:	5208a457          	vid.v	v8
+  da3064:	0d007057          	vsetvli	zero,zero,e32,m1,ta,ma
+  da3068:	028644d7          	vadd.vx	v9,v8,a2
+  da306c:	02051793          	slli	a5,a0,0x20
+  da3070:	0286c457          	vadd.vx	v8,v8,a3
+  da3074:	41270733          	sub	a4,a4,s2
+  da3078:	0d907057          	vsetvli	zero,zero,e64,m2,ta,ma
+  da307c:	4a932557          	vzext.vf2	v10,v9
+  da3080:	83f5                	srli	a5,a5,0x1d
+  da3082:	96ab4557          	vsll.vx	v10,v10,s6
+  da3086:	97a6                	add	a5,a5,s1
+  da3088:	22878527          	vs2r.v	v10,(a5)
+  da308c:	954a                	add	a0,a0,s2
+  da308e:	fb79                	bnez	a4,da3064 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x8e2>
+  da3090:	852e                	mv	a0,a1
+  da3092:	f67e07e3          	beq	t3,t2,da3000 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x87e>
+  da3096:	bfad                	j	da3010 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x88e>
+  da3098:	4a01                	li	s4,0
+  da309a:	4501                	li	a0,0
+  da309c:	f4043a83          	ld	s5,-192(s0)
+  da30a0:	050e                	slli	a0,a0,0x3
+  da30a2:	9a2a                	add	s4,s4,a0
+  da30a4:	84ae                	mv	s1,a1
+  da30a6:	01458f63          	beq	a1,s4,da30c4 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x942>
+  da30aa:	40cc                	lw	a1,4(s1)
+  da30ac:	f6040513          	addi	a0,s0,-160
+  da30b0:	ff9bf097          	auipc	ra,0xff9bf
+  da30b4:	054080e7          	jalr	84(ra) # 762104 <_Z14bitmap_set_bitP11bitmap_headi>
+  da30b8:	04a1                	addi	s1,s1,8
+  da30ba:	ff4498e3          	bne	s1,s4,da30aa <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x928>
+  da30be:	f6843503          	ld	a0,-152(s0)
+  da30c2:	a011                	j	da30c6 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x944>
+  da30c4:	4501                	li	a0,0
+  da30c6:	036995b7          	lui	a1,0x3699
+  da30ca:	0d858593          	addi	a1,a1,216 # 36990d8 <bitmap_zero_bits>
+  da30ce:	027b2837          	lui	a6,0x27b2
+  da30d2:	7ec80813          	addi	a6,a6,2028 # 27b27ec <_ZTVN12_GLOBAL__N_116pass_gimple_iselE+0x494>
+  da30d6:	ee843883          	ld	a7,-280(s0)
+  da30da:	c111                	beqz	a0,da30de <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x95c>
+  da30dc:	85aa                	mv	a1,a0
+  da30de:	4601                	li	a2,0
+  da30e0:	4988                	lw	a0,16(a1)
+  da30e2:	6d98                	ld	a4,24(a1)
+  da30e4:	051e                	slli	a0,a0,0x7
+  da30e6:	00173693          	seqz	a3,a4
+  da30ea:	8ec9                	or	a3,a3,a0
+  da30ec:	f5843503          	ld	a0,-168(s0)
+  da30f0:	0521                	addi	a0,a0,8
+  da30f2:	a815                	j	da3126 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x9a4>
+  da30f4:	40e007b3          	neg	a5,a4
+  da30f8:	8ff9                	and	a5,a5,a4
+  da30fa:	031787b3          	mul	a5,a5,a7
+  da30fe:	93e9                	srli	a5,a5,0x3a
+  da3100:	97c2                	add	a5,a5,a6
+  da3102:	0007c783          	lbu	a5,0(a5)
+  da3106:	000de483          	lwu	s1,0(s11)
+  da310a:	00f75733          	srl	a4,a4,a5
+  da310e:	96be                	add	a3,a3,a5
+  da3110:	00148793          	addi	a5,s1,1
+  da3114:	048e                	slli	s1,s1,0x3
+  da3116:	94aa                	add	s1,s1,a0
+  da3118:	00fda023          	sw	a5,0(s11)
+  da311c:	0004a023          	sw	zero,0(s1)
+  da3120:	c0d4                	sw	a3,4(s1)
+  da3122:	8305                	srli	a4,a4,0x1
+  da3124:	0685                	addi	a3,a3,1
+  da3126:	f779                	bnez	a4,da30f4 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x972>
+  da3128:	03f68693          	addi	a3,a3,63
+  da312c:	fc06f693          	andi	a3,a3,-64
+  da3130:	2605                	addiw	a2,a2,1
+  da3132:	01360d63          	beq	a2,s3,da314c <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x9ca>
+  da3136:	02061713          	slli	a4,a2,0x20
+  da313a:	8375                	srli	a4,a4,0x1d
+  da313c:	972e                	add	a4,a4,a1
+  da313e:	6f18                	ld	a4,24(a4)
+  da3140:	fb55                	bnez	a4,da30f4 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x972>
+  da3142:	2605                	addiw	a2,a2,1
+  da3144:	04068693          	addi	a3,a3,64
+  da3148:	ff3617e3          	bne	a2,s3,da3136 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x9b4>
+  da314c:	618c                	ld	a1,0(a1)
+  da314e:	c599                	beqz	a1,da315c <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x9da>
+  da3150:	4601                	li	a2,0
+  da3152:	4994                	lw	a3,16(a1)
+  da3154:	069e                	slli	a3,a3,0x7
+  da3156:	fe0990e3          	bnez	s3,da3136 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x9b4>
+  da315a:	bfcd                	j	da314c <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x9ca>
+  da315c:	000de583          	lwu	a1,0(s11)
+  da3160:	0005861b          	sext.w	a2,a1
+  da3164:	05967c63          	bgeu	a2,s9,da31bc <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0xa3a>
+  da3168:	002ad693          	srli	a3,s5,0x2
+  da316c:	4661                	li	a2,24
+  da316e:	00d66363          	bltu	a2,a3,da3174 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x9f2>
+  da3172:	46e1                	li	a3,24
+  da3174:	40bc82bb          	subw	t0,s9,a1
+  da3178:	00d2f763          	bgeu	t0,a3,da3186 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0xa04>
+  da317c:	86ae                	mv	a3,a1
+  da317e:	a819                	j	da3194 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0xa12>
+  da3180:	00ada023          	sw	a0,0(s11)
+  da3184:	a0a1                	j	da31cc <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0xa4a>
+  da3186:	fff5871b          	addiw	a4,a1,-1
+  da318a:	ffec869b          	addiw	a3,s9,-2
+  da318e:	10e6f863          	bgeu	a3,a4,da329e <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0xb1c>
+  da3192:	86ae                	mv	a3,a1
+  da3194:	fff68593          	addi	a1,a3,-1
+  da3198:	02069613          	slli	a2,a3,0x20
+  da319c:	2685                	addiw	a3,a3,1
+  da319e:	1582                	slli	a1,a1,0x20
+  da31a0:	81f5                	srli	a1,a1,0x1d
+  da31a2:	95aa                	add	a1,a1,a0
+  da31a4:	0005e703          	lwu	a4,0(a1)
+  da31a8:	0045e583          	lwu	a1,4(a1)
+  da31ac:	8275                	srli	a2,a2,0x1d
+  da31ae:	962a                	add	a2,a2,a0
+  da31b0:	c218                	sw	a4,0(a2)
+  da31b2:	c24c                	sw	a1,4(a2)
+  da31b4:	ff96e0e3          	bltu	a3,s9,da3194 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0xa12>
+  da31b8:	00dda023          	sw	a3,0(s11)
+  da31bc:	f6040513          	addi	a0,s0,-160
+  da31c0:	ff9bf097          	auipc	ra,0xff9bf
+  da31c4:	83c080e7          	jalr	-1988(ra) # 7619fc <_Z12bitmap_clearP11bitmap_head>
+  da31c8:	f5843c83          	ld	s9,-168(s0)
+  da31cc:	4501                	li	a0,0
+  da31ce:	00cc8b93          	addi	s7,s9,12
+  da31d2:	a039                	j	da31e0 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0xa5e>
+  da31d4:	c6cc                	sw	a1,12(a3)
+  da31d6:	000da603          	lw	a2,0(s11)
+  da31da:	0505                	addi	a0,a0,1
+  da31dc:	1cc5fb63          	bgeu	a1,a2,da33b2 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0xc30>
+  da31e0:	000d0763          	beqz	s10,da31ee <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0xa6c>
+  da31e4:	004d6583          	lwu	a1,4(s10)
+  da31e8:	00b56563          	bltu	a0,a1,da31f2 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0xa70>
+  da31ec:	a02d                	j	da3216 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0xa94>
+  da31ee:	02057463          	bgeu	a0,zero,da3216 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0xa94>
+  da31f2:	000de603          	lwu	a2,0(s11)
+  da31f6:	1a060e63          	beqz	a2,da33b2 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0xc30>
+  da31fa:	4581                	li	a1,0
+  da31fc:	00351693          	slli	a3,a0,0x3
+  da3200:	96ea                	add	a3,a3,s10
+  da3202:	46d8                	lw	a4,12(a3)
+  da3204:	87de                	mv	a5,s7
+  da3206:	4384                	lw	s1,0(a5)
+  da3208:	fce486e3          	beq	s1,a4,da31d4 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0xa52>
+  da320c:	2585                	addiw	a1,a1,1
+  da320e:	167d                	addi	a2,a2,-1
+  da3210:	07a1                	addi	a5,a5,8
+  da3212:	fa75                	bnez	a2,da3206 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0xa84>
+  da3214:	aa79                	j	da33b2 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0xc30>
+  da3216:	000dea83          	lwu	s5,0(s11)
+  da321a:	020a8763          	beqz	s5,da3248 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0xac6>
+  da321e:	003a9593          	slli	a1,s5,0x3
+  da3222:	05a1                	addi	a1,a1,8
+  da3224:	4501                	li	a0,0
+  da3226:	015a8097          	auipc	ra,0x15a8
+  da322a:	788080e7          	jalr	1928(ra) # 234b9ae <xrealloc>
+  da322e:	8a2a                	mv	s4,a0
+  da3230:	f3843503          	ld	a0,-200(s0)
+  da3234:	00aaf533          	and	a0,s5,a0
+  da3238:	00aa2023          	sw	a0,0(s4)
+  da323c:	000a2223          	sw	zero,4(s4)
+  da3240:	000da503          	lw	a0,0(s11)
+  da3244:	e511                	bnez	a0,da3250 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0xace>
+  da3246:	a825                	j	da327e <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0xafc>
+  da3248:	4a01                	li	s4,0
+  da324a:	000da503          	lw	a0,0(s11)
+  da324e:	c905                	beqz	a0,da327e <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0xafc>
+  da3250:	4501                	li	a0,0
+  da3252:	000be583          	lwu	a1,0(s7)
+  da3256:	008c3603          	ld	a2,8(s8)
+  da325a:	004a6683          	lwu	a3,4(s4)
+  da325e:	058e                	slli	a1,a1,0x3
+  da3260:	95b2                	add	a1,a1,a2
+  da3262:	00168613          	addi	a2,a3,1
+  da3266:	00ca2223          	sw	a2,4(s4)
+  da326a:	658c                	ld	a1,8(a1)
+  da326c:	068e                	slli	a3,a3,0x3
+  da326e:	96d2                	add	a3,a3,s4
+  da3270:	e68c                	sd	a1,8(a3)
+  da3272:	000de583          	lwu	a1,0(s11)
+  da3276:	0505                	addi	a0,a0,1
+  da3278:	0ba1                	addi	s7,s7,8
+  da327a:	fcb56ce3          	bltu	a0,a1,da3252 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0xad0>
+  da327e:	09000513          	li	a0,144
+  da3282:	8b8e70ef          	jal	d8a33a <_ZN9_slp_treenwEm>
+  da3286:	03adf5b7          	lui	a1,0x3adf
+  da328a:	0885b583          	ld	a1,136(a1) # 3adf088 <_ZL14slp_first_node>
+  da328e:	8daa                	mv	s11,a0
+  da3290:	08053423          	sd	zero,136(a0)
+  da3294:	940583e3          	beqz	a1,da2bda <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x458>
+  da3298:	09b5b423          	sd	s11,136(a1)
+  da329c:	ba3d                	j	da2bda <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x458>
+  da329e:	00359493          	slli	s1,a1,0x3
+  da32a2:	fff5c793          	not	a5,a1
+  da32a6:	00950833          	add	a6,a0,s1
+  da32aa:	97e6                	add	a5,a5,s9
+  da32ac:	1782                	slli	a5,a5,0x20
+  da32ae:	83f5                	srli	a5,a5,0x1d
+  da32b0:	f5843603          	ld	a2,-168(s0)
+  da32b4:	97b2                	add	a5,a5,a2
+  da32b6:	07c1                	addi	a5,a5,16
+  da32b8:	009788b3          	add	a7,a5,s1
+  da32bc:	011db6b3          	sltu	a3,s11,a7
+  da32c0:	00a834b3          	sltu	s1,a6,a0
+  da32c4:	8ee5                	and	a3,a3,s1
+  da32c6:	e6c5                	bnez	a3,da336e <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0xbec>
+  da32c8:	1702                	slli	a4,a4,0x20
+  da32ca:	01d75693          	srli	a3,a4,0x1d
+  da32ce:	00d50733          	add	a4,a0,a3
+  da32d2:	97b6                	add	a5,a5,a3
+  da32d4:	00fdb6b3          	sltu	a3,s11,a5
+  da32d8:	00a734b3          	sltu	s1,a4,a0
+  da32dc:	8ee5                	and	a3,a3,s1
+  da32de:	ead1                	bnez	a3,da3372 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0xbf0>
+  da32e0:	00f836b3          	sltu	a3,a6,a5
+  da32e4:	01173733          	sltu	a4,a4,a7
+  da32e8:	8ef9                	and	a3,a3,a4
+  da32ea:	e2c1                	bnez	a3,da336a <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0xbe8>
+  da32ec:	002ad793          	srli	a5,s5,0x2
+  da32f0:	40f006b3          	neg	a3,a5
+  da32f4:	00d2f8b3          	and	a7,t0,a3
+  da32f8:	e5843683          	ld	a3,-424(s0)
+  da32fc:	96c6                	add	a3,a3,a7
+  da32fe:	0326d73b          	divuw	a4,a3,s2
+  da3302:	0d0076d7          	vsetvli	a3,zero,e32,m1,ta,ma
+  da3306:	5208a457          	vid.v	v8
+  da330a:	0285c4d7          	vadd.vx	v9,v8,a1
+  da330e:	fff78693          	addi	a3,a5,-1
+  da3312:	02069493          	slli	s1,a3,0x20
+  da3316:	011586b3          	add	a3,a1,a7
+  da331a:	0706                	slli	a4,a4,0x1
+  da331c:	0709                	addi	a4,a4,2
+  da331e:	f1843603          	ld	a2,-232(s0)
+  da3322:	02e60733          	mul	a4,a2,a4
+  da3326:	9f2d                	addw	a4,a4,a1
+  da3328:	0204d813          	srli	a6,s1,0x20
+  da332c:	9e903457          	vmv1r.v	v8,v9
+  da3330:	fff58493          	addi	s1,a1,-1
+  da3334:	02059613          	slli	a2,a1,0x20
+  da3338:	1482                	slli	s1,s1,0x20
+  da333a:	80f5                	srli	s1,s1,0x1d
+  da333c:	94aa                	add	s1,s1,a0
+  da333e:	22848507          	vl2r.v	v10,(s1)
+  da3342:	012585bb          	addw	a1,a1,s2
+  da3346:	8275                	srli	a2,a2,0x1d
+  da3348:	962a                	add	a2,a2,a0
+  da334a:	22860527          	vs2r.v	v10,(a2)
+  da334e:	0297c4d7          	vadd.vx	v9,v9,a5
+  da3352:	fce59de3          	bne	a1,a4,da332c <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0xbaa>
+  da3356:	3e884457          	vslidedown.vx	v8,v8,a6
+  da335a:	428025d7          	vmv.x.s	a1,v8
+  da335e:	0585                	addi	a1,a1,1
+  da3360:	00bda023          	sw	a1,0(s11)
+  da3364:	e31298e3          	bne	t0,a7,da3194 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0xa12>
+  da3368:	bd91                	j	da31bc <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0xa3a>
+  da336a:	86ae                	mv	a3,a1
+  da336c:	b525                	j	da3194 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0xa12>
+  da336e:	86ae                	mv	a3,a1
+  da3370:	b515                	j	da3194 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0xa12>
+  da3372:	86ae                	mv	a3,a1
+  da3374:	b505                	j	da3194 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0xa12>
+  da3376:	4505                	li	a0,1
+  da3378:	06ad8623          	sb	a0,108(s11)
+  da337c:	06a60623          	sb	a0,108(a2)
+  da3380:	7208                	ld	a0,32(a2)
+  da3382:	04300593          	li	a1,67
+  da3386:	d62c                	sw	a1,104(a2)
+  da3388:	e9043a83          	ld	s5,-368(s0)
+  da338c:	e8843b83          	ld	s7,-376(s0)
+  da3390:	ee043c03          	ld	s8,-288(s0)
+  da3394:	e8043c83          	ld	s9,-384(s0)
+  da3398:	dc050863          	beqz	a0,da2968 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x1e6>
+  da339c:	410c                	lw	a1,0(a0)
+  da339e:	da05dd63          	bgez	a1,da2958 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x1d6>
+  da33a2:	00052223          	sw	zero,4(a0)
+  da33a6:	dc2ff06f          	j	da2968 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x1e6>
+  da33aa:	000d2223          	sw	zero,4(s10)
+  da33ae:	df2ff06f          	j	da29a0 <_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb+0x21e>
+  da33b2:	0252b537          	lui	a0,0x252b
+  da33b6:	8dc50513          	addi	a0,a0,-1828 # 252a8dc <num_to_text+0x4b6c8>
+  da33ba:	0252c637          	lui	a2,0x252c
+  da33be:	b8660613          	addi	a2,a2,-1146 # 252bb86 <num_to_text+0x4c972>
+  da33c2:	6585                	lui	a1,0x1
+  da33c4:	27058593          	addi	a1,a1,624 # 1270 <__gmpfr_default_rounding_mode+0xf10>
+  da33c8:	0152b097          	auipc	ra,0x152b
+  da33cc:	c80080e7          	jalr	-896(ra) # 22ce048 <_Z11fancy_abortPKciS0_>
+  da33d0:	0252b537          	lui	a0,0x252b
+  da33d4:	8dc50513          	addi	a0,a0,-1828 # 252a8dc <num_to_text+0x4b6c8>
+  da33d8:	0252c637          	lui	a2,0x252c
+  da33dc:	b8660613          	addi	a2,a2,-1146 # 252bb86 <num_to_text+0x4c972>
+  da33e0:	6585                	lui	a1,0x1
+  da33e2:	22c58593          	addi	a1,a1,556 # 122c <__gmpfr_default_rounding_mode+0xecc>
+  da33e6:	0152b097          	auipc	ra,0x152b
+  da33ea:	c62080e7          	jalr	-926(ra) # 22ce048 <_Z11fancy_abortPKciS0_>
+  da33ee:	0252b537          	lui	a0,0x252b
+  da33f2:	8dc50513          	addi	a0,a0,-1828 # 252a8dc <num_to_text+0x4b6c8>
+  da33f6:	0252c637          	lui	a2,0x252c
+  da33fa:	b8660613          	addi	a2,a2,-1146 # 252bb86 <num_to_text+0x4c972>
+  da33fe:	6585                	lui	a1,0x1
+  da3400:	24d58593          	addi	a1,a1,589 # 124d <__gmpfr_default_rounding_mode+0xeed>
+  da3404:	0152b097          	auipc	ra,0x152b
+  da3408:	c44080e7          	jalr	-956(ra) # 22ce048 <_Z11fancy_abortPKciS0_>
+  da340c:	0252b537          	lui	a0,0x252b
+  da3410:	8dc50513          	addi	a0,a0,-1828 # 252a8dc <num_to_text+0x4b6c8>
+  da3414:	0252c637          	lui	a2,0x252c
+  da3418:	b8660613          	addi	a2,a2,-1146 # 252bb86 <num_to_text+0x4c972>
+  da341c:	6585                	lui	a1,0x1
+  da341e:	21158593          	addi	a1,a1,529 # 1211 <__gmpfr_default_rounding_mode+0xeb1>
+  da3422:	0152b097          	auipc	ra,0x152b
+  da3426:	c26080e7          	jalr	-986(ra) # 22ce048 <_Z11fancy_abortPKciS0_>

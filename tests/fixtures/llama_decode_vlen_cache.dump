@@ -1,0 +1,1527 @@
+# Captured native decode from ELF sha256 d7aae7b8c0ad91afc39a7a309a05b4f6d423f353df4c59a0ec8d90dc48d8deed.
+# Function bytes/addresses retained; build path omitted. This is a regression input, not a recompiled result.
+
+Disassembly of section .text:
+
+00000000002484c4 <_ZN13llama_context6decodeERK11llama_batch>:
+  2484c4:	aa010113          	addi	sp,sp,-1376
+  2484c8:	54113c23          	sd	ra,1368(sp)
+  2484cc:	54813823          	sd	s0,1360(sp)
+  2484d0:	54913423          	sd	s1,1352(sp)
+  2484d4:	55213023          	sd	s2,1344(sp)
+  2484d8:	53313c23          	sd	s3,1336(sp)
+  2484dc:	53413823          	sd	s4,1328(sp)
+  2484e0:	53513423          	sd	s5,1320(sp)
+  2484e4:	53613023          	sd	s6,1312(sp)
+  2484e8:	51713c23          	sd	s7,1304(sp)
+  2484ec:	51813823          	sd	s8,1296(sp)
+  2484f0:	51913423          	sd	s9,1288(sp)
+  2484f4:	51a13023          	sd	s10,1280(sp)
+  2484f8:	4fb13c23          	sd	s11,1272(sp)
+  2484fc:	89ae                	mv	s3,a1
+  2484fe:	658c                	ld	a1,8(a1)
+  248500:	0109b603          	ld	a2,16(s3)
+  248504:	8dd1                	or	a1,a1,a2
+  248506:	e199                	bnez	a1,24850c <_ZN13llama_context6decodeERK11llama_batch+0x48>
+  248508:	6850006f          	j	24938c <_ZN13llama_context6decodeERK11llama_batch+0xec8>
+  24850c:	8caa                	mv	s9,a0
+  24850e:	10053503          	ld	a0,256(a0)
+  248512:	cd0d                	beqz	a0,24854c <_ZN13llama_context6decodeERK11llama_batch+0x88>
+  248514:	0009a503          	lw	a0,0(s3)
+  248518:	c549                	beqz	a0,2485a2 <_ZN13llama_context6decodeERK11llama_batch+0xde>
+  24851a:	000cbd03          	ld	s10,0(s9)
+  24851e:	651d                	lui	a0,0x7
+  248520:	a2850b93          	addi	s7,a0,-1496 # 6a28 <_ZGVZNK7httplib10ClientImpl18read_response_lineERNS_6StreamERKNS_7RequestERNS_8ResponseEbE2reB5cxx11+0x2e68>
+  248524:	9bea                	add	s7,s7,s10
+  248526:	030d0413          	addi	s0,s10,48
+  24852a:	855e                	mv	a0,s7
+  24852c:	396740ef          	jal	2bc8c2 <_ZNK11llama_vocab8n_tokensEv>
+  248530:	84aa                	mv	s1,a0
+  248532:	e5a2                	sd	s0,200(sp)
+  248534:	8522                	mv	a0,s0
+  248536:	30f150ef          	jal	25e044 <_ZNK13llama_hparams10n_embd_inpEv>
+  24853a:	059cc583          	lbu	a1,89(s9)
+  24853e:	178cb603          	ld	a2,376(s9)
+  248542:	8a2a                	mv	s4,a0
+  248544:	e9a5                	bnez	a1,2485b4 <_ZN13llama_context6decodeERK11llama_batch+0xf0>
+  248546:	018cab03          	lw	s6,24(s9)
+  24854a:	a0bd                	j	2485b8 <_ZN13llama_context6decodeERK11llama_batch+0xf4>
+  24854c:	00200517          	auipc	a0,0x200
+  248550:	00201617          	auipc	a2,0x201
+  248554:	91850593          	addi	a1,a0,-1768 # 447e64 <_IO_stdin_used+0x215c4>
+  248558:	90960613          	addi	a2,a2,-1783 # 448e59 <_IO_stdin_used+0x225b9>
+  24855c:	4505                	li	a0,1
+  24855e:	286160ef          	jal	25e7e4 <_Z18llama_log_internal14ggml_log_levelPKcz>
+  248562:	8566                	mv	a0,s9
+  248564:	85ce                	mv	a1,s3
+  248566:	55813083          	ld	ra,1368(sp)
+  24856a:	55013403          	ld	s0,1360(sp)
+  24856e:	54813483          	ld	s1,1352(sp)
+  248572:	54013903          	ld	s2,1344(sp)
+  248576:	53813983          	ld	s3,1336(sp)
+  24857a:	53013a03          	ld	s4,1328(sp)
+  24857e:	52813a83          	ld	s5,1320(sp)
+  248582:	52013b03          	ld	s6,1312(sp)
+  248586:	51813b83          	ld	s7,1304(sp)
+  24858a:	51013c03          	ld	s8,1296(sp)
+  24858e:	50813c83          	ld	s9,1288(sp)
+  248592:	50013d03          	ld	s10,1280(sp)
+  248596:	4f813d83          	ld	s11,1272(sp)
+  24859a:	56010113          	addi	sp,sp,1376
+  24859e:	e04ff06f          	j	247ba2 <_ZN13llama_context6encodeERK11llama_batch>
+  2485a2:	001ff517          	auipc	a0,0x1ff
+  2485a6:	00201617          	auipc	a2,0x201
+  2485aa:	72150593          	addi	a1,a0,1825 # 447cc3 <_IO_stdin_used+0x21423>
+  2485ae:	8b360613          	addi	a2,a2,-1869 # 448e59 <_IO_stdin_used+0x225b9>
+  2485b2:	aa99                	j	248708 <_ZN13llama_context6decodeERK11llama_batch+0x244>
+  2485b4:	10000b13          	li	s6,256
+  2485b8:	04ccca83          	lbu	s5,76(s9)
+  2485bc:	e9b2                	sd	a2,208(sp)
+  2485be:	c665                	beqz	a2,2486a6 <_ZN13llama_context6decodeERK11llama_batch+0x1e2>
+  2485c0:	0309b903          	ld	s2,48(s3)
+  2485c4:	0e090163          	beqz	s2,2486a6 <_ZN13llama_context6decodeERK11llama_batch+0x1e2>
+  2485c8:	e1a6                	sd	s1,192(sp)
+  2485ca:	020b0863          	beqz	s6,2485fa <_ZN13llama_context6decodeERK11llama_batch+0x136>
+  2485ce:	020b1513          	slli	a0,s6,0x20
+  2485d2:	01e55c13          	srli	s8,a0,0x1e
+  2485d6:	8562                	mv	a0,s8
+  2485d8:	ffdf0097          	auipc	ra,0xffdf0
+  2485dc:	e98080e7          	jalr	-360(ra) # 38470 <_Znwm@plt>
+  2485e0:	8daa                	mv	s11,a0
+  2485e2:	4581                	li	a1,0
+  2485e4:	8662                	mv	a2,s8
+  2485e6:	ffdf0097          	auipc	ra,0xffdf0
+  2485ea:	23a080e7          	jalr	570(ra) # 38820 <memset@plt>
+  2485ee:	9c6e                	add	s8,s8,s11
+  2485f0:	0009a883          	lw	a7,0(s3)
+  2485f4:	01104963          	bgtz	a7,248606 <_ZN13llama_context6decodeERK11llama_batch+0x142>
+  2485f8:	a869                	j	248692 <_ZN13llama_context6decodeERK11llama_batch+0x1ce>
+  2485fa:	4c01                	li	s8,0
+  2485fc:	4d81                	li	s11,0
+  2485fe:	0009a883          	lw	a7,0(s3)
+  248602:	09105863          	blez	a7,248692 <_ZN13llama_context6decodeERK11llama_batch+0x1ce>
+  248606:	0209b803          	ld	a6,32(s3)
+  24860a:	0289b603          	ld	a2,40(s3)
+  24860e:	4281                	li	t0,0
+  248610:	a021                	j	248618 <_ZN13llama_context6decodeERK11llama_batch+0x154>
+  248612:	0285                	addi	t0,t0,1
+  248614:	07128f63          	beq	t0,a7,248692 <_ZN13llama_context6decodeERK11llama_batch+0x1ce>
+  248618:	00590533          	add	a0,s2,t0
+  24861c:	00054503          	lbu	a0,0(a0)
+  248620:	d96d                	beqz	a0,248612 <_ZN13llama_context6decodeERK11llama_batch+0x14e>
+  248622:	00080c63          	beqz	a6,24863a <_ZN13llama_context6decodeERK11llama_batch+0x176>
+  248626:	00229513          	slli	a0,t0,0x2
+  24862a:	9542                	add	a0,a0,a6
+  24862c:	4108                	lw	a0,0(a0)
+  24862e:	fea052e3          	blez	a0,248612 <_ZN13llama_context6decodeERK11llama_batch+0x14e>
+  248632:	1502                	slli	a0,a0,0x20
+  248634:	02055593          	srli	a1,a0,0x20
+  248638:	a011                	j	24863c <_ZN13llama_context6decodeERK11llama_batch+0x178>
+  24863a:	4585                	li	a1,1
+  24863c:	4501                	li	a0,0
+  24863e:	00329493          	slli	s1,t0,0x3
+  248642:	94b2                	add	s1,s1,a2
+  248644:	c609                	beqz	a2,24864e <_ZN13llama_context6decodeERK11llama_batch+0x18a>
+  248646:	6094                	ld	a3,0(s1)
+  248648:	96aa                	add	a3,a3,a0
+  24864a:	4294                	lw	a3,0(a3)
+  24864c:	a011                	j	248650 <_ZN13llama_context6decodeERK11llama_batch+0x18c>
+  24864e:	4681                	li	a3,0
+  248650:	00269713          	slli	a4,a3,0x2
+  248654:	00ed8433          	add	s0,s11,a4
+  248658:	401c                	lw	a5,0(s0)
+  24865a:	0017871b          	addiw	a4,a5,1
+  24865e:	c018                	sw	a4,0(s0)
+  248660:	00f04663          	bgtz	a5,24866c <_ZN13llama_context6decodeERK11llama_batch+0x1a8>
+  248664:	15fd                	addi	a1,a1,-1
+  248666:	0511                	addi	a0,a0,4
+  248668:	fdf1                	bnez	a1,248644 <_ZN13llama_context6decodeERK11llama_batch+0x180>
+  24866a:	b765                	j	248612 <_ZN13llama_context6decodeERK11llama_batch+0x14e>
+  24866c:	00200517          	auipc	a0,0x200
+  248670:	00200617          	auipc	a2,0x200
+  248674:	84050593          	addi	a1,a0,-1984 # 447eac <_IO_stdin_used+0x2160c>
+  248678:	7e960613          	addi	a2,a2,2025 # 448e59 <_IO_stdin_used+0x225b9>
+  24867c:	4511                	li	a0,4
+  24867e:	166160ef          	jal	25e7e4 <_Z18llama_log_internal14ggml_log_levelPKcz>
+  248682:	41bc05b3          	sub	a1,s8,s11
+  248686:	856e                	mv	a0,s11
+  248688:	ffdf0097          	auipc	ra,0xffdf0
+  24868c:	e18080e7          	jalr	-488(ra) # 384a0 <_ZdlPvm@plt>
+  248690:	a8bd                	j	24870e <_ZN13llama_context6decodeERK11llama_batch+0x24a>
+  248692:	648e                	ld	s1,192(sp)
+  248694:	000d8963          	beqz	s11,2486a6 <_ZN13llama_context6decodeERK11llama_batch+0x1e2>
+  248698:	41bc05b3          	sub	a1,s8,s11
+  24869c:	856e                	mv	a0,s11
+  24869e:	ffdf0097          	auipc	ra,0xffdf0
+  2486a2:	e02080e7          	jalr	-510(ra) # 384a0 <_ZdlPvm@plt>
+  2486a6:	250cb503          	ld	a0,592(s9)
+  2486aa:	100cb683          	ld	a3,256(s9)
+  2486ae:	85ce                	mv	a1,s3
+  2486b0:	865e                	mv	a2,s7
+  2486b2:	8752                	mv	a4,s4
+  2486b4:	87da                	mv	a5,s6
+  2486b6:	8856                	mv	a6,s5
+  2486b8:	959f00ef          	jal	239010 <_ZN18llama_batch_allocr4initERK11llama_batchRK11llama_vocabPK14llama_memory_ijjb>
+  2486bc:	cd15                	beqz	a0,2486f8 <_ZN13llama_context6decodeERK11llama_batch+0x234>
+  2486be:	250cb503          	ld	a0,592(s9)
+  2486c2:	855f20ef          	jal	23af16 <_ZNK18llama_batch_allocr12get_n_tokensEv>
+  2486c6:	250cb583          	ld	a1,592(s9)
+  2486ca:	842a                	mv	s0,a0
+  2486cc:	852e                	mv	a0,a1
+  2486ce:	84df20ef          	jal	23af1a <_ZNK18llama_batch_allocr13get_n_outputsEv>
+  2486d2:	8daa                	mv	s11,a0
+  2486d4:	06850b63          	beq	a0,s0,24874a <_ZN13llama_context6decodeERK11llama_batch+0x286>
+  2486d8:	060a8963          	beqz	s5,24874a <_ZN13llama_context6decodeERK11llama_batch+0x286>
+  2486dc:	00200517          	auipc	a0,0x200
+  2486e0:	00200617          	auipc	a2,0x200
+  2486e4:	82850593          	addi	a1,a0,-2008 # 447f04 <_IO_stdin_used+0x21664>
+  2486e8:	77960613          	addi	a2,a2,1913 # 448e59 <_IO_stdin_used+0x225b9>
+  2486ec:	4511                	li	a0,4
+  2486ee:	86ee                	mv	a3,s11
+  2486f0:	8722                	mv	a4,s0
+  2486f2:	0f2160ef          	jal	25e7e4 <_Z18llama_log_internal14ggml_log_levelPKcz>
+  2486f6:	a821                	j	24870e <_ZN13llama_context6decodeERK11llama_batch+0x24a>
+  2486f8:	001ff517          	auipc	a0,0x1ff
+  2486fc:	00200617          	auipc	a2,0x200
+  248700:	5de50593          	addi	a1,a0,1502 # 447cd6 <_IO_stdin_used+0x21436>
+  248704:	75d60613          	addi	a2,a2,1885 # 448e59 <_IO_stdin_used+0x225b9>
+  248708:	4511                	li	a0,4
+  24870a:	0da160ef          	jal	25e7e4 <_Z18llama_log_internal14ggml_log_levelPKcz>
+  24870e:	557d                	li	a0,-1
+  248710:	55813083          	ld	ra,1368(sp)
+  248714:	55013403          	ld	s0,1360(sp)
+  248718:	54813483          	ld	s1,1352(sp)
+  24871c:	54013903          	ld	s2,1344(sp)
+  248720:	53813983          	ld	s3,1336(sp)
+  248724:	53013a03          	ld	s4,1328(sp)
+  248728:	52813a83          	ld	s5,1320(sp)
+  24872c:	52013b03          	ld	s6,1312(sp)
+  248730:	51813b83          	ld	s7,1304(sp)
+  248734:	51013c03          	ld	s8,1296(sp)
+  248738:	50813c83          	ld	s9,1288(sp)
+  24873c:	50013d03          	ld	s10,1280(sp)
+  248740:	4f813d83          	ld	s11,1272(sp)
+  248744:	56010113          	addi	sp,sp,1376
+  248748:	8082                	ret
+  24874a:	010ca503          	lw	a0,16(s9)
+  24874e:	4a8568e3          	bltu	a0,s0,2493fe <_ZN13llama_context6decodeERK11llama_batch+0xf3a>
+  248752:	04fcc503          	lbu	a0,79(s9)
+  248756:	e509                	bnez	a0,248760 <_ZN13llama_context6decodeERK11llama_batch+0x29c>
+  248758:	014ca503          	lw	a0,20(s9)
+  24875c:	4c8563e3          	bltu	a0,s0,249422 <_ZN13llama_context6decodeERK11llama_batch+0xf5e>
+  248760:	3b8cb503          	ld	a0,952(s9)
+  248764:	e519                	bnez	a0,248772 <_ZN13llama_context6decodeERK11llama_batch+0x2ae>
+  248766:	0018e097          	auipc	ra,0x18e
+  24876a:	9fc080e7          	jalr	-1540(ra) # 3d6162 <ggml_time_us>
+  24876e:	3aacbc23          	sd	a0,952(s9)
+  248772:	3c0cb503          	ld	a0,960(s9)
+  248776:	02041613          	slli	a2,s0,0x20
+  24877a:	230cb583          	ld	a1,560(s9)
+  24877e:	9201                	srli	a2,a2,0x20
+  248780:	9532                	add	a0,a0,a2
+  248782:	3cacb023          	sd	a0,960(s9)
+  248786:	220c8513          	addi	a0,s9,544
+  24878a:	edaa                	sd	a0,216(sp)
+  24878c:	753040ef          	jal	24d6de <_ZNSt8_Rb_treeIiSt4pairIKiSt6vectorIfSaIfEEESt10_Select1stIS5_ESt4lessIiESaIS5_EE8_M_eraseEPSt13_Rb_tree_nodeIS5_E>
+  248790:	e922                	sd	s0,144(sp)
+  248792:	02049993          	slli	s3,s1,0x20
+  248796:	228c8913          	addi	s2,s9,552
+  24879a:	278cb503          	ld	a0,632(s9)
+  24879e:	280cb583          	ld	a1,640(s9)
+  2487a2:	220cb823          	sd	zero,560(s9)
+  2487a6:	232cbc23          	sd	s2,568(s9)
+  2487aa:	252cb023          	sd	s2,576(s9)
+  2487ae:	240cb423          	sd	zero,584(s9)
+  2487b2:	00a58463          	beq	a1,a0,2487ba <_ZN13llama_context6decodeERK11llama_batch+0x2f6>
+  2487b6:	28acb023          	sd	a0,640(s9)
+  2487ba:	0209d513          	srli	a0,s3,0x20
+  2487be:	f12a                	sd	a0,160(sp)
+  2487c0:	278c8c13          	addi	s8,s9,632
+  2487c4:	8566                	mv	a0,s9
+  2487c6:	a3afc0ef          	jal	244a00 <_ZN13llama_context13sched_reserveEv>
+  2487ca:	8566                	mv	a0,s9
+  2487cc:	4581                	li	a1,0
+  2487ce:	80dfd0ef          	jal	245fda <_ZN13llama_context13memory_updateEb>
+  2487d2:	4401                	li	s0,0
+  2487d4:	4481                	li	s1,0
+  2487d6:	4a09                	li	s4,2
+  2487d8:	00200517          	auipc	a0,0x200
+  2487dc:	00200597          	auipc	a1,0x200
+  2487e0:	84a50993          	addi	s3,a0,-1974 # 448022 <_IO_stdin_used+0x21782>
+  2487e4:	67d58b13          	addi	s6,a1,1661 # 448e59 <_IO_stdin_used+0x225b9>
+  2487e8:	100cb583          	ld	a1,256(s9)
+  2487ec:	6188                	ld	a0,0(a1)
+  2487ee:	250cb603          	ld	a2,592(s9)
+  2487f2:	014ca683          	lw	a3,20(s9)
+  2487f6:	691c                	ld	a5,16(a0)
+  2487f8:	1188                	addi	a0,sp,224
+  2487fa:	8756                	mv	a4,s5
+  2487fc:	9782                	jalr	a5
+  2487fe:	7b8e                	ld	s7,224(sp)
+  248800:	f182                	sd	zero,224(sp)
+  248802:	c811                	beqz	s0,248816 <_ZN13llama_context6decodeERK11llama_batch+0x352>
+  248804:	6008                	ld	a0,0(s0)
+  248806:	650c                	ld	a1,8(a0)
+  248808:	8522                	mv	a0,s0
+  24880a:	9582                	jalr	a1
+  24880c:	750e                	ld	a0,224(sp)
+  24880e:	c501                	beqz	a0,248816 <_ZN13llama_context6decodeERK11llama_batch+0x352>
+  248810:	610c                	ld	a1,0(a0)
+  248812:	658c                	ld	a1,8(a1)
+  248814:	9582                	jalr	a1
+  248816:	060b8f63          	beqz	s7,248894 <_ZN13llama_context6decodeERK11llama_batch+0x3d0>
+  24881a:	000bb503          	ld	a0,0(s7)
+  24881e:	750c                	ld	a1,40(a0)
+  248820:	855e                	mv	a0,s7
+  248822:	9582                	jalr	a1
+  248824:	03451663          	bne	a0,s4,248850 <_ZN13llama_context6decodeERK11llama_batch+0x38c>
+  248828:	8885                	andi	s1,s1,1
+  24882a:	e0b9                	bnez	s1,248870 <_ZN13llama_context6decodeERK11llama_batch+0x3ac>
+  24882c:	4585                	li	a1,1
+  24882e:	8566                	mv	a0,s9
+  248830:	faafd0ef          	jal	245fda <_ZN13llama_context13memory_updateEb>
+  248834:	cd15                	beqz	a0,248870 <_ZN13llama_context6decodeERK11llama_batch+0x3ac>
+  248836:	250cb503          	ld	a0,592(s9)
+  24883a:	edcf20ef          	jal	23af16 <_ZNK18llama_batch_allocr12get_n_tokensEv>
+  24883e:	86aa                	mv	a3,a0
+  248840:	4485                	li	s1,1
+  248842:	4505                	li	a0,1
+  248844:	85ce                	mv	a1,s3
+  248846:	865a                	mv	a2,s6
+  248848:	79d150ef          	jal	25e7e4 <_Z18llama_log_internal14ggml_log_levelPKcz>
+  24884c:	845e                	mv	s0,s7
+  24884e:	bf69                	j	2487e8 <_ZN13llama_context6decodeERK11llama_batch+0x324>
+  248850:	4585                	li	a1,1
+  248852:	04b50363          	beq	a0,a1,248898 <_ZN13llama_context6decodeERK11llama_batch+0x3d4>
+  248856:	458d                	li	a1,3
+  248858:	04b51b63          	bne	a0,a1,2488ae <_ZN13llama_context6decodeERK11llama_batch+0x3ea>
+  24885c:	250cb503          	ld	a0,592(s9)
+  248860:	eb6f20ef          	jal	23af16 <_ZNK18llama_batch_allocr12get_n_tokensEv>
+  248864:	8daa                	mv	s11,a0
+  248866:	00200517          	auipc	a0,0x200
+  24886a:	82850593          	addi	a1,a0,-2008 # 44808e <_IO_stdin_used+0x217ee>
+  24886e:	a891                	j	2488c2 <_ZN13llama_context6decodeERK11llama_batch+0x3fe>
+  248870:	250cb503          	ld	a0,592(s9)
+  248874:	ea2f20ef          	jal	23af16 <_ZNK18llama_batch_allocr12get_n_tokensEv>
+  248878:	86aa                	mv	a3,a0
+  24887a:	001ff517          	auipc	a0,0x1ff
+  24887e:	00200617          	auipc	a2,0x200
+  248882:	7dd50593          	addi	a1,a0,2013 # 448057 <_IO_stdin_used+0x217b7>
+  248886:	5db60613          	addi	a2,a2,1499 # 448e59 <_IO_stdin_used+0x225b9>
+  24888a:	450d                	li	a0,3
+  24888c:	759150ef          	jal	25e7e4 <_Z18llama_log_internal14ggml_log_levelPKcz>
+  248890:	4505                	li	a0,1
+  248892:	a089                	j	2488d4 <_ZN13llama_context6decodeERK11llama_batch+0x410>
+  248894:	5579                	li	a0,-2
+  248896:	bdad                	j	248710 <_ZN13llama_context6decodeERK11llama_batch+0x24c>
+  248898:	000bb503          	ld	a0,0(s7)
+  24889c:	750c                	ld	a1,40(a0)
+  24889e:	855e                	mv	a0,s7
+  2488a0:	9582                	jalr	a1
+  2488a2:	8daa                	mv	s11,a0
+  2488a4:	001ff517          	auipc	a0,0x1ff
+  2488a8:	75450593          	addi	a1,a0,1876 # 447ff8 <_IO_stdin_used+0x21758>
+  2488ac:	a819                	j	2488c2 <_ZN13llama_context6decodeERK11llama_batch+0x3fe>
+  2488ae:	8566                	mv	a0,s9
+  2488b0:	85ee                	mv	a1,s11
+  2488b2:	c5bfb0ef          	jal	24450c <_ZN13llama_context14output_reserveEi>
+  2488b6:	03b57763          	bgeu	a0,s11,2488e4 <_ZN13llama_context6decodeERK11llama_batch+0x420>
+  2488ba:	00200517          	auipc	a0,0x200
+  2488be:	80950593          	addi	a1,a0,-2039 # 4480c3 <_IO_stdin_used+0x21823>
+  2488c2:	00200517          	auipc	a0,0x200
+  2488c6:	59750613          	addi	a2,a0,1431 # 448e59 <_IO_stdin_used+0x225b9>
+  2488ca:	4511                	li	a0,4
+  2488cc:	86ee                	mv	a3,s11
+  2488ce:	717150ef          	jal	25e7e4 <_Z18llama_log_internal14ggml_log_levelPKcz>
+  2488d2:	5579                	li	a0,-2
+  2488d4:	000bb583          	ld	a1,0(s7)
+  2488d8:	658c                	ld	a1,8(a1)
+  2488da:	842a                	mv	s0,a0
+  2488dc:	855e                	mv	a0,s7
+  2488de:	9582                	jalr	a1
+  2488e0:	8522                	mv	a0,s0
+  2488e2:	b53d                	j	248710 <_ZN13llama_context6decodeERK11llama_batch+0x24c>
+  2488e4:	e862                	sd	s8,16(sp)
+  2488e6:	fd02                	sd	zero,184(sp)
+  2488e8:	4a81                	li	s5,0
+  2488ea:	258c8c13          	addi	s8,s9,600
+  2488ee:	158c8513          	addi	a0,s9,344
+  2488f2:	f8aa                	sd	a0,112(sp)
+  2488f4:	e56e                	sd	s11,136(sp)
+  2488f6:	020d9513          	slli	a0,s11,0x20
+  2488fa:	758a                	ld	a1,160(sp)
+  2488fc:	058a                	slli	a1,a1,0x2
+  2488fe:	f42e                	sd	a1,40(sp)
+  248900:	658d                	lui	a1,0x3
+  248902:	0e810b13          	addi	s6,sp,232
+  248906:	180c8613          	addi	a2,s9,384
+  24890a:	f4b2                	sd	a2,104(sp)
+  24890c:	1c0c8613          	addi	a2,s9,448
+  248910:	f0b2                	sd	a2,96(sp)
+  248912:	1a0c8613          	addi	a2,s9,416
+  248916:	ecb2                	sd	a2,88(sp)
+  248918:	1d8c8613          	addi	a2,s9,472
+  24891c:	e8b2                	sd	a2,80(sp)
+  24891e:	c2202673          	csrr	a2,vlenb
+  248922:	0e010993          	addi	s3,sp,224
+  248926:	4e010413          	addi	s0,sp,1248
+  24892a:	800006b7          	lui	a3,0x80000
+  24892e:	00165a13          	srli	s4,a2,0x1
+  248932:	41400733          	neg	a4,s4
+  248936:	f03a                	sd	a4,32(sp)
+  248938:	10077713          	andi	a4,a4,256
+  24893c:	41470733          	sub	a4,a4,s4
+  248940:	03475733          	divu	a4,a4,s4
+  248944:	9101                	srli	a0,a0,0x20
+  248946:	e0aa                	sd	a0,64(sp)
+  248948:	95ea                	add	a1,a1,s10
+  24894a:	ec2e                	sd	a1,24(sp)
+  24894c:	00365513          	srli	a0,a2,0x3
+  248950:	0606                	slli	a2,a2,0x1
+  248952:	fc32                	sd	a2,56(sp)
+  248954:	fff68d1b          	addiw	s10,a3,-1 # 7fffffff <__BSS_END__+0x7f9a5e77>
+  248958:	0712                	slli	a4,a4,0x4
+  24895a:	0741                	addi	a4,a4,16
+  24895c:	e4aa                	sd	a0,72(sp)
+  24895e:	02a70533          	mul	a0,a4,a0
+  248962:	954e                	add	a0,a0,s3
+  248964:	f82a                	sd	a0,48(sp)
+  248966:	f562                	sd	s8,168(sp)
+  248968:	fcd2                	sd	s4,120(sp)
+  24896a:	e15e                	sd	s7,128(sp)
+  24896c:	000bb503          	ld	a0,0(s7)
+  248970:	710c                	ld	a1,32(a0)
+  248972:	855e                	mv	a0,s7
+  248974:	9582                	jalr	a1
+  248976:	8daa                	mv	s11,a0
+  248978:	00456503          	lwu	a0,4(a0)
+  24897c:	65aa                	ld	a1,136(sp)
+  24897e:	664a                	ld	a2,144(sp)
+  248980:	00c58a63          	beq	a1,a2,248994 <_ZN13llama_context6decodeERK11llama_batch+0x4d0>
+  248984:	c911                	beqz	a0,248998 <_ZN13llama_context6decodeERK11llama_batch+0x4d4>
+  248986:	050db583          	ld	a1,80(s11)
+  24898a:	01457963          	bgeu	a0,s4,24899c <_ZN13llama_context6decodeERK11llama_batch+0x4d8>
+  24898e:	4601                	li	a2,0
+  248990:	4681                	li	a3,0
+  248992:	a8a1                	j	2489ea <_ZN13llama_context6decodeERK11llama_batch+0x526>
+  248994:	86aa                	mv	a3,a0
+  248996:	a0a5                	j	2489fe <_ZN13llama_context6decodeERK11llama_batch+0x53a>
+  248998:	4681                	li	a3,0
+  24899a:	a095                	j	2489fe <_ZN13llama_context6decodeERK11llama_batch+0x53a>
+  24899c:	41400633          	neg	a2,s4
+  2489a0:	8e69                	and	a2,a2,a0
+  2489a2:	7682                	ld	a3,32(sp)
+  2489a4:	96b2                	add	a3,a3,a2
+  2489a6:	0346d6b3          	divu	a3,a3,s4
+  2489aa:	068a                	slli	a3,a3,0x2
+  2489ac:	0691                	addi	a3,a3,4
+  2489ae:	6726                	ld	a4,72(sp)
+  2489b0:	02d706b3          	mul	a3,a4,a3
+  2489b4:	96ae                	add	a3,a3,a1
+  2489b6:	872e                	mv	a4,a1
+  2489b8:	0d1077d7          	vsetvli	a5,zero,e32,m2,ta,ma
+  2489bc:	5e003457          	vmv.v.i	v8,0
+  2489c0:	0c707057          	vsetvli	zero,zero,e8,mf2,ta,ma
+  2489c4:	02070507          	vle8.v	v10,(a4)
+  2489c8:	9752                	add	a4,a4,s4
+  2489ca:	66a03057          	vmsne.vi	v0,v10,0
+  2489ce:	05107057          	vsetvli	zero,zero,e32,m2,ta,mu
+  2489d2:	0080b457          	vadd.vi	v8,v8,1,v0.t
+  2489d6:	fed715e3          	bne	a4,a3,2489c0 <_ZN13llama_context6decodeERK11llama_batch+0x4fc>
+  2489da:	42006557          	vmv.s.x	v10,zero
+  2489de:	02852457          	vredsum.vs	v8,v8,v10
+  2489e2:	428026d7          	vmv.x.s	a3,v8
+  2489e6:	00a60c63          	beq	a2,a0,2489fe <_ZN13llama_context6decodeERK11llama_batch+0x53a>
+  2489ea:	962e                	add	a2,a2,a1
+  2489ec:	952e                	add	a0,a0,a1
+  2489ee:	00064583          	lbu	a1,0(a2)
+  2489f2:	0605                	addi	a2,a2,1
+  2489f4:	00b035b3          	snez	a1,a1
+  2489f8:	96ae                	add	a3,a3,a1
+  2489fa:	fea61ae3          	bne	a2,a0,2489ee <_ZN13llama_context6decodeERK11llama_batch+0x52a>
+  2489fe:	088ca603          	lw	a2,136(s9)
+  248a02:	24dcac23          	sw	a3,600(s9)
+  248a06:	c609                	beqz	a2,248a10 <_ZN13llama_context6decodeERK11llama_batch+0x54c>
+  248a08:	4505                	li	a0,1
+  248a0a:	22a61ee3          	bne	a2,a0,249446 <_ZN13llama_context6decodeERK11llama_batch+0xf82>
+  248a0e:	460d                	li	a2,3
+  248a10:	4e410713          	addi	a4,sp,1252
+  248a14:	8566                	mv	a0,s9
+  248a16:	85ee                	mv	a1,s11
+  248a18:	86de                	mv	a3,s7
+  248a1a:	d99fe0ef          	jal	2477b2 <_ZN13llama_context14process_ubatchERK12llama_ubatch14llm_graph_typeP22llama_memory_context_iR11ggml_status>
+  248a1e:	84aa                	mv	s1,a0
+  248a20:	e16d                	bnez	a0,248b02 <_ZN13llama_context6decodeERK11llama_batch+0x63e>
+  248a22:	04000513          	li	a0,64
+  248a26:	65a6                	ld	a1,72(sp)
+  248a28:	00b57463          	bgeu	a0,a1,248a30 <_ZN13llama_context6decodeERK11llama_batch+0x56c>
+  248a2c:	4501                	li	a0,0
+  248a2e:	a015                	j	248a52 <_ZN13llama_context6decodeERK11llama_batch+0x58e>
+  248a30:	4140053b          	negw	a0,s4
+  248a34:	10057513          	andi	a0,a0,256
+  248a38:	118c                	addi	a1,sp,224
+  248a3a:	0d107657          	vsetvli	a2,zero,e32,m2,ta,ma
+  248a3e:	7662                	ld	a2,56(sp)
+  248a40:	76c2                	ld	a3,48(sp)
+  248a42:	5e0d4457          	vmv.v.x	v8,s10
+  248a46:	22858427          	vs2r.v	v8,(a1)
+  248a4a:	95b2                	add	a1,a1,a2
+  248a4c:	fed59be3          	bne	a1,a3,248a42 <_ZN13llama_context6decodeERK11llama_batch+0x57e>
+  248a50:	e901                	bnez	a0,248a60 <_ZN13llama_context6decodeERK11llama_batch+0x59c>
+  248a52:	050a                	slli	a0,a0,0x2
+  248a54:	954e                	add	a0,a0,s3
+  248a56:	01a52023          	sw	s10,0(a0)
+  248a5a:	0511                	addi	a0,a0,4
+  248a5c:	fe851de3          	bne	a0,s0,248a56 <_ZN13llama_context6decodeERK11llama_batch+0x592>
+  248a60:	004de603          	lwu	a2,4(s11)
+  248a64:	c61d                	beqz	a2,248a92 <_ZN13llama_context6decodeERK11llama_batch+0x5ce>
+  248a66:	038db503          	ld	a0,56(s11)
+  248a6a:	028db583          	ld	a1,40(s11)
+  248a6e:	060e                	slli	a2,a2,0x3
+  248a70:	962a                	add	a2,a2,a0
+  248a72:	a031                	j	248a7e <_ZN13llama_context6decodeERK11llama_batch+0x5ba>
+  248a74:	c298                	sw	a4,0(a3)
+  248a76:	0521                	addi	a0,a0,8
+  248a78:	0591                	addi	a1,a1,4 # 3004 <_ZZN7httplib6detail27perform_websocket_handshakeERNS_6StreamERKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEiSA_RKSt18unordered_multimapIS8_S8_NS0_11case_ignore4hashENSC_8equal_toESaISt4pairIS9_S8_EEERS8_E3rng+0x854>
+  248a7a:	00c50c63          	beq	a0,a2,248a92 <_ZN13llama_context6decodeERK11llama_batch+0x5ce>
+  248a7e:	6114                	ld	a3,0(a0)
+  248a80:	4294                	lw	a3,0(a3)
+  248a82:	068a                	slli	a3,a3,0x2
+  248a84:	96ce                	add	a3,a3,s3
+  248a86:	4198                	lw	a4,0(a1)
+  248a88:	429c                	lw	a5,0(a3)
+  248a8a:	fef745e3          	blt	a4,a5,248a74 <_ZN13llama_context6decodeERK11llama_batch+0x5b0>
+  248a8e:	873e                	mv	a4,a5
+  248a90:	b7d5                	j	248a74 <_ZN13llama_context6decodeERK11llama_batch+0x5b0>
+  248a92:	8c26                	mv	s8,s1
+  248a94:	4a01                	li	s4,0
+  248a96:	1184                	addi	s1,sp,224
+  248a98:	10000413          	li	s0,256
+  248a9c:	a029                	j	248aa6 <_ZN13llama_context6decodeERK11llama_batch+0x5e2>
+  248a9e:	2a05                	addiw	s4,s4,1
+  248aa0:	147d                	addi	s0,s0,-1
+  248aa2:	0491                	addi	s1,s1,4
+  248aa4:	c81d                	beqz	s0,248ada <_ZN13llama_context6decodeERK11llama_batch+0x616>
+  248aa6:	0004a983          	lw	s3,0(s1)
+  248aaa:	ffa98ae3          	beq	s3,s10,248a9e <_ZN13llama_context6decodeERK11llama_batch+0x5da>
+  248aae:	001ff517          	auipc	a0,0x1ff
+  248ab2:	00200617          	auipc	a2,0x200
+  248ab6:	64c50593          	addi	a1,a0,1612 # 4480fa <_IO_stdin_used+0x2185a>
+  248aba:	3a760613          	addi	a2,a2,935 # 448e59 <_IO_stdin_used+0x225b9>
+  248abe:	450d                	li	a0,3
+  248ac0:	86d2                	mv	a3,s4
+  248ac2:	874e                	mv	a4,s3
+  248ac4:	521150ef          	jal	25e7e4 <_Z18llama_log_internal14ggml_log_levelPKcz>
+  248ac8:	100cb503          	ld	a0,256(s9)
+  248acc:	610c                	ld	a1,0(a0)
+  248ace:	7d98                	ld	a4,56(a1)
+  248ad0:	56fd                	li	a3,-1
+  248ad2:	85d2                	mv	a1,s4
+  248ad4:	864e                	mv	a2,s3
+  248ad6:	9702                	jalr	a4
+  248ad8:	b7d9                	j	248a9e <_ZN13llama_context6decodeERK11llama_batch+0x5da>
+  248ada:	4e412503          	lw	a0,1252(sp)
+  248ade:	84e2                	mv	s1,s8
+  248ae0:	00055b63          	bgez	a0,248af6 <_ZN13llama_context6decodeERK11llama_batch+0x632>
+  248ae4:	55f9                	li	a1,-2
+  248ae6:	7c2a                	ld	s8,168(sp)
+  248ae8:	deb506e3          	beq	a0,a1,2488d4 <_ZN13llama_context6decodeERK11llama_batch+0x410>
+  248aec:	55fd                	li	a1,-1
+  248aee:	00b51a63          	bne	a0,a1,248b02 <_ZN13llama_context6decodeERK11llama_batch+0x63e>
+  248af2:	0370006f          	j	249328 <_ZN13llama_context6decodeERK11llama_batch+0xe64>
+  248af6:	4585                	li	a1,1
+  248af8:	7c2a                	ld	s8,168(sp)
+  248afa:	02b50ae3          	beq	a0,a1,24932e <_ZN13llama_context6decodeERK11llama_batch+0xe6a>
+  248afe:	1e0506e3          	beqz	a0,2494ea <_ZN13llama_context6decodeERK11llama_batch+0x1026>
+  248b02:	04ccc503          	lbu	a0,76(s9)
+  248b06:	c901                	beqz	a0,248b16 <_ZN13llama_context6decodeERK11llama_batch+0x652>
+  248b08:	0204b983          	ld	s3,32(s1)
+  248b0c:	04dcc503          	lbu	a0,77(s9)
+  248b10:	e519                	bnez	a0,248b1e <_ZN13llama_context6decodeERK11llama_batch+0x65a>
+  248b12:	4581                	li	a1,0
+  248b14:	a031                	j	248b20 <_ZN13llama_context6decodeERK11llama_batch+0x65c>
+  248b16:	4981                	li	s3,0
+  248b18:	04dcc503          	lbu	a0,77(s9)
+  248b1c:	d97d                	beqz	a0,248b12 <_ZN13llama_context6decodeERK11llama_batch+0x64e>
+  248b1e:	788c                	ld	a1,48(s1)
+  248b20:	00098563          	beqz	s3,248b2a <_ZN13llama_context6decodeERK11llama_batch+0x666>
+  248b24:	7488                	ld	a0,40(s1)
+  248b26:	c111                	beqz	a0,248b2a <_ZN13llama_context6decodeERK11llama_batch+0x666>
+  248b28:	89aa                	mv	s3,a0
+  248b2a:	e1a6                	sd	s1,192(sp)
+  248b2c:	0184ba03          	ld	s4,24(s1)
+  248b30:	258ca383          	lw	t2,600(s9)
+  248b34:	f956                	sd	s5,176(sp)
+  248b36:	ed2e                	sd	a1,152(sp)
+  248b38:	0e0a0463          	beqz	s4,248c20 <_ZN13llama_context6decodeERK11llama_batch+0x75c>
+  248b3c:	108cb503          	ld	a0,264(s9)
+  248b40:	76c6                	ld	a3,112(sp)
+  248b42:	cd79                	beqz	a0,248c20 <_ZN13llama_context6decodeERK11llama_batch+0x75c>
+  248b44:	0c038e63          	beqz	t2,248c20 <_ZN13llama_context6decodeERK11llama_batch+0x75c>
+  248b48:	004de303          	lwu	t1,4(s11)
+  248b4c:	0c030a63          	beqz	t1,248c20 <_ZN13llama_context6decodeERK11llama_batch+0x75c>
+  248b50:	030db883          	ld	a7,48(s11)
+  248b54:	038db803          	ld	a6,56(s11)
+  248b58:	050db283          	ld	t0,80(s11)
+  248b5c:	160cbe03          	ld	t3,352(s9)
+  248b60:	4481                	li	s1,0
+  248b62:	a021                	j	248b6a <_ZN13llama_context6decodeERK11llama_batch+0x6a6>
+  248b64:	0485                	addi	s1,s1,1
+  248b66:	0a648d63          	beq	s1,t1,248c20 <_ZN13llama_context6decodeERK11llama_batch+0x75c>
+  248b6a:	00928533          	add	a0,t0,s1
+  248b6e:	00054503          	lbu	a0,0(a0)
+  248b72:	d96d                	beqz	a0,248b64 <_ZN13llama_context6decodeERK11llama_batch+0x6a0>
+  248b74:	00249513          	slli	a0,s1,0x2
+  248b78:	9546                	add	a0,a0,a7
+  248b7a:	00052e83          	lw	t4,0(a0)
+  248b7e:	ffd053e3          	blez	t4,248b64 <_ZN13llama_context6decodeERK11llama_batch+0x6a0>
+  248b82:	040e0163          	beqz	t3,248bc4 <_ZN13llama_context6decodeERK11llama_batch+0x700>
+  248b86:	00349513          	slli	a0,s1,0x3
+  248b8a:	9542                	add	a0,a0,a6
+  248b8c:	6110                	ld	a2,0(a0)
+  248b8e:	4701                	li	a4,0
+  248b90:	00271513          	slli	a0,a4,0x2
+  248b94:	9532                	add	a0,a0,a2
+  248b96:	4100                	lw	s0,0(a0)
+  248b98:	85f2                	mv	a1,t3
+  248b9a:	8536                	mv	a0,a3
+  248b9c:	a031                	j	248ba8 <_ZN13llama_context6decodeERK11llama_batch+0x6e4>
+  248b9e:	47c1                	li	a5,16
+  248ba0:	852e                	mv	a0,a1
+  248ba2:	95be                	add	a1,a1,a5
+  248ba4:	618c                	ld	a1,0(a1)
+  248ba6:	c591                	beqz	a1,248bb2 <_ZN13llama_context6decodeERK11llama_batch+0x6ee>
+  248ba8:	519c                	lw	a5,32(a1)
+  248baa:	fe87dae3          	bge	a5,s0,248b9e <_ZN13llama_context6decodeERK11llama_batch+0x6da>
+  248bae:	47e1                	li	a5,24
+  248bb0:	bfcd                	j	248ba2 <_ZN13llama_context6decodeERK11llama_batch+0x6de>
+  248bb2:	00d50963          	beq	a0,a3,248bc4 <_ZN13llama_context6decodeERK11llama_batch+0x700>
+  248bb6:	5108                	lw	a0,32(a0)
+  248bb8:	00a44663          	blt	s0,a0,248bc4 <_ZN13llama_context6decodeERK11llama_batch+0x700>
+  248bbc:	0705                	addi	a4,a4,1
+  248bbe:	fdd719e3          	bne	a4,t4,248b90 <_ZN13llama_context6decodeERK11llama_batch+0x6cc>
+  248bc2:	b74d                	j	248b64 <_ZN13llama_context6decodeERK11llama_batch+0x6a0>
+  248bc4:	290cb503          	ld	a0,656(s9)
+  248bc8:	85d2                	mv	a1,s4
+  248bca:	001a4097          	auipc	ra,0x1a4
+  248bce:	080080e7          	jalr	128(ra) # 3ecc4a <ggml_backend_sched_get_tensor_backend>
+  248bd2:	140501e3          	beqz	a0,249514 <_ZN13llama_context6decodeERK11llama_batch+0x1050>
+  248bd6:	108cb603          	ld	a2,264(s9)
+  248bda:	120606e3          	beqz	a2,249506 <_ZN13llama_context6decodeERK11llama_batch+0x1042>
+  248bde:	000c6583          	lwu	a1,0(s8)
+  248be2:	30058e63          	beqz	a1,248efe <_ZN13llama_context6decodeERK11llama_batch+0xa3a>
+  248be6:	74ca                	ld	s1,176(sp)
+  248be8:	00b486b3          	add	a3,s1,a1
+  248bec:	6706                	ld	a4,64(sp)
+  248bee:	14d76ce3          	bltu	a4,a3,249546 <_ZN13llama_context6decodeERK11llama_batch+0x1082>
+  248bf2:	110cb703          	ld	a4,272(s9)
+  248bf6:	778a                	ld	a5,160(sp)
+  248bf8:	02f686b3          	mul	a3,a3,a5
+  248bfc:	12d74ee3          	blt	a4,a3,249538 <_ZN13llama_context6decodeERK11llama_batch+0x1074>
+  248c00:	02f486b3          	mul	a3,s1,a5
+  248c04:	068a                	slli	a3,a3,0x2
+  248c06:	9636                	add	a2,a2,a3
+  248c08:	76a2                	ld	a3,40(sp)
+  248c0a:	02b68733          	mul	a4,a3,a1
+  248c0e:	85d2                	mv	a1,s4
+  248c10:	4681                	li	a3,0
+  248c12:	001a0097          	auipc	ra,0x1a0
+  248c16:	5b6080e7          	jalr	1462(ra) # 3e91c8 <ggml_backend_tensor_get_async>
+  248c1a:	752a                	ld	a0,168(sp)
+  248c1c:	00052383          	lw	t2,0(a0)
+  248c20:	2c098f63          	beqz	s3,248efe <_ZN13llama_context6decodeERK11llama_batch+0xa3a>
+  248c24:	118cb503          	ld	a0,280(s9)
+  248c28:	2c050b63          	beqz	a0,248efe <_ZN13llama_context6decodeERK11llama_batch+0xa3a>
+  248c2c:	2c038963          	beqz	t2,248efe <_ZN13llama_context6decodeERK11llama_batch+0xa3a>
+  248c30:	290cb503          	ld	a0,656(s9)
+  248c34:	85ce                	mv	a1,s3
+  248c36:	001a4097          	auipc	ra,0x1a4
+  248c3a:	014080e7          	jalr	20(ra) # 3ecc4a <ggml_backend_sched_get_tensor_backend>
+  248c3e:	8baa                	mv	s7,a0
+  248c40:	080503e3          	beqz	a0,2494c6 <_ZN13llama_context6decodeERK11llama_batch+0x1002>
+  248c44:	08cca503          	lw	a0,140(s9)
+  248c48:	12a05a63          	blez	a0,248d7c <_ZN13llama_context6decodeERK11llama_batch+0x8b8>
+  248c4c:	fff50593          	addi	a1,a0,-1
+  248c50:	460d                	li	a2,3
+  248c52:	18c5f463          	bgeu	a1,a2,248dda <_ZN13llama_context6decodeERK11llama_batch+0x916>
+  248c56:	652e                	ld	a0,200(sp)
+  248c58:	432150ef          	jal	25e08a <_ZNK13llama_hparams10n_embd_outEv>
+  248c5c:	842a                	mv	s0,a0
+  248c5e:	010da503          	lw	a0,16(s11)
+  248c62:	28050e63          	beqz	a0,248efe <_ZN13llama_context6decodeERK11llama_batch+0xa3a>
+  248c66:	4481                	li	s1,0
+  248c68:	02041513          	slli	a0,s0,0x20
+  248c6c:	02055c13          	srli	s8,a0,0x20
+  248c70:	01e55a93          	srli	s5,a0,0x1e
+  248c74:	040db503          	ld	a0,64(s11)
+  248c78:	00249593          	slli	a1,s1,0x2
+  248c7c:	048db683          	ld	a3,72(s11)
+  248c80:	952e                	add	a0,a0,a1
+  248c82:	4110                	lw	a2,0(a0)
+  248c84:	4ec12823          	sw	a2,1264(sp)
+  248c88:	00261513          	slli	a0,a2,0x2
+  248c8c:	9536                	add	a0,a0,a3
+  248c8e:	230cb683          	ld	a3,560(s9)
+  248c92:	00052a03          	lw	s4,0(a0)
+  248c96:	85ca                	mv	a1,s2
+  248c98:	c685                	beqz	a3,248cc0 <_ZN13llama_context6decodeERK11llama_batch+0x7fc>
+  248c9a:	854a                	mv	a0,s2
+  248c9c:	a031                	j	248ca8 <_ZN13llama_context6decodeERK11llama_batch+0x7e4>
+  248c9e:	45c1                	li	a1,16
+  248ca0:	8536                	mv	a0,a3
+  248ca2:	95b6                	add	a1,a1,a3
+  248ca4:	6194                	ld	a3,0(a1)
+  248ca6:	c691                	beqz	a3,248cb2 <_ZN13llama_context6decodeERK11llama_batch+0x7ee>
+  248ca8:	528c                	lw	a1,32(a3)
+  248caa:	fec5dae3          	bge	a1,a2,248c9e <_ZN13llama_context6decodeERK11llama_batch+0x7da>
+  248cae:	45e1                	li	a1,24
+  248cb0:	bfcd                	j	248ca2 <_ZN13llama_context6decodeERK11llama_batch+0x7de>
+  248cb2:	85ca                	mv	a1,s2
+  248cb4:	01250663          	beq	a0,s2,248cc0 <_ZN13llama_context6decodeERK11llama_batch+0x7fc>
+  248cb8:	5114                	lw	a3,32(a0)
+  248cba:	85aa                	mv	a1,a0
+  248cbc:	00d65f63          	bge	a2,a3,248cda <_ZN13llama_context6decodeERK11llama_batch+0x816>
+  248cc0:	4f010513          	addi	a0,sp,1264
+  248cc4:	f1aa                	sd	a0,224(sp)
+  248cc6:	0021b517          	auipc	a0,0x21b
+  248cca:	1194                	addi	a3,sp,224
+  248ccc:	a5250613          	addi	a2,a0,-1454 # 463718 <_ZSt19piecewise_construct>
+  248cd0:	4e810713          	addi	a4,sp,1256
+  248cd4:	656e                	ld	a0,216(sp)
+  248cd6:	6b5050ef          	jal	24eb8a <_ZNSt8_Rb_treeIiSt4pairIKiSt6vectorIfSaIfEEESt10_Select1stIS5_ESt4lessIiESaIS5_EE22_M_emplace_hint_uniqueIJRKSt21piecewise_construct_tSt5tupleIJRS1_EESG_IJEEEEESt17_Rb_tree_iteratorIS5_ESt23_Rb_tree_const_iteratorIS5_EDpOT_>
+  248cda:	7510                	ld	a2,40(a0)
+  248cdc:	790c                	ld	a1,48(a0)
+  248cde:	40c586b3          	sub	a3,a1,a2
+  248ce2:	8689                	srai	a3,a3,0x2
+  248ce4:	0186fb63          	bgeu	a3,s8,248cfa <_ZN13llama_context6decodeERK11llama_batch+0x836>
+  248ce8:	02850513          	addi	a0,a0,40
+  248cec:	40dc05b3          	sub	a1,s8,a3
+  248cf0:	ffe03097          	auipc	ra,0xffe03
+  248cf4:	ccc080e7          	jalr	-820(ra) # 4b9bc <_ZNSt6vectorIfSaIfEE17_M_default_appendEm>
+  248cf8:	a809                	j	248d0a <_ZN13llama_context6decodeERK11llama_batch+0x846>
+  248cfa:	00dc7863          	bgeu	s8,a3,248d0a <_ZN13llama_context6decodeERK11llama_batch+0x846>
+  248cfe:	002c1693          	slli	a3,s8,0x2
+  248d02:	9636                	add	a2,a2,a3
+  248d04:	00c58363          	beq	a1,a2,248d0a <_ZN13llama_context6decodeERK11llama_batch+0x846>
+  248d08:	f910                	sd	a2,48(a0)
+  248d0a:	230cb683          	ld	a3,560(s9)
+  248d0e:	85ca                	mv	a1,s2
+  248d10:	c695                	beqz	a3,248d3c <_ZN13llama_context6decodeERK11llama_batch+0x878>
+  248d12:	4f012603          	lw	a2,1264(sp)
+  248d16:	854a                	mv	a0,s2
+  248d18:	a031                	j	248d24 <_ZN13llama_context6decodeERK11llama_batch+0x860>
+  248d1a:	45c1                	li	a1,16
+  248d1c:	8536                	mv	a0,a3
+  248d1e:	95b6                	add	a1,a1,a3
+  248d20:	6194                	ld	a3,0(a1)
+  248d22:	c691                	beqz	a3,248d2e <_ZN13llama_context6decodeERK11llama_batch+0x86a>
+  248d24:	528c                	lw	a1,32(a3)
+  248d26:	fec5dae3          	bge	a1,a2,248d1a <_ZN13llama_context6decodeERK11llama_batch+0x856>
+  248d2a:	45e1                	li	a1,24
+  248d2c:	bfcd                	j	248d1e <_ZN13llama_context6decodeERK11llama_batch+0x85a>
+  248d2e:	85ca                	mv	a1,s2
+  248d30:	01250663          	beq	a0,s2,248d3c <_ZN13llama_context6decodeERK11llama_batch+0x878>
+  248d34:	5114                	lw	a3,32(a0)
+  248d36:	85aa                	mv	a1,a0
+  248d38:	00d65f63          	bge	a2,a3,248d56 <_ZN13llama_context6decodeERK11llama_batch+0x892>
+  248d3c:	4f010513          	addi	a0,sp,1264
+  248d40:	f1aa                	sd	a0,224(sp)
+  248d42:	0021b517          	auipc	a0,0x21b
+  248d46:	1194                	addi	a3,sp,224
+  248d48:	9d650613          	addi	a2,a0,-1578 # 463718 <_ZSt19piecewise_construct>
+  248d4c:	4e810713          	addi	a4,sp,1256
+  248d50:	656e                	ld	a0,216(sp)
+  248d52:	639050ef          	jal	24eb8a <_ZNSt8_Rb_treeIiSt4pairIKiSt6vectorIfSaIfEEESt10_Select1stIS5_ESt4lessIiESaIS5_EE22_M_emplace_hint_uniqueIJRKSt21piecewise_construct_tSt5tupleIJRS1_EESG_IJEEEEESt17_Rb_tree_iteratorIS5_ESt23_Rb_tree_const_iteratorIS5_EDpOT_>
+  248d56:	7510                	ld	a2,40(a0)
+  248d58:	028a0533          	mul	a0,s4,s0
+  248d5c:	1502                	slli	a0,a0,0x20
+  248d5e:	01e55693          	srli	a3,a0,0x1e
+  248d62:	855e                	mv	a0,s7
+  248d64:	85ce                	mv	a1,s3
+  248d66:	8756                	mv	a4,s5
+  248d68:	001a0097          	auipc	ra,0x1a0
+  248d6c:	460080e7          	jalr	1120(ra) # 3e91c8 <ggml_backend_tensor_get_async>
+  248d70:	010de503          	lwu	a0,16(s11)
+  248d74:	0485                	addi	s1,s1,1
+  248d76:	eea4efe3          	bltu	s1,a0,248c74 <_ZN13llama_context6decodeERK11llama_batch+0x7b0>
+  248d7a:	a251                	j	248efe <_ZN13llama_context6decodeERK11llama_batch+0xa3a>
+  248d7c:	16051e63          	bnez	a0,248ef8 <_ZN13llama_context6decodeERK11llama_batch+0xa34>
+  248d80:	118cb503          	ld	a0,280(s9)
+  248d84:	7e050363          	beqz	a0,24956a <_ZN13llama_context6decodeERK11llama_batch+0x10a6>
+  248d88:	652e                	ld	a0,200(sp)
+  248d8a:	300150ef          	jal	25e08a <_ZNK13llama_hparams10n_embd_outEv>
+  248d8e:	258ce583          	lwu	a1,600(s9)
+  248d92:	16058663          	beqz	a1,248efe <_ZN13llama_context6decodeERK11llama_batch+0xa3a>
+  248d96:	77ca                	ld	a5,176(sp)
+  248d98:	00b78633          	add	a2,a5,a1
+  248d9c:	6686                	ld	a3,64(sp)
+  248d9e:	00c6e2e3          	bltu	a3,a2,2495a2 <_ZN13llama_context6decodeERK11llama_batch+0x10de>
+  248da2:	120cb703          	ld	a4,288(s9)
+  248da6:	02051693          	slli	a3,a0,0x20
+  248daa:	9281                	srli	a3,a3,0x20
+  248dac:	02d60633          	mul	a2,a2,a3
+  248db0:	7ec74263          	blt	a4,a2,249594 <_ZN13llama_context6decodeERK11llama_batch+0x10d0>
+  248db4:	118cb603          	ld	a2,280(s9)
+  248db8:	02d786b3          	mul	a3,a5,a3
+  248dbc:	02a58533          	mul	a0,a1,a0
+  248dc0:	068a                	slli	a3,a3,0x2
+  248dc2:	1502                	slli	a0,a0,0x20
+  248dc4:	9636                	add	a2,a2,a3
+  248dc6:	01e55713          	srli	a4,a0,0x1e
+  248dca:	855e                	mv	a0,s7
+  248dcc:	85ce                	mv	a1,s3
+  248dce:	4681                	li	a3,0
+  248dd0:	001a0097          	auipc	ra,0x1a0
+  248dd4:	3f8080e7          	jalr	1016(ra) # 3e91c8 <ggml_backend_tensor_get_async>
+  248dd8:	a21d                	j	248efe <_ZN13llama_context6decodeERK11llama_batch+0xa3a>
+  248dda:	4591                	li	a1,4
+  248ddc:	12b51163          	bne	a0,a1,248efe <_ZN13llama_context6decodeERK11llama_batch+0xa3a>
+  248de0:	010da503          	lw	a0,16(s11)
+  248de4:	10050d63          	beqz	a0,248efe <_ZN13llama_context6decodeERK11llama_batch+0xa3a>
+  248de8:	4481                	li	s1,0
+  248dea:	6562                	ld	a0,24(sp)
+  248dec:	99856403          	lwu	s0,-1640(a0)
+  248df0:	00241a93          	slli	s5,s0,0x2
+  248df4:	040db503          	ld	a0,64(s11)
+  248df8:	00249593          	slli	a1,s1,0x2
+  248dfc:	048db683          	ld	a3,72(s11)
+  248e00:	952e                	add	a0,a0,a1
+  248e02:	4110                	lw	a2,0(a0)
+  248e04:	4ec12823          	sw	a2,1264(sp)
+  248e08:	00261513          	slli	a0,a2,0x2
+  248e0c:	9536                	add	a0,a0,a3
+  248e0e:	230cb683          	ld	a3,560(s9)
+  248e12:	00052a03          	lw	s4,0(a0)
+  248e16:	85ca                	mv	a1,s2
+  248e18:	c685                	beqz	a3,248e40 <_ZN13llama_context6decodeERK11llama_batch+0x97c>
+  248e1a:	854a                	mv	a0,s2
+  248e1c:	a031                	j	248e28 <_ZN13llama_context6decodeERK11llama_batch+0x964>
+  248e1e:	45c1                	li	a1,16
+  248e20:	8536                	mv	a0,a3
+  248e22:	95b6                	add	a1,a1,a3
+  248e24:	6194                	ld	a3,0(a1)
+  248e26:	c691                	beqz	a3,248e32 <_ZN13llama_context6decodeERK11llama_batch+0x96e>
+  248e28:	528c                	lw	a1,32(a3)
+  248e2a:	fec5dae3          	bge	a1,a2,248e1e <_ZN13llama_context6decodeERK11llama_batch+0x95a>
+  248e2e:	45e1                	li	a1,24
+  248e30:	bfcd                	j	248e22 <_ZN13llama_context6decodeERK11llama_batch+0x95e>
+  248e32:	85ca                	mv	a1,s2
+  248e34:	01250663          	beq	a0,s2,248e40 <_ZN13llama_context6decodeERK11llama_batch+0x97c>
+  248e38:	5114                	lw	a3,32(a0)
+  248e3a:	85aa                	mv	a1,a0
+  248e3c:	00d65f63          	bge	a2,a3,248e5a <_ZN13llama_context6decodeERK11llama_batch+0x996>
+  248e40:	4f010513          	addi	a0,sp,1264
+  248e44:	f1aa                	sd	a0,224(sp)
+  248e46:	0021b517          	auipc	a0,0x21b
+  248e4a:	1194                	addi	a3,sp,224
+  248e4c:	8d250613          	addi	a2,a0,-1838 # 463718 <_ZSt19piecewise_construct>
+  248e50:	4e810713          	addi	a4,sp,1256
+  248e54:	656e                	ld	a0,216(sp)
+  248e56:	535050ef          	jal	24eb8a <_ZNSt8_Rb_treeIiSt4pairIKiSt6vectorIfSaIfEEESt10_Select1stIS5_ESt4lessIiESaIS5_EE22_M_emplace_hint_uniqueIJRKSt21piecewise_construct_tSt5tupleIJRS1_EESG_IJEEEEESt17_Rb_tree_iteratorIS5_ESt23_Rb_tree_const_iteratorIS5_EDpOT_>
+  248e5a:	7510                	ld	a2,40(a0)
+  248e5c:	790c                	ld	a1,48(a0)
+  248e5e:	40c586b3          	sub	a3,a1,a2
+  248e62:	8689                	srai	a3,a3,0x2
+  248e64:	0086fb63          	bgeu	a3,s0,248e7a <_ZN13llama_context6decodeERK11llama_batch+0x9b6>
+  248e68:	02850513          	addi	a0,a0,40
+  248e6c:	40d405b3          	sub	a1,s0,a3
+  248e70:	ffe03097          	auipc	ra,0xffe03
+  248e74:	b4c080e7          	jalr	-1204(ra) # 4b9bc <_ZNSt6vectorIfSaIfEE17_M_default_appendEm>
+  248e78:	a039                	j	248e86 <_ZN13llama_context6decodeERK11llama_batch+0x9c2>
+  248e7a:	00d47663          	bgeu	s0,a3,248e86 <_ZN13llama_context6decodeERK11llama_batch+0x9c2>
+  248e7e:	9656                	add	a2,a2,s5
+  248e80:	00c58363          	beq	a1,a2,248e86 <_ZN13llama_context6decodeERK11llama_batch+0x9c2>
+  248e84:	f910                	sd	a2,48(a0)
+  248e86:	230cb683          	ld	a3,560(s9)
+  248e8a:	85ca                	mv	a1,s2
+  248e8c:	c695                	beqz	a3,248eb8 <_ZN13llama_context6decodeERK11llama_batch+0x9f4>
+  248e8e:	4f012603          	lw	a2,1264(sp)
+  248e92:	854a                	mv	a0,s2
+  248e94:	a031                	j	248ea0 <_ZN13llama_context6decodeERK11llama_batch+0x9dc>
+  248e96:	45c1                	li	a1,16
+  248e98:	8536                	mv	a0,a3
+  248e9a:	95b6                	add	a1,a1,a3
+  248e9c:	6194                	ld	a3,0(a1)
+  248e9e:	c691                	beqz	a3,248eaa <_ZN13llama_context6decodeERK11llama_batch+0x9e6>
+  248ea0:	528c                	lw	a1,32(a3)
+  248ea2:	fec5dae3          	bge	a1,a2,248e96 <_ZN13llama_context6decodeERK11llama_batch+0x9d2>
+  248ea6:	45e1                	li	a1,24
+  248ea8:	bfcd                	j	248e9a <_ZN13llama_context6decodeERK11llama_batch+0x9d6>
+  248eaa:	85ca                	mv	a1,s2
+  248eac:	01250663          	beq	a0,s2,248eb8 <_ZN13llama_context6decodeERK11llama_batch+0x9f4>
+  248eb0:	5114                	lw	a3,32(a0)
+  248eb2:	85aa                	mv	a1,a0
+  248eb4:	00d65f63          	bge	a2,a3,248ed2 <_ZN13llama_context6decodeERK11llama_batch+0xa0e>
+  248eb8:	4f010513          	addi	a0,sp,1264
+  248ebc:	f1aa                	sd	a0,224(sp)
+  248ebe:	0021b517          	auipc	a0,0x21b
+  248ec2:	1194                	addi	a3,sp,224
+  248ec4:	85a50613          	addi	a2,a0,-1958 # 463718 <_ZSt19piecewise_construct>
+  248ec8:	4e810713          	addi	a4,sp,1256
+  248ecc:	656e                	ld	a0,216(sp)
+  248ece:	4bd050ef          	jal	24eb8a <_ZNSt8_Rb_treeIiSt4pairIKiSt6vectorIfSaIfEEESt10_Select1stIS5_ESt4lessIiESaIS5_EE22_M_emplace_hint_uniqueIJRKSt21piecewise_construct_tSt5tupleIJRS1_EESG_IJEEEEESt17_Rb_tree_iteratorIS5_ESt23_Rb_tree_const_iteratorIS5_EDpOT_>
+  248ed2:	7510                	ld	a2,40(a0)
+  248ed4:	028a0533          	mul	a0,s4,s0
+  248ed8:	1502                	slli	a0,a0,0x20
+  248eda:	01e55693          	srli	a3,a0,0x1e
+  248ede:	855e                	mv	a0,s7
+  248ee0:	85ce                	mv	a1,s3
+  248ee2:	8756                	mv	a4,s5
+  248ee4:	001a0097          	auipc	ra,0x1a0
+  248ee8:	2e4080e7          	jalr	740(ra) # 3e91c8 <ggml_backend_tensor_get_async>
+  248eec:	010de503          	lwu	a0,16(s11)
+  248ef0:	0485                	addi	s1,s1,1
+  248ef2:	f0a4e1e3          	bltu	s1,a0,248df4 <_ZN13llama_context6decodeERK11llama_batch+0x930>
+  248ef6:	a021                	j	248efe <_ZN13llama_context6decodeERK11llama_batch+0xa3a>
+  248ef8:	55fd                	li	a1,-1
+  248efa:	66b50f63          	beq	a0,a1,249578 <_ZN13llama_context6decodeERK11llama_batch+0x10b4>
+  248efe:	004de683          	lwu	a3,4(s11)
+  248f02:	8566                	mv	a0,s9
+  248f04:	658e                	ld	a1,192(sp)
+  248f06:	766a                	ld	a2,184(sp)
+  248f08:	792000ef          	jal	24969a <_ZN13llama_context20extract_layer_inputsEPK16llm_graph_resultmm>
+  248f0c:	04ecc603          	lbu	a2,78(s9)
+  248f10:	004d8b93          	addi	s7,s11,4
+  248f14:	7aca                	ld	s5,176(sp)
+  248f16:	89d6                	mv	s3,s5
+  248f18:	7c2a                	ld	s8,168(sp)
+  248f1a:	8562                	mv	a0,s8
+  248f1c:	4e810a13          	addi	s4,sp,1256
+  248f20:	65ea                	ld	a1,152(sp)
+  248f22:	e219                	bnez	a2,248f28 <_ZN13llama_context6decodeERK11llama_batch+0xa64>
+  248f24:	79ea                	ld	s3,184(sp)
+  248f26:	855e                	mv	a0,s7
+  248f28:	c5bd                	beqz	a1,248f96 <_ZN13llama_context6decodeERK11llama_batch+0xad2>
+  248f2a:	128cb603          	ld	a2,296(s9)
+  248f2e:	c625                	beqz	a2,248f96 <_ZN13llama_context6decodeERK11llama_batch+0xad2>
+  248f30:	00056483          	lwu	s1,0(a0)
+  248f34:	c0ad                	beqz	s1,248f96 <_ZN13llama_context6decodeERK11llama_batch+0xad2>
+  248f36:	08cca503          	lw	a0,140(s9)
+  248f3a:	ed31                	bnez	a0,248f96 <_ZN13llama_context6decodeERK11llama_batch+0xad2>
+  248f3c:	8a5a                	mv	s4,s6
+  248f3e:	8b62                	mv	s6,s8
+  248f40:	290cb503          	ld	a0,656(s9)
+  248f44:	8c2e                	mv	s8,a1
+  248f46:	001a4097          	auipc	ra,0x1a4
+  248f4a:	d04080e7          	jalr	-764(ra) # 3ecc4a <ggml_backend_sched_get_tensor_backend>
+  248f4e:	842a                	mv	s0,a0
+  248f50:	52050763          	beqz	a0,24947e <_ZN13llama_context6decodeERK11llama_batch+0xfba>
+  248f54:	652e                	ld	a0,200(sp)
+  248f56:	134150ef          	jal	25e08a <_ZNK13llama_hparams10n_embd_outEv>
+  248f5a:	1502                	slli	a0,a0,0x20
+  248f5c:	130cb583          	ld	a1,304(s9)
+  248f60:	9101                	srli	a0,a0,0x20
+  248f62:	00998633          	add	a2,s3,s1
+  248f66:	02a60633          	mul	a2,a2,a0
+  248f6a:	52c5cc63          	blt	a1,a2,2494a2 <_ZN13llama_context6decodeERK11llama_batch+0xfde>
+  248f6e:	128cb603          	ld	a2,296(s9)
+  248f72:	02a985b3          	mul	a1,s3,a0
+  248f76:	02a48733          	mul	a4,s1,a0
+  248f7a:	058a                	slli	a1,a1,0x2
+  248f7c:	962e                	add	a2,a2,a1
+  248f7e:	070a                	slli	a4,a4,0x2
+  248f80:	8522                	mv	a0,s0
+  248f82:	85e2                	mv	a1,s8
+  248f84:	4681                	li	a3,0
+  248f86:	001a0097          	auipc	ra,0x1a0
+  248f8a:	242080e7          	jalr	578(ra) # 3e91c8 <ggml_backend_tensor_get_async>
+  248f8e:	8c5a                	mv	s8,s6
+  248f90:	8b52                	mv	s6,s4
+  248f92:	4e810a13          	addi	s4,sp,1256
+  248f96:	654e                	ld	a0,208(sp)
+  248f98:	26050b63          	beqz	a0,24920e <_ZN13llama_context6decodeERK11llama_batch+0xd4a>
+  248f9c:	650e                	ld	a0,192(sp)
+  248f9e:	6d68                	ld	a0,216(a0)
+  248fa0:	e909                	bnez	a0,248fb2 <_ZN13llama_context6decodeERK11llama_batch+0xaee>
+  248fa2:	650e                	ld	a0,192(sp)
+  248fa4:	10853503          	ld	a0,264(a0)
+  248fa8:	e509                	bnez	a0,248fb2 <_ZN13llama_context6decodeERK11llama_batch+0xaee>
+  248faa:	650e                	ld	a0,192(sp)
+  248fac:	7d28                	ld	a0,120(a0)
+  248fae:	26050063          	beqz	a0,24920e <_ZN13llama_context6decodeERK11llama_batch+0xd4a>
+  248fb2:	d582                	sw	zero,232(sp)
+  248fb4:	f982                	sd	zero,240(sp)
+  248fb6:	fdda                	sd	s6,248(sp)
+  248fb8:	e25a                	sd	s6,256(sp)
+  248fba:	e602                	sd	zero,264(sp)
+  248fbc:	000be503          	lwu	a0,0(s7)
+  248fc0:	c551                	beqz	a0,24904c <_ZN13llama_context6decodeERK11llama_batch+0xb88>
+  248fc2:	4401                	li	s0,0
+  248fc4:	4981                	li	s3,0
+  248fc6:	a03d                	j	248ff4 <_ZN13llama_context6decodeERK11llama_batch+0xb30>
+  248fc8:	4f413823          	sd	s4,1264(sp)
+  248fcc:	0021a617          	auipc	a2,0x21a
+  248fd0:	1188                	addi	a0,sp,224
+  248fd2:	4f010693          	addi	a3,sp,1264
+  248fd6:	74c60613          	addi	a2,a2,1868 # 463718 <_ZSt19piecewise_construct>
+  248fda:	4ef10713          	addi	a4,sp,1263
+  248fde:	7d0040ef          	jal	24d7ae <_ZNSt8_Rb_treeIiSt4pairIKijESt10_Select1stIS2_ESt4lessIiESaIS2_EE22_M_emplace_hint_uniqueIJRKSt21piecewise_construct_tSt5tupleIJRS1_EESD_IJEEEEESt17_Rb_tree_iteratorIS2_ESt23_Rb_tree_const_iteratorIS2_EDpOT_>
+  248fe2:	015985b3          	add	a1,s3,s5
+  248fe6:	d14c                	sw	a1,36(a0)
+  248fe8:	000be503          	lwu	a0,0(s7)
+  248fec:	0985                	addi	s3,s3,1
+  248fee:	0405                	addi	s0,s0,1
+  248ff0:	04a47e63          	bgeu	s0,a0,24904c <_ZN13llama_context6decodeERK11llama_batch+0xb88>
+  248ff4:	050db583          	ld	a1,80(s11)
+  248ff8:	95a2                	add	a1,a1,s0
+  248ffa:	0005c583          	lbu	a1,0(a1)
+  248ffe:	d9e5                	beqz	a1,248fee <_ZN13llama_context6decodeERK11llama_batch+0xb2a>
+  249000:	038db503          	ld	a0,56(s11)
+  249004:	00341593          	slli	a1,s0,0x3
+  249008:	952e                	add	a0,a0,a1
+  24900a:	6108                	ld	a0,0(a0)
+  24900c:	4110                	lw	a2,0(a0)
+  24900e:	76ce                	ld	a3,240(sp)
+  249010:	4ec12423          	sw	a2,1256(sp)
+  249014:	85da                	mv	a1,s6
+  249016:	dacd                	beqz	a3,248fc8 <_ZN13llama_context6decodeERK11llama_batch+0xb04>
+  249018:	855a                	mv	a0,s6
+  24901a:	a031                	j	249026 <_ZN13llama_context6decodeERK11llama_batch+0xb62>
+  24901c:	45c1                	li	a1,16
+  24901e:	853a                	mv	a0,a4
+  249020:	95ba                	add	a1,a1,a4
+  249022:	6194                	ld	a3,0(a1)
+  249024:	ca89                	beqz	a3,249036 <_ZN13llama_context6decodeERK11llama_batch+0xb72>
+  249026:	8736                	mv	a4,a3
+  249028:	529c                	lw	a5,32(a3)
+  24902a:	84aa                	mv	s1,a0
+  24902c:	fec7d8e3          	bge	a5,a2,24901c <_ZN13llama_context6decodeERK11llama_batch+0xb58>
+  249030:	45e1                	li	a1,24
+  249032:	8526                	mv	a0,s1
+  249034:	b7f5                	j	249020 <_ZN13llama_context6decodeERK11llama_batch+0xb5c>
+  249036:	85da                	mv	a1,s6
+  249038:	f96508e3          	beq	a0,s6,248fc8 <_ZN13llama_context6decodeERK11llama_batch+0xb04>
+  24903c:	00c7c363          	blt	a5,a2,249042 <_ZN13llama_context6decodeERK11llama_batch+0xb7e>
+  249040:	84ba                	mv	s1,a4
+  249042:	5094                	lw	a3,32(s1)
+  249044:	85aa                	mv	a1,a0
+  249046:	f8d641e3          	blt	a2,a3,248fc8 <_ZN13llama_context6decodeERK11llama_batch+0xb04>
+  24904a:	bf61                	j	248fe2 <_ZN13llama_context6decodeERK11llama_batch+0xb1e>
+  24904c:	190cb503          	ld	a0,400(s9)
+  249050:	290cb983          	ld	s3,656(s9)
+  249054:	c54d                	beqz	a0,2490fe <_ZN13llama_context6decodeERK11llama_batch+0xc3a>
+  249056:	198cb503          	ld	a0,408(s9)
+  24905a:	648e                	ld	s1,192(sp)
+  24905c:	c155                	beqz	a0,249100 <_ZN13llama_context6decodeERK11llama_batch+0xc3c>
+  24905e:	64e8                	ld	a0,200(s1)
+  249060:	0b848a13          	addi	s4,s1,184
+  249064:	01451963          	bne	a0,s4,249076 <_ZN13llama_context6decodeERK11llama_batch+0xbb2>
+  249068:	a859                	j	2490fe <_ZN13llama_context6decodeERK11llama_batch+0xc3a>
+  24906a:	ffdef097          	auipc	ra,0xffdef
+  24906e:	0e6080e7          	jalr	230(ra) # 38150 <_ZSt18_Rb_tree_incrementPSt18_Rb_tree_node_base@plt>
+  249072:	09450463          	beq	a0,s4,2490fa <_ZN13llama_context6decodeERK11llama_batch+0xc36>
+  249076:	764e                	ld	a2,240(sp)
+  249078:	da6d                	beqz	a2,24906a <_ZN13llama_context6decodeERK11llama_batch+0xba6>
+  24907a:	510c                	lw	a1,32(a0)
+  24907c:	86da                	mv	a3,s6
+  24907e:	a031                	j	24908a <_ZN13llama_context6decodeERK11llama_batch+0xbc6>
+  249080:	4641                	li	a2,16
+  249082:	86be                	mv	a3,a5
+  249084:	963e                	add	a2,a2,a5
+  249086:	6210                	ld	a2,0(a2)
+  249088:	ca09                	beqz	a2,24909a <_ZN13llama_context6decodeERK11llama_batch+0xbd6>
+  24908a:	87b2                	mv	a5,a2
+  24908c:	5218                	lw	a4,32(a2)
+  24908e:	84b6                	mv	s1,a3
+  249090:	feb758e3          	bge	a4,a1,249080 <_ZN13llama_context6decodeERK11llama_batch+0xbbc>
+  249094:	4661                	li	a2,24
+  249096:	86a6                	mv	a3,s1
+  249098:	b7f5                	j	249084 <_ZN13llama_context6decodeERK11llama_batch+0xbc0>
+  24909a:	fd6688e3          	beq	a3,s6,24906a <_ZN13llama_context6decodeERK11llama_batch+0xba6>
+  24909e:	8626                	mv	a2,s1
+  2490a0:	00b74363          	blt	a4,a1,2490a6 <_ZN13llama_context6decodeERK11llama_batch+0xbe2>
+  2490a4:	863e                	mv	a2,a5
+  2490a6:	5210                	lw	a2,32(a2)
+  2490a8:	fcc5c1e3          	blt	a1,a2,24906a <_ZN13llama_context6decodeERK11llama_batch+0xba6>
+  2490ac:	00b74363          	blt	a4,a1,2490b2 <_ZN13llama_context6decodeERK11llama_batch+0xbee>
+  2490b0:	84be                	mv	s1,a5
+  2490b2:	0244e483          	lwu	s1,36(s1)
+  2490b6:	198cb583          	ld	a1,408(s9)
+  2490ba:	2eb4fb63          	bgeu	s1,a1,2493b0 <_ZN13llama_context6decodeERK11llama_batch+0xeec>
+  2490be:	750c                	ld	a1,40(a0)
+  2490c0:	842a                	mv	s0,a0
+  2490c2:	852e                	mv	a0,a1
+  2490c4:	0018d097          	auipc	ra,0x18d
+  2490c8:	53c080e7          	jalr	1340(ra) # 3d6600 <ggml_is_contiguous>
+  2490cc:	85a2                	mv	a1,s0
+  2490ce:	2e050f63          	beqz	a0,2493cc <_ZN13llama_context6decodeERK11llama_batch+0xf08>
+  2490d2:	758c                	ld	a1,40(a1)
+  2490d4:	854e                	mv	a0,s3
+  2490d6:	001a4097          	auipc	ra,0x1a4
+  2490da:	b74080e7          	jalr	-1164(ra) # 3ecc4a <ggml_backend_sched_get_tensor_backend>
+  2490de:	85a2                	mv	a1,s0
+  2490e0:	190cb603          	ld	a2,400(s9)
+  2490e4:	758c                	ld	a1,40(a1)
+  2490e6:	048a                	slli	s1,s1,0x2
+  2490e8:	9626                	add	a2,a2,s1
+  2490ea:	4711                	li	a4,4
+  2490ec:	4681                	li	a3,0
+  2490ee:	001a0097          	auipc	ra,0x1a0
+  2490f2:	0da080e7          	jalr	218(ra) # 3e91c8 <ggml_backend_tensor_get_async>
+  2490f6:	8522                	mv	a0,s0
+  2490f8:	bf8d                	j	24906a <_ZN13llama_context6decodeERK11llama_batch+0xba6>
+  2490fa:	290cb983          	ld	s3,656(s9)
+  2490fe:	648e                	ld	s1,192(sp)
+  249100:	05048513          	addi	a0,s1,80
+  249104:	1198                	addi	a4,sp,224
+  249106:	75a6                	ld	a1,104(sp)
+  249108:	740a                	ld	s0,160(sp)
+  24910a:	8622                	mv	a2,s0
+  24910c:	7686                	ld	a3,96(sp)
+  24910e:	87ce                	mv	a5,s3
+  249110:	766000ef          	jal	249876 <_ZL24copy_tensor_async_floatsRKSt3mapIiP11ggml_tensorSt4lessIiESaISt4pairIKiS1_EEERK11buffer_viewIfEmRSt6vectorIjSaIjEERKS_IijS3_SaIS4_IS5_jEEEP18ggml_backend_sched>
+  249114:	290cb783          	ld	a5,656(s9)
+  249118:	0e048513          	addi	a0,s1,224
+  24911c:	1198                	addi	a4,sp,224
+  24911e:	65e6                	ld	a1,88(sp)
+  249120:	8622                	mv	a2,s0
+  249122:	66c6                	ld	a3,80(sp)
+  249124:	752000ef          	jal	249876 <_ZL24copy_tensor_async_floatsRKSt3mapIiP11ggml_tensorSt4lessIiESaISt4pairIKiS1_EEERK11buffer_viewIfEmRSt6vectorIjSaIjEERKS_IijS3_SaIS4_IS5_jEEEP18ggml_backend_sched>
+  249128:	1b0cb503          	ld	a0,432(s9)
+  24912c:	cd69                	beqz	a0,249206 <_ZN13llama_context6decodeERK11llama_batch+0xd42>
+  24912e:	1b8cb503          	ld	a0,440(s9)
+  249132:	c971                	beqz	a0,249206 <_ZN13llama_context6decodeERK11llama_batch+0xd42>
+  249134:	6cc0                	ld	s0,152(s1)
+  249136:	08848a13          	addi	s4,s1,136
+  24913a:	0d440663          	beq	s0,s4,249206 <_ZN13llama_context6decodeERK11llama_batch+0xd42>
+  24913e:	290cb983          	ld	s3,656(s9)
+  249142:	a809                	j	249154 <_ZN13llama_context6decodeERK11llama_batch+0xc90>
+  249144:	8522                	mv	a0,s0
+  249146:	ffdef097          	auipc	ra,0xffdef
+  24914a:	00a080e7          	jalr	10(ra) # 38150 <_ZSt18_Rb_tree_incrementPSt18_Rb_tree_node_base@plt>
+  24914e:	842a                	mv	s0,a0
+  249150:	0b450b63          	beq	a0,s4,249206 <_ZN13llama_context6decodeERK11llama_batch+0xd42>
+  249154:	77ce                	ld	a5,240(sp)
+  249156:	d7fd                	beqz	a5,249144 <_ZN13llama_context6decodeERK11llama_batch+0xc80>
+  249158:	500c                	lw	a1,32(s0)
+  24915a:	875a                	mv	a4,s6
+  24915c:	a031                	j	249168 <_ZN13llama_context6decodeERK11llama_batch+0xca4>
+  24915e:	47c1                	li	a5,16
+  249160:	8732                	mv	a4,a2
+  249162:	97b2                	add	a5,a5,a2
+  249164:	639c                	ld	a5,0(a5)
+  249166:	cb89                	beqz	a5,249178 <_ZN13llama_context6decodeERK11llama_batch+0xcb4>
+  249168:	863e                	mv	a2,a5
+  24916a:	5394                	lw	a3,32(a5)
+  24916c:	853a                	mv	a0,a4
+  24916e:	feb6d8e3          	bge	a3,a1,24915e <_ZN13llama_context6decodeERK11llama_batch+0xc9a>
+  249172:	47e1                	li	a5,24
+  249174:	872a                	mv	a4,a0
+  249176:	b7f5                	j	249162 <_ZN13llama_context6decodeERK11llama_batch+0xc9e>
+  249178:	fd6706e3          	beq	a4,s6,249144 <_ZN13llama_context6decodeERK11llama_batch+0xc80>
+  24917c:	872a                	mv	a4,a0
+  24917e:	00b6c363          	blt	a3,a1,249184 <_ZN13llama_context6decodeERK11llama_batch+0xcc0>
+  249182:	8732                	mv	a4,a2
+  249184:	5318                	lw	a4,32(a4)
+  249186:	fae5cfe3          	blt	a1,a4,249144 <_ZN13llama_context6decodeERK11llama_batch+0xc80>
+  24918a:	00b6c363          	blt	a3,a1,249190 <_ZN13llama_context6decodeERK11llama_batch+0xccc>
+  24918e:	8532                	mv	a0,a2
+  249190:	1f0cb583          	ld	a1,496(s9)
+  249194:	1f8cb603          	ld	a2,504(s9)
+  249198:	02456c03          	lwu	s8,36(a0)
+  24919c:	8e0d                	sub	a2,a2,a1
+  24919e:	8609                	srai	a2,a2,0x2
+  2491a0:	22cc7d63          	bgeu	s8,a2,2493da <_ZN13llama_context6decodeERK11llama_batch+0xf16>
+  2491a4:	7408                	ld	a0,40(s0)
+  2491a6:	0018d097          	auipc	ra,0x18d
+  2491aa:	45a080e7          	jalr	1114(ra) # 3d6600 <ggml_is_contiguous>
+  2491ae:	20050863          	beqz	a0,2493be <_ZN13llama_context6decodeERK11llama_batch+0xefa>
+  2491b2:	740c                	ld	a1,40(s0)
+  2491b4:	854e                	mv	a0,s3
+  2491b6:	001a4097          	auipc	ra,0x1a4
+  2491ba:	a94080e7          	jalr	-1388(ra) # 3ecc4a <ggml_backend_sched_get_tensor_backend>
+  2491be:	8aaa                	mv	s5,a0
+  2491c0:	1b0cbd83          	ld	s11,432(s9)
+  2491c4:	7404                	ld	s1,40(s0)
+  2491c6:	8526                	mv	a0,s1
+  2491c8:	0018d097          	auipc	ra,0x18d
+  2491cc:	09c080e7          	jalr	156(ra) # 3d6264 <ggml_nbytes>
+  2491d0:	872a                	mv	a4,a0
+  2491d2:	750a                	ld	a0,160(sp)
+  2491d4:	02ac0533          	mul	a0,s8,a0
+  2491d8:	050a                	slli	a0,a0,0x2
+  2491da:	00ad8633          	add	a2,s11,a0
+  2491de:	8556                	mv	a0,s5
+  2491e0:	85a6                	mv	a1,s1
+  2491e2:	4681                	li	a3,0
+  2491e4:	001a0097          	auipc	ra,0x1a0
+  2491e8:	fe4080e7          	jalr	-28(ra) # 3e91c8 <ggml_backend_tensor_get_async>
+  2491ec:	7408                	ld	a0,40(s0)
+  2491ee:	0018d097          	auipc	ra,0x18d
+  2491f2:	050080e7          	jalr	80(ra) # 3d623e <ggml_nelements>
+  2491f6:	1f0cb583          	ld	a1,496(s9)
+  2491fa:	0c0a                	slli	s8,s8,0x2
+  2491fc:	95e2                	add	a1,a1,s8
+  2491fe:	c188                	sw	a0,0(a1)
+  249200:	7c2a                	ld	s8,168(sp)
+  249202:	7aca                	ld	s5,176(sp)
+  249204:	b781                	j	249144 <_ZN13llama_context6decodeERK11llama_batch+0xc80>
+  249206:	75ce                	ld	a1,240(sp)
+  249208:	1188                	addi	a0,sp,224
+  24920a:	7ba040ef          	jal	24d9c4 <_ZNSt8_Rb_treeIiSt4pairIKijESt10_Select1stIS2_ESt4lessIiESaIS2_EE8_M_eraseEPSt13_Rb_tree_nodeIS2_E>
+  24920e:	658a                	ld	a1,128(sp)
+  249210:	6188                	ld	a0,0(a1)
+  249212:	000c6403          	lwu	s0,0(s8)
+  249216:	000be483          	lwu	s1,0(s7)
+  24921a:	8bae                	mv	s7,a1
+  24921c:	690c                	ld	a1,16(a0)
+  24921e:	855e                	mv	a0,s7
+  249220:	9582                	jalr	a1
+  249222:	0e010993          	addi	s3,sp,224
+  249226:	75ea                	ld	a1,184(sp)
+  249228:	95a6                	add	a1,a1,s1
+  24922a:	fd2e                	sd	a1,184(sp)
+  24922c:	9aa2                	add	s5,s5,s0
+  24922e:	4e010413          	addi	s0,sp,1248
+  249232:	7a66                	ld	s4,120(sp)
+  249234:	f2051c63          	bnez	a0,24896c <_ZN13llama_context6decodeERK11llama_batch+0x4a8>
+  249238:	652a                	ld	a0,136(sp)
+  24923a:	00ac2023          	sw	a0,0(s8)
+  24923e:	e8050b63          	beqz	a0,2488d4 <_ZN13llama_context6decodeERK11llama_batch+0x410>
+  249242:	250cb503          	ld	a0,592(s9)
+  249246:	cdff10ef          	jal	23af24 <_ZN18llama_batch_allocr11get_out_idsEv>
+  24924a:	892a                	mv	s2,a0
+  24924c:	6110                	ld	a2,0(a0)
+  24924e:	650c                	ld	a1,8(a0)
+  249250:	000c6503          	lwu	a0,0(s8)
+  249254:	8d91                	sub	a1,a1,a2
+  249256:	4025d813          	srai	a6,a1,0x2
+  24925a:	6b42                	ld	s6,16(sp)
+  24925c:	36a81563          	bne	a6,a0,2495c6 <_ZN13llama_context6decodeERK11llama_batch+0x1102>
+  249260:	e6050a63          	beqz	a0,2488d4 <_ZN13llama_context6decodeERK11llama_batch+0x410>
+  249264:	4681                	li	a3,0
+  249266:	4781                	li	a5,0
+  249268:	260cb483          	ld	s1,608(s9)
+  24926c:	4585                	li	a1,1
+  24926e:	4200                	lw	s0,0(a2)
+  249270:	0611                	addi	a2,a2,4
+  249272:	00241513          	slli	a0,s0,0x2
+  249276:	9526                	add	a0,a0,s1
+  249278:	c114                	sw	a3,0(a0)
+  24927a:	8c3d                	xor	s0,s0,a5
+  24927c:	000c6883          	lwu	a7,0(s8)
+  249280:	00143713          	seqz	a4,s0
+  249284:	8df9                	and	a1,a1,a4
+  249286:	0785                	addi	a5,a5,1
+  249288:	0685                	addi	a3,a3,1
+  24928a:	ff17e2e3          	bltu	a5,a7,24926e <_ZN13llama_context6decodeERK11llama_batch+0xdaa>
+  24928e:	0028b613          	sltiu	a2,a7,2
+  249292:	8e4d                	or	a2,a2,a1
+  249294:	ea6d                	bnez	a2,249386 <_ZN13llama_context6decodeERK11llama_batch+0xec2>
+  249296:	33181f63          	bne	a6,a7,2495d4 <_ZN13llama_context6decodeERK11llama_batch+0x1110>
+  24929a:	4801                	li	a6,0
+  24929c:	4a11                	li	s4,4
+  24929e:	4a85                	li	s5,1
+  2492a0:	a811                	j	2492b4 <_ZN13llama_context6decodeERK11llama_batch+0xdf0>
+  2492a2:	fff88513          	addi	a0,a7,-1
+  2492a6:	1502                	slli	a0,a0,0x20
+  2492a8:	9101                	srli	a0,a0,0x20
+  2492aa:	0a11                	addi	s4,s4,4
+  2492ac:	0a85                	addi	s5,s5,1
+  2492ae:	884e                	mv	a6,s3
+  2492b0:	08a9f263          	bgeu	s3,a0,249334 <_ZN13llama_context6decodeERK11llama_batch+0xe70>
+  2492b4:	00180993          	addi	s3,a6,1
+  2492b8:	02089593          	slli	a1,a7,0x20
+  2492bc:	9181                	srli	a1,a1,0x20
+  2492be:	8542                	mv	a0,a6
+  2492c0:	02b9fb63          	bgeu	s3,a1,2492f6 <_ZN13llama_context6decodeERK11llama_batch+0xe32>
+  2492c4:	00093683          	ld	a3,0(s2)
+  2492c8:	01468733          	add	a4,a3,s4
+  2492cc:	0008879b          	sext.w	a5,a7
+  2492d0:	8656                	mv	a2,s5
+  2492d2:	84c2                	mv	s1,a6
+  2492d4:	a031                	j	2492e0 <_ZN13llama_context6decodeERK11llama_batch+0xe1c>
+  2492d6:	2605                	addiw	a2,a2,1
+  2492d8:	0711                	addi	a4,a4,4
+  2492da:	84aa                	mv	s1,a0
+  2492dc:	00c78d63          	beq	a5,a2,2492f6 <_ZN13llama_context6decodeERK11llama_batch+0xe32>
+  2492e0:	4300                	lw	s0,0(a4)
+  2492e2:	02049593          	slli	a1,s1,0x20
+  2492e6:	81f9                	srli	a1,a1,0x1e
+  2492e8:	95b6                	add	a1,a1,a3
+  2492ea:	418c                	lw	a1,0(a1)
+  2492ec:	8532                	mv	a0,a2
+  2492ee:	feb444e3          	blt	s0,a1,2492d6 <_ZN13llama_context6decodeERK11llama_batch+0xe12>
+  2492f2:	8526                	mv	a0,s1
+  2492f4:	b7cd                	j	2492d6 <_ZN13llama_context6decodeERK11llama_batch+0xe12>
+  2492f6:	02051593          	slli	a1,a0,0x20
+  2492fa:	9181                	srli	a1,a1,0x20
+  2492fc:	fab803e3          	beq	a6,a1,2492a2 <_ZN13llama_context6decodeERK11llama_batch+0xdde>
+  249300:	00093603          	ld	a2,0(s2)
+  249304:	00281693          	slli	a3,a6,0x2
+  249308:	058a                	slli	a1,a1,0x2
+  24930a:	96b2                	add	a3,a3,a2
+  24930c:	95b2                	add	a1,a1,a2
+  24930e:	4190                	lw	a2,0(a1)
+  249310:	4298                	lw	a4,0(a3)
+  249312:	c290                	sw	a2,0(a3)
+  249314:	c198                	sw	a4,0(a1)
+  249316:	d1c2                	sw	a6,224(sp)
+  249318:	d3aa                	sw	a0,228(sp)
+  24931a:	118c                	addi	a1,sp,224
+  24931c:	855a                	mv	a0,s6
+  24931e:	70d030ef          	jal	24d22a <_ZNSt6vectorIN13llama_context9swap_infoESaIS1_EE9push_backEOS1_>
+  249322:	000c2883          	lw	a7,0(s8)
+  249326:	bfb5                	j	2492a2 <_ZN13llama_context6decodeERK11llama_batch+0xdde>
+  249328:	5575                	li	a0,-3
+  24932a:	daaff06f          	j	2488d4 <_ZN13llama_context6decodeERK11llama_batch+0x410>
+  24932e:	4509                	li	a0,2
+  249330:	da4ff06f          	j	2488d4 <_ZN13llama_context6decodeERK11llama_batch+0x410>
+  249334:	260cb483          	ld	s1,608(s9)
+  249338:	268cb583          	ld	a1,616(s9)
+  24933c:	02b48063          	beq	s1,a1,24935c <_ZN13llama_context6decodeERK11llama_batch+0xe98>
+  249340:	8d85                	sub	a1,a1,s1
+  249342:	15f1                	addi	a1,a1,-4
+  249344:	99f1                	andi	a1,a1,-4
+  249346:	00458613          	addi	a2,a1,4
+  24934a:	0ff00593          	li	a1,255
+  24934e:	8526                	mv	a0,s1
+  249350:	ffdef097          	auipc	ra,0xffdef
+  249354:	4d0080e7          	jalr	1232(ra) # 38820 <memset@plt>
+  249358:	000c2883          	lw	a7,0(s8)
+  24935c:	2881                	sext.w	a7,a7
+  24935e:	02088463          	beqz	a7,249386 <_ZN13llama_context6decodeERK11llama_batch+0xec2>
+  249362:	4581                	li	a1,0
+  249364:	00093603          	ld	a2,0(s2)
+  249368:	4681                	li	a3,0
+  24936a:	4501                	li	a0,0
+  24936c:	4218                	lw	a4,0(a2)
+  24936e:	070a                	slli	a4,a4,0x2
+  249370:	9726                	add	a4,a4,s1
+  249372:	c30c                	sw	a1,0(a4)
+  249374:	000c6703          	lwu	a4,0(s8)
+  249378:	0685                	addi	a3,a3,1
+  24937a:	0585                	addi	a1,a1,1
+  24937c:	0611                	addi	a2,a2,4
+  24937e:	fee6e7e3          	bltu	a3,a4,24936c <_ZN13llama_context6decodeERK11llama_batch+0xea8>
+  249382:	d52ff06f          	j	2488d4 <_ZN13llama_context6decodeERK11llama_batch+0x410>
+  249386:	4501                	li	a0,0
+  249388:	d4cff06f          	j	2488d4 <_ZN13llama_context6decodeERK11llama_batch+0x410>
+  24938c:	001fe517          	auipc	a0,0x1fe
+  249390:	001de597          	auipc	a1,0x1de
+  249394:	001ff697          	auipc	a3,0x1ff
+  249398:	bf450513          	addi	a0,a0,-1036 # 446f80 <_IO_stdin_used+0x206e0>
+  24939c:	7c758613          	addi	a2,a1,1991 # 427b57 <_IO_stdin_used+0x12b7>
+  2493a0:	90d68693          	addi	a3,a3,-1779 # 447ca1 <_IO_stdin_used+0x21401>
+  2493a4:	69300593          	li	a1,1683
+  2493a8:	ffdf0097          	auipc	ra,0xffdf0
+  2493ac:	edc080e7          	jalr	-292(ra) # 39284 <ggml_abort>
+  2493b0:	00200517          	auipc	a0,0x200
+  2493b4:	ade50693          	addi	a3,a0,-1314 # 448e8e <_IO_stdin_used+0x225ee>
+  2493b8:	63800593          	li	a1,1592
+  2493bc:	a02d                	j	2493e6 <_ZN13llama_context6decodeERK11llama_batch+0xf22>
+  2493be:	00200517          	auipc	a0,0x200
+  2493c2:	ba550693          	addi	a3,a0,-1115 # 448f63 <_IO_stdin_used+0x226c3>
+  2493c6:	67400593          	li	a1,1652
+  2493ca:	a831                	j	2493e6 <_ZN13llama_context6decodeERK11llama_batch+0xf22>
+  2493cc:	00200517          	auipc	a0,0x200
+  2493d0:	ad550693          	addi	a3,a0,-1323 # 448ea1 <_IO_stdin_used+0x22601>
+  2493d4:	63a00593          	li	a1,1594
+  2493d8:	a039                	j	2493e6 <_ZN13llama_context6decodeERK11llama_batch+0xf22>
+  2493da:	00200517          	auipc	a0,0x200
+  2493de:	b1f50693          	addi	a3,a0,-1249 # 448ef9 <_IO_stdin_used+0x22659>
+  2493e2:	67200593          	li	a1,1650
+  2493e6:	001fe517          	auipc	a0,0x1fe
+  2493ea:	001de617          	auipc	a2,0x1de
+  2493ee:	b9a50513          	addi	a0,a0,-1126 # 446f80 <_IO_stdin_used+0x206e0>
+  2493f2:	76d60613          	addi	a2,a2,1901 # 427b57 <_IO_stdin_used+0x12b7>
+  2493f6:	ffdf0097          	auipc	ra,0xffdf0
+  2493fa:	e8e080e7          	jalr	-370(ra) # 39284 <ggml_abort>
+  2493fe:	001fe517          	auipc	a0,0x1fe
+  249402:	001de597          	auipc	a1,0x1de
+  249406:	001ff697          	auipc	a3,0x1ff
+  24940a:	b8250513          	addi	a0,a0,-1150 # 446f80 <_IO_stdin_used+0x206e0>
+  24940e:	75558613          	addi	a2,a1,1877 # 427b57 <_IO_stdin_used+0x12b7>
+  249412:	b6068693          	addi	a3,a3,-1184 # 447f66 <_IO_stdin_used+0x216c6>
+  249416:	6d400593          	li	a1,1748
+  24941a:	ffdf0097          	auipc	ra,0xffdf0
+  24941e:	e6a080e7          	jalr	-406(ra) # 39284 <ggml_abort>
+  249422:	001fe517          	auipc	a0,0x1fe
+  249426:	001de597          	auipc	a1,0x1de
+  24942a:	001ff697          	auipc	a3,0x1ff
+  24942e:	b5e50513          	addi	a0,a0,-1186 # 446f80 <_IO_stdin_used+0x206e0>
+  249432:	73158613          	addi	a2,a1,1841 # 427b57 <_IO_stdin_used+0x12b7>
+  249436:	b5c68693          	addi	a3,a3,-1188 # 447f86 <_IO_stdin_used+0x216e6>
+  24943a:	6d600593          	li	a1,1750
+  24943e:	ffdf0097          	auipc	ra,0xffdf0
+  249442:	e46080e7          	jalr	-442(ra) # 39284 <ggml_abort>
+  249446:	4541                	li	a0,16
+  249448:	ffdef097          	auipc	ra,0xffdef
+  24944c:	a28080e7          	jalr	-1496(ra) # 37e70 <__cxa_allocate_exception@plt>
+  249450:	842a                	mv	s0,a0
+  249452:	00200517          	auipc	a0,0x200
+  249456:	a2750593          	addi	a1,a0,-1497 # 448e79 <_IO_stdin_used+0x225d9>
+  24945a:	8522                	mv	a0,s0
+  24945c:	ffdef097          	auipc	ra,0xffdef
+  249460:	8a4080e7          	jalr	-1884(ra) # 37d00 <_ZNSt13runtime_errorC1EPKc@plt>
+  249464:	0036a517          	auipc	a0,0x36a
+  249468:	00369617          	auipc	a2,0x369
+  24946c:	b5453583          	ld	a1,-1196(a0) # 5b2fb8 <_ZTISt13runtime_error@GLIBCXX_3.4>
+  249470:	72063603          	ld	a2,1824(a2) # 5b2b88 <_ZNSt13runtime_errorD1Ev@GLIBCXX_3.4>
+  249474:	8522                	mv	a0,s0
+  249476:	ffdf0097          	auipc	ra,0xffdf0
+  24947a:	8fa080e7          	jalr	-1798(ra) # 38d70 <__cxa_throw@plt>
+  24947e:	001fe517          	auipc	a0,0x1fe
+  249482:	001de597          	auipc	a1,0x1de
+  249486:	001ff697          	auipc	a3,0x1ff
+  24948a:	b0250513          	addi	a0,a0,-1278 # 446f80 <_IO_stdin_used+0x206e0>
+  24948e:	6d558613          	addi	a2,a1,1749 # 427b57 <_IO_stdin_used+0x12b7>
+  249492:	99c68693          	addi	a3,a3,-1636 # 447e22 <_IO_stdin_used+0x21582>
+  249496:	7b700593          	li	a1,1975
+  24949a:	ffdf0097          	auipc	ra,0xffdf0
+  24949e:	dea080e7          	jalr	-534(ra) # 39284 <ggml_abort>
+  2494a2:	001fe517          	auipc	a0,0x1fe
+  2494a6:	001de597          	auipc	a1,0x1de
+  2494aa:	001ff697          	auipc	a3,0x1ff
+  2494ae:	ade50513          	addi	a0,a0,-1314 # 446f80 <_IO_stdin_used+0x206e0>
+  2494b2:	6b158613          	addi	a2,a1,1713 # 427b57 <_IO_stdin_used+0x12b7>
+  2494b6:	d3f68693          	addi	a3,a3,-705 # 4481e9 <_IO_stdin_used+0x21949>
+  2494ba:	7bc00593          	li	a1,1980
+  2494be:	ffdf0097          	auipc	ra,0xffdf0
+  2494c2:	dc6080e7          	jalr	-570(ra) # 39284 <ggml_abort>
+  2494c6:	001ff517          	auipc	a0,0x1ff
+  2494ca:	8ef50693          	addi	a3,a0,-1809 # 447db5 <_IO_stdin_used+0x21515>
+  2494ce:	77300593          	li	a1,1907
+  2494d2:	001fe517          	auipc	a0,0x1fe
+  2494d6:	001de617          	auipc	a2,0x1de
+  2494da:	aae50513          	addi	a0,a0,-1362 # 446f80 <_IO_stdin_used+0x206e0>
+  2494de:	68160613          	addi	a2,a2,1665 # 427b57 <_IO_stdin_used+0x12b7>
+  2494e2:	ffdf0097          	auipc	ra,0xffdf0
+  2494e6:	da2080e7          	jalr	-606(ra) # 39284 <ggml_abort>
+  2494ea:	001fe517          	auipc	a0,0x1fe
+  2494ee:	001ff597          	auipc	a1,0x1ff
+  2494f2:	a9650513          	addi	a0,a0,-1386 # 446f80 <_IO_stdin_used+0x206e0>
+  2494f6:	88758613          	addi	a2,a1,-1913 # 447d75 <_IO_stdin_used+0x214d5>
+  2494fa:	75000593          	li	a1,1872
+  2494fe:	ffdf0097          	auipc	ra,0xffdf0
+  249502:	d86080e7          	jalr	-634(ra) # 39284 <ggml_abort>
+  249506:	001ff517          	auipc	a0,0x1ff
+  24950a:	89850693          	addi	a3,a0,-1896 # 447d9e <_IO_stdin_used+0x214fe>
+  24950e:	76500593          	li	a1,1893
+  249512:	a039                	j	249520 <_ZN13llama_context6decodeERK11llama_batch+0x105c>
+  249514:	001ff517          	auipc	a0,0x1ff
+  249518:	87350693          	addi	a3,a0,-1933 # 447d87 <_IO_stdin_used+0x214e7>
+  24951c:	76400593          	li	a1,1892
+  249520:	001fe517          	auipc	a0,0x1fe
+  249524:	001de617          	auipc	a2,0x1de
+  249528:	a6050513          	addi	a0,a0,-1440 # 446f80 <_IO_stdin_used+0x206e0>
+  24952c:	63360613          	addi	a2,a2,1587 # 427b57 <_IO_stdin_used+0x12b7>
+  249530:	ffdf0097          	auipc	ra,0xffdf0
+  249534:	d54080e7          	jalr	-684(ra) # 39284 <ggml_abort>
+  249538:	001ff517          	auipc	a0,0x1ff
+  24953c:	c3450693          	addi	a3,a0,-972 # 44816c <_IO_stdin_used+0x218cc>
+  249540:	76b00593          	li	a1,1899
+  249544:	a039                	j	249552 <_ZN13llama_context6decodeERK11llama_batch+0x108e>
+  249546:	001ff517          	auipc	a0,0x1ff
+  24954a:	bfa50693          	addi	a3,a0,-1030 # 448140 <_IO_stdin_used+0x218a0>
+  24954e:	76a00593          	li	a1,1898
+  249552:	001fe517          	auipc	a0,0x1fe
+  249556:	001de617          	auipc	a2,0x1de
+  24955a:	a2e50513          	addi	a0,a0,-1490 # 446f80 <_IO_stdin_used+0x206e0>
+  24955e:	60160613          	addi	a2,a2,1537 # 427b57 <_IO_stdin_used+0x12b7>
+  249562:	ffdf0097          	auipc	ra,0xffdf0
+  249566:	d22080e7          	jalr	-734(ra) # 39284 <ggml_abort>
+  24956a:	001ff517          	auipc	a0,0x1ff
+  24956e:	86350693          	addi	a3,a0,-1949 # 447dcd <_IO_stdin_used+0x2152d>
+  249572:	77900593          	li	a1,1913
+  249576:	bfb1                	j	2494d2 <_ZN13llama_context6decodeERK11llama_batch+0x100e>
+  249578:	001fe517          	auipc	a0,0x1fe
+  24957c:	001ff597          	auipc	a1,0x1ff
+  249580:	a0850513          	addi	a0,a0,-1528 # 446f80 <_IO_stdin_used+0x206e0>
+  249584:	89158613          	addi	a2,a1,-1903 # 447e0d <_IO_stdin_used+0x2156d>
+  249588:	7a700593          	li	a1,1959
+  24958c:	ffdf0097          	auipc	ra,0xffdf0
+  249590:	cf8080e7          	jalr	-776(ra) # 39284 <ggml_abort>
+  249594:	001ff517          	auipc	a0,0x1ff
+  249598:	c1650693          	addi	a3,a0,-1002 # 4481aa <_IO_stdin_used+0x2190a>
+  24959c:	77f00593          	li	a1,1919
+  2495a0:	a039                	j	2495ae <_ZN13llama_context6decodeERK11llama_batch+0x10ea>
+  2495a2:	001ff517          	auipc	a0,0x1ff
+  2495a6:	b9e50693          	addi	a3,a0,-1122 # 448140 <_IO_stdin_used+0x218a0>
+  2495aa:	77e00593          	li	a1,1918
+  2495ae:	001fe517          	auipc	a0,0x1fe
+  2495b2:	001de617          	auipc	a2,0x1de
+  2495b6:	9d250513          	addi	a0,a0,-1582 # 446f80 <_IO_stdin_used+0x206e0>
+  2495ba:	5a560613          	addi	a2,a2,1445 # 427b57 <_IO_stdin_used+0x12b7>
+  2495be:	ffdf0097          	auipc	ra,0xffdf0
+  2495c2:	cc6080e7          	jalr	-826(ra) # 39284 <ggml_abort>
+  2495c6:	001ff517          	auipc	a0,0x1ff
+  2495ca:	c5950693          	addi	a3,a0,-935 # 44821f <_IO_stdin_used+0x2197f>
+  2495ce:	7db00593          	li	a1,2011
+  2495d2:	a039                	j	2495e0 <_ZN13llama_context6decodeERK11llama_batch+0x111c>
+  2495d4:	001ff517          	auipc	a0,0x1ff
+  2495d8:	c7050693          	addi	a3,a0,-912 # 448244 <_IO_stdin_used+0x219a4>
+  2495dc:	7e800593          	li	a1,2024
+  2495e0:	001fe517          	auipc	a0,0x1fe
+  2495e4:	001de617          	auipc	a2,0x1de
+  2495e8:	9a050513          	addi	a0,a0,-1632 # 446f80 <_IO_stdin_used+0x206e0>
+  2495ec:	57360613          	addi	a2,a2,1395 # 427b57 <_IO_stdin_used+0x12b7>
+  2495f0:	ffdf0097          	auipc	ra,0xffdf0
+  2495f4:	c94080e7          	jalr	-876(ra) # 39284 <ggml_abort>
+  2495f8:	a079                	j	249686 <_ZN13llama_context6decodeERK11llama_batch+0x11c2>
+  2495fa:	a049                	j	24967c <_ZN13llama_context6decodeERK11llama_batch+0x11b8>
+  2495fc:	a041                	j	24967c <_ZN13llama_context6decodeERK11llama_batch+0x11b8>
+  2495fe:	a8bd                	j	24967c <_ZN13llama_context6decodeERK11llama_batch+0x11b8>
+  249600:	a8b5                	j	24967c <_ZN13llama_context6decodeERK11llama_batch+0x11b8>
+  249602:	a8ad                	j	24967c <_ZN13llama_context6decodeERK11llama_batch+0x11b8>
+  249604:	a8a5                	j	24967c <_ZN13llama_context6decodeERK11llama_batch+0x11b8>
+  249606:	a89d                	j	24967c <_ZN13llama_context6decodeERK11llama_batch+0x11b8>
+  249608:	892a                	mv	s2,a0
+  24960a:	8522                	mv	a0,s0
+  24960c:	ffdef097          	auipc	ra,0xffdef
+  249610:	b94080e7          	jalr	-1132(ra) # 381a0 <__cxa_free_exception@plt>
+  249614:	a0ad                	j	24967e <_ZN13llama_context6decodeERK11llama_batch+0x11ba>
+  249616:	a09d                	j	24967c <_ZN13llama_context6decodeERK11llama_batch+0x11b8>
+  249618:	a095                	j	24967c <_ZN13llama_context6decodeERK11llama_batch+0x11b8>
+  24961a:	a08d                	j	24967c <_ZN13llama_context6decodeERK11llama_batch+0x11b8>
+  24961c:	a085                	j	24967c <_ZN13llama_context6decodeERK11llama_batch+0x11b8>
+  24961e:	a8b9                	j	24967c <_ZN13llama_context6decodeERK11llama_batch+0x11b8>
+  249620:	a8b1                	j	24967c <_ZN13llama_context6decodeERK11llama_batch+0x11b8>
+  249622:	a8a9                	j	24967c <_ZN13llama_context6decodeERK11llama_batch+0x11b8>
+  249624:	a8a1                	j	24967c <_ZN13llama_context6decodeERK11llama_batch+0x11b8>
+  249626:	a899                	j	24967c <_ZN13llama_context6decodeERK11llama_batch+0x11b8>
+  249628:	a891                	j	24967c <_ZN13llama_context6decodeERK11llama_batch+0x11b8>
+  24962a:	ffe02097          	auipc	ra,0xffe02
+  24962e:	954080e7          	jalr	-1708(ra) # 4af7e <__clang_call_terminate>
+  249632:	a0a9                	j	24967c <_ZN13llama_context6decodeERK11llama_batch+0x11b8>
+  249634:	ffe02097          	auipc	ra,0xffe02
+  249638:	94a080e7          	jalr	-1718(ra) # 4af7e <__clang_call_terminate>
+  24963c:	892a                	mv	s2,a0
+  24963e:	41bc05b3          	sub	a1,s8,s11
+  249642:	856e                	mv	a0,s11
+  249644:	ffdef097          	auipc	ra,0xffdef
+  249648:	e5c080e7          	jalr	-420(ra) # 384a0 <_ZdlPvm@plt>
+  24964c:	854a                	mv	a0,s2
+  24964e:	ffdef097          	auipc	ra,0xffdef
+  249652:	7e2080e7          	jalr	2018(ra) # 38e30 <_Unwind_Resume@plt>
+  249656:	a805                	j	249686 <_ZN13llama_context6decodeERK11llama_batch+0x11c2>
+  249658:	a015                	j	24967c <_ZN13llama_context6decodeERK11llama_batch+0x11b8>
+  24965a:	a00d                	j	24967c <_ZN13llama_context6decodeERK11llama_batch+0x11b8>
+  24965c:	a02d                	j	249686 <_ZN13llama_context6decodeERK11llama_batch+0x11c2>
+  24965e:	a809                	j	249670 <_ZN13llama_context6decodeERK11llama_batch+0x11ac>
+  249660:	a015                	j	249684 <_ZN13llama_context6decodeERK11llama_batch+0x11c0>
+  249662:	a039                	j	249670 <_ZN13llama_context6decodeERK11llama_batch+0x11ac>
+  249664:	892a                	mv	s2,a0
+  249666:	e122                	sd	s0,128(sp)
+  249668:	a819                	j	24967e <_ZN13llama_context6decodeERK11llama_batch+0x11ba>
+  24966a:	a809                	j	24967c <_ZN13llama_context6decodeERK11llama_batch+0x11b8>
+  24966c:	a011                	j	249670 <_ZN13llama_context6decodeERK11llama_batch+0x11ac>
+  24966e:	a009                	j	249670 <_ZN13llama_context6decodeERK11llama_batch+0x11ac>
+  249670:	892a                	mv	s2,a0
+  249672:	1188                	addi	a0,sp,224
+  249674:	39f030ef          	jal	24d212 <_ZNSt3mapIijSt4lessIiESaISt4pairIKijEEED2Ev>
+  249678:	a019                	j	24967e <_ZN13llama_context6decodeERK11llama_batch+0x11ba>
+  24967a:	a009                	j	24967c <_ZN13llama_context6decodeERK11llama_batch+0x11b8>
+  24967c:	892a                	mv	s2,a0
+  24967e:	650a                	ld	a0,128(sp)
+  249680:	e501                	bnez	a0,249688 <_ZN13llama_context6decodeERK11llama_batch+0x11c4>
+  249682:	a039                	j	249690 <_ZN13llama_context6decodeERK11llama_batch+0x11cc>
+  249684:	e15e                	sd	s7,128(sp)
+  249686:	892a                	mv	s2,a0
+  249688:	650a                	ld	a0,128(sp)
+  24968a:	610c                	ld	a1,0(a0)
+  24968c:	658c                	ld	a1,8(a1)
+  24968e:	9582                	jalr	a1
+  249690:	854a                	mv	a0,s2
+  249692:	ffdef097          	auipc	ra,0xffdef
+  249696:	79e080e7          	jalr	1950(ra) # 38e30 <_Unwind_Resume@plt>

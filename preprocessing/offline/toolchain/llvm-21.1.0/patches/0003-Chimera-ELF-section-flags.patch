@@ -1,0 +1,55 @@
+From 271a40ed6ff8a2f17d2c2441d533359ca7f5e9c1 Mon Sep 17 00:00:00 2001
+From: Chimera Patch Builder <chimera@example.invalid>
+Date: Thu, 13 Aug 2026 11:00:00 +0800
+Subject: [PATCH 3/7] llvm: set Chimera PCSections ELF flags
+
+Chimera LLVM patch 3 of 7.
+---
+ llvm/lib/MC/MCObjectFileInfo.cpp                 |  6 +++++-
+ .../CodeGen/Generic/chimera-pcsections-flags.ll  | 18 ++++++++++++++++++
+ 2 files changed, 23 insertions(+), 1 deletion(-)
+ create mode 100644 llvm/test/CodeGen/Generic/chimera-pcsections-flags.ll
+
+diff --git a/llvm/lib/MC/MCObjectFileInfo.cpp b/llvm/lib/MC/MCObjectFileInfo.cpp
+index 0069d12..c13f313 100644
+--- a/llvm/lib/MC/MCObjectFileInfo.cpp
++++ b/llvm/lib/MC/MCObjectFileInfo.cpp
+@@ -1230,7 +1230,11 @@ MCSection *MCObjectFileInfo::getPCSection(StringRef Name,
+     return nullptr;
+ 
+   // SHF_WRITE for relocations, and let user post-process data in-place.
+-  unsigned Flags = ELF::SHF_WRITE | ELF::SHF_ALLOC | ELF::SHF_LINK_ORDER;
++  unsigned Flags;
++  if (Name.starts_with(".chimera."))
++    Flags = ELF::SHF_LINK_ORDER;
++  else
++    Flags = ELF::SHF_WRITE | ELF::SHF_ALLOC | ELF::SHF_LINK_ORDER;
+ 
+   if (!TextSec)
+     TextSec = getTextSection();
+diff --git a/llvm/test/CodeGen/Generic/chimera-pcsections-flags.ll b/llvm/test/CodeGen/Generic/chimera-pcsections-flags.ll
+new file mode 100644
+index 0000000..565795d
+--- /dev/null
++++ b/llvm/test/CodeGen/Generic/chimera-pcsections-flags.ll
+@@ -0,0 +1,18 @@
++; REQUIRES: riscv-registered-target
++; RUN: llc -mtriple=riscv64 -filetype=asm < %s | FileCheck %s
++
++; Chimera map sections retain link-order but are not allocated or writable.
++; The policy is name-specific and must not alter ordinary PCSections.
++
++define i64 @section_flags(i64 %x) {
++entry:
++  %y = add i64 %x, 1, !pcsections !0
++  ret i64 %y
++}
++
++; CHECK: .section .chimera.stackobj_map,"o",@progbits,.text
++; CHECK: .section .ordinary_pc_map,"awo",@progbits,.text
++
++!0 = distinct !{!".chimera.stackobj_map!A", !1,
++                 !".ordinary_pc_map!A", !1}
++!1 = !{i32 9}
+-- 
+2.55.0.windows.3

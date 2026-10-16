@@ -1,0 +1,138 @@
+[
+  {
+    "binary": "xgcc",
+    "symbol": "_ZL25check_offload_target_namePKcl",
+    "function_start": "0x217fe",
+    "frame_origins": [
+      {
+        "source": "vlen_stack_frame",
+        "adjustment": "0x21ba4",
+        "dependency": "vlen",
+        "size_register": "s1",
+        "release": "0x21c16",
+        "proof": "p141",
+        "gaps": [
+          "entry-parameter"
+        ]
+      }
+    ],
+    "file": "0-xgcc.disasm.txt"
+  },
+  {
+    "binary": "cc1",
+    "symbol": "_ZL26builtin_define_type_minmaxPKcS0_P9tree_node",
+    "function_start": "0x71847c",
+    "frame_origins": [
+      {
+        "source": "vlen_stack_frame",
+        "adjustment": "0x7185d2",
+        "dependency": "vlen",
+        "size_register": "s1",
+        "release": "0x71866a",
+        "proof": "p188",
+        "gaps": [
+          "external-callee"
+        ]
+      },
+      {
+        "source": "vlen_stack_frame",
+        "adjustment": "0x718622",
+        "dependency": "vlen",
+        "size_register": "s1",
+        "release": "0x71866a",
+        "proof": "p196",
+        "gaps": [
+          "external-callee"
+        ]
+      },
+      {
+        "source": "vlen_stack_frame",
+        "adjustment": "0x718644",
+        "dependency": "vlen",
+        "size_register": "s1",
+        "release": "0x71866a",
+        "proof": "p201",
+        "gaps": [
+          "external-callee"
+        ]
+      }
+    ],
+    "file": "1-cc1.disasm.txt"
+  },
+  {
+    "binary": "cc1",
+    "symbol": "_ZL17output_file_namesv",
+    "function_start": "0x836efa",
+    "frame_origins": [
+      {
+        "source": "vlen_stack_frame",
+        "adjustment": "0x8373d4",
+        "dependency": "vlen",
+        "size_register": "s10",
+        "release": "0x837a04",
+        "proof": "p657",
+        "gaps": [
+          "control-dependent"
+        ]
+      }
+    ],
+    "file": "2-cc1.disasm.txt"
+  },
+  {
+    "binary": "cc1",
+    "symbol": "_Z23cl_optimization_restoreP11gcc_optionsS0_P15cl_optimization",
+    "function_start": "0xa6946a",
+    "frame_origins": [
+      {
+        "source": "vlen_stack_frame",
+        "adjustment": "0xa69490",
+        "dependency": "vlen",
+        "size_register": "a3",
+        "release": "0xa6b74a",
+        "proof": null,
+        "gaps": [
+          ""
+        ]
+      }
+    ],
+    "file": "3-cc1.disasm.txt"
+  },
+  {
+    "binary": "cc1",
+    "symbol": "_ZL21vn_reference_lookup_3P6ao_refP9tree_nodePvP15translate_flags",
+    "function_start": "0xce5fac",
+    "frame_origins": [
+      {
+        "source": "vlen_stack_frame",
+        "adjustment": "0xce7a2a",
+        "dependency": "vlen",
+        "size_register": "s1",
+        "release": "0xce7752",
+        "proof": "p1405",
+        "gaps": [
+          "unresolved-memory-source"
+        ]
+      }
+    ],
+    "file": "4-cc1.disasm.txt"
+  },
+  {
+    "binary": "cc1",
+    "symbol": "_ZL28vect_lower_load_permutationsP14_loop_vec_infoP8hash_mapI3vecIP14_stmt_vec_info7va_heap6vl_ptrEP9_slp_tree21simple_hashmap_traitsI10bst_traitsS9_EERK11array_sliceIS9_Eb",
+    "function_start": "0xda2782",
+    "frame_origins": [
+      {
+        "source": "vlen_stack_frame",
+        "adjustment": "0xda2b74",
+        "dependency": "vlen",
+        "size_register": "a4",
+        "release": "0xda27fc",
+        "proof": "p1687",
+        "gaps": [
+          "memory-alias-unknown"
+        ]
+      }
+    ],
+    "file": "5-cc1.disasm.txt"
+  }
+]

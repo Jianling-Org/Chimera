@@ -1,0 +1,202 @@
+
+/root/yangzheng/gcc-rebuild/chimera-staged-20260919-132951/build-gate4/gcc/cc1：     文件格式 elf64-littleriscv
+
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+000000000071847c <_ZL26builtin_define_type_minmaxPKcS0_P9tree_node>:
+  71847c:	7159                	addi	sp,sp,-112
+  71847e:	f486                	sd	ra,104(sp)
+  718480:	f0a2                	sd	s0,96(sp)
+  718482:	eca6                	sd	s1,88(sp)
+  718484:	e8ca                	sd	s2,80(sp)
+  718486:	e4ce                	sd	s3,72(sp)
+  718488:	e0d2                	sd	s4,64(sp)
+  71848a:	fc56                	sd	s5,56(sp)
+  71848c:	f85a                	sd	s6,48(sp)
+  71848e:	1880                	addi	s0,sp,112
+  718490:	8a32                	mv	s4,a2
+  718492:	89ae                	mv	s3,a1
+  718494:	892a                	mv	s2,a0
+  718496:	4248                	lw	a0,4(a2)
+  718498:	03665583          	lhu	a1,54(a2)
+  71849c:	03000613          	li	a2,48
+  7184a0:	155e                	slli	a0,a0,0x37
+  7184a2:	917d                	srli	a0,a0,0x3f
+  7184a4:	952e                	add	a0,a0,a1
+  7184a6:	07800693          	li	a3,120
+  7184aa:	fff50593          	addi	a1,a0,-1
+  7184ae:	f8c40e23          	sb	a2,-100(s0)
+  7184b2:	f8d40ea3          	sb	a3,-99(s0)
+  7184b6:	1eb05463          	blez	a1,71869e <_ZL26builtin_define_type_minmaxPKcS0_P9tree_node+0x222>
+  7184ba:	0035f513          	andi	a0,a1,3
+  7184be:	4605                	li	a2,1
+  7184c0:	f9e40713          	addi	a4,s0,-98
+  7184c4:	00a64963          	blt	a2,a0,7184d6 <_ZL26builtin_define_type_minmaxPKcS0_P9tree_node+0x5a>
+  7184c8:	ed11                	bnez	a0,7184e4 <_ZL26builtin_define_type_minmaxPKcS0_P9tree_node+0x68>
+  7184ca:	02200613          	li	a2,34
+  7184ce:	4511                	li	a0,4
+  7184d0:	02a5da63          	bge	a1,a0,718504 <_ZL26builtin_define_type_minmaxPKcS0_P9tree_node+0x88>
+  7184d4:	a0f9                	j	7185a2 <_ZL26builtin_define_type_minmaxPKcS0_P9tree_node+0x126>
+  7184d6:	460d                	li	a2,3
+  7184d8:	00c51a63          	bne	a0,a2,7184ec <_ZL26builtin_define_type_minmaxPKcS0_P9tree_node+0x70>
+  7184dc:	5675                	li	a2,-3
+  7184de:	03700693          	li	a3,55
+  7184e2:	a801                	j	7184f2 <_ZL26builtin_define_type_minmaxPKcS0_P9tree_node+0x76>
+  7184e4:	567d                	li	a2,-1
+  7184e6:	03100693          	li	a3,49
+  7184ea:	a021                	j	7184f2 <_ZL26builtin_define_type_minmaxPKcS0_P9tree_node+0x76>
+  7184ec:	5679                	li	a2,-2
+  7184ee:	03300693          	li	a3,51
+  7184f2:	0705                	addi	a4,a4,1
+  7184f4:	f8d40f23          	sb	a3,-98(s0)
+  7184f8:	95b2                	add	a1,a1,a2
+  7184fa:	02100613          	li	a2,33
+  7184fe:	4511                	li	a0,4
+  718500:	0aa5c163          	blt	a1,a0,7185a2 <_ZL26builtin_define_type_minmaxPKcS0_P9tree_node+0x126>
+  718504:	469d                	li	a3,7
+  718506:	852e                	mv	a0,a1
+  718508:	00d5c363          	blt	a1,a3,71850e <_ZL26builtin_define_type_minmaxPKcS0_P9tree_node+0x92>
+  71850c:	451d                	li	a0,7
+  71850e:	40a587b3          	sub	a5,a1,a0
+  718512:	00378293          	addi	t0,a5,3
+  718516:	0022d49b          	srliw	s1,t0,0x2
+  71851a:	fff60513          	addi	a0,a2,-1
+  71851e:	00a4e363          	bltu	s1,a0,718524 <_ZL26builtin_define_type_minmaxPKcS0_P9tree_node+0xa8>
+  718522:	84aa                	mv	s1,a0
+  718524:	0485                	addi	s1,s1,1
+  718526:	c22026f3          	csrr	a3,vlenb
+  71852a:	0686                	slli	a3,a3,0x1
+  71852c:	0496fa63          	bgeu	a3,s1,718580 <_ZL26builtin_define_type_minmaxPKcS0_P9tree_node+0x104>
+  718530:	800007b7          	lui	a5,0x80000
+  718534:	37fd                	addiw	a5,a5,-1 # 7fffffff <__BSS_END__+0x7c4e2d4f>
+  718536:	97b6                	add	a5,a5,a3
+  718538:	0097f8b3          	and	a7,a5,s1
+  71853c:	8836                	mv	a6,a3
+  71853e:	00088363          	beqz	a7,718544 <_ZL26builtin_define_type_minmaxPKcS0_P9tree_node+0xc8>
+  718542:	8846                	mv	a6,a7
+  718544:	410484b3          	sub	s1,s1,a6
+  718548:	0022d79b          	srliw	a5,t0,0x2
+  71854c:	00249893          	slli	a7,s1,0x2
+  718550:	00a7e363          	bltu	a5,a0,718556 <_ZL26builtin_define_type_minmaxPKcS0_P9tree_node+0xda>
+  718554:	87aa                	mv	a5,a0
+  718556:	411585bb          	subw	a1,a1,a7
+  71855a:	9e05                	subw	a2,a2,s1
+  71855c:	00970533          	add	a0,a4,s1
+  718560:	fff7c793          	not	a5,a5
+  718564:	06600493          	li	s1,102
+  718568:	983e                	add	a6,a6,a5
+  71856a:	0c1077d7          	vsetvli	a5,zero,e8,m2,ta,ma
+  71856e:	5e04c457          	vmv.v.x	v8,s1
+  718572:	22870427          	vs2r.v	v8,(a4)
+  718576:	9836                	add	a6,a6,a3
+  718578:	9736                	add	a4,a4,a3
+  71857a:	fe081ce3          	bnez	a6,718572 <_ZL26builtin_define_type_minmaxPKcS0_P9tree_node+0xf6>
+  71857e:	872a                	mv	a4,a0
+  718580:	0591                	addi	a1,a1,4
+  718582:	4685                	li	a3,1
+  718584:	06600493          	li	s1,102
+  718588:	479d                	li	a5,7
+  71858a:	853a                	mv	a0,a4
+  71858c:	0ec6fb63          	bgeu	a3,a2,718682 <_ZL26builtin_define_type_minmaxPKcS0_P9tree_node+0x206>
+  718590:	00150713          	addi	a4,a0,1
+  718594:	00950023          	sb	s1,0(a0)
+  718598:	35f1                	addiw	a1,a1,-4
+  71859a:	367d                	addiw	a2,a2,-1
+  71859c:	853a                	mv	a0,a4
+  71859e:	feb7c7e3          	blt	a5,a1,71858c <_ZL26builtin_define_type_minmaxPKcS0_P9tree_node+0x110>
+  7185a2:	00070023          	sb	zero,0(a4)
+  7185a6:	8552                	mv	a0,s4
+  7185a8:	61e010ef          	jal	719bc6 <_ZL11type_suffixP9tree_node>
+  7185ac:	8aaa                	mv	s5,a0
+  7185ae:	854e                	mv	a0,s3
+  7185b0:	d714d0ef          	jal	666320 <strlen@plt>
+  7185b4:	8b2a                	mv	s6,a0
+  7185b6:	f9c40513          	addi	a0,s0,-100
+  7185ba:	d674d0ef          	jal	666320 <strlen@plt>
+  7185be:	84aa                	mv	s1,a0
+  7185c0:	8556                	mv	a0,s5
+  7185c2:	d5f4d0ef          	jal	666320 <strlen@plt>
+  7185c6:	94da                	add	s1,s1,s6
+  7185c8:	9526                	add	a0,a0,s1
+  7185ca:	0545                	addi	a0,a0,17
+  7185cc:	9941                	andi	a0,a0,-16
+  7185ce:	40a104b3          	sub	s1,sp,a0
+  7185d2:	8126                	mv	sp,s1
+  7185d4:	024b95b7          	lui	a1,0x24b9
+  7185d8:	d0558593          	addi	a1,a1,-763 # 24b8d05 <_IO_stdin_used+0x23de5>
+  7185dc:	f9c40693          	addi	a3,s0,-100
+  7185e0:	8526                	mv	a0,s1
+  7185e2:	864e                	mv	a2,s3
+  7185e4:	8756                	mv	a4,s5
+  7185e6:	ccb4d0ef          	jal	6662b0 <sprintf@plt>
+  7185ea:	03697537          	lui	a0,0x3697
+  7185ee:	16853503          	ld	a0,360(a0) # 3697168 <parse_in>
+  7185f2:	85a6                	mv	a1,s1
+  7185f4:	01be7097          	auipc	ra,0x1be7
+  7185f8:	bd4080e7          	jalr	-1068(ra) # 22ff1c8 <_Z10cpp_defineP10cpp_readerPKc>
+  7185fc:	06090763          	beqz	s2,71866a <_ZL26builtin_define_type_minmaxPKcS0_P9tree_node+0x1ee>
+  718600:	004a6503          	lwu	a0,4(s4)
+  718604:	10057493          	andi	s1,a0,256
+  718608:	854a                	mv	a0,s2
+  71860a:	d174d0ef          	jal	666320 <strlen@plt>
+  71860e:	8a2a                	mv	s4,a0
+  718610:	e095                	bnez	s1,718634 <_ZL26builtin_define_type_minmaxPKcS0_P9tree_node+0x1b8>
+  718612:	854e                	mv	a0,s3
+  718614:	d0d4d0ef          	jal	666320 <strlen@plt>
+  718618:	9552                	add	a0,a0,s4
+  71861a:	0561                	addi	a0,a0,24
+  71861c:	9941                	andi	a0,a0,-16
+  71861e:	40a104b3          	sub	s1,sp,a0
+  718622:	8126                	mv	sp,s1
+  718624:	024b95b7          	lui	a1,0x24b9
+  718628:	d1458593          	addi	a1,a1,-748 # 24b8d14 <_IO_stdin_used+0x23df4>
+  71862c:	8526                	mv	a0,s1
+  71862e:	864a                	mv	a2,s2
+  718630:	86ce                	mv	a3,s3
+  718632:	a00d                	j	718654 <_ZL26builtin_define_type_minmaxPKcS0_P9tree_node+0x1d8>
+  718634:	8556                	mv	a0,s5
+  718636:	ceb4d0ef          	jal	666320 <strlen@plt>
+  71863a:	9552                	add	a0,a0,s4
+  71863c:	0549                	addi	a0,a0,18
+  71863e:	9941                	andi	a0,a0,-16
+  718640:	40a104b3          	sub	s1,sp,a0
+  718644:	8126                	mv	sp,s1
+  718646:	024b95b7          	lui	a1,0x24b9
+  71864a:	d0d58593          	addi	a1,a1,-755 # 24b8d0d <_IO_stdin_used+0x23ded>
+  71864e:	8526                	mv	a0,s1
+  718650:	864a                	mv	a2,s2
+  718652:	86d6                	mv	a3,s5
+  718654:	c5d4d0ef          	jal	6662b0 <sprintf@plt>
+  718658:	03697537          	lui	a0,0x3697
+  71865c:	16853503          	ld	a0,360(a0) # 3697168 <parse_in>
+  718660:	85a6                	mv	a1,s1
+  718662:	01be7097          	auipc	ra,0x1be7
+  718666:	b66080e7          	jalr	-1178(ra) # 22ff1c8 <_Z10cpp_defineP10cpp_readerPKc>
+  71866a:	f9040113          	addi	sp,s0,-112
+  71866e:	70a6                	ld	ra,104(sp)
+  718670:	7406                	ld	s0,96(sp)
+  718672:	64e6                	ld	s1,88(sp)
+  718674:	6946                	ld	s2,80(sp)
+  718676:	69a6                	ld	s3,72(sp)
+  718678:	6a06                	ld	s4,64(sp)
+  71867a:	7ae2                	ld	s5,56(sp)
+  71867c:	7b42                	ld	s6,48(sp)
+  71867e:	6165                	addi	sp,sp,112
+  718680:	8082                	ret
+  718682:	024b8537          	lui	a0,0x24b8
+  718686:	cd950513          	addi	a0,a0,-807 # 24b7cd9 <_IO_stdin_used+0x22db9>
+  71868a:	024b9637          	lui	a2,0x24b9
+  71868e:	d2160613          	addi	a2,a2,-735 # 24b8d21 <_IO_stdin_used+0x23e01>
+  718692:	7f000593          	li	a1,2032
+  718696:	01bb6097          	auipc	ra,0x1bb6
+  71869a:	9b2080e7          	jalr	-1614(ra) # 22ce048 <_Z11fancy_abortPKciS0_>
+  71869e:	024b8537          	lui	a0,0x24b8
+  7186a2:	cd950513          	addi	a0,a0,-807 # 24b7cd9 <_IO_stdin_used+0x22db9>
+  7186a6:	024b9637          	lui	a2,0x24b9
+  7186aa:	d2160613          	addi	a2,a2,-735 # 24b8d21 <_IO_stdin_used+0x23e01>
+  7186ae:	7d900593          	li	a1,2009
+  7186b2:	01bb6097          	auipc	ra,0x1bb6
+  7186b6:	996080e7          	jalr	-1642(ra) # 22ce048 <_Z11fancy_abortPKciS0_>

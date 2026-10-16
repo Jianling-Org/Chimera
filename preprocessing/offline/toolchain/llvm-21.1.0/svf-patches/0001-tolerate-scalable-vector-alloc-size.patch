@@ -1,0 +1,40 @@
+diff --git a/svf-llvm/lib/LLVMModule.cpp b/svf-llvm/lib/LLVMModule.cpp
+index 3590d874..e12da753 100644
+--- a/svf-llvm/lib/LLVMModule.cpp
++++ b/svf-llvm/lib/LLVMModule.cpp
+@@ -1305,7 +1305,10 @@ SVFType* LLVMModuleSet::addSVFTypeInfo(const Type* T)
+         const llvm::DataLayout &DL = LLVMModuleSet::getLLVMModuleSet()->
+                                      getMainLLVMModule()->getDataLayout();
+         Type *mut_T = const_cast<Type *>(T);
+-        byteSize = DL.getTypeAllocSize(mut_T);
++        // Scalable vector types (<vscale x N x T>) have no fixed byte
++        // size; converting their TypeSize to a scalar is a fatal error.
++        // Model them by their vscale=1 minimum size.
++        byteSize = DL.getTypeAllocSize(mut_T).getKnownMinValue();
+     }
+ 
+     SVFType* svftype;
+diff --git a/svf-llvm/lib/SVFIRExtAPI.cpp b/svf-llvm/lib/SVFIRExtAPI.cpp
+index 7532be6e..7eca2453 100644
+--- a/svf-llvm/lib/SVFIRExtAPI.cpp
++++ b/svf-llvm/lib/SVFIRExtAPI.cpp
+@@ -127,7 +127,7 @@ void collectMemcpyFields(
+         const SVFType* elemSVFType = pag->getOriginalElemType(svfType, 0);
+         if (elemSVFType == nullptr)
+             return;
+-        const APOffset elemByteSize = static_cast<APOffset>(dl.getTypeAllocSize(const_cast<Type*>(elemLLVMType)));
++        const APOffset elemByteSize = static_cast<APOffset>(dl.getTypeAllocSize(const_cast<Type*>(elemLLVMType)).getKnownMinValue());
+         for (u32_t i = 0; i < arrayType->getNumElements(); ++i)
+         {
+             APOffset elemByteOffset = baseByteOffset + i * elemByteSize;
+@@ -256,8 +256,8 @@ void SVFIRBuilder::addComplexConsForExt(Value *D, Value *S, const Value* szValue
+ 
+             const DataLayout& dl = llvmModuleSet()->getMainLLVMModule()->getDataLayout();
+             APOffset copyBytes = std::min<APOffset>(
+-                                     static_cast<APOffset>(dl.getTypeAllocSize(const_cast<Type*>(dstLayoutType))),
+-                                     static_cast<APOffset>(dl.getTypeAllocSize(const_cast<Type*>(srcLayoutType))));
++                                     static_cast<APOffset>(dl.getTypeAllocSize(const_cast<Type*>(dstLayoutType)).getKnownMinValue()),
++                                     static_cast<APOffset>(dl.getTypeAllocSize(const_cast<Type*>(srcLayoutType)).getKnownMinValue()));
+             if (szValue && SVFUtil::isa<ConstantInt>(szValue))
+             {
+                 auto szIntVal = LLVMUtil::getIntegerValue(SVFUtil::cast<ConstantInt>(szValue));

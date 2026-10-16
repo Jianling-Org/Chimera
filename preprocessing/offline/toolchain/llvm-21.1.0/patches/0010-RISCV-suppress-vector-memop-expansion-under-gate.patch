@@ -1,0 +1,81 @@
+From 3cce75a710542a184875f6ba43045dc0cb0a607d Mon Sep 17 00:00:00 2001
+From: Chimera Patch Builder <chimera@example.invalid>
+Date: Thu, 3 Sep 2026 17:44:18 +0800
+Subject: [PATCH] riscv: suppress vector memop expansion under
+ chimera-no-vectorize
+
+The RISC-V memcpy/memset lowering expands constant-length memops into
+VLEN-sensitive vector accesses (whole-register vs2r.v/vl2r.v and fixed-vl
+vse sequences whose byte extent changes with VLEN).  For functions
+carrying the chimera-no-vectorize attribute (the gate's only switch - no
+target-feature stripping, so functions with RVV intrinsics/inline asm are
+gated the same way), force the scalar expansion or a libcall instead.
+
+The decision point doubles as the census: memop-census records
+formed/blocked per decision event into CHIMERA_GATE_STATS.  The gate
+fires after the shape and legality checks, so "blocked" means this query
+would have formed a vector type; queries that would have stayed scalar
+record nothing.  getOptimalMemOpType has no MachineFunction access, so
+the census line carries no function name.
+---
+ llvm/lib/Target/RISCV/RISCVISelLowering.cpp | 26 +++++++++++++++++++++
+ 1 file changed, 26 insertions(+)
+
+diff --git a/llvm/lib/Target/RISCV/RISCVISelLowering.cpp b/llvm/lib/Target/RISCV/RISCVISelLowering.cpp
+index 55c6dc051..3a7028746 100644
+--- a/llvm/lib/Target/RISCV/RISCVISelLowering.cpp
++++ b/llvm/lib/Target/RISCV/RISCVISelLowering.cpp
+@@ -44,10 +44,12 @@
+ #include "llvm/Support/CommandLine.h"
+ #include "llvm/Support/Debug.h"
+ #include "llvm/Support/ErrorHandling.h"
++#include "llvm/Support/FileSystem.h"
+ #include "llvm/Support/InstructionCost.h"
+ #include "llvm/Support/KnownBits.h"
+ #include "llvm/Support/MathExtras.h"
+ #include "llvm/Support/raw_ostream.h"
++#include <cstdlib>
+ #include <optional>
+ 
+ using namespace llvm;
+@@ -23879,6 +23881,25 @@ EVT RISCVTargetLowering::getOptimalMemOpType(
+   if (FuncAttributes.hasFnAttr(Attribute::NoImplicitFloat))
+     return MVT::Other;
+ 
++  // Chimera gate: per-function suppression of the vector form of this memop.
++  // The attribute is the only switch (no target-feature stripping), so
++  // functions with RVV intrinsics/inline asm are gated the same way as plain
++  // ones.  The generic expansion falls back to scalar sequences or a libcall.
++  // The gate fires after the shape/legality checks below so the census can
++  // record the counterfactual decision: "blocked" means this query would
++  // have formed a vector type; queries that would have stayed scalar record
++  // nothing.  This lowering query carries no MachineFunction, so the census
++  // records the decision event without a function name.
++  const bool ChimeraGated = FuncAttributes.hasFnAttr("chimera-no-vectorize");
++  auto ChimeraLogMemopCensus = [](const char *Event) {
++    if (const char *StatsPath = std::getenv("CHIMERA_GATE_STATS")) {
++      std::error_code EC;
++      raw_fd_ostream StatsOS(StatsPath, EC, sys::fs::OF_Append);
++      if (!EC)
++        StatsOS << "memop-census\t" << Event << "\n";
++    }
++  };
++
+   // We use LMUL1 memory operations here for a non-obvious reason.  Our caller
+   // has an expansion threshold, and we want the number of hardware memory
+   // operations to correspond roughly to that threshold.  LMUL>1 operations
+@@ -23918,6 +23939,11 @@ EVT RISCVTargetLowering::getOptimalMemOpType(
+       RequiredAlign = std::min(RequiredAlign, Op.getSrcAlign());
+     PreferredVT = MVT::getIntegerVT(RequiredAlign.value() * 8);
+   }
++  if (ChimeraGated) {
++    ChimeraLogMemopCensus("blocked");
++    return MVT::Other;
++  }
++  ChimeraLogMemopCensus("formed");
+   return MVT::getVectorVT(PreferredVT, MinVLenInBytes/PreferredVT.getStoreSize());
+ }
+ 
+-- 
+2.40.0.windows.1
+
