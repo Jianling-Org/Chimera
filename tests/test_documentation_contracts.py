@@ -146,10 +146,9 @@ class DocumentationContractTests(unittest.TestCase):
                     offenders.append(f"{path.relative_to(ROOT)}: {term}")
         self.assertEqual([], offenders, "stale documentation terms:\n" + "\n".join(offenders))
 
-    def test_generated_support_matrix_is_skipped_when_translator_source_is_not_shipped(self):
+    def test_generated_support_matrix_matches_translator_registry(self):
         generator = ROOT / "preprocessing" / "translator" / "rvv_sbt_tool" / "tools" / "generate_support_docs.py"
-        if not generator.is_file():
-            self.skipTest("translator source and its support-matrix generator are excluded from this release")
+        self.assertTrue(generator.is_file(), "source checkout must include the translator generator")
         result = subprocess.run(
             [sys.executable, str(generator), "--check"],
             cwd=generator.parent.parent,

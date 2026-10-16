@@ -23,6 +23,11 @@ class ReleaseTreeContractTests(unittest.TestCase):
             "tools/build_release_wheel.py",
             "examples/applications/hello-world/README.md",
             "doc/README.md",
+            "preprocessing/translator/rvv_sbt_tool/rvv_sbt_rvv.py",
+            "preprocessing/translator/rvv_sbt_tool/rvv_sbt_rvv1024.py",
+            "preprocessing/translator/rvv_sbt_tool/rvv_sbt.py",
+            "preprocessing/translator/rvv_sbt_tool/ime_sbt_rvv.py",
+            "doc/developer/translator/limitations.md",
         )
         missing = [name for name in required if not (ROOT / name).is_file()]
         self.assertEqual([], missing, "release tree is missing required files")
@@ -38,7 +43,7 @@ class ReleaseTreeContractTests(unittest.TestCase):
         self.assertEqual([], missing_sources, "wheel package mapping points outside the publication tree")
         self.assertFalse(
             any(source.as_posix().startswith("preprocessing/translator/") for source in package_sources),
-            "translator source must remain an explicitly supplied external dependency",
+            "translator is supplied in the source checkout, not bundled in the wheel",
         )
 
     def test_current_safety_check_identity_uses_v31_fingerprint(self) -> None:

@@ -29,3 +29,7 @@ make portable-c-test
 
 开发者交付 Chimera wheel 与对应的目标能力说明。接口变化时同步更新 [Profile 说明](../integration/profiles.md)、[命令参考](cli.md) 及相应 ABI 文档，使应用集成者可以依据明确的接口准备工件。
 
+
+## 翻译器回归
+
+安装测试依赖 `python3 -m pip install pytest`，从仓库根目录执行 `make translator-test`。`make test` 同时运行系统 Python、翻译器和可移植 C 测试。详见[翻译器使用与开发](../integration/translator.md)。

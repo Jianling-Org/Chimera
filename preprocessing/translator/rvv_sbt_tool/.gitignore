@@ -1,0 +1,72 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+ENV/
+env/
+.venv/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# MyPy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre
+.pyre/
+
+# Project specific
+*.o
+!tests/fixtures/obj/*.o
+*.elf
+*.bin
+output/
+
+# 参考代码
+qemu/
+
+verify/**/*.s
+
+# Generated verification outputs
+verify/**/artifacts/
+verify/**/results/
+verify/**/*-results/
+
+# Local development tools
+CLAUDE.md
+AGENTS.md
+.workbuddy-ai/
+.DS_Store

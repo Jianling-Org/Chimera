@@ -78,6 +78,6 @@ Runtime 初始化未完成时不安装迁移处理器。当前 constructor 的�
 - [通用 Runtime 定义](../../../runtime/interfaces/abi/chimera_runtime.h)与 [RVV ABI](../../../runtime/interfaces/abi/linux_riscv64_rvv_v1/runtime_v1.h)
 - [Runtime 工件契约](../../../runtime/artifacts/scene_contracts/chimera/scene_contracts/linux_riscv64_rvv_v1.py)
 - [能力加载器](../../../runtime/artifacts/manifest/linux_riscv64_rvv_v1/capability_loaders.c)
-- 翻译器状态 ABI：`preprocessing/translator/rvv_sbt_tool/docs/STATE_ABI.md`
+- [翻译器状态 ABI](translator-state.md)
 - [向量状态搬运](../../../runtime/runtime/state/linux_riscv64_rvv_v1/vector_state.c)与 [状态回归](../../../runtime/tests/runtime/test_translator_state.c)
 

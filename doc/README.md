@@ -61,3 +61,8 @@ chimera-user run --input /path/to/app -- APPLICATION_ARGS...
 - [GCC](../examples/applications/gcc/README.md)：编译器驱动与编译子程序的适配。
 - [OpenMP 算子探针](../examples/applications/omp-kernel-probe/README.md)：真实并行调用链与日志口径。
 
+
+## 翻译器
+
+- [翻译器使用方法](integration/translator.md)
+- [翻译器架构](developer/architecture/translator.md)

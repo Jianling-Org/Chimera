@@ -1,0 +1,82 @@
+{
+  "primary_symbol": "ggml_gemm_q3_K_64x1_q8_K",
+  "source_elf_sha256": "ac12dad308dfdb70e095aa9a86aa612602ba4eac8dda3da21ea1b7edbf80b1a6",
+  "kernel_sha256": "cf0ff6fde59c0460beca8148794d70dc6bb7eeaff4c92d9525154691af16f80b",
+  "threads": 8,
+  "output_stride": "N+16 float elements",
+  "source_layouts": {
+    "Q3_Kx64": 7040,
+    "Q8_Kx4": 1168
+  },
+  "cases": [
+    {
+      "name": "ffn_up_m32",
+      "use": "FFN gate/up",
+      "M": 32,
+      "N": 5632,
+      "K": 2048
+    },
+    {
+      "name": "ffn_down_m32",
+      "use": "FFN down",
+      "M": 32,
+      "N": 2048,
+      "K": 5632
+    },
+    {
+      "name": "attn_q_m32",
+      "use": "Attention Q/output",
+      "M": 32,
+      "N": 2048,
+      "K": 2048
+    },
+    {
+      "name": "attn_kv_m32",
+      "use": "Attention K/V",
+      "M": 32,
+      "N": 256,
+      "K": 2048
+    }
+  ],
+  "paths": {
+    "forward": {
+      "source_vlen_bits": 1024,
+      "target_vlen_bits": 256,
+      "worker_cpus": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "frequency_khz": 2200000
+    },
+    "reverse": {
+      "source_vlen_bits": 256,
+      "target_vlen_bits": 1024,
+      "worker_cpus": [
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15
+      ],
+      "frequency_khz": 1800000
+    }
+  },
+  "measurement": "CLOCK_MONOTONIC_RAW, static worker partition, 3 warmups, independent calibration, 50 retained samples",
+  "auxiliary_suite": "../rvv_bidirectional_hotspots",
+  "translation_contract": "one source instruction at a time, immediate state commit, register and CSR preservation",
+  "reference_sha256": {
+    "ffn_up_m32": "11c12df43d339f29069a1328963fbc0600625fd4654354fcb8c39d4ede7850ea",
+    "ffn_down_m32": "360b7dc0389ee659666c5d1537a9bf7ec048e9d0095e9c844d79515700ce1184",
+    "attn_q_m32": "550c6c8f4412d71a249b5f261e827295934c22d83802a32982d202f86165a67c",
+    "attn_kv_m32": "ac771a01adb87a4cedb72b413074c158ce7e8772a199f04e9ea5c2764c438a33"
+  }
+}

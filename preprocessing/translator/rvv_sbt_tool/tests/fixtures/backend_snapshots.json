@@ -1,0 +1,38 @@
+{
+  "registries": {
+    "scalar": {
+      "count": 65,
+      "sha256": "385e45c7444acea2c0cf5b8d7abfcb42e8fbc95a8226db49efdc5ccca72f3fae"
+    },
+    "rvv256-wide": {
+      "count": 199,
+      "sha256": "69175a55dd29ad7c895edc710b4bf1a9bfb2b2203febed8e8b85b2d963359f9e"
+    },
+    "rvv256-conservative": {
+      "count": 199,
+      "sha256": "69175a55dd29ad7c895edc710b4bf1a9bfb2b2203febed8e8b85b2d963359f9e"
+    },
+    "rvv1024-transition": {
+      "count": 205,
+      "sha256": "bb7f35e9a7fd030a42d5c996b3019d9a03fdfe92ca63f73ffcd40a4622be7711"
+    }
+  },
+  "normalized_assembly": {
+    "scalar-e32m1": {
+      "line_count": 54,
+      "sha256": "fd3e31d655acb9d358c0fefe9e5a655ccc348c2b03e8d42300229293f0b5703e"
+    },
+    "rvv256-wide-e32m1": {
+      "line_count": 42,
+      "sha256": "e1f36f184df139301c3a0ff974cf9bb892658f7a4c9e229d700193e4b0ca4027"
+    },
+    "rvv256-conservative-e32m1": {
+      "line_count": 73,
+      "sha256": "4758690bfc0858b2f89e893322b1c25cce102264ba468aa5bea4a72874bea008"
+    },
+    "rvv1024-transition-e32m1": {
+      "line_count": 62,
+      "sha256": "a8435c726b93b601759e23ffccd449f51fe2bc30449bfe76d110846008f858fc"
+    }
+  }
+}

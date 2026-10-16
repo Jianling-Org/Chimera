@@ -12,14 +12,19 @@ WHEEL_TARGET_ARGS = $(if $(TARGET_OS),--target-os "$(TARGET_OS)") \
 	$(if $(TARGET_EXTENSION),--target-extension "$(TARGET_EXTENSION)") \
 	$(if $(SCENE),--scene "$(SCENE)")
 
-.PHONY: all test python-test portable-c-test wheel install develop clean
+.PHONY: all test python-test translator-test portable-c-test wheel install develop clean
 
 all: wheel
 
-test: python-test portable-c-test
+test: python-test translator-test portable-c-test
 
 python-test:
 	$(PYTHON) tests/run_tests.py
+
+translator-test:
+	cd preprocessing/translator/rvv_sbt_tool && PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=.:src $(PYTHON) -m pytest tests -q -ra
+	$(PYTHON) preprocessing/translator/rvv_sbt_tool/tools/generate_support_docs.py --check
+	$(PYTHON) preprocessing/translator/rvv_sbt_tool/tools/check_backend_quality.py
 
 portable-c-test:
 	$(CMAKE) -S runtime -B "$(TEST_BUILD_DIR)" \

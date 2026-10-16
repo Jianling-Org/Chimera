@@ -33,3 +33,23 @@ chimera-dev toolchain build llvm-plugin --plugins stackobject function-pointer v
 ```
 
 这些外部源码目录由 `.gitignore` 排除，发布源码不含 `.gitmodules` 或 gitlink。按上面的命令单独克隆并检出依赖；构建前确认源码无本地改动，详细要求见[构建与测试](developer/build-and-test.md)。
+
+## 翻译器
+
+仓库提供 `preprocessing/translator/rvv_sbt_tool/`。wheel 暂不包含 `chimera.preprocess.translator` 包；使用源码检出中的入口，并保持同目录 `src/` 完整。详见[翻译器使用方法](integration/translator.md)。
+
+在应用 Profile 中填写真实绝对路径，例如：
+
+```toml
+[[config.translators]]
+source = "riscv64;rvv;vlen=1024"
+target = "riscv64;rvv;vlen=256"
+translator_path = "/opt/chimera-translator/rvv_sbt_rvv.py"
+```
+
+需要反向路线时，再声明对应的 `256-to-1024` 绑定及翻译步骤，入口为 `rvv_sbt_rvv1024.py`，当前属于实验性过渡后端。样例 Profile 中的 `/path/to/...` 是待替换路径；文件不存在时配置会拒绝使用，不会静默跳过翻译。协议见 [Runtime ABI](developer/abi/runtime-v1.md)。
+
+
+## 翻译器 benchmark 输入
+
+翻译器基础回归可独立运行。部分 benchmark 依赖未分发的历史参考数据：Q3 GEMM 需要与 workload 哈希一致的四份 `.ref`；IME 完整形状验证还需要固定哈希的参考驱动与 kernel。详细输入与 Git、工具链前提见[翻译器使用方法](integration/translator.md)及各 benchmark README。仅有源码不代表完整性能或迁移验收条件已经具备。

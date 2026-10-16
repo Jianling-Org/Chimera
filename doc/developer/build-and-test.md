@@ -91,3 +91,15 @@ ctest --test-dir build/runtime-tests --output-on-failure
 - [LLVM 集成工程](../../preprocessing/offline/toolchain/llvm-21.1.0/plugins/CMakeLists.txt)
 - [运行时测试](../../runtime/tests)
 
+
+## 翻译器回归
+
+安装测试依赖 `python3 -m pip install pytest`，从仓库根目录执行 `make translator-test`。`make test` 同时运行系统 Python、翻译器和可移植 C 测试。详见[翻译器使用与开发](../integration/translator.md)。
+
+## 宿主平台与发布范围
+
+`make portable-c-test` 当前包含 Linux 信号结构相关条目。macOS 的 `siginfo_t` 不提供这些条目使用的 `si_ptr`，因此完整 C 测试目标在 macOS 上可能编译失败；不能将其描述为已全部支持跨平台运行。完整信号与迁移验收应在匹配的 Linux/RISC-V 环境执行。
+
+插件测试脚本带有工具链路径默认值。在自己的环境中运行时，应显式覆盖 stackobject 的 `LLVM` 安装根和 vector_gate 的 `CLANG` 可执行文件，选择匹配的已打补丁工具链。
+
+本地 `.venv/`、`build/`、测试缓存与对象文件由 Git 忽略。发布源码归档应使用版本控制的文件清单，不应直接压缩整个开发目录。

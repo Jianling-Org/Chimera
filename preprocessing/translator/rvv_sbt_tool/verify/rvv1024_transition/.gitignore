@@ -1,0 +1,3 @@
+# 由 run_verify.py 生成的汇编、对象、C harness 和目标可执行文件。
+artifacts/
+__pycache__/
