@@ -1,0 +1,37 @@
+{
+  "status": "passed",
+  "userspace": "63af9761e897044bec705f4a26bc68d38389b212",
+  "kernel": "b59985145518c994b3953d55717a15ca93459928",
+  "conditional": true,
+  "mixed_seconds": 7227.387940375003,
+  "mixed_rounds": 106,
+  "scope": {
+    "threads": [
+      2,
+      4,
+      8,
+      12,
+      16,
+      24,
+      32
+    ],
+    "main_thread_migration": true,
+    "native_ppl": 12.7757,
+    "absolute_ppl_tolerance": 0.01,
+    "profile": "assume-scalar-independent; pinned libc memset contract; min_vlen=256",
+    "input": "TinyLlama Q3_K_S; fixed corpus; context/batch 512, ubatch128, chunks1, seed1234",
+    "mixed": "Mixed thread counts, not multiple models or context sizes"
+  },
+  "archives": {
+    "reduced": "5fd50543121b52122565d5da8be75587a1e0f5d2ac0e5ebf2fabf3545d2791a3",
+    "preparation": "3db842ea3930b58664f2e1bbb4e2b44b1e5173ea502f988314657159e69fc7f2",
+    "matrix": "8eb28450f384fbcffaa01270841f5053998102ec93f53e128771766d4e85c6a2",
+    "ten16": "abab552f020df81aa8411c1b4459564f7a98495086b12fcbafc94d27a9e6f545",
+    "mixed": "d3d2105a796cee9351d9b62810f9fd3a31954516e800cbba69735dd32be9a15d"
+  },
+  "boot_hashes": {
+    "/boot/vmlinuz-6.18.3-prefer-a100-chimera-child-freeze.gz": "d2494e859dd17fb5114c36c4516247754dd015a53301aa0964defe8ff4fd595d",
+    "/boot/initrd.img-6.18.3-prefer-a100-chimera-child-freeze": "e309e443621780ce97c76060a9839ca12d61c43de1c88c97cdaf5d0c9c9814af",
+    "/boot/config-6.18.3-prefer-a100-chimera-child-freeze": "686032b6c65a9b13ff0baa83aad3a13154b586b02ac98984242c3d0b8cfe3f77"
+  }
+}

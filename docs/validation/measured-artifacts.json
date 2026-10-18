@@ -1,0 +1,14 @@
+{
+  "purpose": "Identify artifacts used for recorded validation; these digests are not expected outputs of independent builds.",
+  "sha256": {
+    "llama_elf": "7f06939c8f057cebc594a9b2a4d62c3e7b0d03d052b2df3d9b67e818dfd9afb8",
+    "gate_decision": "434683cb11dd482644c91e2107cfb4963c85c70e2ff825ae8328a43e01fdb4fe",
+    "kernel_config": "686032b6c65a9b13ff0baa83aad3a13154b586b02ac98984242c3d0b8cfe3f77",
+    "libomp.so.5": "5171eb9a0ca427eaee37c70e4108cf036268f1d7e6c55f35121b3434fdce9531",
+    "libc.so.6_scalar_leaf_contract": "9e176e749295e63146af11a20ccef2f2c1273692ce899b3437257145ae9d62ff",
+    "corpus": "b62ca0b765cc22e0f1ab25b0a53ae2b04c5a462650c49bbb9b18c315c1c18033",
+    "bpf_trigger_source": "2d9aff3ee0c27145f8b2298af527525f72d707ecd5f19b883d77df3e4e91f3e8",
+    "gemm_experiment_source_elf": "ac12dad308dfdb70e095aa9a86aa612602ba4eac8dda3da21ea1b7edbf80b1a6",
+    "gemm_extracted_machine_code": "cf0ff6fde59c0460beca8148794d70dc6bb7eeaff4c92d9525154691af16f80b"
+  }
+}
