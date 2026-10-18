@@ -25,9 +25,9 @@
 # input, an identity mismatch or an execution failure exits non-zero.
 set -euo pipefail
 
-RUN=${RUN:-/root/yangzheng/gcc-rebuild/chimera-staged-20260919-132951}
-CHIMERA=${CHIMERA:-/root/yangzheng/chimera_release/chimera}
-VENV=${VENV:-/root/yangzheng/chimera_release/chimera_release}
+RUN="${RUN:?set RUN to the staged GCC root}"
+CHIMERA="${CHIMERA:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+VENV="${VENV:-${VIRTUAL_ENV:?set VENV or activate a Python virtual environment}}"
 
 # Inputs, never guessed.  GATE_DECISION is the *comparison* list the audit
 # checks both builds against - it is the gate-2 target list, and the baseline
@@ -45,7 +45,7 @@ GATE_CENSUS_EXTRA=${GATE_CENSUS_EXTRA:-}
 EVIDENCE_MANIFEST=${EVIDENCE_MANIFEST:-}
 
 MIN_VLEN_BITS=${MIN_VLEN_BITS:-256}
-EXPECTED_GATE_COUNT=${EXPECTED_GATE_COUNT:-1642}
+EXPECTED_GATE_COUNT="${EXPECTED_GATE_COUNT:?set EXPECTED_GATE_COUNT to the deduplicated decision count}"
 #: The two build stages the audit distinguishes.  A census file binds only to
 #: the stage it was captured under, which is why both are named here.
 STAGE_STACK=build-stack

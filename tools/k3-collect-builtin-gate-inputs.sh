@@ -3,13 +3,13 @@
 set -euo pipefail
 export LC_ALL=C LANG=C
 : "${RUN:?set RUN to the staged GCC root}"
-CHIMERA="${CHIMERA:-/root/yangzheng/chimera_release/chimera}"
-VENV="${VENV:-/root/yangzheng/chimera_release/chimera_release}"
+CHIMERA="${CHIMERA:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+VENV="${VENV:-${VIRTUAL_ENV:?set VENV or activate a Python virtual environment}}"
 PY="${PY:-$VENV/bin/python}"
-ORIGIN="${ORIGIN:-$RUN/reports/gate4-build-check-v20-20260930-163702-BKOpNC}"
-COMPILER="${COMPILER:-/root/.chimera/toolchain_build/llvm/bin/clang++}"
-STACK_PLUGIN="${STACK_PLUGIN:-/root/.chimera/toolchain_build/plugins/lib/chimera/llvm/ChimeraStackObject.so}"
-GATE_PLUGIN="${GATE_PLUGIN:-/root/.chimera/toolchain_build/plugins/lib/chimera/llvm/ChimeraVectorGate.so}"
+ORIGIN="${ORIGIN:?set ORIGIN to the GCC build-check report directory}"
+COMPILER="${COMPILER:-$HOME/.chimera/toolchain_build/llvm/bin/clang++}"
+STACK_PLUGIN="${STACK_PLUGIN:-$HOME/.chimera/toolchain_build/plugins/lib/chimera/llvm/ChimeraStackObject.so}"
+GATE_PLUGIN="${GATE_PLUGIN:-$HOME/.chimera/toolchain_build/plugins/lib/chimera/llvm/ChimeraVectorGate.so}"
 test -x "$PY" || { echo "STOP: missing Python $PY" >&2; exit 2; }
 test -f "$CHIMERA/tools/builtin_gate_inputs.py" || { echo "STOP: missing collector; synchronize the new tools first" >&2; exit 2; }
 mkdir -p "$RUN/reports"

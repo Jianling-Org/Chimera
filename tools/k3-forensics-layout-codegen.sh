@@ -8,8 +8,8 @@ case "$STAGE" in
 esac
 
 RUN="${RUN:?set RUN to the staged GCC root}"
-CHIMERA="${CHIMERA:-/root/yangzheng/chimera_release/chimera}"
-VENV="${VENV:-/root/yangzheng/chimera_release/chimera_release}"
+CHIMERA="${CHIMERA:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+VENV="${VENV:-${VIRTUAL_ENV:?set VENV or activate a Python virtual environment}}"
 PY="${PY:-$VENV/bin/python}"
 EXPECTED_GATE2_SHA256="${EXPECTED_GATE2_SHA256:-3b022cb21ef1e5ce80768ac84a8862f14bbf568650b28c75210d884c46a65e1d}"
 test -x "$PY" || { echo "STOP: missing Python $PY" >&2; exit 2; }

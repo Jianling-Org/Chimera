@@ -5,7 +5,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
-CLANG="${CLANG:-/root/.chimera/toolchain_build/llvm/bin/clang++}"
+CLANG="${CLANG:-${CHIMERA_TOOLCHAIN_BUILD:-$HOME/.chimera/toolchain_build}/llvm/bin/clang++}"
 PLUGIN="${PLUGIN:-}"
 if [[ -z "$PLUGIN" ]]; then
     for candidate in "$ROOT"/../build*/plugins/vector_gate/ChimeraVectorGate.so \

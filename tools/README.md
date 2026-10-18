@@ -27,7 +27,18 @@
 | `k3_unknown_stack_scope_evidence.py` | 历史 ELF/决策哈希核对，仍被 builtin 输入收集器使用 |
 | `k3-fetch-origin-targets.sh` | 从报告导出待补充的函数体，不重新执行完整分析 |
 
-这些是受测试的开发诊断接口。部分 K3 驱动的默认值仍指向原 gate2/gate4 现场；换机器时必须显式提供匹配的 ELF、报告、决策和工具路径，不可把历史默认值用于新的验收。Python 实现与 fixture 保留是为了回归对象关联、重定位、CFG、未知目标和证据绑定，不代表需要重新执行已闭合的 GCC 实验。
+K3 驱动从脚本位置定位当前源码仓库；Python 环境由 `VENV` 或已激活的 `VIRTUAL_ENV` 指定。工具链默认位于当前用户的 `~/.chimera/toolchain_build`，可用各脚本参数覆盖。
+
+运行前显式选择本次输入：
+
+| 入口 | 必需输入 |
+|---|---|
+| `k3-gate-source-audit.sh` | `RUN`、`GATE_DECISION`、`EXPECTED_GATE_COUNT` |
+| `k3-gate-experiment.sh`、两个 layout 取证驱动 | `RUN` 及脚本声明的报告/决策参数 |
+| `k3-collect-builtin-gate-inputs.sh` | `RUN`、`ORIGIN`（构建检查报告目录） |
+| `k3-builtin-gate-experiment.sh` | `RUN`、`COLLECTION`（已收集输入清单） |
+
+驱动在缺少必需输入时退出，避免自动选择旧机器或旧实验目录。Python 实现与 fixture 用于对象关联、重定位、CFG、未知目标和证据绑定的回归测试。
 
 ## 历史现场材料
 

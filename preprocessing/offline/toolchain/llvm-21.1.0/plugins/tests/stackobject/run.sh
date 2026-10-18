@@ -5,7 +5,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
-LLVM="${LLVM:-/root/yangzheng/svf/toolchains/build/llvm-21.1.0}"
+LLVM="${LLVM:-${CHIMERA_TOOLCHAIN_BUILD:-$HOME/.chimera/toolchain_build}/llvm}"
 OPT="${OPT:-$LLVM/bin/opt}"
 LLC="${LLC:-$LLVM/bin/llc}"
 LLD="${LLD:-$LLVM/bin/ld.lld}"

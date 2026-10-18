@@ -26,7 +26,7 @@
 # criterion.  Exit 0 only means the evidence was collected.
 #
 # Usage (on the machine that holds $RUN):
-#   RUN=/root/yangzheng/gcc-rebuild/chimera-staged-20260919-132951 \
+#   RUN=/absolute/path/to/staged-gcc \
 #   bash tools/k3-forensics-layout-metadata.sh
 #
 # Optional: INHERITANCE=/path/xgcc.inheritance.json
@@ -36,8 +36,8 @@
 set -euo pipefail
 
 RUN="${RUN:?set RUN to the staged rebuild root}"
-CHIMERA="${CHIMERA:-/root/yangzheng/chimera_release/chimera}"
-VENV="${VENV:-/root/yangzheng/chimera_release/chimera_release}"
+CHIMERA="${CHIMERA:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+VENV="${VENV:-${VIRTUAL_ENV:?set VENV or activate a Python virtual environment}}"
 PY="${PY:-$VENV/bin/python}"
 LAYOUT_SYMBOL="${LAYOUT_SYMBOL:-_ZN12_GLOBAL__N_16layoutC2ERK30diagnostic_source_print_policyRK13rich_locationP29diagnostic_source_effect_info}"
 

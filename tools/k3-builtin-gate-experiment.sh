@@ -3,11 +3,11 @@
 set -euo pipefail
 export LC_ALL=C LANG=C
 : "${RUN:?set RUN to the staged GCC root}"
-CHIMERA="${CHIMERA:-/root/yangzheng/chimera_release/chimera}"
-VENV="${VENV:-/root/yangzheng/chimera_release/chimera_release}"
+CHIMERA="${CHIMERA:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+VENV="${VENV:-${VIRTUAL_ENV:?set VENV or activate a Python virtual environment}}"
 PY="$VENV/bin/python"
-export CHIMERA_TOOLCHAIN_BUILD="${CHIMERA_TOOLCHAIN_BUILD:-/root/.chimera/toolchain_build}"
-COLLECTION="${COLLECTION:-$RUN/reports/builtin-gate-inputs-20261001T064917Z-7Rt302/collection/collection.json}"
+export CHIMERA_TOOLCHAIN_BUILD="${CHIMERA_TOOLCHAIN_BUILD:-$HOME/.chimera/toolchain_build}"
+COLLECTION="${COLLECTION:?set COLLECTION to the collected input manifest}"
 test -x "$PY" || { echo "STOP: missing venv Python" >&2; exit 2; }
 test -f "$COLLECTION" || { echo "STOP: missing collection: $COLLECTION" >&2; exit 2; }
 test -f "$CHIMERA/tools/builtin_gate_experiment.py" || { echo "STOP: synchronize experiment tools first" >&2; exit 2; }

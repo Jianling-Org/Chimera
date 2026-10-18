@@ -23,7 +23,6 @@ class DriverContractTests(unittest.TestCase):
         self.assertIn('unset PYTHONPATH PYTHONHOME', self.script)
         self.assertIn('"$PY" -I "$CHIMERA/tools/builtin_gate_experiment.py"', self.script)
         self.assertIn('--policy assume-scalar-independent', self.script)
-        self.assertIn('builtin-gate-inputs-20261001T064917Z-7Rt302/collection/collection.json', self.script)
         self.assertNotIn('eval ', self.script)
         self.assertNotIn('make ', self.script)
         self.assertNotIn('layout-codegen-collect-', self.script)

@@ -71,7 +71,7 @@ python -m chimera.gate_source_audit compare --baseline 建仓审计.json --audit
 
 先使用[模块身份检查器](../../tools/audit_module_identity.py)核对源码与实际安装模块。保留ELF、decision、census、编译/链接日志、消耗决策和工具身份，再对当前输入直接运行上述模块接口。诊断参数和范围见[开发与诊断](diagnostics.md)。
 
-`tools/k3-gate-source-audit.sh` 是针对既有GCC目录结构的专用入口，其中历史stage/路径不能直接套到llama。需要重用时先核对脚本参数与输入身份；不能把logged wrapper文本交给shell执行。
+`tools/k3-gate-source-audit.sh` 用于 GCC 的 `build-stack/gcc/xgcc` 与 `build-gate2/gcc/xgcc` 布局。运行前设置 `RUN`、`VENV`、`GATE_DECISION` 和 `EXPECTED_GATE_COUNT`；`CHIMERA` 默认取脚本所在仓库。其他应用按上述模块接口显式提供 ELF、阶段和证据。Logged wrapper 作为审计输入读取，不由 shell 执行。
 
 ## 输入
 

@@ -11,8 +11,8 @@
 # results directory.
 set -euo pipefail
 
-CHIMERA="${CHIMERA:-/root/yangzheng/chimera_release/chimera}"
-VENV="${VENV:-/root/yangzheng/chimera_release/chimera_release}"
+CHIMERA="${CHIMERA:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+VENV="${VENV:-${VIRTUAL_ENV:?set VENV or activate a Python virtual environment}}"
 PY="${PY:-$VENV/bin/python}"
 RUN="${RUN:?set RUN to the staged GCC root}"
 COLLECTION="${COLLECTION:?set COLLECTION to the collect result collection.json}"
