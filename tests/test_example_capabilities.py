@@ -139,19 +139,16 @@ class ExampleCapabilityTests(unittest.TestCase):
             migration_control=False,
             bpf=False,
         )
-        with tempfile.TemporaryDirectory() as temporary:
-            profile = Path(temporary) / "profile.toml"
-            profile.write_text(
-                "[config]\n"
-                "data_root='data'\nworkspace_root='workspaces'\nscalar_root='scalar'\n"
-                "[profile]\nname='x'\ntarget_os='linux'\n"
-                "target_arch='riscv64'\ntarget_arch_extension='rvv'\n"
-                "runtime_scene='linux_riscv64_rvv_v1'\nruntime_abi=1\n"
-                "[profile.workflow]\nsteps=[]\n",
-                encoding="utf-8",
-            )
-            with patch("chimera.examples.detect_host_capabilities", return_value=unsupported), \
-                 patch("chimera.examples._bundled_profile", return_value=profile):
+        with patch("chimera.examples.detect_host_capabilities", return_value=unsupported):
+            with tempfile.TemporaryDirectory() as temporary:
+                profile = Path(temporary) / "profile.toml"
+                profile.write_text(
+                    "[profile]\nname='x'\ntarget_os='linux'\n"
+                    "target_arch='riscv64'\ntarget_arch_extension='rvv'\n"
+                    "runtime_scene='linux_riscv64_rvv_v1'\nruntime_abi=1\n"
+                    "[profile.workflow]\nsteps=[]\n",
+                    encoding="utf-8",
+                )
                 hidden = list_examples(profile=profile)
                 self.assertEqual(hidden, [])
                 shown = list_examples(profile=profile, all_examples=True)

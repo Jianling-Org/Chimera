@@ -317,7 +317,8 @@ class WidthInputDiagnosticTests(unittest.TestCase):
         from chimera.preprocess.offline.analysis.safety.stack_liveness.model import ActiveOrigin
         origin = ActiveOrigin('inherited', 'caller', 'caller:inherited-stack-data', 'existing')
         self.assertEqual(set(_origins_payload((origin,))[0]),
-                         {'origin', 'object', 'allocation', 'release', 'dependency', 'proof', 'gaps', 'detail'})
+                         {'origin', 'object', 'allocation', 'release', 'dependency', 'proof', 'gaps', 'detail',
+                          'control_guard_address', 'width_source_candidates'})
 
     def test_old_origin_shape_without_the_optional_field_remains_serializable(self):
         from types import SimpleNamespace

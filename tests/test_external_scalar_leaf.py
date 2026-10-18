@@ -73,11 +73,11 @@ CONTRACT = {"symbol": "memset", "library": "libc.so.6", "sha256": "a" * 64}
 
 
 class RequestTests(unittest.TestCase):
-    def test_requests_are_content_pinned_and_part_of_v31_fingerprint(self):
+    def test_requests_are_content_pinned_and_part_of_v32_fingerprint(self):
         params = {"min_vlen_bits": 256, "compiler_metadata": [],
                   "external_scalar_leaf_contracts": [CONTRACT]}
         request = safety_binary_check_request(params)
-        self.assertEqual(request.version, 31)
+        self.assertEqual(request.version, 32)
         self.assertEqual(request.parameters["external_scalar_leaf_contracts"],
                          normalize_leaf_contracts([CONTRACT]))
         changed = dict(CONTRACT, sha256="b" * 64)
@@ -87,13 +87,15 @@ class RequestTests(unittest.TestCase):
     def test_names_paths_duplicate_requests_and_unpinned_hashes_are_not_contracts(self):
         for contracts in ([{"symbol": "memset"}], [dict(CONTRACT, sha256="latest")],
                           [dict(CONTRACT, library="../libc.so.6")],
-                          [dict(CONTRACT, symbol="memset@plt")], [CONTRACT, CONTRACT]):
+                          [dict(CONTRACT, symbol="memset@plt")], [CONTRACT, CONTRACT],
+                          [dict(CONTRACT, symbol="memcpy")]):
             with self.subTest(contracts=contracts), self.assertRaises(ValueError):
                 normalize_leaf_contracts(contracts)
 
 
 def dynamic_elf(path, *, provider=False, ifunc=False, relocation_type=5, bad_plt=False,
-                version=None, hidden=False, absolute=False, dynamic_tag=None, symbol_binding=1):
+                version=None, hidden=False, absolute=False, dynamic_tag=None,
+                symbol_binding=1, symbol_name="memset"):
     """Real dynsym and JUMP_SLOT sections, not a name-based binder mock."""
     from elf_fixture import EHDR, SHDR
     instructions, body = leaf([("sb", ["a1", "0(a0)"], "00b50023"), ("ret", [], "8082")])
@@ -105,7 +107,7 @@ def dynamic_elf(path, *, provider=False, ifunc=False, relocation_type=5, bad_plt
                          len(body) if provider else 0)
     parts = [(".text" if provider else ".plt", 1, 6, 0x2000 if provider else 0x1000,
               body if provider else stub, 0, 0),
-             (".dynstr", 3, 0, 0, b"\0memset\0", 0, 0),
+             (".dynstr", 3, 0, 0, b"\0" + symbol_name.encode() + b"\0", 0, 0),
              (".dynsym", 11, 0, 0, b"\0" * 24 + symbol, 2, 24)]
     if not provider:
         parts.append((".rela.plt", 4, 0, 0, struct.pack("<QQq", 0x4010,
@@ -210,6 +212,72 @@ class ElfBindingTests(unittest.TestCase):
         self.assertFalse(result.closed_targets)
         self.assertEqual(result.rejections[0]["reason"], "module-changed-during-leaf-binding")
 
+    def test_standard_libc_memcpy_contract_accepts_ifunc_without_leaf_proof(self):
+        from chimera.preprocess.offline.analysis.core.data_model import Program
+        dynamic_elf(self.main, symbol_name="memcpy")
+        dynamic_elf(self.provider, provider=True, ifunc=True, symbol_name="memcpy")
+        self.program = Program([], [Function("memcpy@plt", 0x1000, [], is_external_trampoline=True)], [], {})
+        self.modules[1].module_id = "libc_so_6"
+        bound = bind_external_scalar_leaves(self.main, self.program, self.modules, (), objdump="objdump")
+        self.assertEqual(bound.closed_targets, frozenset({0x1000}))
+        self.assertEqual(bound.proofs, ())
+        self.assertEqual(bound.interface_rejections, ())
+        contract = bound.no_callback_interfaces[0]
+        self.assertEqual(contract["symbol"], "memcpy")
+        self.assertEqual(contract["provider_library"], "libc.so.6")
+        self.assertEqual(contract["semantic_basis"], "standard-libc-memcpy-no-application-callback-v1")
+        self.assertIn(contract["provider_type"], {"STT_LOOS", "STT_GNU_IFUNC"})
+
+    def test_standard_memcpy_semantics_do_not_require_a_scalar_build_of_libc(self):
+        from chimera.preprocess.offline.analysis.core.data_model import Program
+        dynamic_elf(self.main, symbol_name="memcpy")
+        dynamic_elf(self.provider, provider=True, ifunc=True, symbol_name="memcpy")
+        self.modules[1].module_id = "libc_so_6"
+        self.modules[1].is_scalar = False
+        self.program = Program([], [Function("memcpy@plt", 0x1000, [], is_external_trampoline=True)], [], {})
+        bound = bind_external_scalar_leaves(self.main, self.program, self.modules, (), objdump="objdump")
+        self.assertEqual(bound.closed_targets, frozenset({0x1000}))
+        self.assertEqual(bound.interface_rejections, ())
+
+    def test_memcpy_import_and_provider_symbol_versions_must_match(self):
+        from chimera.preprocess.offline.analysis.core.data_model import Program
+        dynamic_elf(self.main, symbol_name="memcpy", version="GLIBC_2.27")
+        dynamic_elf(self.provider, provider=True, ifunc=True,
+                    symbol_name="memcpy", version="GLIBC_2.28")
+        self.modules[1].module_id = "libc_so_6"
+        self.program = Program([], [Function("memcpy@plt", 0x1000, [], is_external_trampoline=True)], [], {})
+        bound = bind_external_scalar_leaves(self.main, self.program, self.modules, (), objdump="objdump")
+        self.assertFalse(bound.closed_targets)
+        self.assertEqual(bound.no_callback_interfaces, ())
+        self.assertIn("memcpy-symbol-version-mismatch",
+                      [item["reason"] for item in bound.interface_rejections])
+
+    def test_memcpy_name_from_non_libc_or_interposed_provider_stays_open(self):
+        from chimera.preprocess.offline.analysis.core.data_model import Program
+        dynamic_elf(self.main, symbol_name="memcpy")
+        dynamic_elf(self.provider, provider=True, ifunc=True, symbol_name="memcpy")
+        self.modules[1].selected_path = self.root / "libshim.so"
+        self.modules[1].selected_path.write_bytes(self.provider.read_bytes())
+        self.modules[1].module_id = "libshim"
+        self.program = Program([], [Function("memcpy@plt", 0x1000, [], is_external_trampoline=True)], [], {})
+        bound = bind_external_scalar_leaves(self.main, self.program, self.modules, (), objdump="objdump")
+        self.assertFalse(bound.closed_targets)
+        self.assertEqual(bound.no_callback_interfaces, ())
+        self.assertTrue(bound.interface_rejections)
+
+    def test_memcpy_with_same_name_provider_interposition_stays_open(self):
+        from chimera.preprocess.offline.analysis.core.data_model import Program
+        dynamic_elf(self.main, symbol_name="memcpy")
+        dynamic_elf(self.provider, provider=True, ifunc=True, symbol_name="memcpy")
+        shim = self.root / "shim.so"
+        dynamic_elf(shim, provider=True, ifunc=True, symbol_name="memcpy")
+        self.modules.append(SimpleNamespace(module_id="shim", selected_path=shim, is_scalar=False))
+        self.modules[1].module_id = "libc_so_6"
+        self.program = Program([], [Function("memcpy@plt", 0x1000, [], is_external_trampoline=True)], [], {})
+        bound = bind_external_scalar_leaves(self.main, self.program, self.modules, (), objdump="objdump")
+        self.assertFalse(bound.closed_targets)
+        self.assertTrue(bound.interface_rejections)
+
     def test_symbol_versions_must_match_and_the_provider_must_be_default(self):
         dynamic_elf(self.main, version="GLIBC_2.27")
         self.body = dynamic_elf(self.provider, provider=True, version="GLIBC_2.27")
@@ -243,6 +311,36 @@ class ElfBindingTests(unittest.TestCase):
 
 
 class BoundaryRetentionTests(unittest.TestCase):
+    def test_uncontracted_standard_memcpy_closes_only_the_external_boundary(self):
+        with tempfile.TemporaryDirectory() as root:
+            root = Path(root)
+            app, libc = root / "app", root / "libc.so.6"
+            dynamic_elf(app, symbol_name="memcpy")
+            dynamic_elf(libc, provider=True, ifunc=True, symbol_name="memcpy")
+            modules = [
+                SimpleNamespace(module_id="app", selected_path=app, is_scalar=False),
+                SimpleNamespace(module_id="libc_so_6", selected_path=libc, is_scalar=True),
+            ]
+            dump = (
+                "0000000000003000 <caller>:\n"
+                " 3000:\t00000013\tcsrr\ts4,vlenb\n"
+                " 3004:\t00000013\tjal\tra,1000 <memcpy@plt>\n"
+                " 3008:\t00000013\tadd\tt0,s4,zero\n"
+                " 300c:\t00000013\tret\n\n"
+                "0000000000001000 <memcpy@plt>:\n")
+            result = collect_diagnostics(app, objdump_cmd="objdump", min_vlen_bits=256,
+                dump_text=dump, strategy="gate", metadata=ChimeraMetadata.empty(),
+                external_modules=modules)
+            self.assertEqual(result.analysis.stack.closed_external_calls, {0x3004: (0x1000,)})
+            self.assertEqual(result.analysis.stack.external_leaf_proofs, ())
+            self.assertEqual(result.analysis.stack.external_no_callback_interfaces[0]["symbol"], "memcpy")
+            self.assertFalse(any(item.diagnostic_code == "active-external-call"
+                                 for item in result.findings))
+            safety = classify_liveness(result.analysis.program,
+                SimpleNamespace(by_function={}), result.analysis.stack)
+            self.assertFalse(safety.records[0x3004].safe)
+            self.assertIn("live_vlen_scalar_data", safety.records[0x3004].reasons)
+
     def test_leaf_summary_does_not_authorize_a_tail_or_custom_link_return(self):
         from test_external_call_gate import _call, _function
         from chimera.preprocess.offline.analysis.core.data_model import Program

@@ -737,6 +737,9 @@ class CheckElfInheritanceDiagnosticsTests(unittest.TestCase):
         ), mock.patch(
             "chimera.check_elf.ChimeraMetadata.from_elf",
             return_value=ChimeraMetadata.empty(),
+        ), mock.patch(
+            "chimera.check_elf.selected_check_modules",
+            return_value=(),
         ):
             outcome = request.runner(self.elf, context)
         self.assertFalse(outcome.passed)
@@ -927,7 +930,7 @@ class CheckElfInheritanceDiagnosticsTests(unittest.TestCase):
         self.assertTrue(inherited[0]["witness_reached_seed"])
         self.assertFalse(inherited[0]["diagnostics_incomplete"])
 
-    # --- P1: credentials recorded under the old check version must be rejected -
+    # --- P1: credentials recorded under an earlier check version must be rejected -
     def test_previous_version_credential_is_rejected(self):
         from chimera.check_elf import safety_binary_check_request
         from chimera.elf_state import CHECKED, ElfStateRegistry, sha256_of
@@ -939,18 +942,15 @@ class CheckElfInheritanceDiagnosticsTests(unittest.TestCase):
         request = safety_binary_check_request(
             {"min_vlen_bits": 256, "compiler_metadata": ()}
         )
-        # ... and now the per-function metadata-coverage rule: a
-        # VLEN-sensitive access without a stack-object record is no longer
-        # dropped, so a half-instrumented product does not look clean any
-        # more.  Sources v18 discarded reappear, so the credential version
-        # moved from 18 to 19, and local seed provenance now has its own
-        # version boundary for inheritance and unknown-only VLEN setup.
+        # v32 invalidates v31 credentials because width-selected CFG paths
+        # now remain unsafe after the scalar guard is overwritten, and standard
+        # libc memcpy uses a separately bound interface-level callback contract.
         from chimera.preprocess.offline.analysis.safety.stack_liveness.origins import (
             ORIGIN_ANALYSIS_VERSION,
         )
 
         self.assertEqual(ORIGIN_ANALYSIS_VERSION, "origins-v16")
-        self.assertEqual(request.version, 31)
+        self.assertEqual(request.version, 32)
 
         registry = ElfStateRegistry(Path(self.tmp.name) / "states.json")
         elf_path = self.elf.resolve()
@@ -967,7 +967,7 @@ class CheckElfInheritanceDiagnosticsTests(unittest.TestCase):
         )
         old_request = type(request)(
             check_id=request.check_id,
-            version=30,
+            version=31,
             parameters=request.parameters,
             runner=request.runner,
         )
@@ -977,9 +977,9 @@ class CheckElfInheritanceDiagnosticsTests(unittest.TestCase):
             runtime_abi=1,
             requests=(old_request,),
         )
-        # Version 31 corrects the synthetic all-cache use at complete internal
-        # ABI exits. Version 30 credentials cannot admit this different
-        # classification without an actual fresh check.
+        # Version 32 keeps width-selected control regions unsafe after their
+        # scalar guard dies and binds standard libc memcpy by interface.
+        # Version 31 credentials cannot admit these semantics without a fresh check.
         registry.set_status(
             elf_path,
             CHECKED,
@@ -1038,7 +1038,7 @@ class CheckElfInheritanceDiagnosticsTests(unittest.TestCase):
             requests=(scoped,),
         )
 
-        self.assertEqual(conservative.version, 31)
+        self.assertEqual(conservative.version, 32)
         self.assertEqual(conservative.parameters["unknown_stack_size_policy"], "conservative")
         self.assertNotEqual(
             conservative_plan.fingerprint("0" * 64),

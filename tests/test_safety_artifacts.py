@@ -3,6 +3,8 @@ from __future__ import annotations
 from pathlib import Path
 import tempfile
 import unittest
+import gc
+import weakref
 from dataclasses import fields
 
 from chimera.preprocess.offline.analysis.safety import SAFETY_ABI_VERSION
@@ -19,6 +21,50 @@ from chimera.preprocess.offline.analysis.core.data_model import Function, Instru
 
 
 class SafetyArtifactTests(unittest.TestCase):
+    def test_patch_facts_pack_only_safe_addresses_without_keeping_records(self):
+        from chimera.preprocess.offline.analysis.safety.result import SafetyPipelineResult
+        original = SafetyAnalysisResult(records={
+            0x1000: SafetyRecord(0x1000, True, frozenset(), frozenset()),
+            0x1004: SafetyRecord(0x1004, False, frozenset({2}), frozenset()),
+            0x1008: SafetyRecord(0x1008, True, frozenset(), frozenset()),
+        }, vector=None, stack=None)
+        ref = weakref.ref(original)
+        full = SafetyPipelineResult("main", None, None, None, original, (), {"safe": 2})
+        compact = full.for_patching()
+        self.assertEqual(list(compact.iter_safe_addresses()), list(full.iter_safe_addresses()))
+        self.assertEqual(len(compact.patch_addresses), 16)
+        self.assertIsNone(compact.safety)
+        self.assertIs(compact.summary, full.summary)
+        self.assertIs(compact.for_patching(), compact)
+        del original, full
+        gc.collect()
+        self.assertIsNone(ref())
+
+    def test_workflow_facts_release_intermediates_and_preserve_admission_scope(self):
+        class WorkGraph:
+            pass
+
+        vector, stack = WorkGraph(), WorkGraph()
+        refs = weakref.ref(vector), weakref.ref(stack)
+        record = SafetyRecord(0x1000, False, frozenset({3}), frozenset(), ("vector",))
+        original = SafetyAnalysisResult(
+            records={record.address: record}, vector=vector, stack=stack,
+            unknown_stack_size_policy="conservative", assumption="test scope",
+            conditional=False, scope_exclusions=("retained sentinel",),
+        )
+        compact = original.without_intermediates()
+        self.assertIs(compact.records, original.records)
+        self.assertIs(compact.records[0x1000], record)
+        self.assertEqual(compact.unknown_stack_size_policy, original.unknown_stack_size_policy)
+        self.assertEqual(compact.assumption, original.assumption)
+        self.assertEqual(compact.conditional, original.conditional)
+        self.assertEqual(compact.scope_exclusions, original.scope_exclusions)
+        self.assertIs(original.vector, vector)
+        self.assertIs(original.stack, stack)
+        del original, vector, stack
+        gc.collect()
+        self.assertTrue(all(ref() is None for ref in refs))
+
     def test_safety_json_identifies_conditional_unknown_size_scope(self) -> None:
         field_names = {item.name for item in fields(SafetyAnalysisResult)}
         self.assertIn("unknown_stack_size_policy", field_names)

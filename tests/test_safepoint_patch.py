@@ -205,7 +205,16 @@ class PatchSafepointsTests(unittest.TestCase):
             sha256(content).hexdigest(),
         ))
 
-        updated = PatchSafepointsStep().run(self._context())
+        context = self._context()
+        updated = PatchSafepointsStep().run(context)
+        full_patch = self.library.read_bytes()
+        compact = context.require_global("safety_analysis").for_patching()
+        compact_updated = PatchSafepointsStep().run(
+            context.put_global("safety_analysis", compact)
+        )
+        self.assertEqual(self.library.read_bytes(), full_patch)
+        self.assertEqual(compact_updated.require_global("patched_safepoints"),
+                         updated.require_global("patched_safepoints"))
 
         patched = self.library.read_bytes()
         self.assertEqual(

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from pathlib import Path
-from pathlib import PurePosixPath
 import tempfile
 import tomllib
 import unittest
@@ -105,20 +104,26 @@ class ProfileConfigTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, r"unknown \[profile\] key"):
             parse_profile_config(table, source=Path("profile.toml"))
 
-    def test_current_example_profile_references_external_translator(self) -> None:
+    def test_current_example_profile_uses_bundled_translator(self) -> None:
         source = Path("examples/platforms/k3/linux-riscv64-rvv-1024-to-256.toml")
         document = tomllib.loads(source.read_text(encoding="utf-8"))
 
         self.assertEqual(document["profile"]["runtime_abi"], 1)
-        translator = document["config"]["translators"][0]
-        self.assertEqual(translator["source"], "riscv64;rvv;vlen=1024")
-        self.assertEqual(translator["target"], "riscv64;rvv;vlen=256")
         self.assertEqual(
-            translator["translator_path"],
-            "/path/to/chimera-translator/rvv_sbt_rvv.py",
+            document["config"]["translators"][0]["source"],
+            "riscv64;rvv;vlen=1024",
         )
-        self.assertTrue(PurePosixPath(translator["translator_path"]).is_absolute())
-        self.assertNotIn("preprocessing/translator", translator["translator_path"])
+        # translator_path 相对 profile 文件解析，指向仓库内置 rvv_sbt_tool，
+        # 不需要用户手工替换部署路径。
+        translator = (
+            source.parent
+            / document["config"]["translators"][0]["translator_path"]
+        ).resolve()
+        self.assertEqual(
+            translator,
+            Path("preprocessing/translator/rvv_sbt_tool/rvv_sbt_rvv.py").resolve(),
+        )
+        self.assertTrue(translator.is_file())
         self.assertEqual(
             [step["step"] for step in document["profile"]["workflow"]["steps"]],
             [

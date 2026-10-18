@@ -129,7 +129,10 @@ class TranslationSemanticsContractTests(unittest.TestCase):
                 else:
                     stdout_path.write_text("translated\n", encoding="utf-8")
 
-            def compile_(sources, output, **_kwargs):
+            compile_options = []
+
+            def compile_(sources, output, **kwargs):
+                compile_options.append(kwargs)
                 output.parent.mkdir(parents=True, exist_ok=True)
                 output.write_bytes(b"artifact")
                 return ("compile",)
@@ -179,6 +182,9 @@ class TranslationSemanticsContractTests(unittest.TestCase):
             key = next(iter(updated.require_global("translations")))
             self.assertEqual(key.canonical_route, ("toy;scalar;v1", "toy;wide;v2"))
             self.assertIn("translated-main-toy", session.registry.artifacts)
+            self.assertEqual(compile_options, [{
+                "flags": ("-fPIC", "-shared", "-Wl,-Bsymbolic-functions")
+            }])
 
 
 if __name__ == "__main__":

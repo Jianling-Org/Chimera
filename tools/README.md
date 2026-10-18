@@ -1,30 +1,34 @@
 # 开发与诊断工具
 
-此目录包含 Chimera 源码树的构建入口、回归辅助和开发诊断脚本，不实现运行时功能。用户安装后使用 `chimera-dev`、`chimera-pkg`、`chimera-user`；这些脚本不属于 wheel 的 Python 包映射。源码树中的 `make wheel` 通过 `build_release_wheel.py` 构建发行包。
+正式用户流程使用 `chimera-dev`、`chimera-pkg`、`chimera-user`。此目录用于源码开发、性能回归、决策合并及诊断，不是产品准入的另一条路径。
 
-可重复使用的诊断命令与判据见[开发与诊断指南](../doc/developer/diagnostics.md)。
-
-## 开发入口
+## 持续维护的开发入口
 
 | 工具 | 用途 |
 |---|---|
 | `run_chimera.py` | 从源码树启动 CLI，映射与 wheel 一致的包布局 |
 | `build_release_wheel.py` | 发布 wheel 的构建入口 |
-| `audit_module_identity.py` | 核对实际导入模块的位置、环境和摘要 |
-| `merge_gate_decision.py` | 合并完整报告的候选名单并核对来源 |
-| `write_gate_wrapper.py` | 生成固定决策的 C/C++ 编译 wrapper |
-| `unknown_stack_scope_profile.py` | 生成显式条件范围 Profile |
+| `audit_module_identity.py` | 比较实际导入模块与源码身份，拒绝 venv 外路径和哈希不一致 |
+| `merge_gate_decision.py` | 合并当前完整报告的候选名单，另提供覆盖/局部源头核验 |
+| `write_gate_wrapper.py` | 生成固定决策的 C/C++ 编译 wrapper，透传原参数 |
+| `unknown_stack_scope_profile.py` | 生成显式条件范围 profile，原 profile 保持不变 |
 | `bench_parse_memory.py`、`bench_analysis_memory.py` | 独立进程测量解析和分析内存；合成结果不代替实机验收 |
 
-使用前运行相应 Python 工具的 `--help`。决策、Profile、wrapper 和报告应写入本次独立工作目录。
+使用前运行相应 Python 工具的 `--help`。决策、profile 和 wrapper 应写入新的工作目录。
 
-## 专项诊断与实验工具
+## 保留的诊断工具及回归辅助
 
-| 工具组 | 主要用途 |
+| 工具组 | 保留原因与入口 |
 |---|---|
-| `layout_codegen_forensics.py` | 对象、命令、输出和 A/B 结果的绑定分析 |
-| `diagnose_layout_metadata_mode.py` | 检查元数据模式及绑定传播路径 |
-| `builtin_gate_inputs.py`、`builtin_gate_experiment.py` | 收集并分析隔离 A/B 实验输入 |
-| `k3_unknown_stack_scope_evidence.py` | 校验归档构建、ELF 摘要与决策文件的身份关系 |
+| `k3-gate-source-audit.sh` | 原名单与来源证据的独立复核；见[源头审计](../docs/developer/gate-source-audit.md) |
+| `layout_codegen_forensics.py`、`k3-forensics-layout-codegen.sh`、`k3-gate-experiment.sh` | 经过回归测试的对象/命令绑定、输出隔离和 A/B 对比；见[编译取证](../docs/developer/analysis-state-memory.md) |
+| `k3-forensics-layout-metadata.sh`、`diagnose_layout_metadata_mode.py`、`k3-record-exit-status.sh` | 元数据模式、绑定传播路径及有界内存取证；算法有正反例测试 |
+| `builtin_gate_inputs.py`、`builtin_gate_experiment.py` 及两个 builtin Shell 驱动 | 已核对编译单元的隔离 A/B，不能把 census 或脚本退出码当安全通过；见[实验说明](../docs/deployment/gate-build.md) |
+| `k3_unknown_stack_scope_evidence.py` | 历史 ELF/决策哈希核对，仍被 builtin 输入收集器使用 |
+| `k3-fetch-origin-targets.sh` | 从报告导出待补充的函数体，不重新执行完整分析 |
 
-这些 Python 工具用于源码回归和编译器诊断，不是用户工作流入口。相关算法与身份校验仍由回归测试覆盖；诊断结果不能替代 `chimera-pkg check-elf --strict`。详细判据见[诊断指南](../doc/developer/diagnostics.md)及[安全点分析](../doc/developer/architecture/safepoints/README.md)。
+这些是受测试的开发诊断接口。部分 K3 驱动的默认值仍指向原 gate2/gate4 现场；换机器时必须显式提供匹配的 ELF、报告、决策和工具路径，不可把历史默认值用于新的验收。Python 实现与 fixture 保留是为了回归对象关联、重定位、CFG、未知目标和证据绑定，不代表需要重新执行已闭合的 GCC 实验。
+
+## 历史现场材料
+
+诊断脚本的输入、输出和工具路径应显式指定；按本页与正式 docs 选择操作入口。

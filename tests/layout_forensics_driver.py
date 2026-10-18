@@ -1,4 +1,7 @@
-"""Layout forensics driver: bounded logging, parse-once, strong + weak paths.  Two field costs are designed out:
+"""K3 forensics driver: bounded logging, parse-once, strong + weak paths.
+
+This is the testable half of ``tools/k3-forensics-layout-metadata.sh``'s
+inline Python.  Two field costs are designed out:
 
 1. **no object-graph expansion** -- every log line prints scalars only.  A
    ``Function`` owns all its instructions; formatting one walks the whole

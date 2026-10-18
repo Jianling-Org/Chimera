@@ -194,10 +194,7 @@ class VectorCensusBuildScriptTests(unittest.TestCase):
         scheduler = (run_dir / "run_llamacpp_scheduler.sh").read_text(encoding="utf-8")
         self.assertNotIn(" migrate ", scheduler)
 
-        for path in (
-            ROOT / "doc/developer/architecture/targets/rvv/README.md",
-            ROOT / "doc/user/cli.md",
-        ):
+        for path in (ROOT / "docs/developer/architecture/targets/rvv/README.md", ROOT / "TODO.md"):
             text = path.read_text(encoding="utf-8")
             with self.subTest(path=path.name):
                 self.assertNotIn("MIGRATE_INTERVAL", text)

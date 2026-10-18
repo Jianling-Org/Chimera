@@ -56,7 +56,9 @@ from chimera.preprocess.offline.analysis.safety.stack_liveness.model import (
     ORIGIN_LOCAL_FRAME,
     ORIGIN_LOCAL_SETUP,
     ORIGIN_LOCAL_SCALAR,
+    ORIGIN_LOCAL_CONTROL,
     VLEN_SCALAR_ESCAPE,
+    VLEN_CONTROL_FALLBACK,
     ORIGIN_VECTOR_DATA,
 )
 from chimera.preprocess.offline.analysis.safety.stack_liveness.scope import (
@@ -273,6 +275,10 @@ def _origins_payload(origins) -> list[dict]:
             "proof": origin.proof,
             "gaps": list(origin.gaps),
             "detail": origin.detail,
+            "control_guard_address": (hex(origin.control_guard_address)
+                                      if getattr(origin, "control_guard_address", None) is not None else None),
+            "width_source_candidates": [hex(address) for address in
+                                        getattr(origin, "width_source_candidates", ())],
             **({'width_evidence': _width_evidence_payload(origin.width_evidence)}
                if getattr(origin, 'width_evidence', None) is not None else {}),
         }
@@ -339,7 +345,7 @@ def _cache_warnings_payload(result: DiagnosticsResult) -> list[dict]:
             "activity_origins": _origins_payload(warning.origins),
         }
         for warning in result.analysis.stack.warnings
-        if warning.code == VLEN_SCALAR_ESCAPE
+        if warning.code in {VLEN_SCALAR_ESCAPE, VLEN_CONTROL_FALLBACK}
     ]
 
 
@@ -348,6 +354,8 @@ def _external_leaf_payload(result) -> dict:
     return {
         "proofs": list(getattr(stack, "external_leaf_proofs", ())),
         "rejections": list(getattr(stack, "external_leaf_rejections", ())),
+        "no_callback_interfaces": list(getattr(stack, "external_no_callback_interfaces", ())),
+        "interface_rejections": list(getattr(stack, "external_interface_rejections", ())),
         "closed_calls": [
             {"call_site": hex(site), "targets": [hex(target) for target in targets]}
             for site, targets in sorted(getattr(stack, "closed_external_calls", {}).items())],
@@ -413,8 +421,7 @@ def safety_binary_check_request(parameters) -> BinaryCheckRequest:
             text_threshold=context.overrides.get("text_threshold", DEFAULT_TEXT_THRESHOLD),
             metadata=metadata,
             external_scalar_leaf_contracts=normalized["external_scalar_leaf_contracts"],
-            external_modules=(selected_check_modules(input_elf, configuration)
-                if normalized["external_scalar_leaf_contracts"] else ()),
+            external_modules=selected_check_modules(input_elf, configuration),
         )
         inheritance_report = context.overrides.get("inheritance_report")
         if inheritance_report is not None:
@@ -596,7 +603,9 @@ def safety_binary_check_request(parameters) -> BinaryCheckRequest:
         # v31 limits synthetic exit uses to open/unsupported transfers.
         # Complete internal ABI exits retain actual target/SP/continuation
         # uses; v30 credentials require a fresh check under that lifetime.
-        version=31,
+        # v32 keeps width-selected CFG regions unsafe after a scalar guard
+        # dies and binds the standard libc memcpy callback boundary by interface.
+        version=32,
         parameters=normalized,
         runner=run,
     )
@@ -739,15 +748,16 @@ def _attribute(origins) -> Attribution:
     ]
     has_local_frame = bool(local_frames)
     has_scalar = ORIGIN_LOCAL_SCALAR in kinds
+    has_control = ORIGIN_LOCAL_CONTROL in kinds
     has_inherited = ORIGIN_INHERITED in kinds
-    has_vlen_source = has_scalar or any(
+    has_vlen_source = has_scalar or has_control or any(
         origin.dependency == "vlen" for origin in local_frames
     )
     has_unproven = any(
         origin.dependency == "unknown" for origin in local_frames
     )
 
-    if has_local_frame or has_scalar:
+    if has_local_frame or has_scalar or has_control:
         primary = CAUSE_LOCAL
     elif ORIGIN_CONSERVATIVE in kinds:
         primary = CAUSE_CONSERVATIVE
@@ -759,7 +769,7 @@ def _attribute(origins) -> Attribution:
         primary = CAUSE_INHERITED
 
     is_root = primary != CAUSE_INHERITED
-    if has_local_frame or has_scalar:
+    if has_local_frame or has_scalar or has_control:
         if has_vlen_source and has_unproven:
             status = ORIGIN_STATUS_MIXED
         elif has_vlen_source:
@@ -917,7 +927,7 @@ def collect_diagnostics(
     configs = extension.vector_configs(program)
     if metadata is None:
         metadata = ChimeraMetadata.from_elf(elf_path)
-    if external_leaf_bindings is None and external_scalar_leaf_contracts:
+    if external_leaf_bindings is None and (external_modules or external_scalar_leaf_contracts):
         external_leaf_bindings = bind_external_scalar_leaves(
             elf_path, program, external_modules, external_scalar_leaf_contracts,
             objdump=objdump_cmd)

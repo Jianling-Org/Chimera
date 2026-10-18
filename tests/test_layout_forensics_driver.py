@@ -530,5 +530,53 @@ class IsolatedImportTests(unittest.TestCase):
         self.assertIn("ok True True", completed.stdout)
 
 
+class ScriptContractTests(unittest.TestCase):
+    """The shell script must call the driver and use unbuffered isolated Python."""
+
+    def test_script_uses_unbuffered_isolated_python_and_the_driver(self) -> None:
+        root = Path(__file__).resolve().parents[1]
+        script = (root / "tools" / "k3-forensics-layout-metadata.sh").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("-I -u", script)
+        self.assertIn("layout_forensics_driver", script)
+        self.assertIn("/usr/bin/time -v", script)
+        self.assertIn("k3-record-exit-status.sh", script)
+        self.assertIn('exit "$TRACE_EXIT_STATUS"', script)
+        self.assertIn('smallest-site-trace.exit.txt', script)
+        # No inline object formatting left in the script's Python blocks.
+        self.assertNotIn("f\"layout entry is {", script)
+        # CRITICAL: the driver owns smallest-site-trace.log; a shell tee into
+        # that path would double-write and corrupt the primary artifact.
+        self.assertNotIn('tee "$OUT/smallest-site-trace.log"', script)
+
+    def test_shell_recorder_preserves_python_failure_status(self) -> None:
+        root = Path(__file__).resolve().parents[1]
+        bash = os.environ.get("BASH") or "D:/ProgramEnv/git/Git/bin/bash.exe"
+        if not Path(bash).is_file():
+            self.skipTest("Git Bash is unavailable")
+        helper = (root / "tools" / "k3-record-exit-status.sh").as_posix()
+        status_file = f".exit-status-test-{os.getpid()}.txt"
+        command = (
+            f"source '{helper}'; status_file='{status_file}'; "
+            "fail_with_137() { return 137; }; "
+            "run_and_record_exit \"$status_file\" fail_with_137; "
+            "helper_rc=$?; IFS= read -r recorded < \"$status_file\"; "
+            "printf 'helper_rc=%s recorded=%s\\n' \"$helper_rc\" \"$recorded\"; "
+            "if [ \"$helper_rc\" -ne 0 ]; then exit 88; fi; "
+            "exit \"$TRACE_EXIT_STATUS\""
+        )
+        status_path = root / status_file
+        try:
+            completed = subprocess.run(
+                [bash, "--noprofile", "--norc", "-c", command],
+                capture_output=True, text=True, check=False, cwd=root,
+            )
+        finally:
+            status_path.unlink(missing_ok=True)
+        self.assertEqual(completed.returncode, 137, completed.stderr)
+        self.assertIn("helper_rc=0 recorded=137", completed.stdout)
+
+
 if __name__ == "__main__":
     unittest.main()

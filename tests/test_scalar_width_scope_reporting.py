@@ -84,9 +84,9 @@ class CacheWarningReportTests(unittest.TestCase):
         self.assertEqual(document['propagation']['scalar_width_escape_sites'], 0)
         self.assertEqual(document['propagation']['cross_check']['mismatches'], [])
 
-    def test_scope_version_is_31(self):
+    def test_scope_version_is_32(self):
         request = safety_binary_check_request({'min_vlen_bits': 256, 'compiler_metadata': ()})
-        self.assertEqual(request.version, 31)
+        self.assertEqual(request.version, 32)
 
 
 if __name__ == '__main__':

@@ -784,6 +784,73 @@ class InheritanceBindingTests(unittest.TestCase):
         )
 
 
+class ScriptUsesTheUnifiedEntryTests(unittest.TestCase):
+    """The forensics script must call the testable entry, not a private walk.
+
+    Reconciled with the thin-driver form (``layout_forensics_driver.run_trace``):
+    the grading rules no longer live in the script at all, so these pins check
+    that the script delegates and stays free of the old inline walk.
+    """
+
+    def test_script_imports_under_isolated_python_outside_checkout(self) -> None:
+        import subprocess
+        import sys
+
+        root = Path(__file__).resolve().parents[1]
+        script = (root / "tools/k3-forensics-layout-metadata.sh").read_text(
+            encoding="utf-8"
+        )
+        # Execute the launcher's import shim exactly as the shell expands it.
+        # -I hides cwd/PYTHONPATH, as on K3.
+        program = script.split('-c "', 1)[1].split('" || true', 1)[0]
+        program = program.replace("$CHIMERA", str(root))
+        program = program.split("run_trace(", 1)[0]
+        with tempfile.TemporaryDirectory() as directory:
+            completed = subprocess.run(
+                [sys.executable, "-I", "-c", program],
+                capture_output=True, text=True, cwd=directory,
+            )
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+
+    def test_script_calls_the_driver_entry_not_a_private_walk(self) -> None:
+        root = Path(__file__).resolve().parents[1]
+        script = (root / "tools" / "k3-forensics-layout-metadata.sh").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("from layout_forensics_driver import", script)
+        self.assertIn("run_trace(", script)
+        # The old inline walk is gone: no private BFS, no name-substring
+        # target resolution, no parallel grading table in the script.
+        self.assertNotIn("candidate in rest", script)
+        self.assertNotIn("line_by_caller", script)
+        self.assertNotIn("trace_from_inheritance", script)
+        self.assertNotIn("call_edges_from_objdump", script)
+        # Grading vocabulary is still surfaced (driver log + summary grep).
+        self.assertIn("is_propagation_evidence", script)
+        self.assertIn("g2_filled", script)
+        self.assertIn("path_grade", script)
+        self.assertIn("callgraph-path-only", script)
+
+    def test_script_leaves_trace_from_elf_out_of_the_script(self) -> None:
+        root = Path(__file__).resolve().parents[1]
+        script = (root / "tools" / "k3-forensics-layout-metadata.sh").read_text(
+            encoding="utf-8"
+        )
+        driver = (root / "tests" / "layout_forensics_driver.py").read_text(
+            encoding="utf-8"
+        )
+        # Strong evidence comes from the production pipeline; the script must
+        # not reload the Program (trace_from_elf) or grade anything itself.
+        self.assertNotIn("trace_from_elf", script)
+        self.assertNotIn("load_production_program", script)
+        self.assertNotIn("resolved_call_edges", script)
+        self.assertNotIn('path_grade == "production"', script)
+        # The production grading rule lives in the driver, unchanged.
+        self.assertIn("trace_from_bound_edges", driver)
+        self.assertIn('path_grade == "production"', driver)
+        self.assertNotIn("trace_from_elf(", driver)
+
+
 class InventedTargetTests(unittest.TestCase):
     """A target that is not a function entry must not become an edge.
 

@@ -104,7 +104,7 @@ class ScalarWidthExitLivenessTests(unittest.TestCase):
                 ])
                 self.assertTrue(safety.records[0x1004].safe)
 
-    def test_width_used_only_as_a_branch_selector_is_not_an_exit_cache_use(self):
+    def test_width_used_as_a_branch_selector_keeps_its_control_region_unsafe(self):
         _, _, safety = analyze([
             (0x1000, "caller", [
                 ("csrr", "s4,vlenb"),
@@ -114,9 +114,9 @@ class ScalarWidthExitLivenessTests(unittest.TestCase):
             ]),
             (0x2000, "known_body", [("ret", "")]),
         ])
-        self.assertTrue(safety.records[0x1000].safe)
-        self.assertTrue(safety.records[0x1008].safe)
-        self.assertTrue(safety.records[0x100C].safe)
+        self.assertFalse(safety.records[0x1004].safe)
+        self.assertFalse(safety.records[0x1008].safe)
+        self.assertFalse(safety.records[0x100C].safe)
 
     def test_width_guarded_branch_to_complete_internal_entry_is_not_a_content_use(self):
         _, stack, safety = analyze([
@@ -125,8 +125,9 @@ class ScalarWidthExitLivenessTests(unittest.TestCase):
                                  ("li", "a0,0"), ("ret", "")]),
             (0x2000, "known_body", [("ret", "")]),
         ])
-        self.assertTrue(safety.records[0x1004].safe)
-        self.assertNotIn(0x2000, stack.inherited_functions)
+        self.assertFalse(safety.records[0x1004].safe)
+        self.assertIn(0x2000, stack.inherited_functions)
+        self.assertFalse(safety.records[0x2000].safe)
 
     def test_unresolved_empty_mixed_external_and_plt_targets_stay_conservative(self):
         cases = (

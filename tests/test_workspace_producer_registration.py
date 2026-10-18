@@ -427,7 +427,7 @@ class WorkspaceProducerRegistrationTests(unittest.TestCase):
 
         self.assertEqual(raised.exception.errno, errno.EIO)
 
-    def test_prepare_materializes_dependency_under_needed_soname(self) -> None:
+    def test_prepare_keeps_target_dependency_under_needed_soname(self) -> None:
         source = self.root / "app"
         write_elf(source, b"main")
         versioned = self.root / "libfoo.so.1.2.3"
@@ -452,14 +452,18 @@ class WorkspaceProducerRegistrationTests(unittest.TestCase):
         updated = PrepareWorkspaceStep().run(self.context(services, config))
 
         self.assertEqual([path.name for path in dependencies], ["app", soname.name])
-        materialized = self.stage / "scalar" / soname.name
-        self.assertEqual(materialized.read_bytes(), versioned.read_bytes())
+        # Mainline D2 keeps application dependencies at their installed path.
+        # Only an explicit scalar replacement is shipped in scalar/.
+        self.assertFalse((self.stage / "scalar" / soname.name).exists())
         self.assertFalse((self.stage / "scalar" / versioned.name).exists())
         dependency = next(
             module for module in updated.require_global("modules")
             if not module.is_main
         )
         self.assertEqual(dependency.selected_path.name, soname.name)
+        self.assertEqual(dependency.selected_path, soname)
+        self.assertEqual(dependency.selected_path.read_bytes(), versioned.read_bytes())
+        self.assertEqual(dependency.delivery, DELIVERY_TARGET)
         self.assertEqual(
             self.session.registry.modules[dependency.module_id].runtime_name,
             soname.name,
@@ -497,6 +501,8 @@ class WorkspaceProducerRegistrationTests(unittest.TestCase):
         self.assertTrue(dependency.is_scalar)
         self.assertEqual(dependency.selected_path.name, soname.name)
         self.assertEqual(dependency.selected_path.read_bytes(), scalar.read_bytes())
+        self.assertEqual(dependency.selected_path, self.stage / "scalar" / soname.name)
+        self.assertEqual(dependency.delivery, DELIVERY_PACKAGE)
 
     def test_dependency_collection_deduplicates_repeated_soname(self) -> None:
         source = self.root / "app"
@@ -546,7 +552,7 @@ class WorkspaceProducerRegistrationTests(unittest.TestCase):
             request.assembly_output.write_text(".text\n", encoding="utf-8")
             return ("translate",)
 
-        def compile_command(_sources, output):
+        def compile_command(_sources, output, **_kwargs):
             output.write_bytes(b"translated elf")
             return ("compile",)
 

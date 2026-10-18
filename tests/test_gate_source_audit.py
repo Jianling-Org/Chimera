@@ -2070,6 +2070,111 @@ class CliTests(unittest.TestCase):
 # region K3 script contract
 
 
+class K3ScriptContractTests(unittest.TestCase):
+    """The K3 script runs on the target machine; here its contract is text.
+
+    Executing it needs the RISC-V host, both GCC build trees and the release
+    venv, so what is pinned instead is the *shape*: which builds it audits,
+    which inputs it must verify, and the rule that a completed run never
+    doubles as a safety verdict.
+    """
+
+    def setUp(self):
+        self.text = (
+            Path(__file__).resolve().parents[1] / "tools" / "k3-gate-source-audit.sh"
+        ).read_text(encoding="utf-8")
+
+    def test_it_audits_both_builds_and_compares_them(self):
+        self.assertIn("build-stack/gcc/xgcc", self.text)
+        self.assertIn("build-gate2/gcc/xgcc", self.text)
+        self.assertIn("STAGE_STACK=build-stack", self.text)
+        self.assertIn("STAGE_GATE2=build-gate2", self.text)
+        self.assertIn("gate_source_audit compare", self.text)
+
+    def test_it_verifies_its_inputs_and_records_hashes(self):
+        for marker in (
+            "sha256sum",
+            "rev-parse HEAD",
+            "objdump --version",
+            'test -f "$GATE_DECISION"',
+            "test -x /usr/bin/time",
+            "sha256sum -c --status",
+        ):
+            self.assertIn(marker, self.text, marker)
+
+    def test_it_creates_a_fresh_result_directory_under_the_run(self):
+        self.assertRegex(self.text, r'mkdir -p "\$RUN/reports"')
+        self.assertIn("mktemp -d", self.text)
+        self.assertIn("last-gate-source-audit-reports.txt", self.text)
+
+    def test_it_runs_the_two_audits_sequentially(self):
+        self.assertNotIn("&\n", self.text)
+        self.assertNotIn("wait\n", self.text)
+        self.assertLess(
+            self.text.index('audit_one "$STAGE_STACK"'),
+            self.text.index('audit_one "$STAGE_GATE2"'),
+        )
+
+    def test_it_never_rewrites_production_inputs_or_credentials(self):
+        for forbidden in (
+            "check_elf",
+            "latest.json",
+            "rm -rf",
+            "git checkout",
+            "git reset",
+            "--force",
+        ):
+            self.assertNotIn(forbidden, self.text, forbidden)
+
+    def test_the_audit_module_that_runs_must_be_the_reviewed_revision(self):
+        """Recording the repo HEAD is not enough when the venv executes the code."""
+
+        for marker in (
+            "audit_module_identity.py",
+            "audit-module.txt",
+            "audit-module.log",
+            "installed-modules.tsv",
+            "module-identity.txt",
+            "all_modules_match_source",
+            "all_modules_inside_venv",
+            "source-tree-revision.txt",
+        ):
+            self.assertIn(marker, self.text, marker)
+        self.assertNotIn("wheel-source-revision.txt", self.text)
+        # The mismatch must stop the run *before* any audit starts.
+        self.assertLess(
+            self.text.index("module-identity.txt"),
+            self.text.index('audit_one "$STAGE_STACK"'),
+        )
+        # Every input is an argument: the tool reads nothing from the ambient
+        # environment, which is what broke the inline version.
+        self.assertIn('--out-dir "$OUT"', self.text)
+        self.assertIn('--source-root "$CHIMERA"', self.text)
+        self.assertIn('--venv "$VENV"', self.text)
+        self.assertNotIn("os.environ[", self.text)
+        self.assertNotIn("<<'PY'", self.text)
+
+    def test_the_comparison_list_and_the_consumed_decisions_are_kept_apart(self):
+        self.assertIn("comparison_list=$GATE_DECISION", self.text)
+        self.assertIn("build-stack=${STACK_DECISION", self.text)
+        self.assertIn("decisions.txt", self.text)
+        self.assertIn("--consumed-decision", self.text)
+
+    def test_the_exit_code_never_means_safe(self):
+        self.assertIn("不代表安全检查通过", self.text)
+        self.assertIn("does NOT mean the application is", self.text)
+        self.assertIn("exit 2", self.text)
+        self.assertIn("Read-only is a claim", self.text)
+
+    def test_missing_evidence_is_written_down_as_missing(self):
+        self.assertIn("census-inventory.txt", self.text)
+        self.assertIn("log-inventory.txt", self.text)
+        self.assertIn("evidence-presence.txt", self.text)
+        self.assertIn("MISSING", self.text)
+        self.assertIn("UNBOUND", self.text)
+        self.assertIn("--evidence", self.text)
+
+
 def _load_identity_tool():
     """Import the identity tool by path so its default table is the real one."""
 
@@ -2244,6 +2349,13 @@ class ModuleIdentityToolTests(unittest.TestCase):
                 (self.repo / relative).is_file(), f"源码路径不存在：{relative}"
             )
 
+    def test_the_k3_script_uses_the_tool_without_any_ambient_variables(self):
+        text = (self.repo / "tools" / "k3-gate-source-audit.sh").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn('"$PY" -I "$IDENTITY_TOOL"', text)
+        self.assertNotIn("os.environ", text)
+        self.assertIn('IDENTITY_TOOL="$CHIMERA/tools/audit_module_identity.py"', text)
 
 
 # endregion

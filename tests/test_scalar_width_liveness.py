@@ -135,6 +135,106 @@ class ScalarWidthLivenessTests(unittest.TestCase):
         self.assertNotIn('live_vlen_scalar_data', safety.records[sites[1]].reasons)
         self.assertNotIn('live_vlen_scalar_data', safety.records[sites[5]].reasons)
 
+    def test_width_selected_region_stays_unsafe_after_guard_register_is_overwritten(self):
+        safety, stack, sites = self.analyze([
+            ('csrr', 's4,vlenb'),
+            ('bnez', 's4,1014 <width_source+0x14>'),
+            ('li', 's4,0'),
+            ('jal', 'ra,2000 <carrier>'),
+            ('jal', 'ra,8000 <external>'),
+            ('j', '1018 <width_source+0x18>'),
+            ('li', 't0,1'),
+            ('ret', ''),
+        ], carrier=True)
+
+        self.assertIn('live_vlen_control_path', safety.records[sites[1]].reasons)
+        self.assertIn('live_vlen_control_path', safety.records[sites[3]].reasons)
+        self.assertIn('live_vlen_control_path', safety.records[sites[4]].reasons)
+        self.assertNotIn('live_vlen_control_path', safety.records[sites[6]].reasons)
+        self.assertNotIn('live_vlen_control_path', safety.records[sites[7]].reasons)
+        self.assertNotIn('live_vlen_scalar_data', safety.records[sites[3]].reasons)
+        self.assertIn(0x2000, stack.inherited_functions)
+        warning = next(item for item in stack.warnings
+                       if item.code == 'active-external-call' and 0x1010 in item.addresses)
+        self.assertEqual(warning.code, 'active-external-call')
+        self.assertEqual(warning.origins[0].origin, 'local-vlen-control')
+        self.assertEqual(warning.origins[0].control_guard_address, sites[1])
+        self.assertEqual(warning.origins[0].width_source_candidates, (sites[0],))
+
+    def test_nested_width_control_marks_both_arms_until_the_common_join(self):
+        safety, _, sites = self.analyze([
+            ('csrr', 's4,vlenb'),
+            ('bnez', 's4,1010 <width_source+0x10>'),
+            ('jal', 'ra,8000 <external>'),
+            ('j', '1018 <width_source+0x18>'),
+            ('bnez', 's4,1018 <width_source+0x18>'),
+            ('jal', 'ra,8004 <external2>'),
+            ('ret', ''),
+        ])
+        for index in (1, 2, 3, 4, 5):
+            self.assertIn('live_vlen_control_path', safety.records[sites[index]].reasons)
+        self.assertNotIn('live_vlen_control_path', safety.records[sites[6]].reasons)
+
+    def test_loop_body_selected_by_width_stays_unsafe_until_loop_exit(self):
+        safety, _, sites = self.analyze([
+            ('csrr', 's4,vlenb'),
+            ('bnez', 's4,100c <width_source+0xc>'),
+            ('j', '1014 <width_source+0x14>'),
+            ('jal', 'ra,8000 <external>'),
+            ('bnez', 's4,100c <width_source+0xc>'),
+            ('li', 'a0,0'),
+            ('ret', ''),
+        ])
+        for index in (1, 3, 4):
+            self.assertIn('live_vlen_control_path', safety.records[sites[index]].reasons)
+        self.assertNotIn('live_vlen_control_path', safety.records[sites[5]].reasons)
+        self.assertNotIn('live_vlen_control_path', safety.records[sites[6]].reasons)
+
+    def test_spilled_width_reload_can_control_a_path_after_source_register_is_cleared(self):
+        safety, _, sites = self.analyze([
+            ('addi', 'sp,sp,-16'),
+            ('csrr', 't0,vlenb'),
+            ('sd', 't0,8(sp)'),
+            ('li', 't0,0'),
+            ('ld', 's4,8(sp)'),
+            ('bnez', 's4,101c <width_source+0x1c>'),
+            ('jal', 'ra,8000 <external>'),
+            ('j', '101c <width_source+0x1c>'),
+            ('addi', 'sp,sp,16'),
+            ('ret', ''),
+        ])
+        self.assertIn('live_vlen_control_path', safety.records[sites[5]].reasons)
+        self.assertIn('live_vlen_control_path', safety.records[sites[6]].reasons)
+        self.assertNotIn('live_vlen_control_path', safety.records[sites[9]].reasons)
+
+    def test_unclosed_width_control_region_uses_warning_and_fail_closed_reachability(self):
+        safety, stack, sites = self.analyze([
+            ('csrr', 's4,vlenb'),
+            ('bnez', 's4,100c <width_source+0xc>'),
+            ('j', '1010 <width_source+0x10>'),
+            ('addi', 't0,t0,1'),
+            ('j', '100c <width_source+0xc>'),
+        ])
+        self.assertTrue(all(not safety.records[site].safe for site in sites[1:]))
+        warning = next(item for item in stack.warnings
+                       if item.code == 'unclosed-vlen-control-region')
+        self.assertEqual(warning.addresses, (sites[1],))
+        self.assertIn('control-region-not-closed', warning.origins[0].gaps)
+
+    def test_unknown_memory_and_independent_constant_conditions_do_not_create_width_paths(self):
+        for body in (
+            [('ld', 's4,0(a0)'), ('bnez', 's4,1010 <width_source+0x10>'),
+             ('jal', 'ra,8000 <external>'), ('j', '1014 <width_source+0x14>'), ('ret', '')],
+            [('li', 's4,0'), ('bnez', 's4,1010 <width_source+0x10>'),
+             ('jal', 'ra,8000 <external>'), ('j', '1014 <width_source+0x14>'), ('ret', '')],
+        ):
+            with self.subTest(body=body):
+                safety, stack, sites = self.analyze(body)
+                self.assertTrue(all('live_vlen_control_path' not in safety.records[site].reasons
+                                    for site in sites))
+                self.assertNotIn('unclosed-vlen-control-region',
+                                 [warning.code for warning in stack.warnings])
+
     def test_register_alias_and_backedge_do_not_lose_taint(self):
         safety, _, sites = self.analyze([
             ('csrr', 'x20,vlenb'), ('add', 't0,x20,zero'),

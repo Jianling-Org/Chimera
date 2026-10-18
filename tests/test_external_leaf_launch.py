@@ -45,6 +45,60 @@ class LeafLaunchTests(unittest.TestCase):
     def test_content_pinned_leaf_is_still_bound_to_the_resolved_modules(self):
         self.assertTrue(self.validate())
 
+    def configure_memcpy_interface(self):
+        dynamic_elf(self.resolved["app"], symbol_name="memcpy")
+        dynamic_elf(self.resolved["libc"], provider=True, ifunc=True, symbol_name="memcpy")
+        self.modules[0].sha256 = sha256(self.resolved["app"].read_bytes()).hexdigest()
+        self.modules[1].sha256 = sha256(self.resolved["libc"].read_bytes()).hexdigest()
+        self.document = {
+            "format": "chimera-external-call-contracts-v2",
+            "elf_sha256": self.modules[0].sha256,
+            "proofs": [], "rejections": [], "interface_rejections": [],
+            "no_callback_interfaces": [{
+                "target": 0x1000, "symbol": "memcpy", "provider_module": "libc",
+                "provider_library": "libc.so.6", "provider_sha256": self.modules[1].sha256,
+                "provider_address": 0x2000, "provider_size": 6, "provider_type": "STT_LOOS",
+                "provider_version": None, "imported_version": None, "got": 0x4010,
+                "status": "bound-standard-interface-no-application-callback",
+                "semantic_basis": "standard-libc-memcpy-no-application-callback-v1",
+            }],
+            "closed_calls": {"16": [0x1000]},
+        }
+        self.path.write_text(json.dumps(self.document), encoding="utf-8")
+        self.artifact.sha256 = sha256(self.path.read_bytes()).hexdigest()
+
+    def test_standard_libc_memcpy_interface_is_rebound_at_launch(self):
+        self.configure_memcpy_interface()
+        self.assertTrue(self.validate())
+
+    def test_workspace_capability_accepts_only_the_structured_memcpy_interface_contract(self):
+        from chimera.runtime.artifacts.validate.chimera.validate.capabilities import (
+            CapabilityVerificationError, verify_external_leaf_json,
+        )
+        self.configure_memcpy_interface()
+        verify_external_leaf_json(self.path, self.artifact, self.manifest, None)
+        self.document["no_callback_interfaces"][0]["semantic_basis"] = "machine-code-leaf-proof"
+        self.path.write_text(json.dumps(self.document), encoding="utf-8")
+        with self.assertRaisesRegex(CapabilityVerificationError, "incomplete"):
+            verify_external_leaf_json(self.path, self.artifact, self.manifest, None)
+
+    def test_memcpy_runtime_provider_identity_and_symbol_preemption_are_checked(self):
+        self.configure_memcpy_interface()
+        self.modules[1].runtime_name = "libshim.so"
+        with self.assertRaisesRegex(ValueError, "libc.so.6"):
+            self.validate()
+
+        self.modules[1].runtime_name = "libc.so.6"
+        shim = self.root / "shim.so"
+        dynamic_elf(shim, provider=True, ifunc=True, symbol_name="memcpy")
+        self.manifest.artifacts.append(SimpleNamespace(capability="runtime", representation="elf",
+            path="shim.so", sha256=sha256(shim.read_bytes()).hexdigest()))
+        self.resolved["shim"] = shim
+        self.modules.append(SimpleNamespace(module_id="shim", runtime_name="shim.so",
+            role="dependency", sha256=sha256(shim.read_bytes()).hexdigest()))
+        with self.assertRaisesRegex(ValueError, "interposed"):
+            self.validate()
+
     def round_tripped_manifest(self, *, owner="app"):
         from chimera.runtime.manifest import (
             ArtifactRecord, ModuleRecord, WorkspaceManifest,

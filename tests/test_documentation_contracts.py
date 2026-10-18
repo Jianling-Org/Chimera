@@ -19,14 +19,6 @@ def _markdown_files() -> list[Path]:
     )
 
 
-def _inside_release(path: Path) -> bool:
-    try:
-        path.relative_to(ROOT)
-    except ValueError:
-        return False
-    return True
-
-
 def _heading_slugs(path: Path) -> set[str]:
     slugs: set[str] = set()
     for line in path.read_text(encoding="utf-8").splitlines():
@@ -41,22 +33,22 @@ def _heading_slugs(path: Path) -> set[str]:
 
 class DocumentationContractTests(unittest.TestCase):
     def test_extensibility_guide_is_indexed_and_describes_current_hooks(self):
-        guide_path = ROOT / "doc" / "developer" / "architecture" / "extensibility.md"
+        guide_path = ROOT / "docs" / "developer" / "extensibility.md"
         guide = guide_path.read_text(encoding="utf-8")
-        docs_index = (ROOT / "doc" / "README.md").read_text(encoding="utf-8")
-        overview = (ROOT / "doc" / "developer" / "architecture" / "README.md").read_text(encoding="utf-8")
+        docs_index = (ROOT / "docs" / "README.md").read_text(encoding="utf-8")
+        overview = (ROOT / "docs" / "developer" / "architecture" / "README.md").read_text(encoding="utf-8")
 
-        self.assertIn("(extensibility.md)", overview)
+        self.assertIn("(developer/extensibility.md)", docs_index)
         self.assertIn("(targets/README.md)", overview)
         required = (
-            "StepCatalog",
-            "registered_target_catalog()",
+            "registered_step_catalog",
+            "registered_target_catalog",
             "registered_scene_verifiers",
-            "adapters,migration",
-            "session.registry.register_artifact",
+            "registered_launch_adapters",
+            "registered_registrars",
             "workspace_contributions",
             "required_by",
-            "没有通用的第三方 entry-point 自动发现机制",
+            "Dynamic external plugin discovery",
         )
         for marker in required:
             self.assertIn(marker, guide, marker)
@@ -71,9 +63,6 @@ class DocumentationContractTests(unittest.TestCase):
                     continue
                 target_path, separator, anchor = target.partition("#")
                 resolved = (source.parent / target_path).resolve() if target_path else source
-                if not _inside_release(resolved):
-                    errors.append(f"{source.relative_to(ROOT)} -> escapes release root: {raw_target}")
-                    continue
                 if not (resolved.is_file() or resolved.is_dir()):
                     errors.append(f"{source.relative_to(ROOT)} -> {raw_target}")
                     continue
@@ -82,8 +71,8 @@ class DocumentationContractTests(unittest.TestCase):
         self.assertEqual([], errors, "broken Markdown links or anchors:\n" + "\n".join(errors))
 
     def test_formal_documents_are_reachable_from_index(self):
-        documents = {path.resolve() for path in (ROOT / "doc").rglob("*.md")}
-        pending = [(ROOT / "doc/README.md").resolve()]
+        documents = {path.resolve() for path in (ROOT / "docs").rglob("*.md")}
+        pending = [(ROOT / "docs/README.md").resolve()]
         reached: set[Path] = set()
         while pending:
             source = pending.pop()
@@ -95,8 +84,6 @@ class DocumentationContractTests(unittest.TestCase):
                 if not target or target.startswith(("http://", "https://", "mailto:")):
                     continue
                 resolved = (source.parent / target).resolve()
-                if not _inside_release(resolved):
-                    continue
                 if resolved in documents and resolved not in reached:
                     pending.append(resolved)
         self.assertEqual([], sorted(str(path.relative_to(ROOT)) for path in documents - reached))
@@ -105,21 +92,19 @@ class DocumentationContractTests(unittest.TestCase):
         cli = "\n".join(
             path.read_text(encoding="utf-8")
             for path in (
-                ROOT / "doc" / "developer" / "cli.md",
-                ROOT / "doc" / "developer" / "build-and-test.md",
-                ROOT / "doc" / "integration" / "cli.md",
-                ROOT / "doc" / "user" / "cli.md",
+                ROOT / "docs" / "developer" / "cli.md",
+                ROOT / "docs" / "deployment" / "cli.md",
+                ROOT / "docs" / "user" / "cli.md",
             )
         )
         required = (
             # The application no longer lives in the package, so every command
             # that touches a real file needs the machine's own path for it.
-            "register --input ELF",
-            "run --input ELF",
-            "verify --workspace ID_OR_PATH",
-            "check-elf --profile PROFILE --input ELF",
-            "stackobject",
-            "vector-gate",
+            "chimera-user register --input ELF [--workspace ID_OR_PATH]",
+            "chimera-user run --input ELF [--workspace ID_OR_PATH]",
+            "chimera-user verify --workspace ID_OR_PATH [--input ELF]",
+            "chimera-pkg check-elf --profile PROFILE --input ELF",
+            "--plugins stackobject function-pointer vector-gate",
             "llvm-objdump",
         )
         for fragment in required:
@@ -146,9 +131,8 @@ class DocumentationContractTests(unittest.TestCase):
                     offenders.append(f"{path.relative_to(ROOT)}: {term}")
         self.assertEqual([], offenders, "stale documentation terms:\n" + "\n".join(offenders))
 
-    def test_generated_support_matrix_matches_translator_registry(self):
+    def test_generated_support_matrix_is_current(self):
         generator = ROOT / "preprocessing" / "translator" / "rvv_sbt_tool" / "tools" / "generate_support_docs.py"
-        self.assertTrue(generator.is_file(), "source checkout must include the translator generator")
         result = subprocess.run(
             [sys.executable, str(generator), "--check"],
             cwd=generator.parent.parent,

@@ -202,7 +202,8 @@ class BinaryCheckPlanTests(unittest.TestCase):
             elf = Path(directory) / "app"
             elf.write_bytes(b"ELF payload")
             with mock.patch("chimera.check_elf.ChimeraMetadata.from_elf", return_value=mock.Mock(capabilities=frozenset())), \
-                mock.patch("chimera.check_elf.collect_diagnostics", return_value=result) as collect:
+                mock.patch("chimera.check_elf.collect_diagnostics", return_value=result) as collect, \
+                mock.patch("chimera.check_elf.selected_check_modules", return_value=()):
                 outcome = request.run(elf, __import__(
                     "chimera.preprocess.offline.analysis_profile.checks",
                     fromlist=["BinaryCheckContext"],
