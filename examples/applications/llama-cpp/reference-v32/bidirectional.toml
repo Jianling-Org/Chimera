@@ -1,7 +1,6 @@
 # Reference conditional scope; replace all /absolute/path entries and CHIMERA_MAP_PIN.
 [config]
 data_root = "/absolute/path/to/reference-run/data"
-workspace_root = "/absolute/path/to/reference-run/workspaces"
 scalar_root = "/absolute/path/to/scalar"
 workspace_name = "auto"
 

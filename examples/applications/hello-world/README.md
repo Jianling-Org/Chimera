@@ -6,7 +6,7 @@
 
 需要 Linux / RISC-V64 / RVV 目标、支持 `<riscv_vector.h>` 的编译器、目标 `objdump/nm`、CMake、Python 与 Chimera。准备环境须有 scalar 底座与翻译器；运行环境还需匹配的 BPF map、迁移控制接口及权限。源文件支持便携标量分支，但 `CHIMERA_HELLO_VECTOR=portable` 不能证明 RVV 路径可用。
 
-默认 Profile 为 [hello-world.toml](../../platforms/k3/hello-world.toml)，声明 1024→256 的翻译与 safety workflow。它的工具名、scalar_root 和翻译器路径需要符合所在机器；`config.workspace_root` 已被公开 CLI 忽略。
+默认 Profile 为 [hello-world.toml](../../platforms/k3/hello-world.toml)，声明 1024→256 的翻译与 safety workflow。使用前核对工具名、`scalar_root` 和翻译器路径。Workspace 默认写入 CLI 配置的根目录；需要独立输出目录时，在 `prepare` 中传入 `--workspace-root`。
 
 ## 构建与严格检查
 
@@ -76,7 +76,16 @@ chimera-user migrate --workspace hello_world --threads "$PID" --direction 1024-t
 wait "$PID"
 ```
 
-若报 `migration not ready`，等待 Runtime 初始化后在进程存活期间重试。当前 [run_hello_world.sh](../../scripts/run/run_hello_world.sh) 仍含旧的 `register --verify` 和缺少 `--input` 的调用，不能直接用于现有 CLI；使用上面的显式命令。
+若报 `migration not ready`，等待 Runtime 初始化后在进程存活期间重试。
+
+也可从仓库根目录使用 [run_hello_world.sh](../../scripts/run/run_hello_world.sh) 执行上述流程：
+
+```bash
+CHIMERA_EXAMPLE_ELF="$ELF" CHIMERA_EXAMPLE_WORKSPACE=hello_world \
+  bash examples/scripts/run/run_hello_world.sh
+```
+
+脚本依次验证 Workspace、注册实际 ELF、启动应用并提交迁移请求，检查应用退出状态和地址重写日志。默认 ELF 为 `~/.chimera/examples/hello_world/hello-world`，可用 `CHIMERA_EXAMPLE_ELF` 覆盖；整个示例运行由 30 秒 watchdog 限时。
 
 ## 验证与证据边界
 

@@ -1,6 +1,5 @@
 [config]
 data_root = "~/.chimera/data"
-workspace_root = "~/.chimera/workspaces"
 scalar_root = "~/.chimera/scalar"
 workspace_name = "auto"
 
