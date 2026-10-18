@@ -3,8 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from riscv.frontend.model import CFGEdgeKind
-from riscv.frontend.literals import parse_integer_literal
 from riscv.frontend.model import PLTTarget, ProgramStructure
 import re
 from collections import Counter
@@ -15,7 +13,6 @@ from typing import Any, Callable
 from riscv.registers import CALL_CLOBBERED_FPRS, CALL_CLOBBERED_GPRS, normalize_gpr_name
 from riscv.frontend.model import CallEdge, CallEdgeKind, CallGraph
 from riscv.frontend.model import RVFunction, RVInstruction
-from riscv.frontend.text_index import TextProgramIndex
 
 
 _QUERY_FP_START = len(CALL_CLOBBERED_GPRS) * 8
@@ -76,7 +73,7 @@ class ControlFlowEmitter:
     """集中实现程序标签、直接跳转、间接查表和 JAL 跳板。"""
 
     _mem_operand_pattern = re.compile(
-        r"^(?P<offset>[-+]?(?:0[xX][0-9a-fA-F]+|0[bB][01]+|\d+))?"
+        r"^(?P<offset>[-+]?(?:0x[0-9a-fA-F]+|\d+))?"
         r"\((?P<base>[A-Za-z][A-Za-z0-9]*)\)$"
     )
 
@@ -164,12 +161,12 @@ class ControlFlowEmitter:
             (
                 edge
                 for edge in function_analysis.cfg.edges_for_source(insn.address)
-                if edge.kind
+                if edge.kind.value
                 in {
-                    CFGEdgeKind.CONDITIONAL_BRANCH,
-                    CFGEdgeKind.UNCONDITIONAL_JUMP,
-                    CFGEdgeKind.DIRECT_CALL,
-                    CFGEdgeKind.TAIL_CALL,
+                    "conditional-branch",
+                    "unconditional-jump",
+                    "direct-call",
+                    "tail-call",
                 }
             ),
             None,
@@ -387,7 +384,7 @@ class ControlFlowEmitter:
         if target_index is None or not operands:
             return None
         target_op = str(operands[target_index]).strip()
-        is_plt_target = "@plt" in target_op
+        is_plt_target = target_op.endswith("@plt")
 
         if is_plt_target:
             candidate = context.structure.plt_candidates.get(insn.address) if context else None
@@ -520,6 +517,7 @@ class ControlFlowEmitter:
         *,
         context: ControlFlowContext | None,
         active_long_jump_veneers: dict[str, tuple[str, str]],
+        emit_indirect_sites: bool = False,
     ) -> list[str]:
         direct = self._emit_direct_control_flow_instruction(
             insn,
@@ -539,6 +537,7 @@ class ControlFlowEmitter:
             return self._emit_indirect_jump_lookup(
                 insn, operands, plt_candidate=candidate,
                 original_base_symbol=base_delta_symbol,
+                emit_indirect_sites=emit_indirect_sites,
             )
         return self.emit_scalar_instruction(insn, operands)
 
@@ -551,7 +550,10 @@ class ControlFlowEmitter:
         rd = normalize_gpr_name(str(operands[0])) or str(operands[0])
         temp = "t1" if rd == "t0" else "t0"
         imm_str = str(operands[1]).strip()
-        offset_32bit = TextProgramIndex.auipc_displacement(insn)
+        imm = int(imm_str, 0 if imm_str.startswith("0x") else 16)
+        offset_32bit = (imm & 0xFFFFF) << 12
+        if offset_32bit & 0x80000000:
+            offset_32bit -= 0x100000000
         target_rel_addr = insn.address + offset_32bit
         if rd == "sp":
             # Commit SP only after the old stack has restored every temporary.
@@ -585,19 +587,13 @@ class ControlFlowEmitter:
         self, insn: RVInstruction, operands: list[object], *,
         plt_candidate: PLTTarget | None = None,
         original_base_symbol: str = "",
+        emit_indirect_sites: bool = False,
     ) -> list[str]:
-        try:
-            parsed = self._parse_indirect_jump_operands(insn.opcode, operands)
-        except ValueError as exc:
-            raise ValueError(
-                f"Invalid {insn.opcode} at {insn.address:#x}: {insn.op_str}: {exc}"
-            ) from exc
+        parsed = self._parse_indirect_jump_operands(insn.opcode, operands)
         if parsed is None:
-            raise ValueError(f"Invalid {insn.opcode} operands at {insn.address:#x}: {insn.op_str}")
+            return self.emit_scalar_instruction(insn, operands)
         rd, base_reg, offset = parsed
-        base_reg = normalize_gpr_name(base_reg)
-        if base_reg is None:
-            raise ValueError(f"Invalid {insn.opcode} base register at {insn.address:#x}: {insn.op_str}")
+        base_reg = normalize_gpr_name(base_reg) or base_reg
         link_reg = normalize_gpr_name(rd) if rd else ("zero" if insn.opcode == "jr" else "ra")
         no_link = link_reg == "zero"
         target_slot = _QUERY_EXTRA_START
@@ -648,10 +644,22 @@ class ControlFlowEmitter:
                 *self._emit_query_call_epilogue(extra_slots=extra_slots),
                 *self.emit_scalar_instruction(insn, operands),
                 f"{reject_label}:",
-                *self._emit_query_call_epilogue(extra_slots=extra_slots),
+                *([f"    sd      a0, {target_slot}(sp)", *self._emit_query_restore_registers()]
+                  if emit_indirect_sites else self._emit_query_call_epilogue(extra_slots=extra_slots)),
+                *([f".Lchimera_no_link_{insn.address:x}:"] if emit_indirect_sites else []),
                 "    # Unsupported no-link indirect target remap",
                 "    ebreak",
             ))
+            if emit_indirect_sites:
+                lines.extend((
+                    '    .pushsection .data.rel.ro.chimera_no_link,"aw",@progbits',
+                    "    .balign 8",
+                    f"    .quad .Lchimera_no_link_{insn.address:x}",
+                    f"    .quad {frame_size}",
+                    f"    .quad {target_slot}",
+                    f"    .quad {insn.address}",
+                    "    .popsection",
+                ))
             return lines
         lines.append(f"    sd      a0, {target_slot}(sp)")
         jump_reg = link_reg
@@ -660,7 +668,9 @@ class ControlFlowEmitter:
         lines.extend(self._emit_query_restore_registers(skip={jump_reg}))
         lines.append(f"    ld      {jump_reg}, {target_slot}(sp)")
         lines.append(f"    addi    sp, sp, {frame_size}")
-        if rd:
+        if insn.opcode == "jr":
+            lines.append(f"    jr      {jump_reg}")
+        elif rd:
             lines.append(f"    jalr    {rd}, 0({jump_reg})")
         else:
             lines.append(f"    jalr    {jump_reg}")
@@ -670,8 +680,8 @@ class ControlFlowEmitter:
         self, opcode: str, operands: list[object]
     ) -> tuple[str | None, str, int] | None:
         string_ops = [str(operand).strip() for operand in operands]
-        if opcode == "ret":
-            return ("zero", "ra", 0) if not string_ops else None
+        if opcode == "ret" and not string_ops:
+            return "zero", "ra", 0
         if opcode == "jr":
             if len(string_ops) != 1:
                 return None
@@ -682,9 +692,9 @@ class ControlFlowEmitter:
             return (None, base_reg, offset) if base_reg is not None else None
         if len(string_ops) == 3:
             try:
-                return string_ops[0], string_ops[1], parse_integer_literal(string_ops[2])
-            except ValueError as exc:
-                raise ValueError(f"Invalid JALR offset: {string_ops[2]!r}") from exc
+                return string_ops[0], string_ops[1], int(string_ops[2], 0)
+            except ValueError:
+                return None
         if len(string_ops) == 2:
             base_reg, offset = self._parse_jump_target_operand(string_ops[1])
             return (
@@ -697,14 +707,8 @@ class ControlFlowEmitter:
     def _parse_jump_target_operand(self, operand: str) -> tuple[str | None, int]:
         match = self._mem_operand_pattern.match(operand)
         if not match:
-            if "(" in operand or ")" in operand:
-                raise ValueError(f"Invalid JALR target operand: {operand!r}")
             return operand, 0
-        try:
-            offset = parse_integer_literal(match.group("offset") or "0")
-        except ValueError as exc:
-            raise ValueError(f"Invalid JALR offset in {operand!r}") from exc
-        return match.group("base"), offset
+        return match.group("base"), int(match.group("offset") or "0", 0)
 
     def _emit_checked_query_call(self) -> list[str]:
         # The caller reserves one extra slot, reused for the result by JALR.

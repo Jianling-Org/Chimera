@@ -1,4 +1,4 @@
-# LLVM 21.1.0 补丁系列
+# LLVM 21.1.0 Patch Series
 
 本目录中的补丁仅针对干净的 LLVM `llvmorg-21.1.0`，必须按文件名前缀顺序应用。十二个补丁是依赖有序的 concern series；不得跳号、并行应用或把职责重新合并。
 
@@ -107,8 +107,9 @@
 
 文件：`0008-AsmPrinter-one-Chimera-PCSections-record-per-MI.patch`
 
-- 保证 `.chimera.stackobj_map` 每条记录只有一个 PC 和一个 SOID，保持固定
-  12 字节布局。upstream PCSections 发射把共享同一
+- 修复 2026-08-27 llama.cpp 端到端首跑暴露的 `.chimera.stackobj_map`
+  尺寸非 12 字节倍数问题（`chimera: error: .chimera.stackobj_map size is
+  not a multiple of 12 bytes`）：upstream PCSections 发射把共享同一
   metadata node 的所有 MachineInstr PC 聚成一个条目（N×pointer-size
   之后只发一次 aux），与 Chimera 固定 `[u64 PC][u32 SOID]` 记录布局冲突；
 - 一个 node 合法地对应多条 MI 有两条途径：SelectionDAG 把一条 IR 指令
@@ -128,6 +129,10 @@
 
 依赖 0001/0002（改动位于其插入的 helper 之后）；0003–0007 不触碰
 AsmPrinter.cpp，故 series 顺序上固定为最后一项。
+
+状态：2026-08-27 新增。`git am` 干净应用性已对照 llvmorg-21.1.0 + 0001
++ 0002 后的 AsmPrinter.cpp 精确验证；服务器侧 patched-llvm 重建、lit
+  与端到端复验待执行。
 
 ## 0009：`chimera-no-vectorize` auto-vectorization gate（基础语义）
 
@@ -166,7 +171,8 @@ AsmPrinter.cpp，故 series 顺序上固定为最后一项。
   `vse`，其字节范围随 VLEN 变化）；
 - 0012 将 census 接到同一最终决策接口：门在形状/合法性检查之后生效，
   只有本来会形成向量类型的查询记录 `MEMOP formed|blocked`，并通过
-  late function ID 归属到函数。
+  late function ID 归属到函数；旧的无函数名 `memop-census` 仅保留在
+  本补丁的历史 diff 中。
 - includes：`FileSystem.h`（`sys::fs::OF_Append`，21.1.0 无 `CD_Append`
   枚举；`OF_Append` 经 `nativeOpenFlags()` 强制 `CD_OpenAlways` +
   `O_APPEND`，即不存在则创建、存在则追加，不截断）与 `<cstdlib>`。

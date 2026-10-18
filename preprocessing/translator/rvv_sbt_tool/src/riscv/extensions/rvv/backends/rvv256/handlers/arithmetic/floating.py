@@ -58,6 +58,7 @@ def _build_vfadd_vv_lines(context) -> list[str]:
     sew = state.sew
     chunk_n = _chunk_size(sew)
     c_bytes = _chunk_bytes()
+    elem_bytes = sew // 8
     shift_amt = {8: 5, 16: 4, 32: 3, 64: 2}[sew]
     mask = chunk_n - 1
 
@@ -905,6 +906,7 @@ def _build_vfsub_vv_lines(context) -> list[str]:
     sew = state.sew
     chunk_n = _chunk_size(sew)
     c_bytes = _chunk_bytes()
+    elem_bytes = sew // 8
     shift_amt = {8: 5, 16: 4, 32: 3, 64: 2}[sew]
     mask = chunk_n - 1
 
@@ -1028,6 +1030,7 @@ def _build_vfmul_vv_lines(context) -> list[str]:
     sew = state.sew
     chunk_n = _chunk_size(sew)
     c_bytes = _chunk_bytes()
+    elem_bytes = sew // 8
     shift_amt = {8: 5, 16: 4, 32: 3, 64: 2}[sew]
     mask = chunk_n - 1
 
@@ -1234,8 +1237,6 @@ def _build_vfdiv_vv_lines(context) -> list[str]:
     lines.append(f"    # --- 尾部 RVV chunk: 剩余 {tail_count} 个元素 ---")
     end_label = new_label("vfdiv_vv_end")
     lines.append(f"    beqz    {tail_count}, {end_label}")
-    if is_masked:
-        _emit_mask_extraction_chunk(lines, sew, mask_bit_idx, v0_base, vl_reg, temp)
     lines.append(f"    vsetvli zero, {tail_count}, e{sew}, m1, ta, ma")
     lines.append(f"    {vle_instr} {vs2_vreg}, ({vs2_ptr})         # 加载 {vs2} tail")
     lines.append(f"    {vle_instr} {vs1_vreg}, ({vs1_ptr})         # 加载 {vs1} tail")
@@ -1501,6 +1502,7 @@ def _build_vfnmsac_vf_lines(context) -> list[str]:
     sew = state.sew
     chunk_n = _chunk_size(sew)
     c_bytes = _chunk_bytes()
+    elem_bytes = sew // 8
     shift_amt = {8: 5, 16: 4, 32: 3, 64: 2}[sew]
     mask = chunk_n - 1
 
@@ -1844,8 +1846,7 @@ def _build_vfncvt_f_f_w_lines(context) -> list[str]:
     input_sew = output_sew * 2
 
     if output_sew not in (16, 32):
-        raise InstructionValidationError(
-            insn,
+        raise ValueError(
             f"vfncvt.f.f.w 当前仅支持输出 SEW=16/32 (e32->e16, e64->e32), "
             f"实际为 SEW={state.sew}"
         )
@@ -1966,8 +1967,7 @@ def _build_vfncvt_x_f_w_lines(context) -> list[str]:
     input_sew = output_sew * 2
 
     if output_sew not in (16, 32):
-        raise InstructionValidationError(
-            insn,
+        raise ValueError(
             f"vfncvt.x.f.w 当前仅支持输出 SEW=16/32, "
             f"实际为 SEW={state.sew}"
         )

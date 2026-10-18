@@ -10,7 +10,7 @@
 
 import re
 from typing import Iterable
-from riscv.extensions.rvv.translation.temps import TempRegisterAllocationError, record_vreg_group
+from riscv.extensions.rvv.translation.temps import record_vreg_group
 from riscv.frontend.model import RVInstruction
 
 VREG_TEMP_POOL = tuple(f"v{i}" for i in range(24, 32))
@@ -37,7 +37,7 @@ class VRegTempAllocator:
 
     def alloc_vreg(self) -> str:
         if not self._free:
-            raise TempRegisterAllocationError("可用临时向量寄存器不足")
+            raise ValueError("可用临时向量寄存器不足")
         register = self._free.pop(0)
         record_vreg_group(register, 1)
         return register
@@ -60,4 +60,4 @@ class VRegTempAllocator:
                 record_vreg_group(reg, width)
                 return reg
 
-        raise TempRegisterAllocationError(f"无法分配宽度为 {width} 的连续临时向量寄存器组")
+        raise ValueError(f"无法分配宽度为 {width} 的连续临时向量寄存器组")

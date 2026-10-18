@@ -33,6 +33,7 @@ from .model import (
     ORIGIN_LOCAL_FRAME,
     ORIGIN_LOCAL_SETUP,
     ORIGIN_LOCAL_SCALAR,
+    ORIGIN_LOCAL_CONTROL,
     ORIGIN_VECTOR_DATA,
     StackAccessKind,
     StackFunctionLiveness,
@@ -59,6 +60,7 @@ _ORIGIN_BY_SOURCE = {
     "vlen_stack_frame": ORIGIN_LOCAL_FRAME,
     "vlen_stack_setup": ORIGIN_LOCAL_SETUP,
     "vlen_scalar": ORIGIN_LOCAL_SCALAR,
+    "vlen_control": ORIGIN_LOCAL_CONTROL,
 }
 
 #: The prose line of each structured origin.  Classification never reads it.
@@ -66,6 +68,10 @@ _ORIGIN_TEXT = {
     ORIGIN_LOCAL_SCALAR: (
         "live hardware-width scalar cache: a value derived from vector width "
         "is still used in a scalar register or private frame slot"
+    ),
+    ORIGIN_LOCAL_CONTROL: (
+        "width-selected control region: a branch condition depends on a known "
+        "VLEN-derived value; the selected CFG region remains unsafe until its join"
     ),
     ORIGIN_INHERITED: (
         "live caller-inherited stack data: an earlier active call propagated "
@@ -168,7 +174,7 @@ def _origin_record(
         allocation=None if allocation is None else allocation.adjustment,
         release=None if allocation is None else allocation.release,
         dependency=(
-            "vlen" if kind == ORIGIN_LOCAL_SCALAR else
+            "vlen" if kind in (ORIGIN_LOCAL_SCALAR, ORIGIN_LOCAL_CONTROL) else
             None
             if allocation is None
             else allocation.dependency
@@ -176,6 +182,10 @@ def _origin_record(
         proof=None if allocation is None else allocation.proof,
         gaps=() if allocation is None else allocation.gaps,
         width_evidence=width_evidence,
+        control_guard_address=(int(obj.value) if kind == ORIGIN_LOCAL_CONTROL
+                               and isinstance(obj.value, int) else None),
+        width_source_candidates=(tuple(sorted(source.address for source in local.scalar_width_sources))
+                                 if kind == ORIGIN_LOCAL_CONTROL else ()),
     )
 
 # region Local and interprocedural liveness

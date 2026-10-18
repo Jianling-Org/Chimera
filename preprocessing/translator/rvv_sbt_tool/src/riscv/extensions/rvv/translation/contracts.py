@@ -319,7 +319,7 @@ class InstructionValidationError(ValueError):
 
     def __init__(
         self,
-        instruction: RVInstruction,
+        instruction: Any,
         detail: str,
         *,
         status: LoweringStatus = LoweringStatus.INVALID,
@@ -341,7 +341,7 @@ class UnsupportedInstructionError(RuntimeError):
     策略，而不必比较异常类名字符串。消息格式沿用既有 CLI 合同。
     """
 
-    def __init__(self, instruction: RVInstruction, detail: str | None = None):
+    def __init__(self, instruction: Any, detail: str | None = None):
         self.instruction = instruction
         # ``insn`` 是既有测试和调用方使用的属性名，属于公开兼容边界。
         self.insn = instruction

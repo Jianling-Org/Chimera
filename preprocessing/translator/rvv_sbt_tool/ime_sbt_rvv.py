@@ -16,16 +16,13 @@ def main() -> int:
     parser.add_argument("-o", "--output", type=Path)
     args = parser.parse_args()
     try:
-        output = translate_assembly(args.input.read_text(encoding="utf-8"))
-    except (ValueError, RuntimeError, OSError) as exc:
+        output = translate_assembly(args.input.read_text())
+    except (ValueError, RuntimeError) as exc:
         parser.exit(2, f"{exc}\n")
-    try:
-        if args.output:
-            args.output.write_text(output, encoding="utf-8")
-        else:
-            sys.stdout.write(output)
-    except (OSError, UnicodeError) as exc:
-        parser.exit(2, f"{args.output or '<stdout>'}: {exc}\n")
+    if args.output:
+        args.output.write_text(output)
+    else:
+        sys.stdout.write(output)
     return 0
 
 

@@ -37,7 +37,7 @@ class ScalarDispatcher:
         """
         初始化分发器，建立指令到处理函数的映射表
         """
-        # 循环标签计数器 (实例变量，每个发射会话独占)
+        # 循环标签计数器 (实例变量，线程安全)
         self._loop_counter = 0
         self._emission_session = None
 
@@ -46,7 +46,7 @@ class ScalarDispatcher:
 
     def get_loop_label(self, prefix: str = "math") -> str:
         """
-        生成唯一的循环标签 (实例方法，按发射会话维护)
+        生成唯一的循环标签 (实例方法，线程安全)
 
         :param prefix: 标签前缀
         :return: 唯一标签字符串
@@ -104,8 +104,9 @@ class ScalarDispatcher:
     def fallback_result(self, insn: RVInstruction, reason: str) -> None:
         """标量后端策略为 ``raise``，不提供任何运行时 fallback 文案。
 
-        ``None`` 表示未提供后端专用模板；core 的 ebreak 策略可使用通用
-        模板。当前 scalar profile 使用 raise，不执行运行时 fallback。
+        显式返回 ``None`` 而不是省略方法：如果未来有人把标量 profile
+        改成 ``ebreak``，会在这里暴露缺失的品牌化合同，而不是静默退回
+        core 通用模板后被误当成已验证的标量行为。
         """
 
         return None

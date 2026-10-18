@@ -14,12 +14,14 @@ from .dependencies import _known_control_dependence
 from .expressions import Expr, Constant, Input, VLENB, _affine_terms, classify_stack_address_expression
 from .instruction_facts import instruction_predecessors
 from .model import (
-    ActiveOrigin, AnalysisWarning, ORIGIN_LOCAL_SCALAR, ScalarWidthSource, StackObjectId,
-    VLEN_SCALAR_ESCAPE, ScalarLeafCallDiagnostic, ScalarWidthEvidence, ScalarWidthSlotDiagnostic,
+    ActiveOrigin, AnalysisWarning, ORIGIN_LOCAL_CONTROL, ORIGIN_LOCAL_SCALAR,
+    ScalarWidthSource, StackObjectId, VLEN_CONTROL_FALLBACK, VLEN_SCALAR_ESCAPE,
+    ScalarLeafCallDiagnostic, ScalarWidthEvidence, ScalarWidthSlotDiagnostic,
 )
 
 VLEN_SCALAR_DATA = StackObjectId("vlen_scalar", "hardware-width-cache")
 _MARKER = frozenset({VLEN_SCALAR_DATA})
+_CONTROL_MARKER_SOURCE = "vlen_control"
 _ANY_FRAME = ("frame", None)
 
 
@@ -353,7 +355,7 @@ def analyze_scalar_width_liveness(function, expressions, semantics, *, domain=No
                for a, f in facts.items() if f.memory or f.vector_memory}
     private = {a for a, region in regions.items()
                if _region_is_private(region, expressions.before_states.get(a, {}), min_vlen_bits // 8)}
-    control, _, control_fallback = _known_control_dependence(function, semantics)
+    control, unsafe_guards, _control_fallback = _known_control_dependence(function, semantics)
     by_controller = {}
     for a, controllers in control.items():
         for controller in controllers:
@@ -364,7 +366,7 @@ def analyze_scalar_width_liveness(function, expressions, semantics, *, domain=No
     scope = {}
     call_effects = {}
     fallback = False
-    control_fallback_used = False
+    control_fallback_guards = set()
     entry = function.insts[0].addr
     work = deque([entry])
     queued = {entry}
@@ -393,9 +395,9 @@ def analyze_scalar_width_liveness(function, expressions, semantics, *, domain=No
                 if dependent not in queued:
                     work.append(dependent)
                     queued.add(dependent)
-            if control_fallback:
+            if address in unsafe_guards:
                 fallback = True
-                control_fallback_used = True
+                control_fallback_guards.add(address)
         registers = set(incoming.registers)
         frame = set(incoming.frame_bytes)
         vectors = set(incoming.vectors)
@@ -729,6 +731,32 @@ def analyze_scalar_width_liveness(function, expressions, semantics, *, domain=No
         successors=lambda a: instructions[a].succ, predecessors=lambda a: predecessors[a],
         use_def=lambda a: (uses[a], defs[a]))
     markers = {}
+    control_markers = {}
+    for address, controllers in control.items():
+        active_controllers = controllers & known_guards
+        if active_controllers:
+            control_markers.setdefault(address, set()).update(
+                StackObjectId(_CONTROL_MARKER_SOURCE, guard)
+                for guard in active_controllers)
+    for guard in known_guards:
+        marker = StackObjectId(_CONTROL_MARKER_SOURCE, guard)
+        control_markers.setdefault(guard, set()).add(marker)
+        if guard not in unsafe_guards:
+            continue
+        # If post-dominance could not close this width-dependent region (or
+        # exhausted its bounded edge budget), retain the path guard through
+        # every CFG-reachable instruction.  This may mark extra blocks unsafe,
+        # but cannot silently turn a width-selected path native-safe.
+        pending = list(instructions[guard].succ)
+        seen = {guard}
+        while pending:
+            current = pending.pop()
+            if current in seen or current not in instructions:
+                continue
+            seen.add(current)
+            control_markers.setdefault(current, set()).add(marker)
+            pending.extend(instructions[current].succ)
+
     for address, incoming in before.items():
         wanted = live[address]
         if (incoming.escaped
@@ -739,8 +767,33 @@ def analyze_scalar_width_liveness(function, expressions, semantics, *, domain=No
                 _ANY_FRAME in wanted or any(("frame", b) in wanted for b in incoming.frame_bytes))
             ):
             markers[address] = _MARKER
-    if control_fallback_used:
-        escapes.setdefault(sources[0].address, "width-controlled CFG lifetime could not be closed")
+    width_source_addresses = tuple(sorted(source.address for source in sources))
+    for address, objects in control_markers.items():
+        if address not in instructions:
+            continue
+        markers[address] = markers.get(address, frozenset()) | frozenset(objects)
+    control_warnings = tuple(
+        AnalysisWarning(
+            code=VLEN_CONTROL_FALLBACK,
+            message=(f"width-dependent branch at {guard:#x} has no reliably closed "
+                     "control region; all CFG-reachable instructions were kept unsafe"),
+            function_start=function.start,
+            addresses=(guard,),
+            details=("control-region closure failed; conservative reachability fallback applied",
+                     "width-source candidates: " + ", ".join(hex(a) for a in width_source_addresses)),
+            origins=(ActiveOrigin(
+                origin=ORIGIN_LOCAL_CONTROL,
+                object_source=_CONTROL_MARKER_SOURCE,
+                object_id=str(StackObjectId(_CONTROL_MARKER_SOURCE, guard)),
+                detail="unclosed width-selected CFG control region",
+                dependency="vlen",
+                gaps=("control-region-not-closed",),
+                control_guard_address=guard,
+                width_source_candidates=width_source_addresses,
+            ),),
+        )
+        for guard in sorted(control_fallback_guards)
+    )
     warnings = tuple(_warning(function, a, reason, proof=scope.get(a, (None, ()))[0],
                               gaps=scope.get(a, (None, ()))[1],
                               evidence=_width_evidence(a, before.get(a, _EMPTY), live[a], facts[a],
@@ -768,5 +821,5 @@ def analyze_scalar_width_liveness(function, expressions, semantics, *, domain=No
                 regions.get(address, _Region(None, None)), address in private,
                 control.get(address, set()) & known_guards,
                 prover=None, instruction=instructions[address])))
-    warnings += tuple(call_snapshots)
+    warnings += tuple(call_snapshots) + control_warnings
     return AddressStateMap(domain, EMPTY_STATES, markers), sources, warnings, fallback

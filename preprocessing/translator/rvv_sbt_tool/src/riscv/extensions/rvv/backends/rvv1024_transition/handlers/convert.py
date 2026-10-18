@@ -16,7 +16,7 @@ from __future__ import annotations
 from typing import List, Sequence
 
 from riscv.extensions.rvv.backends.rvv1024_transition import state_view
-from riscv.extensions.rvv.analysis.model import LMUL_TOKENS
+from riscv.extensions.rvv.analysis.model import LEGAL_LMULS, LMUL_TOKENS
 from riscv.extensions.rvv.analysis.config import StateTracker
 from riscv.extensions.rvv.translation.temps import TempRegisterAllocator, record_vreg_group
 from riscv.extensions.rvv.backends.rvv1024_transition.execution import (
@@ -37,6 +37,7 @@ from riscv.extensions.rvv.backends.rvv1024_transition.operands import (
 from riscv.extensions.rvv.backends.rvv1024_transition.operands import _validate_lmul
 
 
+_LEGAL_LMULS = LEGAL_LMULS
 
 
 
@@ -62,6 +63,7 @@ def _emit_mixed_width_write(
             _validate_lmul(source_lmul, f"源 {source_vreg}")[1]
             for source_vreg, source_lmul in vector_sources
         ]
+        state_view
         requested_widths = [result_width, *source_widths]
         if mask_source is not None:
             requested_widths.append(1)
@@ -180,17 +182,22 @@ def _emit_extend(insn, state, allocator,  opcode: str, factor: int) -> List[str]
 
 def _emit_narrow(insn, state, allocator,  opcode: str, *, immediate: int | None = None) -> List[str]:
     """翻译窄化：当前 vtype 是窄目的，vs2 为两倍 EMUL 的宽源。"""
-    expected_operands = 3
+    expected_operands = 3 if immediate is None else 3
     operands = _unmasked_operands(insn, expected_operands)
     if operands is None:
         return _error(insn, f"{opcode} 仅支持无掩码固定操作数 form")
-    vd, vs2 = operands[:2]
+    vd, vs2, *tail = operands
     try:
         sew, lmul, _, _ = _source_shape(state)
         if sew not in (8, 16, 32):
             raise ValueError(f"{opcode} 只支持目的 SEW=e8/e16/e32，当前 e{sew}")
         source_lmul = lmul * 2.0
         _validate_lmul(source_lmul, "宽源")
+        actual_immediate = immediate
+        if actual_immediate is None:
+            # 无立即数窄化（vncvt/vfncvt）的 operands 恰好只有 vd, vs2；
+            # 调用方会走专用 wrapper，不会到这里的三操作数分支。
+            actual_immediate = None
     except ValueError as exc:
         return _error(insn, str(exc))
     return _emit_mixed_width_write(
@@ -202,7 +209,7 @@ def _emit_narrow(insn, state, allocator,  opcode: str, *, immediate: int | None 
         result_lmul=lmul,
         vector_sources=((vs2, source_lmul),),
         description=f"e{sew * 2}->e{sew} 窄化，vs2 EMUL={source_lmul:g}",
-        immediate=immediate,
+        immediate=actual_immediate,
     )
 
 
@@ -294,6 +301,7 @@ def _emit_widening_shift_left_vi(
             raise ValueError(f"vwsll.vi 只支持源 SEW=e8/e16/e32，当前 e{sew}")
         result_lmul = lmul * 2.0
         result_lmul_token, result_width = _validate_lmul(result_lmul, "宽目的")
+        state_view
         temp_vd, temp_vs2 = _allocate_vector_groups([result_width, source_width])
         temps = TempRegisterAllocator(insn, reserved_gprs=("t6",))
         vl_reg = temps.alloc_gpr()

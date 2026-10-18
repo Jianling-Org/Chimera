@@ -60,13 +60,15 @@ qemu/
 
 verify/**/*.s
 
-# Generated verification outputs
-verify/**/artifacts/
-verify/**/results/
-verify/**/*-results/
+# OpenBLAS demo assets
+!openblas-function/openblas_build_rvv/
+!openblas-function/openblas_build_rvv/**
 
-# Local development tools
+# Claude Code
 CLAUDE.md
+
+# Codex
 AGENTS.md
-.workbuddy-ai/
-.DS_Store
+
+docs/superpowers/
+

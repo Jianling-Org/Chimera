@@ -219,14 +219,35 @@ class StateTracker:
         - bit 6: vta (vector tail agnostic)
         - bit 7: vma (vector mask agnostic)
 
-        SEW 编码: e8=0, e16=1, e32=2, e64=3（当前 ELEN=64）
+        SEW 编码: e8=0, e16=1, e32=2, e64=3, e128=4, e256=5, e512=6, e1024=7
         LMUL 编码: m1=0, m2=1, m4=2, m8=3, mf8=5, mf4=6, mf2=7
 
         :return: vtype CSR 值
         """
-        vsew = {8: 0, 16: 1, 32: 2, 64: 3}[self.sew]
-        vlmul = {"m1": 0, "m2": 1, "m4": 2, "m8": 3,
-                 "mf8": 5, "mf4": 6, "mf2": 7}[LMUL_TOKENS[self.lmul]]
+        # SEW 编码 (bits 5-3)
+        sew_to_vsew = {8: 0, 16: 1, 32: 2, 64: 3, 128: 4, 256: 5, 512: 6, 1024: 7}
+        vsew = sew_to_vsew.get(self.sew, 0)
+
+        # LMUL 编码 (bits 2-0)
+        # 先将 lmul 转换为字符串再编码
+        lmul_str = ""
+        if self.lmul == 1.0:
+            lmul_str = "1"
+        elif self.lmul == 2.0:
+            lmul_str = "2"
+        elif self.lmul == 4.0:
+            lmul_str = "4"
+        elif self.lmul == 8.0:
+            lmul_str = "8"
+        elif self.lmul == 0.5:
+            lmul_str = "f2"
+        elif self.lmul == 0.25:
+            lmul_str = "f4"
+        elif self.lmul == 0.125:
+            lmul_str = "f8"
+
+        lmul_to_vlmul = {"1": 0, "2": 1, "4": 2, "8": 3, "f8": 5, "f4": 6, "f2": 7}
+        vlmul = lmul_to_vlmul.get(lmul_str, 0)
 
         # 按 RVV 1.0 规定的真实位布局组合 vtype。
         #

@@ -1,0 +1,838 @@
+[
+  {
+    "case": "attn_kv_m32",
+    "implementation": "int8_opt4",
+    "measurement": {
+      "validation": "PASS",
+      "max_abs_error": 0,
+      "canaries_and_inputs_intact": true,
+      "threads": 8,
+      "vlenb": 128,
+      "M": 32,
+      "N": 256,
+      "K": 2048,
+      "macs": 16777216,
+      "iterations_per_sample": 28,
+      "pilot_seconds": 0.0036134168,
+      "seconds_per_call": [
+        0.00363438693,
+        0.00359800146,
+        0.00359676193,
+        0.00359699407,
+        0.00359838693,
+        0.00359691815,
+        0.00359708629,
+        0.00359666372,
+        0.00359671875,
+        0.00359725,
+        0.00359679464,
+        0.0035972634,
+        0.003597186,
+        0.00359746429,
+        0.00359751936,
+        0.00359674257,
+        0.00359672768,
+        0.00359702378,
+        0.00359654168,
+        0.00359703125,
+        0.00359672025,
+        0.00359658185,
+        0.00359622768,
+        0.00359681847,
+        0.00359730803,
+        0.0035968006,
+        0.00359663839,
+        0.00359732589,
+        0.00359666518,
+        0.00359708778,
+        0.00359688543,
+        0.00359674553,
+        0.00359674107,
+        0.00359648958,
+        0.00359708182,
+        0.0035972664,
+        0.00359623364,
+        0.00359663243,
+        0.00359610714,
+        0.00359683185,
+        0.00359702233,
+        0.00359640775,
+        0.00359669789,
+        0.00359667264,
+        0.00359745089,
+        0.00359759224,
+        0.00359675893,
+        0.00359684228,
+        0.00359651786,
+        0.00373322617
+      ],
+      "affinity_masks": [
+        256,
+        512,
+        1024,
+        2048,
+        4096,
+        8192,
+        16384,
+        32768
+      ]
+    },
+    "wall_seconds": 5.094370587961748,
+    "environment": [
+      {
+        "time": 1791795336.0950432,
+        "load": [
+          0.23046875,
+          0.16748046875,
+          0.20458984375
+        ],
+        "cpu_frequency": {
+          "8": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "9": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "10": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "11": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "12": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "13": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "14": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "15": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          }
+        }
+      },
+      {
+        "time": 1791795341.1015232,
+        "load": [
+          0.85302734375,
+          0.2978515625,
+          0.24658203125
+        ],
+        "cpu_frequency": {
+          "8": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "9": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "10": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "11": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "12": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "13": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "14": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "15": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          }
+        }
+      },
+      {
+        "time": 1791795341.1934881,
+        "load": [
+          0.85302734375,
+          0.2978515625,
+          0.24658203125
+        ],
+        "cpu_frequency": {
+          "8": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "9": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "10": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "11": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "12": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "13": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "14": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "15": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          }
+        }
+      }
+    ],
+    "output_sha256": "1602e5efe3beb18d64a26fbea4abe2542e5d0580b82aba2e72282c538ebba064"
+  },
+  {
+    "case": "attn_q_m32",
+    "implementation": "int8_opt4",
+    "measurement": {
+      "validation": "PASS",
+      "max_abs_error": 0,
+      "canaries_and_inputs_intact": true,
+      "threads": 8,
+      "vlenb": 128,
+      "M": 32,
+      "N": 2048,
+      "K": 2048,
+      "macs": 134217728,
+      "iterations_per_sample": 4,
+      "pilot_seconds": 0.0292432089,
+      "seconds_per_call": [
+        0.0292141977,
+        0.0291678126,
+        0.0288695208,
+        0.0288649687,
+        0.028861125,
+        0.0288622917,
+        0.028862073,
+        0.028864125,
+        0.028878177,
+        0.0288685105,
+        0.028874677,
+        0.0288721457,
+        0.0288631458,
+        0.0288657813,
+        0.0288627502,
+        0.0288612915,
+        0.0288669688,
+        0.028874052,
+        0.0288632083,
+        0.0288729478,
+        0.028872469,
+        0.0288635624,
+        0.0288637083,
+        0.0288605836,
+        0.0288646145,
+        0.028870677,
+        0.0288749273,
+        0.0288667395,
+        0.0288700625,
+        0.0288735727,
+        0.028863125,
+        0.0288618648,
+        0.0288615937,
+        0.0288639792,
+        0.0288664477,
+        0.0288641875,
+        0.0288666147,
+        0.0288663853,
+        0.0288658648,
+        0.0288646668,
+        0.029680479,
+        0.0288697293,
+        0.0288676875,
+        0.0288706145,
+        0.0288636253,
+        0.0288704478,
+        0.0288638438,
+        0.0288662398,
+        0.028864479,
+        0.028861698
+      ],
+      "affinity_masks": [
+        256,
+        512,
+        1024,
+        2048,
+        4096,
+        8192,
+        16384,
+        32768
+      ]
+    },
+    "wall_seconds": 6.092533502960578,
+    "environment": [
+      {
+        "time": 1791795341.1976855,
+        "load": [
+          0.85302734375,
+          0.2978515625,
+          0.24658203125
+        ],
+        "cpu_frequency": {
+          "8": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "9": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "10": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "11": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "12": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "13": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "14": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "15": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          }
+        }
+      },
+      {
+        "time": 1791795346.2014937,
+        "load": [
+          1.42578125,
+          0.42578125,
+          0.28857421875
+        ],
+        "cpu_frequency": {
+          "8": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "9": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "10": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "11": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "12": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "13": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "14": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "15": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          }
+        }
+      },
+      {
+        "time": 1791795347.2939024,
+        "load": [
+          1.42578125,
+          0.42578125,
+          0.28857421875
+        ],
+        "cpu_frequency": {
+          "8": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "9": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "10": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "11": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "12": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "13": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "14": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "15": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          }
+        }
+      }
+    ],
+    "output_sha256": "429b1ea4b53fde0ff98911ace1c6aaabde1d531a3ce0799e3f417819baaeb754"
+  },
+  {
+    "case": "ffn_up_m32",
+    "implementation": "int8_opt4",
+    "measurement": {
+      "validation": "PASS",
+      "max_abs_error": 0,
+      "canaries_and_inputs_intact": true,
+      "threads": 8,
+      "vlenb": 128,
+      "M": 32,
+      "N": 5632,
+      "K": 2048,
+      "macs": 369098752,
+      "iterations_per_sample": 2,
+      "pilot_seconds": 0.080113417,
+      "seconds_per_call": [
+        0.0796297916,
+        0.0791911461,
+        0.0792327914,
+        0.0792081874,
+        0.079217646,
+        0.079202854,
+        0.0791939375,
+        0.0791987501,
+        0.079220792,
+        0.079200167,
+        0.079213646,
+        0.0792090836,
+        0.0791999375,
+        0.0792057085,
+        0.079222271,
+        0.0791948335,
+        0.079199146,
+        0.0792172711,
+        0.0791910414,
+        0.0791978126,
+        0.0791987914,
+        0.0792177916,
+        0.079196417,
+        0.0792010626,
+        0.079207146,
+        0.079189333,
+        0.080952354,
+        0.079242208,
+        0.0792019166,
+        0.079217875,
+        0.0792115415,
+        0.079200458,
+        0.079198104,
+        0.079225917,
+        0.0791950836,
+        0.079208417,
+        0.0792121874,
+        0.0792129795,
+        0.0792004375,
+        0.079196854,
+        0.0792146876,
+        0.0791929581,
+        0.079209958,
+        0.079208583,
+        0.079187625,
+        0.0792104165,
+        0.0792186039,
+        0.0791903541,
+        0.079201646,
+        0.0792047289
+      ],
+      "affinity_masks": [
+        256,
+        512,
+        1024,
+        2048,
+        4096,
+        8192,
+        16384,
+        32768
+      ]
+    },
+    "wall_seconds": 8.74930599797517,
+    "environment": [
+      {
+        "time": 1791795347.2989895,
+        "load": [
+          1.42578125,
+          0.42578125,
+          0.28857421875
+        ],
+        "cpu_frequency": {
+          "8": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "9": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "10": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "11": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "12": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "13": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "14": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "15": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          }
+        }
+      },
+      {
+        "time": 1791795352.3055084,
+        "load": [
+          1.95263671875,
+          0.5517578125,
+          0.330078125
+        ],
+        "cpu_frequency": {
+          "8": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "9": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "10": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "11": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "12": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "13": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "14": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "15": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          }
+        }
+      },
+      {
+        "time": 1791795356.0521755,
+        "load": [
+          2.43701171875,
+          0.67578125,
+          0.37158203125
+        ],
+        "cpu_frequency": {
+          "8": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "9": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "10": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "11": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "12": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "13": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "14": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "15": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          }
+        }
+      }
+    ],
+    "output_sha256": "2b87b6ab2341769e8852875d611fd025be8fd18559e736d14d70030423259242"
+  },
+  {
+    "case": "ffn_down_m32",
+    "implementation": "int8_opt4",
+    "measurement": {
+      "validation": "PASS",
+      "max_abs_error": 0,
+      "canaries_and_inputs_intact": true,
+      "threads": 8,
+      "vlenb": 128,
+      "M": 32,
+      "N": 2048,
+      "K": 5632,
+      "macs": 369098752,
+      "iterations_per_sample": 2,
+      "pilot_seconds": 0.0812980419,
+      "seconds_per_call": [
+        0.0812696461,
+        0.0812574375,
+        0.081252667,
+        0.0812736669,
+        0.0812480415,
+        0.0812611665,
+        0.0812465416,
+        0.0812608539,
+        0.0812645205,
+        0.0812442709,
+        0.083634729,
+        0.080082771,
+        0.080086521,
+        0.0800905834,
+        0.0800793126,
+        0.080084521,
+        0.0800836041,
+        0.080077771,
+        0.0800975835,
+        0.0800852085,
+        0.080089875,
+        0.080084583,
+        0.080084229,
+        0.0800960625,
+        0.0800994165,
+        0.080092021,
+        0.0809682501,
+        0.0800800625,
+        0.07932875,
+        0.0791994164,
+        0.0792241665,
+        0.079224271,
+        0.0792147295,
+        0.0792112499,
+        0.079217229,
+        0.0792111874,
+        0.079214563,
+        0.0792192081,
+        0.079215,
+        0.0792005626,
+        0.0792214376,
+        0.0792182505,
+        0.0792130419,
+        0.0792159375,
+        0.079223,
+        0.079229271,
+        0.0792056251,
+        0.079199333,
+        0.079224125,
+        0.0792015624
+      ],
+      "affinity_masks": [
+        256,
+        512,
+        1024,
+        2048,
+        4096,
+        8192,
+        16384,
+        32768
+      ]
+    },
+    "wall_seconds": 8.839367164066061,
+    "environment": [
+      {
+        "time": 1791795356.071135,
+        "load": [
+          2.43701171875,
+          0.67578125,
+          0.37158203125
+        ],
+        "cpu_frequency": {
+          "8": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "9": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "10": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "11": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "12": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "13": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "14": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "15": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          }
+        }
+      },
+      {
+        "time": 1791795361.0775096,
+        "load": [
+          2.8828125,
+          0.7978515625,
+          0.41259765625
+        ],
+        "cpu_frequency": {
+          "8": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "9": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "10": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "11": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "12": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "13": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "14": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "15": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          }
+        }
+      },
+      {
+        "time": 1791795364.9143748,
+        "load": [
+          2.8828125,
+          0.7978515625,
+          0.41259765625
+        ],
+        "cpu_frequency": {
+          "8": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "9": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "10": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "11": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "12": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "13": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "14": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          },
+          "15": {
+            "scaling_governor": "userspace",
+            "scaling_cur_freq": "1800000"
+          }
+        }
+      }
+    ],
+    "output_sha256": "b8a09d17ddc2a92656b2bdc29a04fd7324a3ca66e2ed7c960a78155c0f7b2aab"
+  }
+]

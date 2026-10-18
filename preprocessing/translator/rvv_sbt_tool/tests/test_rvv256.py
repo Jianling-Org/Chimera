@@ -348,7 +348,7 @@ def test_vnsra_wi_narrows_signed_shift():
     assert 'vnsra.wi v26, v24, 7' in result
     assert 'vle32.v v24' in result
     assert 'vse16.v v26' in result
-
+    
     assert 'e32 -> e16' in result
 
 def test_vnclip_wi_uses_native_rounding_and_saturation():
@@ -933,7 +933,7 @@ def test_vfwred_ordered_unordered_sum_paths():
     assert 'widen-reduce-unordered-sum(v18[0:vl], v3[0])' in result
     assert 'e32->e64' in result
     assert '尾部 RVV widening reduction chunk' in result
-
+    
     result_e16 = translate(cases, init_vtype='sew=16,lmul=1', raw=True)
     assert 'vfwredosum.vs v25, v24, v25' in result_e16
     assert 'widen-reduce-ordered-sum(v16[0:vl], v1[0])' in result_e16
@@ -1260,14 +1260,14 @@ def test_masked_memory_instructions():
                              op_str='vse32.v v8, (a1), v0.t', )
     insn_vlse = RVInstruction(8, 'vlse16.v', operands=['v12', '(a2)', 'a3', 'v0.t'],
                               op_str='vlse16.v v12, (a2), a3, v0.t', )
-
+    
     res_vle = translate([insn_vle], init_vtype='sew=8,lmul=1', raw=True)
     assert 'vle8.v v24, (' in res_vle and ', v0.t' in res_vle
     assert 'vse8.v v24, (' in res_vle and ', v0.t' in res_vle
     assert 'Direct byte-aligned mask chunk into v0' in res_vle
     assert 'vlm.v   v0' in res_vle
     assert 'vmv.v.x v0' not in res_vle
-
+    
     res_vse = translate([insn_vse], init_vtype='sew=32,lmul=1', raw=True)
     assert 'vle32.v v24, (' in res_vse and ', v0.t' in res_vse
     assert 'vse32.v v24, (' in res_vse and ', v0.t' in res_vse
@@ -1281,7 +1281,7 @@ def test_masked_memory_instructions():
     assert 'Direct byte-aligned mask chunk into v0' in res_vlse
     assert 'vlm.v   v0' in res_vlse
     assert 'vmv.v.x v0' not in res_vlse
-
+    
 
 def test_rvv256_masked_forms():
     from rvv_sbt_rvv import translate

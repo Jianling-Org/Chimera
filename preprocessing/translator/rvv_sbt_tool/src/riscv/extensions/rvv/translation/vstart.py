@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from riscv.extensions.rvv.runtime.access import STATE_BASE_MARKER
 from riscv.extensions.rvv.runtime.layout import CSR_OFFSETS
 from riscv.extensions.rvv.translation.contracts import HandlerContext, LoweringPlan, VStartPolicy
 from riscv.extensions.rvv.translation.lowering import AssemblyFragments
@@ -24,7 +23,7 @@ def apply_vstart_policy(
         ready = context.new_label("vstart_zero")
         prefix = (
             f"    li      {temp}, {CSR_OFFSETS['vstart']:#x}",
-            f"    add     {temp}, t6, {temp}  # {STATE_BASE_MARKER}",
+            f"    add     {temp}, t6, {temp}",
             f"    ld      {temp}, 0({temp})",
             f"    beqz    {temp}, {ready}",
             "    ebreak                          # unsupported nonzero source vstart",
@@ -32,7 +31,7 @@ def apply_vstart_policy(
         )
     clear = (
         f"    li      {temp}, {CSR_OFFSETS['vstart']:#x}",
-        f"    add     {temp}, t6, {temp}  # {STATE_BASE_MARKER}",
+        f"    add     {temp}, t6, {temp}",
         f"    sd      zero, 0({temp})              # CSR.vstart = 0 after vector completion",
     )
     # A deferred guest result may overwrite t6, so clear state before committing it.

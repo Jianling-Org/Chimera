@@ -14,9 +14,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 from dataclasses import dataclass
 from types import ModuleType
-from typing import Literal
 
-from riscv.frontend.literals import parse_integer_literal
 from riscv.extensions.rvv.analysis.model import LEGAL_LMULS
 from riscv.extensions.rvv.backends.rvv256.handlers import config, mask, memory
 from riscv.extensions.rvv.translation import vector_csr as csr
@@ -180,7 +178,7 @@ def _same_width(
     operand_form: str,
     *,
     allowed_sews: tuple[int, ...] = (),
-    lowering: Literal["direct", "not_base_v", "and_not_base_v"] = "direct",
+    lowering: str = "direct",
 ) -> RVV256SameWidthSpec:
     """由明确的 form 标记建立等宽寄存器位置，不检查 opcode 后缀。"""
 
@@ -1186,14 +1184,12 @@ def _validator(seed: _Seed, *, wide_lmul: bool):
     def validate(context: HandlerContext) -> tuple[str, ...]:
         insn = context.instruction
         operands = tuple(str(operand).strip() for operand in insn.operands)
-        if operands and operands[-1].lower().endswith(".t"):
-            operands = (*operands[:-1], operands[-1].lower())
         mask_operand = operands[-1] if operands and operands[-1].endswith(".t") else None
         base_count = len(operands) - (1 if mask_operand is not None else 0)
-        if base_count != seed.operand_count:
+        if base_count < seed.operand_count:
             raise InstructionValidationError(
                 insn,
-                f"{insn.opcode} 需要恰好 {seed.operand_count} 个非掩码操作数，"
+                f"{insn.opcode} 至少需要 {seed.operand_count} 个非掩码操作数，"
                 f"实际为 {base_count}",
             )
         if mask_operand is not None and mask_operand != "v0.t":
@@ -1213,18 +1209,6 @@ def _validator(seed: _Seed, *, wide_lmul: bool):
                 status=LoweringStatus.UNSUPPORTED,
                 code="unsupported-mask-form",
             )
-        if insn.opcode in {"vsll.vi", "vsrl.vi", "vsra.vi"}:
-            try:
-                immediate = parse_integer_literal(operands[2])
-            except ValueError as exc:
-                raise InstructionValidationError(
-                    insn, f"{insn.opcode} uimm5 must be an integer in 0..31",
-                ) from exc
-            if not 0 <= immediate <= 31:
-                raise InstructionValidationError(
-                    insn, f"{insn.opcode} uimm5 must be in 0..31, got {immediate}",
-                )
-            operands = (*operands[:2], str(immediate), *operands[3:])
         validate_source_operands(context, operands)
         return operands
 
@@ -1253,8 +1237,8 @@ def _state_sets(seed: _Seed) -> tuple[frozenset[str], frozenset[str]]:
         return frozenset({"vector-csr", "vcsr"}), writes
     writes = {"vstart"}
     if not (
-        (seed.category == "memory" and seed.opcode.startswith("vs"))
-        or seed.opcode in {"vcpop.m", "vfirst.m", "vmv.x.s", "vfmv.f.s"}
+        seed.opcode.startswith("vs")
+        or seed.opcode in {"vsm.v", "vcpop.m", "vfirst.m", "vmv.x.s", "vfmv.f.s"}
     ):
         writes.add("vreg")
     reads = {"vl", "vtype", "vreg", "vstart"}
@@ -1279,12 +1263,11 @@ def build_rvv256_registry(*, wide_lmul: bool) -> HandlerRegistry:
             same_width=seed.same_width,
             conservative_mask_supported="conservative" in seed.mask_profiles,
         )
-        base_form = seed.form.replace("[, v0.t]", "")
-        masked_form = f"{base_form}, v0.t"
+        masked_form = f"{seed.form}, v0.t"
         registry.register(InstructionSpec(
             opcode=seed.opcode,
             category=seed.category,
-            operand_forms=(base_form, masked_form) if mask_supported else (base_form,),
+            operand_forms=(seed.form, masked_form) if mask_supported else (seed.form,),
             supported_sews=seed.supported_sews,
             supported_lmuls=seed.supported_lmuls,
             mask_policy=MaskPolicy.V0_ONLY if mask_supported else MaskPolicy.FORBIDDEN,

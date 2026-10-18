@@ -74,7 +74,7 @@ def _get_float_instr(suffix: str, sew: int) -> str:
             'div': 'fdiv.d',
             'sqrt': 'fsqrt.d',
         }
-    return instr_map[suffix]
+    return instr_map.get(suffix, 'fld')
 
 
 
@@ -1184,6 +1184,9 @@ def _build_vmv_s_x_lines(context) -> list[str]:
     # 获取偏移量
     vd_offset = allocator.get_offset(vd)
     element_size = state.sew // 8
+
+    # 获取整数指令
+    store_instr = _get_int_instr(element_size * 8, 'store')
 
     # 生成注释
     lines.append(f"    # {insn.opcode}: {vd}[0] = {rs1}")

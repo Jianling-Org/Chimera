@@ -3,11 +3,8 @@
 from __future__ import annotations
 
 from riscv.extensions.rvv.instruction import is_vector_instruction, is_config_instruction
-from riscv.extensions.rvv.translation.temps import (
-    TempRegisterAllocationError, TempRegisterAllocator,
-)
+from riscv.extensions.rvv.translation.temps import TempRegisterAllocator
 from riscv.extensions.rvv.backends.rvv1024_transition import state_view
-from riscv.extensions.rvv.backends.rvv1024_transition.temp_regs import RegisterAllocationError
 from riscv.extensions.rvv.backends.rvv1024_transition.lowering_metadata import (
     lowering_metadata,
 )
@@ -145,7 +142,9 @@ class TransitionLowerer:
                 builder,
                 postprocessor=self._postprocess,
             )
-        except (RegisterAllocationError, TempRegisterAllocationError) as exc:
+        except InstructionValidationError:
+            raise
+        except (TypeError, ValueError) as exc:
             raise InstructionValidationError(context.instruction, str(exc)) from exc
 
 

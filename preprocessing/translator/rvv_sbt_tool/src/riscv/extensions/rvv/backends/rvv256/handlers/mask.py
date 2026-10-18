@@ -49,12 +49,9 @@ def _get_int_store(sew: int) -> str:
     return {8: 'sb', 16: 'sh', 32: 'sw', 64: 'sd'}[sew]
 
 
-def _parse_int(insn: RVInstruction, value: str) -> int:
-    """Parse decimal/hex integer operands at the source boundary."""
-    try:
-        return int(str(value), 0)
-    except ValueError as exc:
-        raise InstructionValidationError(insn, f"Invalid immediate: {value}") from exc
+def _parse_int(value: str) -> int:
+    """Parse decimal/hex integer operands."""
+    return int(str(value), 0)
 
 
 def _emit_byte_count_from_vl(lines: List[str], byte_count: str, vl_reg: str) -> None:
@@ -67,6 +64,7 @@ def _emit_mask_result_loop_header(
     insn: RVInstruction,
     state: StateTracker,
     allocator: SimulatedStateLayout,
+    new_label,
     lines: List[str],
     vd: str,
     vs2: str,
@@ -577,7 +575,7 @@ def _build_vmsne_vv_lines(context) -> list[str]:
     if len(operands) != 3:
         raise InstructionValidationError(insn, f"vmsne.vv currently supports unmasked RVV1.0 form only: {insn.op_str}")
     vd, vs2, vs1 = operands
-    regs = _emit_mask_result_loop_header(insn, state, allocator, lines, vd, vs2, True, vs1)
+    regs = _emit_mask_result_loop_header(insn, state, allocator, new_label, lines, vd, vs2, True, vs1)
     load = _get_int_load(regs["sew"])
     lines.insert(0, f"# vmsne.vv {vd}, {vs2}, {vs1} (256-bit mode, RVV1.0 bit-packed mask)")
     compare = [
@@ -601,10 +599,10 @@ def _build_vmsne_vi_lines(context) -> list[str]:
     if len(operands) != 3:
         raise InstructionValidationError(insn, f"vmsne.vi currently supports unmasked RVV1.0 form only: {insn.op_str}")
     vd, vs2, imm_s = operands
-    imm = _parse_int(insn, imm_s)
+    imm = _parse_int(imm_s)
     if imm < -16 or imm > 15:
         raise InstructionValidationError(insn, f"vmsne.vi immediate must be signed 5-bit (-16..15), got {imm}")
-    regs = _emit_mask_result_loop_header(insn, state, allocator, lines, vd, vs2)
+    regs = _emit_mask_result_loop_header(insn, state, allocator, new_label, lines, vd, vs2)
     load = _get_int_load(regs["sew"])
     imm_bits = imm if regs["sew"] == 64 else imm & ((1 << regs["sew"]) - 1)
     lines.insert(0, f"# vmsne.vi {vd}, {vs2}, {imm} (256-bit mode, RVV1.0 bit-packed mask)")
@@ -629,10 +627,10 @@ def _build_vmseq_vi_lines(context) -> list[str]:
     if len(operands) != 3:
         raise InstructionValidationError(insn, f"vmseq.vi currently supports unmasked RVV1.0 form only: {insn.op_str}")
     vd, vs2, imm_s = operands
-    imm = _parse_int(insn, imm_s)
+    imm = _parse_int(imm_s)
     if imm < -16 or imm > 15:
         raise InstructionValidationError(insn, f"vmseq.vi immediate must be signed 5-bit (-16..15), got {imm}")
-    regs = _emit_mask_result_loop_header(insn, state, allocator, lines, vd, vs2)
+    regs = _emit_mask_result_loop_header(insn, state, allocator, new_label, lines, vd, vs2)
     load = _get_int_load(regs["sew"])
     imm_bits = imm if regs["sew"] == 64 else imm & ((1 << regs["sew"]) - 1)
     lines.insert(0, f"# vmseq.vi {vd}, {vs2}, {imm} (256-bit mode, RVV1.0 bit-packed mask)")
@@ -657,23 +655,14 @@ def _build_vmseq_vx_lines(context) -> list[str]:
     if len(operands) != 3:
         raise InstructionValidationError(insn, f"vmseq.vx currently supports unmasked RVV1.0 form only: {insn.op_str}")
     vd, vs2, rs1 = operands
-    regs = _emit_mask_result_loop_header(insn, state, allocator, lines, vd, vs2)
+    regs = _emit_mask_result_loop_header(insn, state, allocator, new_label, lines, vd, vs2)
     load = _get_int_load(regs["sew"])
     lines.insert(0, f"# vmseq.vx {vd}, {vs2}, {rs1} (256-bit mode, RVV1.0 bit-packed mask)")
-    scalar = rs1
-    compare = []
-    if regs["sew"] < 64:
-        scalar = regs["val1"]
-        shift = 64 - regs["sew"]
-        compare.extend([
-            f"    slli    {scalar}, {rs1}, {shift}",
-            f"    srli    {scalar}, {scalar}, {shift}",
-        ])
-    compare.extend([
+    compare = [
         f"    {load:<8} {regs['val2']}, 0({regs['vs2_ptr']})",
-        f"    xor     {regs['tmp']}, {regs['val2']}, {scalar}",
+        f"    xor     {regs['tmp']}, {regs['val2']}, {rs1}",
         f"    seqz    {regs['tmp']}, {regs['tmp']}              # mask bit = ({vs2}[i] == {rs1})",
-    ])
+    ]
     _emit_mask_compare_finish(lines, regs, new_label, compare, "vmseq_vx")
     return lines
 
@@ -689,10 +678,10 @@ def _build_vmsleu_vi_lines(context) -> list[str]:
     if len(operands) != 3:
         raise InstructionValidationError(insn, f"vmsleu.vi currently supports unmasked RVV1.0 form only: {insn.op_str}")
     vd, vs2, imm_s = operands
-    imm = _parse_int(insn, imm_s)
+    imm = _parse_int(imm_s)
     if imm < -16 or imm > 15:
         raise InstructionValidationError(insn, f"vmsleu.vi immediate must be signed 5-bit (-16..15), got {imm}")
-    regs = _emit_mask_result_loop_header(insn, state, allocator, lines, vd, vs2)
+    regs = _emit_mask_result_loop_header(insn, state, allocator, new_label, lines, vd, vs2)
     load = _get_int_load(regs["sew"])
 
     # RVV vi immediate 是 signed 5-bit，再按当前 SEW 解释为元素值；
@@ -720,10 +709,10 @@ def _build_vmsgtu_vi_lines(context) -> list[str]:
     if len(operands) != 3:
         raise InstructionValidationError(insn, f"vmsgtu.vi currently supports unmasked RVV1.0 form only: {insn.op_str}")
     vd, vs2, imm_s = operands
-    imm = _parse_int(insn, imm_s)
+    imm = _parse_int(imm_s)
     if imm < -16 or imm > 15:
         raise InstructionValidationError(insn, f"vmsgtu.vi immediate must be signed 5-bit (-16..15), got {imm}")
-    regs = _emit_mask_result_loop_header(insn, state, allocator, lines, vd, vs2)
+    regs = _emit_mask_result_loop_header(insn, state, allocator, new_label, lines, vd, vs2)
     load = _get_int_load(regs["sew"])
 
     # RVV vi immediate 是 signed 5-bit，再按当前 SEW 解释为元素值。
@@ -749,7 +738,7 @@ def _build_vmsgtu_vx_lines(context) -> list[str]:
     if len(operands) != 3:
         raise InstructionValidationError(insn, f"vmsgtu.vx currently supports unmasked RVV1.0 form only: {insn.op_str}")
     vd, vs2, rs1 = operands
-    regs = _emit_mask_result_loop_header(insn, state, allocator, lines, vd, vs2)
+    regs = _emit_mask_result_loop_header(insn, state, allocator, new_label, lines, vd, vs2)
     load = _get_int_load(regs["sew"])
     shift = 64 - regs["sew"]
     lines.insert(0, f"# vmsgtu.vx {vd}, {vs2}, {rs1} (256-bit mode, RVV1.0 bit-packed mask)")
@@ -774,10 +763,10 @@ def _build_vmsle_vi_lines(context) -> list[str]:
     if len(operands) != 3:
         raise InstructionValidationError(insn, f"vmsle.vi currently supports unmasked RVV1.0 form only: {insn.op_str}")
     vd, vs2, imm_s = operands
-    imm = _parse_int(insn, imm_s)
+    imm = _parse_int(imm_s)
     if imm < -16 or imm > 15:
         raise InstructionValidationError(insn, f"vmsle.vi immediate must be signed 5-bit (-16..15), got {imm}")
-    regs = _emit_mask_result_loop_header(insn, state, allocator, lines, vd, vs2)
+    regs = _emit_mask_result_loop_header(insn, state, allocator, new_label, lines, vd, vs2)
     load = _get_int_load_signed(regs["sew"])
     lines.insert(0, f"# vmsle.vi {vd}, {vs2}, {imm} (256-bit mode, RVV1.0 bit-packed mask)")
     compare = [
@@ -801,7 +790,7 @@ def _build_vmsleu_vv_lines(context) -> list[str]:
     if len(operands) != 3:
         raise InstructionValidationError(insn, f"vmsleu.vv currently supports unmasked RVV1.0 form only: {insn.op_str}")
     vd, vs2, vs1 = operands
-    regs = _emit_mask_result_loop_header(insn, state, allocator, lines, vd, vs2, True, vs1)
+    regs = _emit_mask_result_loop_header(insn, state, allocator, new_label, lines, vd, vs2, True, vs1)
     load = _get_int_load(regs["sew"])
     lines.insert(0, f"# vmsleu.vv {vd}, {vs2}, {vs1} (256-bit mode, RVV1.0 bit-packed mask)")
     compare = [
@@ -825,7 +814,7 @@ def _build_vmsltu_vv_lines(context) -> list[str]:
     if len(operands) != 3:
         raise InstructionValidationError(insn, f"vmsltu.vv currently supports unmasked RVV1.0 form only: {insn.op_str}")
     vd, vs2, vs1 = operands
-    regs = _emit_mask_result_loop_header(insn, state, allocator, lines, vd, vs2, True, vs1)
+    regs = _emit_mask_result_loop_header(insn, state, allocator, new_label, lines, vd, vs2, True, vs1)
     load = _get_int_load(regs["sew"])
     lines.insert(0, f"# vmsltu.vv {vd}, {vs2}, {vs1} (256-bit mode, RVV1.0 bit-packed mask)")
     compare = [
@@ -848,7 +837,7 @@ def _build_vmsltu_vx_lines(context) -> list[str]:
     if len(operands) != 3:
         raise InstructionValidationError(insn, f"vmsltu.vx currently supports unmasked RVV1.0 form only: {insn.op_str}")
     vd, vs2, rs1 = operands
-    regs = _emit_mask_result_loop_header(insn, state, allocator, lines, vd, vs2)
+    regs = _emit_mask_result_loop_header(insn, state, allocator, new_label, lines, vd, vs2)
     load = _get_int_load(regs["sew"])
     shift = 64 - regs["sew"]
     lines.insert(0, f"# vmsltu.vx {vd}, {vs2}, {rs1} (256-bit mode, RVV1.0 bit-packed mask)")
@@ -1226,7 +1215,7 @@ def _emit_vmerge_vx_or_vi(
 
     if true_kind == "imm":
         try:
-            imm = _parse_int(insn, str(true_operand))
+            imm = _parse_int(str(true_operand))
         except ValueError:
             raise InstructionValidationError(insn, f"vmerge.vim immediate must be an integer: {insn.op_str}")
         if imm < -16 or imm > 15:

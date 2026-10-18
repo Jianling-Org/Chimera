@@ -101,10 +101,10 @@ class StateAccessEmitter:
         """生成状态字段地址，正确处理超出 I 型立即数范围的偏移。"""
 
         if -2048 <= offset <= 2047:
-            return f"    addi    {destination}, {base}, {offset}  # {STATE_BASE_MARKER}"
+            return f"    addi    {destination}, {base}, {offset}"
         return "\n".join((
             f"    li      {destination}, {offset}",
-            f"    add     {destination}, {base}, {destination}  # {STATE_BASE_MARKER}",
+            f"    add     {destination}, {base}, {destination}",
         ))
 
     def emit_load_csr(

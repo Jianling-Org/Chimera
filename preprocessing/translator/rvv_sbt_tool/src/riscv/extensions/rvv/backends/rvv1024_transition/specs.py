@@ -1064,7 +1064,7 @@ def _resolve_lowering(seed: _Seed) -> TransitionLoweringMetadata:
             emitter=arithmetic_handler._emit_integer_reduction_vs,
         ),
     }
-    if seed.category == "memory-load":
+    if seed.category == "memory-load" and seed.opcode != "vle8ff.v":
         builder = partial(
             memory.build_unit_load_lines,
             eew=_MEMORY_EEW[seed.opcode],

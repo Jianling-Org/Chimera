@@ -2,7 +2,7 @@
 
 `chimera/preprocessing/offline/toolchain/llvm-21.1.0` 是 Chimera 的统一 LLVM 21.1.0 扩展工程：一份共享实现、三个可独立启用的插件，以及一套按顺序应用到 LLVM 源码的 patch series。
 
-## 功能与产物
+## 这是什么
 
 Chimera 需要三类信息，本工程分别产出：
 

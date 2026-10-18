@@ -145,7 +145,11 @@ class TranslationPipeline:
                 "不得注入额外预检器"
             )
         initial_vtype = parse_init_vtype(init_vtype) if init_vtype else None
-        analysis = analyze_program(program, initial_vtype=initial_vtype)
+        analysis = (
+            analyze_program(program, initial_vtype=initial_vtype)
+            if initial_vtype is not None
+            else analyze_program(program)
+        )
         _validate_analyzed_program(program, analysis)
         plans = (
             ()

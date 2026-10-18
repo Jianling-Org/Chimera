@@ -1,0 +1,2 @@
+cpu=8 vlenb=128 translated_oracle_comparison=enabled
+PASS cases=109980 vectors=32x128B gprs=32 fprs=32 csr=vl,vtype,vstart,vcsr,fcsr completed=109980 rejected=0

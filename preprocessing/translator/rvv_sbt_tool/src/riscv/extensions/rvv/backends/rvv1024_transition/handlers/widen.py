@@ -5,7 +5,6 @@ from __future__ import annotations
 from typing import List, Sequence
 from riscv.extensions.rvv.backends.rvv1024_transition import state_view
 from riscv.extensions.rvv.analysis.config import StateTracker
-from riscv.extensions.rvv.analysis.model import LMUL_TOKENS
 from riscv.extensions.rvv.translation.temps import TempRegisterAllocator, record_vreg_group
 from riscv.extensions.rvv.backends.rvv1024_transition.execution import (
     _allocate_vector_groups,
@@ -47,9 +46,8 @@ def _emit_widening_write(
         sew, source_lmul, lmul_token, _ = _source_shape(state)
         widened_lmul, widened_width = _widened_lmul(source_lmul, sew)
         if mask_source is None and native_opcode == "vwmacc.vv" and sew == 16 and source_lmul == 1:
-            lmul_token = LMUL_TOKENS[
-                source_lmul * state_view.SOURCE_VLENB / state_view.TARGET_VLENB
-            ]
+            lmul_token = "mf4"
+        state_view
 
         vector_specs = [spec for spec in operand_specs if spec[0] == "vector"]
         vector_widths = [
@@ -272,6 +270,7 @@ def _emit_widening_reduction(
         # e64 的结果会是 e128；一期的目标执行 profile 没有该元素宽度。
         if sew not in (8, 16, 32):
             raise ValueError(f"宽化归约只支持源 SEW=e8/e16/e32，当前 e{sew}")
+        state_view
 
         requested_widths = [1, source_width, 1]
         if mask_source is not None:

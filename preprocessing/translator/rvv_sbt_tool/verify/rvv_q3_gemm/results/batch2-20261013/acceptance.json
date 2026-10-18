@@ -1,0 +1,19 @@
+{
+  "operator": "ggml_gemm_q3_K_64x1_q8_K",
+  "final_reverse_pairs": 200,
+  "final_reverse_measurements": 400,
+  "forward_state_records": 34344,
+  "reverse_state_records": 21978,
+  "guard_cases_each_candidate": 9,
+  "source_pc_labels": 1140,
+  "changed_reverse_blocks": 84,
+  "unchanged_reverse_blocks": 1056,
+  "forward_assembly_unchanged": true,
+  "register_CSR_state_gate_pass": true,
+  "formal_main_and_gate_byte_identical": true,
+  "tests_passed": 1822,
+  "tests_skipped": 41,
+  "index_unchanged": true,
+  "board_root": "/home/yzgx/guoxuan/rvv-bench/rvv-q3-batch2-20261013-01a12f6b",
+  "measurement_boundary": "Counterfactual component deltas are marginal and nonadditive, diagnostics are never integrated. Final gains are same-shape paired medians against this batch baseline."
+}

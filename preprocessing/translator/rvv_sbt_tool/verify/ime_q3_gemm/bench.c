@@ -209,11 +209,11 @@ int main(int argc, char **argv) {
     initialize(k,n,12345); if(!verify(12345)) return 1;
     uint64_t before_hash=input_hash();
     if(!rounds) {
-        uint64_t slowest=0;
-        for(int impl=0;impl<3;impl++) { uint64_t t=now(); for(int j=0;j<8;j++) invoke(impl); t=(now()-t)/8; if(t>slowest) slowest=t; }
-        rounds=(int)(2000000/(slowest?slowest:1)); if(rounds<1) rounds=1; if(rounds>4096) rounds=4096;
+        uint64_t fastest=UINT64_MAX;
+        for(int impl=0;impl<3;impl++) { uint64_t t=now(); for(int j=0;j<8;j++) invoke(impl); t=(now()-t)/8; if(t<fastest) fastest=t; }
+        rounds=(int)(2000000/(fastest?fastest:1)); if(rounds<1) rounds=1; if(rounds>4096) rounds=4096;
     }
-    printf("{\"event\":\"config\",\"protocol\":\"slowest-calibration-v2\",\"M\":4,\"N\":%d,\"K\":%d,\"ldc\":%d,\"rounds\":%d,\"samples\":%d,\"warmup\":5}\n",n,k,leading,rounds,samples);
+    printf("{\"event\":\"config\",\"M\":4,\"N\":%d,\"K\":%d,\"ldc\":%d,\"rounds\":%d,\"samples\":%d,\"warmup\":5}\n",n,k,leading,rounds,samples);
     for(int pass=-5;pass<samples;pass++) {
         for(int order=0;order<3;order++) {
             int impl=(pass+6+order)%3; check_cpu(cpu);

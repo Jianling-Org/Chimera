@@ -62,16 +62,9 @@ class VectorBlockEmitter:
     def _line_writes_t6(code_part: str) -> bool:
         """识别将 ``t6/x31`` 作为客体语义输出的行。"""
 
-        match = re.match(r"^\s*([A-Za-z.0-9]+)\s+(?:t6|x31)\s*,", code_part)
-        if match is None:
-            return False
-        # Stores and branches read their first operand; it is still guest t6.
-        return match[1] not in {
-            "sb", "sh", "sw", "sd", "c.sw", "c.sd", "c.swsp", "c.sdsp",
-            "beq", "bne", "blt", "bge", "bltu", "bgeu", "bgt", "ble",
-            "bgtu", "bleu", "beqz", "bnez", "bltz", "bgez", "bgtz", "blez",
-            "c.beqz", "c.bnez", "csrw", "csrs", "csrc",
-        }
+        return re.match(
+            r"^\s*[A-Za-z.0-9]+\s+(?:t6|x31)\s*,", code_part
+        ) is not None
 
     def _replace_semantic_t6_uses(
         self, translated: list[str], alias: str
@@ -220,7 +213,7 @@ class VectorBlockEmitter:
             clobbered_gprs.append("t6")
         # 同一物理寄存器同时是客体输入和输出时，块头仍需
         # 保存其原值，块尾则必须保留新结果。
-        for register in sorted(semantic_gpr_inputs & semantic_gpr_outputs):
+        for register in semantic_gpr_inputs & semantic_gpr_outputs:
             if register == "sp":
                 continue
             if register not in clobbered_gprs:
@@ -286,12 +279,12 @@ class VectorBlockEmitter:
             if state_base_calls_helper:
                 gpr_inputs_to_restore = [
                     register
-                    for register in sorted(semantic_gpr_inputs)
+                    for register in semantic_gpr_inputs
                     if register != "t6" and register in gpr_spill_offsets
                 ]
                 fpr_inputs_to_restore = [
                     register
-                    for register in sorted(semantic_fpr_inputs)
+                    for register in semantic_fpr_inputs
                     if register in fpr_spill_offsets
                 ]
                 if gpr_inputs_to_restore or fpr_inputs_to_restore:

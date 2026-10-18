@@ -141,6 +141,9 @@ def _float_shape(state: StateTracker) -> tuple[int, float, str]:
     return sew, lmul, lmul_token
 
 
+SOURCE_VLENB = 32
+
+
 _VECTOR_CSR_ALIASES = {
     "0x008": "vstart",
     "0x009": "vxsat",

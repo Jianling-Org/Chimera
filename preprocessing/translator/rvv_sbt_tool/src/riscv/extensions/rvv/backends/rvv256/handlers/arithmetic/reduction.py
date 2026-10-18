@@ -31,12 +31,12 @@ def _build_vfredusum_vs_lines(context) -> list[str]:
     """
     翻译 vfredusum.vs 指令 (256-bit 模式)
 
-    格式: vfredusum.vs vd, src_vec, seed_vec
-    语义: vd[0] = Σ src_vec[i] + seed_vec[0] (i = 0 to vl-1)
+    格式: vfredusum.vs vd, vs1, vs2
+    语义: vd[0] = Σ vs1[i] + vs2[0] (i = 0 to vl-1)
 
     策略:
-    - 加载 seed_vec[0] 作为初始累加器
-    - 主循环: 对每个 src_vec 块执行 vfredusum.vs, 跨块传递累加值
+    - 加载 vs2[0] 作为初始累加器
+    - 主循环: 对每个 vs1 块执行 vfredusum.vs, 跨块传递累加值
     - 尾部: 标量 fadd 回退
     - 最终写回 vd[0]
     :return: 生成的汇编代码行列表
@@ -46,13 +46,14 @@ def _build_vfredusum_vs_lines(context) -> list[str]:
     allocator = context.layout
     new_label = context.new_label
     lines = []
+    mask_suffix = ""
     operands = insn.operands
     if len(operands) < 3:
         raise InstructionValidationError(insn, f"Invalid operands for {insn.opcode}: {insn.op_str}")
 
     vd = operands[0]
-    src_vec = operands[1]
-    seed_vec = operands[2]
+    vs1 = operands[1]
+    vs2 = operands[2]
 
     sew = state.sew
     chunk_n = _chunk_size(sew)
@@ -62,11 +63,11 @@ def _build_vfredusum_vs_lines(context) -> list[str]:
     mask = chunk_n - 1
 
     vd_off = allocator.get_offset(vd)
-    src_vec_off = allocator.get_offset(src_vec)
-    seed_vec_off = allocator.get_offset(seed_vec)
+    vs1_off = allocator.get_offset(vs1)
+    vs2_off = allocator.get_offset(vs2)
 
     vtemps = VRegTempAllocator(insn)
-    src_vec_vreg = vtemps.alloc_vreg()
+    vs1_vreg = vtemps.alloc_vreg()
     acc_vreg = vtemps.alloc_vreg()
 
     # 保留 ft0: 尾部回退循环硬编码 ft0 作为源加载目标, 不能与 acc_fpr 冲突
@@ -74,7 +75,8 @@ def _build_vfredusum_vs_lines(context) -> list[str]:
     vl_reg = temps.alloc_gpr()
     chunk_count = temps.alloc_gpr()
     tail_count = temps.alloc_gpr()
-    src_vec_ptr = temps.alloc_gpr()
+    vs1_ptr = temps.alloc_gpr()
+    vd_ptr = temps.alloc_gpr()
     temp = temps.alloc_gpr()
     acc_fpr = temps.alloc_fpr()  # 标量累加器 (不会是 ft0)
 
@@ -82,19 +84,19 @@ def _build_vfredusum_vs_lines(context) -> list[str]:
     store_instr = _get_float_instr('store', sew)
     add_instr = _get_float_instr('add', sew)
 
-    lines.append(f"# vfredusum.vs {vd}, {src_vec}, {seed_vec} (256-bit mode)")
-    lines.append(f"# Semantic: {vd}[0] = Σ{src_vec}[i] + {seed_vec}[0], SEW={sew}")
+    lines.append(f"# vfredusum.vs {vd}, {vs1}, {vs2} (256-bit mode)")
+    lines.append(f"# Semantic: {vd}[0] = Σ{vs1}[i] + {vs2}[0], SEW={sew}")
     lines.append("")
 
     done_label = new_label("reduction_done")
     _load_vl_from_csr(lines, vl_reg=vl_reg, addr_reg=chunk_count)
     lines.append(f"    beqz    {vl_reg}, {done_label}")
 
-    # ========== 1. 加载初始值 seed_vec[0] ==========
-    lines.append(f"    # 加载初始值 {seed_vec}[0] -> {acc_fpr}")
-    lines.append(f"    li      {temp}, {seed_vec_off:#x}")
+    # ========== 1. 加载初始值 vs2[0] ==========
+    lines.append(f"    # 加载初始值 {vs2}[0] -> {acc_fpr}")
+    lines.append(f"    li      {temp}, {vs2_off:#x}")
     lines.append(f"    add     {temp}, t6, {temp}")
-    lines.append(f"    {load_instr:<8} {acc_fpr}, 0({temp})            # {acc_fpr} = {seed_vec}[0]")
+    lines.append(f"    {load_instr:<8} {acc_fpr}, 0({temp})            # {acc_fpr} = {vs2}[0]")
     lines.append("")
 
     # ========== 2. 加载 vl 并计算块数/尾数 ==========
@@ -102,26 +104,26 @@ def _build_vfredusum_vs_lines(context) -> list[str]:
     lines.append(f"    andi    {tail_count}, {vl_reg}, {mask}              # {tail_count} = vl % {chunk_n}")
     lines.append("")
 
-    # ========== 设置 src_vec 指针 ==========
-    lines.append(f"    li      {temp}, {src_vec_off:#x}")
-    lines.append(f"    add     {src_vec_ptr}, t6, {temp}            # {src_vec_ptr} = &{src_vec}")
+    # ========== 设置 vs1 指针 ==========
+    lines.append(f"    li      {temp}, {vs1_off:#x}")
+    lines.append(f"    add     {vs1_ptr}, t6, {temp}            # {vs1_ptr} = &{vs1}")
     lines.append("")
 
     # ========== 3. 主循环: 256-bit 块级归约 ==========
     main_loop = new_label("vfredusum_main")
     after_main = new_label("vfredusum_after")
 
-    lines.append(f"    # --- 主循环: 逐块归约 {src_vec} ---")
+    lines.append(f"    # --- 主循环: 逐块归约 {vs1} ---")
     lines.append(f"    beqz    {chunk_count}, {after_main}")
     lines.append(f"{main_loop}:")
     _emit_vsetvl_for_chunk(lines, chunk_n, sew, "m1", vl_reg, scratch_reg=vl_reg)
     lines.append("")
     lines.append(f"    vfmv.v.f {acc_vreg}, {acc_fpr}                  # 广播累加器 -> {acc_vreg}")
-    lines.append(f"    vle{sew}.v {src_vec_vreg}, ({src_vec_ptr})               # 加载 {src_vec} 块")
-    lines.append(f"    vfredusum.vs {acc_vreg}, {src_vec_vreg}, {acc_vreg}  # {acc_vreg}[0] += Σ{src_vec_vreg}[i]")
+    lines.append(f"    vle{sew}.v {vs1_vreg}, ({vs1_ptr})               # 加载 {vs1} 块")
+    lines.append(f"    vfredusum.vs {acc_vreg}, {vs1_vreg}, {acc_vreg}  # {acc_vreg}[0] += Σ{vs1_vreg}[i]")
     lines.append(f"    vfmv.f.s {acc_fpr}, {acc_vreg}                   # 提取累加结果 -> {acc_fpr}")
     lines.append("")
-    lines.append(f"    addi    {src_vec_ptr}, {src_vec_ptr}, {c_bytes}")
+    lines.append(f"    addi    {vs1_ptr}, {vs1_ptr}, {c_bytes}")
     lines.append(f"    addi    {chunk_count}, {chunk_count}, -1")
     lines.append(f"    bnez    {chunk_count}, {main_loop}")
     lines.append(f"{after_main}:")
@@ -134,9 +136,9 @@ def _build_vfredusum_vs_lines(context) -> list[str]:
 
     lines.append(f"{tail_loop}:")
     lines.append(f"    beqz    {tail_count}, {tail_end}")
-    lines.append(f"    {load_instr:<8} ft0, 0({src_vec_ptr})               # ft0 = {src_vec}[i]")
+    lines.append(f"    {load_instr:<8} ft0, 0({vs1_ptr})               # ft0 = {vs1}[i]")
     lines.append(f"    {add_instr:<8} {acc_fpr}, {acc_fpr}, ft0           # {acc_fpr} += ft0")
-    lines.append(f"    addi    {src_vec_ptr}, {src_vec_ptr}, {elem_bytes}")
+    lines.append(f"    addi    {vs1_ptr}, {vs1_ptr}, {elem_bytes}")
     lines.append(f"    addi    {tail_count}, {tail_count}, -1")
     lines.append(f"    j       {tail_loop}")
     lines.append(f"{tail_end}:")
@@ -163,6 +165,7 @@ def _emit_vfred_minmax_vs(
 ) -> List[str]:
     """Emit vfredmax.vs/vfredmin.vs using chunked RVV reductions."""
     lines = []
+    mask_suffix = ""
     operands = insn.operands
     if len(operands) < 3:
         raise InstructionValidationError(insn, f"Invalid operands for {insn.opcode}: {insn.op_str}")
@@ -295,6 +298,7 @@ def _emit_vred_int_vs(
 ) -> List[str]:
     """Emit single-width integer vredsum.vs/vredor.vs/vredmaxu.vs using chunked RVV reductions."""
     lines = []
+    mask_suffix = ""
     operands = insn.operands
     if len(operands) < 3:
         raise InstructionValidationError(insn, f"Invalid operands for {insn.opcode}: {insn.op_str}")
@@ -514,8 +518,11 @@ def _emit_vfwred_sum_vs_for_sew(
 ) -> List[str]:
     """Emit vfwred[o/u]sum.vs for a known e16/e32 input SEW."""
     lines = []
+    mask_suffix = ""
     operands = list(insn.operands)
+    is_masked = False
     if len(operands) > 0 and str(operands[-1]).strip().endswith(".t"):
+        is_masked = True
         operands = operands[:-1]
     if len(operands) < 3:
         raise InstructionValidationError(insn, f"Invalid operands for {insn.opcode}: {insn.op_str}")
@@ -645,3 +652,6 @@ def _build_vfwredusum_vs_lines(context) -> list[str]:
     allocator = context.layout
     new_label = context.new_label
     return _emit_vfwred_sum_vs(insn, state, allocator, new_label, "usum")
+
+
+

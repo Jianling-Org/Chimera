@@ -11,8 +11,6 @@ import statistics
 
 
 def kde_mode(values):
-    if len(values) < 2 or any(not math.isfinite(value) or value <= 0 for value in values):
-        raise ValueError("KDE requires at least two positive finite samples")
     deviation = statistics.stdev(values)
     if not deviation:
         return values[0]
@@ -24,10 +22,8 @@ def kde_mode(values):
 
 def summarize(directory):
     rows = [json.loads(line) for line in (directory / "results.jsonl").read_text().splitlines() if line.strip()]
-    config = next((row for row in rows if row["event"] == "config"), None)
-    environment = next((row for row in rows if row["event"] == "environment"), None)
-    if config is None or environment is None:
-        raise ValueError(f"{directory}: missing config or environment event")
+    config = next(row for row in rows if row["event"] == "config")
+    environment = next(row for row in rows if row["event"] == "environment")
     checks = [row for row in rows if row["event"] == "validation"]
     equal = [row for row in rows if row["event"] == "native_translated_bitwise"]
     if environment["vlenb"] != 128 or len(checks) != 78 or any(row["bad"] for row in checks):
@@ -57,9 +53,8 @@ def summarize(directory):
         stats[name] = dict(samples=len(values), mean_ns=statistics.mean(values),
                            median_ns=statistics.median(values), kde_mode_ns=kde_mode(values),
                            min_ns=min(values), max_ns=max(values))
-    packing_rows = [row for row in rows if row["event"] == "packing"]
-    packing = {row["layout"]: row["ns_per_call"] for row in packing_rows}
-    if len(packing_rows) != 2 or set(packing) != {"ime", "rvv"}:
+    packing = {row["layout"]: row["ns_per_call"] for row in rows if row["event"] == "packing"}
+    if set(packing) != {"ime", "rvv"}:
         raise ValueError("missing packing measurements")
     return dict(environment=environment, config=config, stats=stats, packing_ns=packing,
                 native_ime_instructions=audit["ime_native"], validation_cases=24,

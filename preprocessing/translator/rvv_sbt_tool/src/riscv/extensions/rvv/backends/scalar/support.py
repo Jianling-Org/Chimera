@@ -9,7 +9,7 @@ from riscv.extensions.rvv.analysis.model import LEGAL_LMULS
 
 
 def _vector_group_bounds(context, register: str, eew: int) -> tuple[int, int]:
-    """Return one non-segment operand group's simulated byte range."""
+    """Validate an operand's EMUL and return its simulated byte range."""
     state = context.state
     number = _parse_vector_register_number(register)
     emul = 1 if eew == 1 else state.lmul * eew / state.sew
@@ -23,7 +23,7 @@ def _vector_group_bounds(context, register: str, eew: int) -> tuple[int, int]:
 
 
 def _validate_vector_groups(context, destination_eew: int, sources) -> None:
-    """Enforce overlap for plain groups; segment/slide/gather use source validation."""
+    """Enforce RVV overlap rules before emitting loops over simulated storage."""
     state = context.state
     if state.sew not in (8, 16, 32, 64) or state.lmul not in LEGAL_LMULS:
         raise ValueError(f"Invalid vector configuration: e{state.sew}, LMUL={state.lmul}")
@@ -61,7 +61,7 @@ def emit_mask_skip_guard(
     - 元素 i 的 mask bit 位于 offset(i/64) 的第 (i%64) bit
     - 这在 little-endian RISC-V 上与 RVV 1.0 bit-packed 布局 (bit i
       位于 byte i/8 的 i%8 位) 兼容: ld 将 byte 0 读入 bit 0-7
-    - 与 256-bit 模式 (backends/rvv256/support.py 的 _emit_mask_extraction_chunk) 的逐字节 lbu 访问在位级
+    - 与 256-bit 模式 (rvv_mask_rvv256.py) 的逐字节 lbu 访问在位级
       结果上一致, 均遵循 RVV 1.0 spec
 
     参考了 QEMU `vext_elem_mask()` 的位读取思路。

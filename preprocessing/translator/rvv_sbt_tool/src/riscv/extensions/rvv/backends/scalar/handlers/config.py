@@ -12,7 +12,6 @@ CSR 内存布局 (来自 ``SimulatedStateLayout``):
 - vlenb:  0x1030
 """
 
-from riscv.frontend.literals import parse_integer_literal
 from riscv.extensions.rvv.translation.contracts import InstructionValidationError
 from riscv.extensions.rvv.runtime.layout import CSR_OFFSETS
 from riscv.extensions.rvv.runtime.access import emit_clear_vstart
@@ -147,7 +146,13 @@ def _build_vsetivli_lines(context) -> list[str]:
     vtype_offset = CSR_OFFSETS['vtype']
 
     # 解析立即数
-    imm_value = parse_integer_literal(uimm)
+    try:
+        if uimm.startswith('0x'):
+            imm_value = int(uimm, 16)
+        else:
+            imm_value = int(uimm)
+    except ValueError:
+        imm_value = 0
 
     lines.append(f"    # {insn.op_str}: imm={imm_value}, vlmax={vlmax}翻译开始")
 

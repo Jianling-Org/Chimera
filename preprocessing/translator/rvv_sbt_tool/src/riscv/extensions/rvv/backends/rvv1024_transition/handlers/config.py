@@ -16,8 +16,9 @@ from __future__ import annotations
 
 from typing import List
 
-from riscv.frontend.literals import parse_integer_literal
+from riscv.extensions.rvv.analysis.model import LEGAL_LMULS
 from riscv.extensions.rvv.translation.contracts import InstructionValidationError
+from riscv.extensions.rvv.runtime.layout import CSR_OFFSETS
 from riscv.extensions.rvv.runtime.access import emit_clear_vstart
 from riscv.extensions.rvv.analysis.config import StateTracker
 from riscv.extensions.rvv.translation.vtype_decode import emit_vlmax_from_vtype
@@ -27,9 +28,7 @@ from riscv.extensions.rvv.backends.rvv1024_transition.operands import _validate_
 
 # 本后端一期的输入合同。目标硬件 VLENB=128 的检查由入口 guard 负责；
 # 这里仅定义客体可见的源端 VLENB，避免误把目标机宽度混入源语义计算。
-from riscv.extensions.rvv.backends.rvv1024_transition.state_view import (
-    SOURCE_VLENB, emit_load_csr, emit_store_csr,
-)
+from riscv.extensions.rvv.backends.rvv1024_transition.state_view import SOURCE_VLENB
 
 def _snapshot_state(state: StateTracker) -> tuple:
     """保存静态状态，保证拒绝配置时不会污染后续指令的翻译判断。"""
@@ -55,6 +54,23 @@ def _restore_state(state: StateTracker, snapshot: tuple) -> None:
         state.vma,
         state.config_str,
     ) = snapshot
+
+
+
+
+
+def _emit_store_csr(lines: List[str], addr_reg: str, value_reg: str, offset: int, name: str) -> None:
+    """把 ``value_reg`` 写入状态块中的一个固定 CSR 槽位。"""
+    lines.append(f"    li      {addr_reg}, {offset:#x}")
+    lines.append(f"    add     {addr_reg}, t6, {addr_reg}")
+    lines.append(f"    sd      {value_reg}, 0({addr_reg})              # CSR.{name}")
+
+
+def _emit_load_csr(lines: List[str], addr_reg: str, value_reg: str, offset: int, name: str) -> None:
+    """从状态块读取一个固定 CSR 槽位。"""
+    lines.append(f"    li      {addr_reg}, {offset:#x}")
+    lines.append(f"    add     {addr_reg}, t6, {addr_reg}")
+    lines.append(f"    ld      {value_reg}, 0({addr_reg})              # CSR.{name}")
 
 
 def _build_vsetvli_lines(context) -> list[str]:
@@ -118,7 +134,7 @@ def _build_vsetvli_lines(context) -> list[str]:
             check_done_label = new_label("vsetvli_x0_x0_check_done")
 
             lines.append("    # x0,x0：新旧 VLMAX 必须相同，VL 才可保持")
-            emit_load_csr(lines, old_vtype, addr_reg, "vtype")
+            _emit_load_csr(lines, addr_reg, old_vtype, CSR_OFFSETS["vtype"], "vtype(旧)")
             emit_vlmax_from_vtype(lines, source_vlenb=SOURCE_VLENB, vtype_reg=old_vtype, out_reg=old_vlmax, sew_reg=sew_reg, base_reg=base_reg, lmul_reg=lmul_reg, tmp_reg=tmp_reg, invalid_label=invalid_label, new_label=new_label, prefix="vsetvli_x0_x0_old_vlmax")
             lines.append(f"    li      {tmp_reg}, {vlmax}              # 新 VLMAX")
             lines.append(f"    bne     {old_vlmax}, {tmp_reg}, {invalid_label}")
@@ -131,13 +147,13 @@ def _build_vsetvli_lines(context) -> list[str]:
         # 执行采用的 tu,mu 策略写回为客体可见的 vtype。
         emit_clear_vstart(lines, addr_reg)
         lines.append(f"    li      {value_reg}, {vtype_value:#x}       # 源 CSR.vtype")
-        emit_store_csr(lines, value_reg, addr_reg, "vtype")
+        _emit_store_csr(lines, addr_reg, value_reg, CSR_OFFSETS["vtype"], "vtype")
 
         if rs1_is_zero and rd_is_zero:
             lines.append("    # rs1=x0 且 rd=x0：CSR.vl 保持原值")
         elif rs1_is_zero:
             lines.append(f"    li      {result_reg}, {vlmax}           # VL = VLMAX")
-            emit_store_csr(lines, result_reg, addr_reg, "vl")
+            _emit_store_csr(lines, addr_reg, result_reg, CSR_OFFSETS["vl"], "vl")
             lines.append(f"    mv      {rd}, {result_reg}              # rd = VL")
         else:
             skip_label = new_label("vsetvli_min_done")
@@ -146,7 +162,7 @@ def _build_vsetvli_lines(context) -> list[str]:
             lines.append(f"    bltu    {value_reg}, {rs1}, {skip_label}")
             lines.append(f"    mv      {result_reg}, {rs1}")
             lines.append(f"{skip_label}:")
-            emit_store_csr(lines, result_reg, addr_reg, "vl")
+            _emit_store_csr(lines, addr_reg, result_reg, CSR_OFFSETS["vl"], "vl")
             if not rd_is_zero:
                 lines.append(f"    mv      {rd}, {result_reg}              # rd = VL")
     except ValueError as error:
@@ -176,7 +192,7 @@ def _build_vsetivli_lines(context) -> list[str]:
     uimm_text = str(operands[1]).strip()
     rd_is_zero = rd in ("zero", "x0")
     try:
-        uimm = parse_integer_literal(uimm_text)
+        uimm = int(uimm_text, 16) if uimm_text.lower().startswith("0x") else int(uimm_text)
     except ValueError as error:
         raise InstructionValidationError(
             insn, f"invalid uimm for vsetivli: {insn.op_str}"
@@ -209,7 +225,7 @@ def _build_vsetivli_lines(context) -> list[str]:
 
         emit_clear_vstart(lines, addr_reg)
         lines.append(f"    li      {value_reg}, {vtype_value:#x}       # 源 CSR.vtype")
-        emit_store_csr(lines, value_reg, addr_reg, "vtype")
+        _emit_store_csr(lines, addr_reg, value_reg, CSR_OFFSETS["vtype"], "vtype")
 
         lines.append(f"    li      {value_reg}, {vlmax}            # VLMAX")
         lines.append(f"    li      {imm_reg}, {uimm}               # AVL 立即数")
@@ -218,7 +234,7 @@ def _build_vsetivli_lines(context) -> list[str]:
         lines.append(f"    bltu    {value_reg}, {imm_reg}, {skip_label}")
         lines.append(f"    mv      {result_reg}, {imm_reg}")
         lines.append(f"{skip_label}:")
-        emit_store_csr(lines, result_reg, addr_reg, "vl")
+        _emit_store_csr(lines, addr_reg, result_reg, CSR_OFFSETS["vl"], "vl")
         if not rd_is_zero:
             lines.append(f"    mv      {rd}, {result_reg}              # rd = VL")
     except ValueError as error:
@@ -279,7 +295,7 @@ def _build_vsetvl_lines(context) -> list[str]:
         # 后续提前写入 rs2 而破坏检查对象。
         if keep_vl:
             assert old_vtype is not None and old_vlmax is not None
-            emit_load_csr(lines, old_vtype, addr_reg, "vtype")
+            _emit_load_csr(lines, addr_reg, old_vtype, CSR_OFFSETS["vtype"], "vtype(旧)")
             emit_vlmax_from_vtype(lines, source_vlenb=SOURCE_VLENB, vtype_reg=old_vtype, out_reg=old_vlmax, sew_reg=sew_or_vl, base_reg=addr_reg, lmul_reg=lmul_reg, tmp_reg=tmp_reg, invalid_label=invalid_label, new_label=new_label, prefix="vsetvl_old_vlmax")
 
         lines.append(f"    bltz    {rs2}, {invalid_label}              # 输入 vtype 的 vill 置位")
@@ -297,7 +313,7 @@ def _build_vsetvl_lines(context) -> list[str]:
 
         # vtype 是客体可见的 CSR，保留 rs2 中原始 ta/ma 位；目标临时 vtype
         # 由具体向量 handler 另行设置为 tu,mu，不能污染这里的值。
-        emit_store_csr(lines, rs2, addr_reg, "vtype")
+        _emit_store_csr(lines, addr_reg, rs2, CSR_OFFSETS["vtype"], "vtype")
 
         lines.append(f"    li      {addr_reg}, {SOURCE_VLENB}")
         lines.append(
@@ -320,7 +336,7 @@ def _build_vsetvl_lines(context) -> list[str]:
             lines.append(f"    bne     {old_vlmax}, {vlmax_reg}, {invalid_label}")
 
         if keep_vl:
-            emit_load_csr(lines, sew_or_vl, addr_reg, "vl")
+            _emit_load_csr(lines, addr_reg, sew_or_vl, CSR_OFFSETS["vl"], "vl(保持)")
         elif rs1_is_zero:
             lines.append(f"    mv      {sew_or_vl}, {vlmax_reg}            # VL = VLMAX")
         else:
@@ -331,7 +347,7 @@ def _build_vsetvl_lines(context) -> list[str]:
             lines.append(f"{min_done_label}:")
 
         if not keep_vl:
-            emit_store_csr(lines, sew_or_vl, addr_reg, "vl")
+            _emit_store_csr(lines, addr_reg, sew_or_vl, CSR_OFFSETS["vl"], "vl")
         emit_clear_vstart(lines, addr_reg)
         if not rd_is_zero:
             lines.append(f"    mv      {rd}, {sew_or_vl}              # rd = VL")
@@ -340,9 +356,9 @@ def _build_vsetvl_lines(context) -> list[str]:
         lines.append(f"{invalid_label}:")
         lines.append(f"    li      {tmp_reg}, 1")
         lines.append(f"    slli    {tmp_reg}, {tmp_reg}, 63         # RV64 vill")
-        emit_store_csr(lines, tmp_reg, addr_reg, "vtype")
+        _emit_store_csr(lines, addr_reg, tmp_reg, CSR_OFFSETS["vtype"], "vtype(vill)")
         lines.append(f"    li      {sew_or_vl}, 0")
-        emit_store_csr(lines, sew_or_vl, addr_reg, "vl")
+        _emit_store_csr(lines, addr_reg, sew_or_vl, CSR_OFFSETS["vl"], "vl(非法 vtype)")
         emit_clear_vstart(lines, addr_reg)
         if not rd_is_zero:
             lines.append(f"    mv      {rd}, {sew_or_vl}")

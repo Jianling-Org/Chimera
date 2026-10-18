@@ -9,14 +9,10 @@
 from __future__ import annotations
 
 import re
-import os
-import selectors
-import signal
 import shlex
 import shutil
 import subprocess
 import tempfile
-import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable, Iterable, Iterator, Sequence
@@ -43,8 +39,6 @@ _RELOCATION_LIMITS = {
 }
 _DIRECT_RELOCATION_TYPES = frozenset(_RELOCATION_LIMITS)
 _SITE_LABEL = re.compile(r"^chimera_j_site_([0-9a-fA-F]+)$")
-# Large program compilation can take hours; callers may set a tighter tool budget.
-DEFAULT_COMMAND_TIMEOUT = 6 * 60 * 60
 
 
 class JalRangeFixupError(RuntimeError):
@@ -101,71 +95,38 @@ def _command_parts(command: str | Sequence[str]) -> list[str]:
     return parts
 
 
-def _run(command: Sequence[str], *, timeout: float | None = None) -> str:
+def _run(command: Sequence[str]) -> str:
     """运行对象工具，并保留完整错误上下文。"""
 
-    output: list[str] = []
-    try:
-        output.extend(_run_lines(command, timeout=timeout))
-    except JalRangeFixupError as exc:
-        if output:
-            raise JalRangeFixupError(f"{exc}\n{''.join(output).strip()}") from exc
-        raise
-    return "".join(output)
+    result = subprocess.run(
+        list(command),
+        check=False,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    if result.returncode != 0:
+        detail = (result.stderr or result.stdout).strip()
+        raise JalRangeFixupError(
+            f"命令失败（退出码 {result.returncode}）: {' '.join(command)}\n{detail}"
+        )
+    return result.stdout
 
 
-def _run_lines(command: Sequence[str], *, timeout: float | None = None) -> Iterator[str]:
-    """Stream output under one deadline and reap our process group on cancellation."""
-    budget = DEFAULT_COMMAND_TIMEOUT if timeout is None else timeout
-    if not 0 < budget < float("inf"):
-        raise ValueError("工具超时必须为正数")
-    deadline = time.monotonic() + budget
+def _run_lines(command: Sequence[str]) -> Iterator[str]:
+    """Stream large readelf output; keep stderr on disk to avoid pipe deadlock."""
     with tempfile.TemporaryFile(mode="w+t") as errors:
         with subprocess.Popen(
             list(command), stdout=subprocess.PIPE, stderr=errors, text=True,
-            start_new_session=True,
         ) as process:
             assert process.stdout is not None
-            completed = False
-            try:
-                with selectors.DefaultSelector() as selector:
-                    selector.register(process.stdout, selectors.EVENT_READ)
-                    pending = b""
-                    while True:
-                        remaining = deadline - time.monotonic()
-                        if remaining <= 0 or not selector.select(remaining):
-                            raise subprocess.TimeoutExpired(command, budget)
-                        chunk = os.read(process.stdout.fileno(), 65536)
-                        if not chunk:
-                            if pending:
-                                yield pending.decode(process.stdout.encoding)
-                            break
-                        lines = (pending + chunk).split(b"\n")
-                        pending = lines.pop()
-                        for line in lines:
-                            yield line.decode(process.stdout.encoding) + "\n"
-                process.wait(timeout=max(0, deadline - time.monotonic()))
-                completed = True
-                if process.returncode != 0:
-                    errors.seek(0)
-                    raise JalRangeFixupError(
-                        f"命令失败（退出码 {process.returncode}）: {' '.join(command)}\n"
-                        f"{errors.read().strip()}"
-                    )
-            except subprocess.TimeoutExpired as exc:
+            yield from process.stdout
+            if process.wait() != 0:
                 errors.seek(0)
                 raise JalRangeFixupError(
-                    f"命令超时（{budget:g}s）: {' '.join(command)}\n{errors.read().strip()}"
-                ) from exc
-            finally:
-                # Closing a partially consumed iterator must not leave a compiler
-                # or a pipe-holding descendant running after the caller exits.
-                if not completed:
-                    try:
-                        os.killpg(process.pid, signal.SIGKILL)
-                    except ProcessLookupError:
-                        pass
-                process.wait()
+                    f"命令失败（退出码 {process.returncode}）: {' '.join(command)}\n"
+                    f"{errors.read().strip()}"
+                )
 
 
 def _parse_symbols(
@@ -208,21 +169,20 @@ def _parse_relocations(
             ),
             None,
         )
-        if type_index is None:
+        if type_index is None or type_index + 2 >= len(fields):
             continue
-        if type_index + 2 >= len(fields):
-            raise JalRangeFixupError(f"无法解析重定位行（缺少目标符号）: {line.strip()}")
 
         target = fields[type_index + 2]
+        addend = 0
         addend_index = type_index + 3
-        if addend_index + 2 != len(fields) or fields[addend_index] not in {"+", "-"}:
-            raise JalRangeFixupError(f"无法解析重定位 addend: {line.strip()}")
-        raw_addend = fields[addend_index + 1]
-        if re.fullmatch(r"(?:0[xX])?[0-9a-fA-F]+", raw_addend) is None:
-            raise JalRangeFixupError(f"无法解析重定位 addend: {line.strip()}")
-        addend = int(raw_addend, 16)
-        if fields[addend_index] == "-":
-            addend = -addend
+        if addend_index + 1 < len(fields) and fields[addend_index] in {"+", "-"}:
+            raw_addend = fields[addend_index + 1]
+            try:
+                addend = int(raw_addend, 0)
+            except ValueError:
+                addend = int(raw_addend, 16)
+            if fields[addend_index] == "-":
+                addend = -addend
 
         relocations.append(
             (

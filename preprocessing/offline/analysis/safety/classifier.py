@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Any
 
 from ..core.data_model import Program
@@ -39,6 +39,10 @@ class SafetyAnalysisResult:
     assumption: str = CONSERVATIVE_SCOPE_DESCRIPTION
     conditional: bool = False
     scope_exclusions: tuple = ()
+
+    def without_intermediates(self) -> "SafetyAnalysisResult":
+        """Keep published safety facts without retaining analysis work graphs."""
+        return replace(self, vector=None, stack=None)
 
     @property
     def safe_addresses(self) -> list[int]:
@@ -90,12 +94,14 @@ def classify_liveness(
             stack_reasons: list[str] = []
             if any(item.source == "vlen_scalar" for item in stack_live):
                 stack_reasons.append("live_vlen_scalar_data")
+            if any(item.source == "vlen_control" for item in stack_live):
+                stack_reasons.append("live_vlen_control_path")
             if any(item.source == "vlen_stack_frame" for item in stack_live):
                 stack_reasons.append("live_vlen_stack_frame")
             if any(item.source == "vlen_stack_setup" for item in stack_live):
                 stack_reasons.append("live_vlen_stack_setup")
             if any(
-                item.source not in {"vlen_stack_frame", "vlen_stack_setup", "vlen_scalar"}
+                item.source not in {"vlen_stack_frame", "vlen_stack_setup", "vlen_scalar", "vlen_control"}
                 for item in stack_live
             ):
                 stack_reasons.append("live_stack_vector_data")

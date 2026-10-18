@@ -82,7 +82,6 @@ def parse_init_vtype(value: str) -> VTypeSpec:
     不会再对同一个公开参数给出互相矛盾的判断。
 
     数值形式和命名形式都只接受当前 ELEN=64 profile 可解释的配置。
-    命名形式省略 tail 或 mask 策略时分别使用 tu、mu。
     """
 
     text = str(value).strip()
@@ -102,6 +101,10 @@ def parse_init_vtype(value: str) -> VTypeSpec:
             1: 16,
             2: 32,
             3: 64,
+            4: 128,
+            5: 256,
+            6: 512,
+            7: 1024,
         }
         lmul_map = {
             0: 1.0,

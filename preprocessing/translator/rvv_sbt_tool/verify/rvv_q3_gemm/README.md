@@ -15,9 +15,7 @@
 `bs=N+16`。正向模拟源 VLEN1024，目标为 CPU0–7/X100、VLEN256、2.2 GHz；
 反向模拟源 VLEN256，目标为 CPU8–15/A100、VLEN1024、1.8 GHz。
 
-源 ELF SHA256 为 `ac12dad308dfdb70e095aa9a86aa612602ba4eac8dda3da21ea1b7edbf80b1a6`，
-函数入口 `0x5ad99e`，1140条指令、356条RVV指令、3580B机器码。
-kernel SHA256 为 `cf0ff6fde59c0460beca8148794d70dc6bb7eeaff4c92d9525154691af16f80b`。
+历史实验输入身份见[验证记录](../../../../../docs/validation/measured-artifacts.json)。该输入的函数入口 `0x5ad99e`，1140条指令、356条RVV指令、3580B机器码。
 当前提取与历史、IME比较中复用的原生 RVV kernel 机器码逐字节相同。
 同一函数在源 VLEN1024/256 下分别走 VL64/VL16 分支，保持两种源语义。
 
@@ -25,7 +23,7 @@ kernel SHA256 为 `cf0ff6fde59c0460beca8148794d70dc6bb7eeaff4c92d9525154691af16f
 反向另有356个profile/vstart guard。分支必须按源PC重新绑定局部标签，原函数offset
 不能直接用作展开后的跳转位置。原有逐条1:N、立即提交、寄存器/CSR合同保持。
 
-本源码分发不包含历史验收结果与四份 `.ref` 参考文件；需要自行提供与 `workload.json` 哈希一致的参考输入。计时包含原kernel
+已接入主路径、累计收益、六批验收与基线口径见 [RESULTS.md](RESULTS.md)。计时包含原kernel
 与LLVM OpenMP调度，packing、TLS初始化、环境门禁和校验在计时外。
 使用CLOCK_MONOTONIC_RAW、3次预热、独立pilot校准约100ms批次、50个保留样本。
 计时前后核对每worker的CPU、单核affinity、硬件vlenb、频率和未重置的TLS canary。

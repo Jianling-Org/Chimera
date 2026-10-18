@@ -38,14 +38,9 @@ def main():
             print(json.dumps({"event":"started", "case":case, "implementation":name}), flush=True)
             observation = [environment()]
             stopped = threading.Event()
-            observation_errors = []
             def observe():
                 while not stopped.wait(5):
-                    try:
-                        observation.append(environment())
-                    except Exception as error:
-                        observation_errors.append({"time": time.time(), "error": str(error)})
-                        return
+                    observation.append(environment())
             watcher = threading.Thread(target=observe)
             watcher.start()
             start = time.monotonic()
@@ -55,20 +50,10 @@ def main():
                 proc = subprocess.run(["taskset","-c","8-15","./bench-full","measure",str(m),str(n),str(k),
                                        str(ROOT/(case+".ref")),str(implementation)],
                                       env=env,capture_output=True,text=True,timeout=900)
-            except subprocess.TimeoutExpired as error:
-                for suffix, value in (("stdout", error.stdout), ("stderr", error.stderr)):
-                    (ROOT/f"{case}-{name}.{suffix}").write_bytes(
-                        value if isinstance(value, bytes) else (value or "").encode())
-                raise RuntimeError(f"{case}/{name}: timed out after 900s; partial output saved") from error
             finally:
                 stopped.set(); watcher.join()
-                if observation_errors:
-                    (ROOT/f"{case}-{name}.environment-errors.json").write_text(
-                        json.dumps(observation_errors, indent=2)+"\n")
             (ROOT/f"{case}-{name}.stdout").write_text(proc.stdout)
             (ROOT/f"{case}-{name}.stderr").write_text(proc.stderr)
-            if observation_errors:
-                raise RuntimeError(f"{case}/{name}: environment sampling failed: {observation_errors}")
             if proc.returncode:
                 raise RuntimeError((case,name,proc.returncode,proc.stdout,proc.stderr))
             data = json.loads(proc.stdout)

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Callable, Iterable
-from riscv.frontend.literals import parse_integer_literal
 from riscv.extensions.rvv.backends.rvv1024_transition.operands import (
     _effective_lmul,
     _segment_field_registers,
@@ -42,9 +41,7 @@ from riscv.extensions.rvv.backends.rvv1024_transition.state_view import (
     SOURCE_VLENB,
     validate_source_group,
 )
-from riscv.extensions.rvv.backends.rvv1024_transition.temp_regs import (
-    RegisterAllocationError, VRegTempAllocator,
-)
+from riscv.extensions.rvv.backends.rvv1024_transition.temp_regs import VRegTempAllocator
 from riscv.extensions.rvv.translation.contracts import (
     HandlerContext,
     InstructionValidationError,
@@ -147,7 +144,7 @@ def _validate_profile(context: HandlerContext, seed: _Seed) -> tuple[int, float]
         )
     try:
         sew, lmul, _token, _width = _source_shape(state)
-    except ValueError as exc:
+    except (TypeError, ValueError) as exc:
         raise InstructionValidationError(insn, str(exc)) from exc
     # 复杂宽化/窄化族需要保留更具体的诊断（例如“目的 SEW”或“浮点
     # e8”），因此由下方专用 validator 检查；规格中的集合仍准确描述能力。
@@ -184,18 +181,15 @@ def _validate_groups(
     try:
         for vreg, lmul in collected:
             validate_source_group(vreg, lmul)
-    except ValueError as exc:
-        raise InstructionValidationError(insn, str(exc)) from exc
-    widths = tuple(
-        temp_widths
-        if temp_widths is not None
-        else (int(lmul) if lmul >= 1 else 1 for _vreg, lmul in collected)
-    )
-    if widths:
-        try:
+        widths = tuple(
+            temp_widths
+            if temp_widths is not None
+            else (int(lmul) if lmul >= 1 else 1 for _vreg, lmul in collected)
+        )
+        if widths:
             VRegTempAllocator().alloc_groups(widths)
-        except RegisterAllocationError as exc:
-            raise InstructionValidationError(insn, str(exc)) from exc
+    except (TypeError, ValueError) as exc:
+        raise InstructionValidationError(insn, str(exc)) from exc
 
 
 def _vector_tokens(operands: Iterable[str]) -> tuple[str, ...]:
@@ -216,7 +210,7 @@ def _validate_config(context: HandlerContext, seed: _Seed, operands: tuple[str, 
         probe = context.state.clone()
         if seed.validation_kind == "config-immediate":
             raw = operands[1]
-            value = parse_integer_literal(raw)
+            value = int(raw, 16) if raw.lower().startswith("0x") else int(raw, 10)
             if not 0 <= value <= 31:
                 raise ValueError("vsetivli uimm out of range (0..31)")
         if seed.validation_kind != "config-dynamic":
@@ -273,271 +267,209 @@ def _validate_data_shape(
     kind = seed.validation_kind
     sew, lmul = _validate_profile(context, seed)
 
-    if kind == "move-simm5":
-        try:
+    try:
+        if kind == "move-simm5":
             _parse_simm5(base[1])
-        except ValueError as exc:
-            raise InstructionValidationError(insn, str(exc)) from exc
-        _validate_groups(insn, ((base[0], lmul),))
-        return
-    elif kind == "integer-same-width" and insn.opcode in {
-        "vadd.vi", "vand.vi", "vor.vi", "vrsub.vi"
-    }:
-        try:
+            _validate_groups(insn, ((base[0], lmul),))
+            return
+        elif kind == "integer-same-width" and insn.opcode in {
+            "vadd.vi", "vand.vi", "vor.vi", "vrsub.vi"
+        }:
             _parse_simm5(base[2])
-        except ValueError as exc:
-            raise InstructionValidationError(insn, str(exc)) from exc
-    elif kind == "integer-same-width" and insn.opcode in {
-        "vsll.vi", "vsrl.vi", "vsra.vi"
-    }:
-        try:
+        elif kind == "integer-same-width" and insn.opcode in {
+            "vsll.vi", "vsrl.vi", "vsra.vi"
+        }:
             _parse_uimm5(base[2])
-        except ValueError as exc:
-            raise InstructionValidationError(insn, str(exc)) from exc
-    elif kind in {"narrow-immediate", "integer-widen-immediate"}:
-        try:
+        elif kind in {"narrow-immediate", "integer-widen-immediate"}:
             _parse_uimm5(base[2])
-        except ValueError as exc:
-            raise InstructionValidationError(insn, str(exc)) from exc
-    elif kind == "slide-immediate":
-        try:
+        elif kind == "slide-immediate":
             _parse_slide_uimm5(base[2], insn.opcode)
-        except ValueError as exc:
-            raise InstructionValidationError(insn, str(exc)) from exc
 
-    if kind in {"float-move", "float-same-width", "float-reduction"}:
-        try:
+        if kind in {"float-move", "float-same-width", "float-reduction"}:
             _require_float_sew(context.state)
-        except ValueError as exc:
-            raise InstructionValidationError(insn, str(exc)) from exc
-    if kind == "float-reduction-widen":
-        try:
+        if kind == "float-reduction-widen":
             _float_shape(context.state)
-        except ValueError as exc:
-            raise InstructionValidationError(insn, str(exc)) from exc
-        if sew not in (16, 32):
-            raise InstructionValidationError(
+            if sew not in (16, 32):
+                raise ValueError(
+                    f"{insn.opcode} 仅支持 e16->e32 或 e32->e64，当前为 e{sew}"
+                )
+
+        if insn.opcode in {"vmv.s.x", "vmv.x.s", "vfmv.s.f", "vfmv.f.s"}:
+            # .s move 只访问 element 0；handler 也按独立 m1 物理寄存器组
+            # Pack/执行/Unpack，而不是按当前 source LMUL 读取整组。
+            _validate_groups(
                 insn,
-                f"{insn.opcode} 仅支持 e16->e32 或 e32->e64，当前为 e{sew}"
+                ((token, 1.0) for token in _vector_tokens(base)),
             )
+            return
 
-    if insn.opcode in {"vmv.s.x", "vmv.x.s", "vfmv.s.f", "vfmv.f.s"}:
-        # .s move 只访问 element 0；handler 也按独立 m1 物理寄存器组
-        # Pack/执行/Unpack，而不是按当前 source LMUL 读取整组。
-        _validate_groups(
-            insn,
-            ((token, 1.0) for token in _vector_tokens(base)),
-        )
-        return
+        if kind in {
+            "same-width", "integer-same-width", "float-move", "float-same-width",
+        }:
+            groups = [(token, lmul) for token in _vector_tokens(base)]
+            _validate_groups(insn, groups)
+            return
 
-    if kind in {
-        "same-width", "integer-same-width", "float-move", "float-same-width",
-    }:
-        groups = [(token, lmul) for token in _vector_tokens(base)]
-        _validate_groups(insn, groups)
-        return
+        if kind in {"reduction", "float-reduction", "float-reduction-widen"}:
+            groups = ((base[0], 1.0), (base[1], lmul), (base[2], 1.0))
+            _validate_groups(insn, groups)
+            return
 
-    if kind in {"reduction", "float-reduction", "float-reduction-widen"}:
-        groups = ((base[0], 1.0), (base[1], lmul), (base[2], 1.0))
-        _validate_groups(insn, groups)
-        return
-
-    if kind in {"integer-reduction-widen"}:
-        try:
+        if kind in {"integer-reduction-widen"}:
             _widened_lmul(lmul, sew)
-        except ValueError as exc:
-            raise InstructionValidationError(insn, str(exc)) from exc
-        groups = ((base[0], 1.0), (base[1], lmul), (base[2], 1.0))
-        widths = (1, int(lmul) if lmul >= 1 else 1, 1)
-        if len(operands) != len(base):
-            widths += (1,)
-            groups += (("v0", 1.0),)
-        _validate_groups(insn, groups, temp_widths=widths)
-        return
+            groups = ((base[0], 1.0), (base[1], lmul), (base[2], 1.0))
+            widths = (1, int(lmul) if lmul >= 1 else 1, 1)
+            if len(operands) != len(base):
+                widths += (1,)
+                groups += (("v0", 1.0),)
+            _validate_groups(insn, groups, temp_widths=widths)
+            return
 
-    if kind in {"float-convert-widen", "float-widen"}:
-        if kind == "float-widen":
-            try:
+        if kind in {"float-convert-widen", "float-widen"}:
+            if kind == "float-widen":
                 _sew, source_lmul, _token, result_lmul = _wide_result_shape(
                     context.state, insn.opcode
                 )
-            except ValueError as exc:
-                raise InstructionValidationError(insn, str(exc)) from exc
-        else:
-            try:
+            else:
                 _float_shape(context.state)
-            except ValueError as exc:
-                raise InstructionValidationError(insn, str(exc)) from exc
-            if sew not in (16, 32):
-                raise InstructionValidationError(
-                    insn,
-                    f"{insn.opcode} 仅支持 e16->e32 或 e32->e64，当前为 e{sew}"
-                )
-            source_lmul = lmul
-            result_lmul = lmul * 2.0
-            if result_lmul not in _ALL_LMULS:
-                raise InstructionValidationError(
-                    insn,
-                    f"{insn.opcode} 的宽目的 LMUL={result_lmul:g} 不可用"
-                )
-        groups = [(base[0], result_lmul)]
-        groups.extend((token, source_lmul) for token in _vector_tokens(base[1:]))
-        _validate_groups(insn, groups)
-        return
+                if sew not in (16, 32):
+                    raise ValueError(
+                        f"{insn.opcode} 仅支持 e16->e32 或 e32->e64，当前为 e{sew}"
+                    )
+                source_lmul = lmul
+                result_lmul = lmul * 2.0
+                if result_lmul not in _ALL_LMULS:
+                    raise ValueError(
+                        f"{insn.opcode} 的宽目的 LMUL={result_lmul:g} 不可用"
+                    )
+            groups = [(base[0], result_lmul)]
+            groups.extend((token, source_lmul) for token in _vector_tokens(base[1:]))
+            _validate_groups(insn, groups)
+            return
 
-    if kind in {"integer-widen", "integer-widen-immediate"}:
-        try:
+        if kind in {"integer-widen", "integer-widen-immediate"}:
             result_lmul, _width = _widened_lmul(lmul, sew)
-        except ValueError as exc:
-            raise InstructionValidationError(insn, str(exc)) from exc
-        groups = [(base[0], result_lmul)]
-        groups.extend((token, lmul) for token in _vector_tokens(base[1:]))
-        if len(operands) != len(base):
-            groups.append(("v0", 1.0))
-        _validate_groups(insn, groups)
-        return
+            groups = [(base[0], result_lmul)]
+            groups.extend((token, lmul) for token in _vector_tokens(base[1:]))
+            if len(operands) != len(base):
+                groups.append(("v0", 1.0))
+            _validate_groups(insn, groups)
+            return
 
-    if kind == "integer-wide-narrow":
-        try:
+        if kind == "integer-wide-narrow":
             wide_lmul, _width = _widened_lmul(lmul, sew)
-        except ValueError as exc:
-            raise InstructionValidationError(insn, str(exc)) from exc
-        groups = ((base[0], wide_lmul), (base[1], wide_lmul), (base[2], lmul))
-        _validate_groups(insn, groups)
-        return
+            groups = ((base[0], wide_lmul), (base[1], wide_lmul), (base[2], lmul))
+            _validate_groups(insn, groups)
+            return
 
-    if kind.startswith("extend-"):
-        factor = int(kind.split("-", 1)[1])
-        source_lmul = lmul / factor
-        try:
+        if kind.startswith("extend-"):
+            factor = int(kind.split("-", 1)[1])
+            source_lmul = lmul / factor
             _validate_lmul(source_lmul, "源")
-        except ValueError as exc:
-            raise InstructionValidationError(insn, str(exc)) from exc
-        _validate_groups(insn, ((base[0], lmul), (base[1], source_lmul)))
-        return
+            _validate_groups(insn, ((base[0], lmul), (base[1], source_lmul)))
+            return
 
-    if kind in {"narrow", "narrow-immediate"}:
-        if sew not in (8, 16, 32):
-            raise InstructionValidationError(
-                insn,
-                f"{insn.opcode} 目的 SEW=e8/e16/e32，当前目的 SEW=e{sew}"
-            )
-        source_lmul = lmul * 2.0
-        try:
+        if kind in {"narrow", "narrow-immediate"}:
+            if sew not in (8, 16, 32):
+                raise ValueError(
+                    f"{insn.opcode} 目的 SEW=e8/e16/e32，当前目的 SEW=e{sew}"
+                )
+            source_lmul = lmul * 2.0
             _validate_lmul(source_lmul, "宽源")
-        except ValueError as exc:
-            raise InstructionValidationError(insn, str(exc)) from exc
-        _validate_groups(insn, ((base[0], lmul), (base[1], source_lmul)))
-        return
+            _validate_groups(insn, ((base[0], lmul), (base[1], source_lmul)))
+            return
 
-    if kind in {"gather", "gather-e16-index"}:
-        index_lmul = lmul
-        if kind == "gather-e16-index":
-            try:
+        if kind in {"gather", "gather-e16-index"}:
+            index_lmul = lmul
+            if kind == "gather-e16-index":
                 index_lmul, _ = _index_e16_shape(lmul, sew)
-            except ValueError as exc:
-                raise InstructionValidationError(insn, str(exc)) from exc
-        _validate_groups(
-            insn,
-            ((base[0], lmul), (base[1], lmul), (base[2], index_lmul)),
-        )
-        return
+            _validate_groups(
+                insn,
+                ((base[0], lmul), (base[1], lmul), (base[2], index_lmul)),
+            )
+            return
 
-    if kind in {"slide", "slide-immediate", "slide-non-overlap"}:
-        _validate_groups(insn, ((base[0], lmul), (base[1], lmul)))
-        if kind == "slide-non-overlap" or insn.opcode == "vslideup.vi":
-            try:
+        if kind in {"slide", "slide-immediate", "slide-non-overlap"}:
+            _validate_groups(insn, ((base[0], lmul), (base[1], lmul)))
+            if kind == "slide-non-overlap" or insn.opcode == "vslideup.vi":
                 _require_non_overlapping_groups(base[0], base[1], lmul, insn.opcode)
-            except ValueError as exc:
-                raise InstructionValidationError(insn, str(exc)) from exc
-        return
+            return
 
-    if kind in {"mask-single", "mask-all", "mask-scan"}:
-        groups = [(token, 1.0) for token in _vector_tokens(base)]
-        # mask 逻辑可按一个临时组顺序搬运；比较/merge 另行声明并行组。
-        _validate_groups(insn, groups, temp_widths=(1,) * len(groups))
-        return
+        if kind in {"mask-single", "mask-all", "mask-scan"}:
+            groups = [(token, 1.0) for token in _vector_tokens(base)]
+            # mask 逻辑可按一个临时组顺序搬运；比较/merge 另行声明并行组。
+            _validate_groups(insn, groups, temp_widths=(1,) * len(groups))
+            return
 
-    if kind == "mask-compare":
-        if insn.opcode in {"vmfgt.vf", "vmfle.vf", "vmfne.vf"}:
-            try:
+        if kind == "mask-compare":
+            if insn.opcode in {"vmfgt.vf", "vmfle.vf", "vmfne.vf"}:
                 _require_float_sew(context.state)
-            except ValueError as exc:
-                raise InstructionValidationError(insn, str(exc)) from exc
-        if insn.opcode in {
-            "vmseq.vi", "vmsne.vi", "vmsle.vi", "vmsgtu.vi", "vmsleu.vi"
-        }:
-            try:
+            if insn.opcode in {
+                "vmseq.vi", "vmsne.vi", "vmsle.vi", "vmsgtu.vi", "vmsleu.vi"
+            }:
                 _parse_simm5(base[2])
-            except ValueError as exc:
-                raise InstructionValidationError(insn, str(exc)) from exc
-        groups = [(base[0], 1.0), (base[1], lmul)]
-        if base[2].lower().startswith("v") and base[2][1:].isdigit():
-            groups.append((base[2], lmul))
-        _validate_groups(insn, groups)
-        return
+            groups = [(base[0], 1.0), (base[1], lmul)]
+            if base[2].lower().startswith("v") and base[2][1:].isdigit():
+                groups.append((base[2], lmul))
+            _validate_groups(insn, groups)
+            return
 
-    if kind == "mask-merge":
-        if base[3].lower() != "v0":
-            raise InstructionValidationError(
-                insn,
-                f"{insn.opcode} 的 selector 必须是 v0，得到 {base[3]}"
-            )
-        if insn.opcode == "vmerge.vim":
-            try:
+        if kind == "mask-merge":
+            if base[3].lower() != "v0":
+                raise ValueError(
+                    f"{insn.opcode} 的 selector 必须是 v0，得到 {base[3]}"
+                )
+            if insn.opcode == "vmerge.vim":
                 _parse_simm5(base[2])
-            except ValueError as exc:
-                raise InstructionValidationError(insn, str(exc)) from exc
-        groups = [(base[0], lmul), (base[1], lmul), ("v0", 1.0)]
-        if insn.opcode == "vmerge.vvm":
-            groups.insert(2, (base[2], lmul))
-        _validate_groups(insn, groups)
-        return
+            groups = [(base[0], lmul), (base[1], lmul), ("v0", 1.0)]
+            if insn.opcode == "vmerge.vvm":
+                groups.insert(2, (base[2], lmul))
+            _validate_groups(insn, groups)
+            return
 
-    if kind in {"memory-unit", "memory-strided"}:
-        try:
+        if kind in {"memory-unit", "memory-strided"}:
             emul, _width = _effective_lmul(lmul, sew, memory_eew[insn.opcode])
-        except ValueError as exc:
-            raise InstructionValidationError(insn, str(exc)) from exc
-        groups = [(base[0], emul)]
-        if len(operands) != len(base):
-            groups.append(("v0", 1.0))
-        _validate_groups(insn, groups)
-        return
+            groups = [(base[0], emul)]
+            if len(operands) != len(base):
+                groups.append(("v0", 1.0))
+            _validate_groups(insn, groups)
+            return
 
-    if kind == "memory-indexed":
-        try:
+        if kind == "memory-indexed":
             index_emul, _ = _effective_lmul(lmul, sew, index_eew[insn.opcode])
-        except ValueError as exc:
-            raise InstructionValidationError(insn, str(exc)) from exc
-        _validate_groups(insn, ((base[0], lmul), (base[2], index_emul)))
-        return
+            _validate_groups(insn, ((base[0], lmul), (base[2], index_emul)))
+            return
 
-    if kind == "memory-segment":
-        eew, field_count, _is_load, _is_strided = segment_shapes[insn.opcode]
-        try:
+        if kind == "memory-segment":
+            eew, field_count, _is_load, _is_strided = segment_shapes[insn.opcode]
             emul, field_width = _effective_lmul(lmul, sew, eew)
-        except ValueError as exc:
-            raise InstructionValidationError(insn, str(exc)) from exc
-        if field_count * field_width > 8:
-            raise InstructionValidationError(
-                insn,
-                f"NF={field_count} 与 EMUL={emul:g} 需要 "
-                f"{field_count * field_width} 个物理寄存器，超出 RVV segment 上限"
-            )
-        try:
+            if field_count * field_width > 8:
+                raise ValueError(
+                    f"NF={field_count} 与 EMUL={emul:g} 需要 "
+                    f"{field_count * field_width} 个物理寄存器，超出 RVV segment 上限"
+                )
             fields = _segment_field_registers(base[0], field_width, field_count)
-        except ValueError as exc:
-            raise InstructionValidationError(insn, str(exc)) from exc
-        groups = tuple((field, emul) for field in fields)
-        _validate_groups(
-            insn,
-            groups,
-            temp_widths=(field_width,) * field_count,
-        )
-        return
+            groups = tuple((field, emul) for field in fields)
+            _validate_groups(
+                insn,
+                groups,
+                temp_widths=(field_width,) * field_count,
+            )
+            return
 
-    raise RuntimeError(f"内部错误：未知 validation kind {kind!r}")
+        if kind in {"whole-move", "whole-memory"}:
+            factor = _WHOLE_FACTORS[insn.opcode]
+            groups = tuple((token, float(factor)) for token in _vector_tokens(base))
+            # handler 只需一个 transfer 临时组；源/目的 raw group 顺序搬运。
+            transfer_width = 1 if factor <= 4 else 2
+            _validate_groups(insn, groups, temp_widths=(transfer_width,))
+            return
+
+        raise ValueError(f"内部错误：未知 validation kind {kind!r}")
+    except InstructionValidationError:
+        raise
+    except (TypeError, ValueError, IndexError) as exc:
+        raise InstructionValidationError(insn, str(exc)) from exc
 
 
 def _validator(seed: _Seed, memory_eew, index_eew, segment_shapes) -> Callable[[HandlerContext], tuple[str, ...]]:

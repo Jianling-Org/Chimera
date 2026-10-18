@@ -8,7 +8,10 @@ import subprocess
 from elftools.elf.elffile import ELFFile
 from elftools.elf.relocation import RelocationSection
 
-from .external_leaf import ExternalLeafBindings, disassemble_leaf, file_sha256, verify_scalar_leaf
+from .external_leaf import (
+    MEMCPY_NO_CALLBACK_BASIS, ExternalLeafBindings, disassemble_leaf,
+    file_sha256, verify_scalar_leaf,
+)
 
 
 def _version(elf, index):
@@ -104,15 +107,23 @@ def plt_import(elf, target):
 
 
 def bind_leaves(elf_path, program, modules, contracts, objdump):
-    if not contracts:
-        return ExternalLeafBindings()
     requests = {item["symbol"]: item for item in contracts}
-    definitions, digests = {}, {}
+    names = set(requests) | {"memcpy"}
+    definitions, digests, module_errors = {}, {}, {}
     for module in modules:
         path = Path(module.selected_path)
-        definitions[module.module_id] = dynamic_definitions(path, requests)
-        digests[module.module_id] = file_sha256(path)
-    proofs, rejections, cached = [], [], {}
+        try:
+            digests[module.module_id] = file_sha256(path)
+            definitions[module.module_id] = dynamic_definitions(path, names)
+        except (OSError, ValueError) as error:
+            module_errors[module.module_id] = type(error).__name__ + ":" + str(error)
+            definitions[module.module_id] = {name: [] for name in names}
+    if module_errors and contracts:
+        # Preserve the explicit leaf contract's former fail-fast behavior.
+        # The automatic memcpy interface has no user contract to trust, so its
+        # incomplete scan is recorded below as an open boundary instead.
+        raise ValueError(next(iter(module_errors.values())))
+    proofs, rejections, interfaces, interface_rejections, cached = [], [], [], [], {}
     with elf_path.open("rb") as stream:
         elf = ELFFile(stream)
         if elf.elfclass != 64 or not elf.little_endian or elf["e_machine"] != "EM_RISCV":
@@ -123,13 +134,51 @@ def bind_leaves(elf_path, program, modules, contracts, objdump):
             # The name only limits requested work; GOT/ELF checks below are
             # what establishes identity. An unrequested boundary stays open.
             requested_name = function.name.removesuffix("@plt")
-            if requested_name not in requests:
+            if requested_name not in requests and requested_name != "memcpy":
                 continue
             try:
                 imported = plt_import(elf, function.start)
                 name = imported["symbol"]
                 if name != requested_name:
                     raise ValueError("plt-name-and-relocation-disagree")
+                if name == "memcpy":
+                    if module_errors:
+                        raise ValueError("selected-module-symbol-scan-incomplete")
+                    candidates = [(module, definition) for module in modules
+                        for definition in definitions[module.module_id][name]
+                        if not definition["hidden_version"]]
+                    if len(candidates) != 1:
+                        raise ValueError("missing-or-interposed-memcpy-provider")
+                    module, definition = candidates[0]
+                    library = Path(module.selected_path).name
+                    if library != "libc.so.6" or module_errors:
+                        raise ValueError("memcpy-provider-is-not-the-selected-libc")
+                    if (definition["type"] not in {"STT_FUNC", "STT_LOOS", "STT_GNU_IFUNC"}
+                            or not isinstance(definition["section"], int)
+                            or definition["binding"] not in {"STB_GLOBAL", "STB_WEAK"}):
+                        raise ValueError("memcpy-provider-symbol-kind-is-not-supported")
+                    if (imported["version"] is not None
+                            and imported["version"] != definition["version"]):
+                        raise ValueError("memcpy-symbol-version-mismatch")
+                    interfaces.append({
+                        "target": function.start,
+                        "symbol": "memcpy",
+                        "provider_module": module.module_id,
+                        "provider_library": library,
+                        "provider_sha256": digests[module.module_id],
+                        "provider_address": definition["value"],
+                        "provider_size": definition["size"],
+                        "provider_type": definition["type"],
+                        "provider_version": definition["version"],
+                        "imported_version": imported["version"],
+                        "got": imported["got"],
+                        "status": "bound-standard-interface-no-application-callback",
+                        "semantic_basis": MEMCPY_NO_CALLBACK_BASIS,
+                    })
+                    continue
+                if module_errors:
+                    raise ValueError("selected-module-symbol-scan-incomplete: "
+                                     + ";".join(sorted(module_errors.values())))
                 request = requests[name]
                 candidates = [(module, definition) for module in modules
                     for definition in definitions[module.module_id][name]]
@@ -165,8 +214,21 @@ def bind_leaves(elf_path, program, modules, contracts, objdump):
                     "got": imported["got"], "status": "verified-scalar-leaf"})
             except (OSError, ValueError, struct.error, subprocess.TimeoutExpired) as error:
                 # A malformed or unproved boundary never becomes a proof.
-                rejections.append({"target": function.start, "reason": str(error)})
+                item = {"target": function.start, "reason": str(error)}
+                if requested_name == "memcpy":
+                    interface_rejections.append(item)
+                else:
+                    rejections.append(item)
     for module in modules:
-        if file_sha256(Path(module.selected_path)) != digests[module.module_id]:
-            return ExternalLeafBindings((), ({"reason": "module-changed-during-leaf-binding"},))
-    return ExternalLeafBindings(tuple(proofs), tuple(rejections))
+        try:
+            unchanged = file_sha256(Path(module.selected_path)) == digests[module.module_id]
+        except (OSError, KeyError):
+            unchanged = False
+        if not unchanged:
+            error = {"reason": "module-changed-during-leaf-binding",
+                     "module": module.module_id}
+            return ExternalLeafBindings((), (error,) if contracts else (), (),
+                                        (error,) if any(f.name.removesuffix("@plt") == "memcpy"
+                                                        for f in program.functions) else ())
+    return ExternalLeafBindings(tuple(proofs), tuple(rejections),
+                                tuple(interfaces), tuple(interface_rejections))

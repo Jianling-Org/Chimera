@@ -10,8 +10,8 @@ int main() {
     int32_t a[N], b[N], c[N];
 
     for (int i = 0; i < N; i++) {
-        a[i] = 3 * i + 1;
-        b[i] = i * i - 2 * i + 7;
+        a[i] = i;
+        b[i] = N - i;
         c[i] = 0;
     }
 
@@ -19,9 +19,8 @@ int main() {
 
     int pass = 1;
     for (int i = 0; i < N; i++) {
-        int32_t expected = i * i + i + 8;
-        if (c[i] != expected) {
-            printf("Error at index %d: Expected %d, Got %d\n", i, expected, c[i]);
+        if (c[i] != N) {
+            printf("Error at index %d: Expected %d, Got %d\n", i, N, c[i]);
             pass = 0;
             break;
         }

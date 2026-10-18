@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from riscv.frontend.literals import parse_integer_literal
 from riscv.extensions.rvv.translation.contracts import InstructionValidationError
 from riscv.extensions.rvv.backends.rvv256.temp_regs import VRegTempAllocator
 from riscv.extensions.rvv.backends.rvv256.support import (
@@ -38,10 +37,7 @@ def _build_vslidedown_vi_lines(context) -> list[str]:
 
     vd = operands[0]
     vs2 = operands[1]
-    try:
-        uimm = parse_integer_literal(operands[2])
-    except ValueError as exc:
-        raise InstructionValidationError(insn, f"Invalid immediate: {operands[2]}") from exc
+    uimm = int(operands[2])
 
     sew = state.sew
     chunk_n = _chunk_size(sew)
@@ -341,7 +337,7 @@ def _build_vslideup_vi_lines(context) -> list[str]:
     vd = operands[0]
     vs2 = operands[1]
     try:
-        uimm = parse_integer_literal(operands[2])
+        uimm = int(str(operands[2]), 0)
     except ValueError:
         raise InstructionValidationError(insn, f"vslideup.vi immediate must be an integer: {insn.op_str}")
 

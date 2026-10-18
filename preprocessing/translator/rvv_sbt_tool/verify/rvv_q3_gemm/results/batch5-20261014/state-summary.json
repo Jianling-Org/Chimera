@@ -1,0 +1,80 @@
+{
+  "rows": [
+    {
+      "candidate": "vstart_zero",
+      "cases": 8766,
+      "source_vlenb": 32,
+      "hardware_vlenb": 128,
+      "full_state": "PASS"
+    },
+    {
+      "candidate": "csr_after",
+      "cases": 8766,
+      "source_vlenb": 32,
+      "hardware_vlenb": 128,
+      "full_state": "PASS"
+    },
+    {
+      "candidate": "csr_after_page",
+      "cases": 8766,
+      "source_vlenb": 32,
+      "hardware_vlenb": 128,
+      "full_state": "PASS"
+    },
+    {
+      "candidate": "state_eew64",
+      "cases": 8766,
+      "source_vlenb": 32,
+      "hardware_vlenb": 128,
+      "full_state": "PASS"
+    },
+    {
+      "candidate": "csr_write_before",
+      "cases": 8766,
+      "source_vlenb": 32,
+      "hardware_vlenb": 128,
+      "full_state": "PASS"
+    },
+    {
+      "candidate": "csr_write_after",
+      "cases": 8766,
+      "source_vlenb": 32,
+      "hardware_vlenb": 128,
+      "full_state": "PASS"
+    },
+    {
+      "candidate": "rejected-combination",
+      "entry": "candidate",
+      "cases": 8766,
+      "source_vlenb": 32,
+      "hardware_vlenb": 128,
+      "full_state": "PASS"
+    },
+    {
+      "candidate": "rejected-combination",
+      "entry": "candidate-equal",
+      "cases": 8766,
+      "source_vlenb": 32,
+      "hardware_vlenb": 128,
+      "full_state": "PASS"
+    },
+    {
+      "candidate": "accepted",
+      "entry": "candidate",
+      "cases": 8766,
+      "source_vlenb": 32,
+      "hardware_vlenb": 128,
+      "full_state": "PASS"
+    },
+    {
+      "candidate": "accepted",
+      "entry": "candidate-equal",
+      "cases": 8766,
+      "source_vlenb": 32,
+      "hardware_vlenb": 128,
+      "full_state": "PASS"
+    }
+  ],
+  "all_records": 87660,
+  "accepted_records": 17532
+}

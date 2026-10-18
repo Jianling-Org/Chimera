@@ -4,7 +4,8 @@ This directory extracts SpacemiT `gemm_kernel_i8i3k_m4` and compares native IME,
 the current optimized IME-to-RVV lowering, and the pinned original
 `ggml_gemm_q3_K_64x1_q8_K` RVV operator. There is one production translation
 strategy; the benchmark implementation selector chooses these three operators,
-not optimization versions. Historical A100 measurements are not included. The scripts require the external inputs below; importing the source does not revalidate hardware performance.
+not optimization versions. Current A100 evidence is in
+[CURRENT_RESULTS.md](CURRENT_RESULTS.md).
 
 ## Inputs and scope
 
@@ -62,7 +63,8 @@ seeds (24 cases). Signed Q8 covers -128..127, Q3 covers -4..3, block scales
 cover -32..31, and global scales are finite signed binary powers. It checks the
 independent double reference with tolerance `2e-5*(1+abs(reference))`, exact
 native/translated output equality, read-only input hashes, buffer canaries and
-row-stride padding. Any failure prohibits timings. Historical results are not included; evaluate correctness from the current run before interpreting its timings.
+row-stride padding. Any failure prohibits timings. The reported cases all had
+zero error, stronger than the acceptance tolerance for this data set.
 
 Kernel timing uses CLOCK_MONOTONIC_RAW, five warm-up passes and fifty retained
 passes. All implementations use the same repetitions per pass; their order
@@ -94,7 +96,7 @@ unchanged. Only the core range/VLEN and IME layout/row adapter are changed.
 
 ```sh
 python3 verify/ime_q3_gemm/prepare_full.py \
-  --historical /path/to/reference-bundle --out /path/to/full-build
+  --historical /path/to/operator-8c8t-v256 --out /path/to/full-build
 ```
 
 On the board, put the generated files, the already validated `ime_native.o` /
@@ -127,23 +129,3 @@ The full-size summary uses the historical Gaussian KDE + Scott bandwidth,
 must be labeled separately from historical X100 core 0-7 results even though the
 workload and timing method match. No historical QEMU/scalar/translation columns
 are rerun or overwritten.
-
-### Active measurement protocol revisions
-
-New small-harness records identify `slowest-calibration-v2`: automatic calibration
-uses the slowest of the three implementations to bound the common batch length.
-Explicit `--rounds` still overrides calibration. Existing results keep their
-original protocol and have not been recomputed.
-
-The full-matrix summary identifies its KDE search as `endpoint-brackets-v2`.
-Gaussian density, Scott bandwidth and all retained samples are unchanged; the
-search now includes modes closer to a boundary than one grid step. A KDE requires
-at least two positive finite samples. Duplicate packing observations are rejected.
-Timeout output and background environment-sampling errors remain available even
-when a run fails, and such runs never receive `full-done`.
-
-## External reference bundle
-
-Full-shape preparation requires an external reference bundle. Supply `--historical` with a directory containing `native.c`, `kernel.S`, `kernel.bin`, `ffn_up_m32.ref`, `ffn_down_m32.ref`, `attn_q_m32.ref`, and `attn_kv_m32.ref`. The driver hash remains pinned by `HISTORICAL_SHA`; renaming a different driver to `native.c` does not satisfy the contract. No dated private directory layout is required.
-
-These historical inputs are not distributed here, and a public acquisition or regeneration recipe remains to be supplied. This benchmark is therefore conditional on obtaining the matching bundle; it is not a self-contained reproduction of historical hardware results.

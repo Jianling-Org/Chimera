@@ -36,6 +36,39 @@ from riscv.extensions.rvv.backends.rvv1024_transition.operands import (
 )
 
 
+# 源 RVV256 的客体可见 VLENB。它刻意不读取 StateTracker 的 vlenb，以防
+# 调用端错误传入 128B 时把目标机属性泄漏给客体代码。
+
+# 同时接受 GNU 汇编器的名字和 CSR 编号。编号归一化为三位十六进制，便于
+# ``0xc20``、``0x0c20``、``3104`` 三种解析结果走同一条路径。
+
+# 需要被 new_label 从普通标量 passthrough 截获的全部 CSR pseudo/基础
+# form。否则 ``csrwi vxrm, 1`` 会直接写真实 RVV1024 CSR，而紧凑 RVV256
+# state.vcsr 仍是旧值，下一条过渡向量指令恢复错误的舍入模式。
+
+
+
+# 这些 CSR 可在既有 state ABI 中完整表达。特别地，vxsat/vxrm 绝不能写入
+# 历史兼容的独立槽位，而必须合并进 0x1018 的 state.vcsr。
+
+# CSR 在 CSR 伪指令/基础指令中的操作数位置不同：csrw/csrwi 的 CSR 是第一个
+# 操作数，其余读改写形式则和 csrr 一样位于第二个操作数。
+
+# 写值（rs1/zimm）在不同 pseudo form 中的位置。读取 csrr 没有写值，故不
+# 在此表出现；调用者必须先通过 vector_csr_from_instruction() 确认 CSR。
+
+# 保留公开常量，供 后端的预检和测试使用。vxsat/vxrm 虽在 CSR_OFFSETS
+# 中有历史兼容槽位，但 emit_csrr 不读取那两个槽位，而是先读 vcsr 再解码。
+
+
+
+
+
+
+
+
+
+
 def _emit_state_load(lines: list[str], addr_reg: str, result_reg: str, offset: int, name: str) -> None:
     """读取状态块中的 CSR；``t6`` 始终是 wrapper 在块内建立的状态基址。"""
     lines.append(f"    li      {addr_reg}, {offset:#x}")
@@ -113,6 +146,14 @@ def _build_csrr_lines(context) -> list[str]:
     return lines
 
 
+
+
+
+
+
+
+
+
 def _emit_load_visible_csr(
     lines: list[str],
     *,
@@ -120,9 +161,27 @@ def _emit_load_visible_csr(
     addr_reg: str,
     result_reg: str,
 ) -> None:
-    """读取零掩码 CSRRS/CSRRC 访问的只读 vl/vtype/vlenb。"""
+    """将客体可见 CSR 值读入 ``result_reg``。
+
+    这个 helper 同时被 ``csrr`` 和零掩码的 ``CSRRS/CSRRC`` 使用。后者虽然
+    编码为读改写，但按规范不发生写入，不能因为迁移器没有真实硬件 CSR 而
+    错误拒绝。
+    """
     if csr_name == "vlenb":
         lines.append(f"    li      {result_reg}, {SOURCE_VLENB}       # 源 CSR.vlenb")
+        return
+    if csr_name == "vxsat":
+        _emit_state_load(lines, addr_reg, result_reg, CSR_OFFSETS["vcsr"], "vcsr")
+        lines.append(f"    andi    {result_reg}, {result_reg}, 1                 # vxsat")
+        return
+    if csr_name == "vxrm":
+        _emit_state_load(lines, addr_reg, result_reg, CSR_OFFSETS["vcsr"], "vcsr")
+        lines.append(f"    srli    {result_reg}, {result_reg}, 1                 # vcsr[2:1]")
+        lines.append(f"    andi    {result_reg}, {result_reg}, 3                 # vxrm")
+        return
+    if csr_name == "vcsr":
+        _emit_state_load(lines, addr_reg, result_reg, CSR_OFFSETS["vcsr"], "vcsr")
+        lines.append(f"    andi    {result_reg}, {result_reg}, 7                 # vcsr 定义字段")
         return
     _emit_state_load(lines, addr_reg, result_reg, CSR_OFFSETS[csr_name], csr_name)
 

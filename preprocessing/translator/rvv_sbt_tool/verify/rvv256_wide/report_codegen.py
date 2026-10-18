@@ -22,6 +22,7 @@ sys.path.insert(0, str(REPO_ROOT / "src"))
 from riscv.extensions.rvv.instruction import is_vector_instruction
 from riscv.frontend.parser import AsmParser  # noqa: E402
 from riscv.extensions.rvv.instruction import peek_mask_operand  # noqa: E402
+from riscv.frontend.model import RVProgram  # noqa: E402
 from rvv_sbt_rvv import translate_program  # noqa: E402
 
 
@@ -38,8 +39,7 @@ def assembly_metrics(text: str) -> dict[str, int]:
     """提取可稳定用于版本间比较的静态汇编指标。"""
     return {
         "source_bytes": len(text.encode("utf-8")),
-        # Exact base markers, disjoint from masked/commit/reduction markers.
-        "wide_blocks": text.count("RVV256-WIDE:"),
+        "wide_blocks": text.count("RVV256-WIDE"),
         # native whole-register 传输现已同时服务默认/宽 profile。为避免旧 JSON
         # 消费方把新 marker 误读为“没有 whole 优化”，兼容字段也统计新 marker；
         # ``native_whole_blocks`` 保留更准确的、与 profile 无关的名称。
@@ -58,7 +58,7 @@ def assembly_metrics(text: str) -> dict[str, int]:
         ),
         "vset": len(re.findall(r"(?m)^\s*vset(?:i?vli|vl)\s+", text)),
         "vector_loads": len(re.findall(r"(?m)^\s*vl[a-z0-9.]*\s+v", text)),
-        "vector_stores": len(re.findall(r"(?m)^\s*(?:vse\d+|vsse\d+|vs[ou]xei\d+|vs(?:s|[ou]x)?seg[2-8]e(?:i)?\d+|vs[1248]r|vsm)\.v\s+v\d+,\s*\(", text)),
+        "vector_stores": len(re.findall(r"(?m)^\s*vs[a-z0-9.]*\s+v", text)),
         "loop_backedges": len(re.findall(r"(?m)^\s*bnez\s+[^,]+,\s*\.L_", text)),
         "scalar_tail_labels": text.count("尾部标量回退"),
         "gpr_spills": len(re.findall(r"(?m)^\s*sd\s+\w+,\s*\d+\(sp\)$", text)),

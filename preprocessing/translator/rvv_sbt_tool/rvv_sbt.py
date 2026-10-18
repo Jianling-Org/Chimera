@@ -201,7 +201,7 @@ def main():
         type=str,
         default=None,
         help='为 StateTracker 播种 vtype 值，不产生输出'
-            '（原始数值如 0xDA，或语义形式如 sew=32,lmul=2,ta,ma；省略策略使用 tu,mu）'
+            '（原始数值如 0xDA，或语义形式如 sew=32,lmul=2,ta,ma）'
     )
     parser.add_argument(
         '--raw',
@@ -222,8 +222,6 @@ def main():
     )
 
     args = parser.parse_args()
-    if args.command and (args.input or args.lib_name):
-        parser.error("-c/--command 不能与输入文件或 lib_name 同时使用")
 
     # 必须提供 input 文件或 -c 命令
     if not args.input and not args.command:
@@ -235,11 +233,13 @@ def main():
     try:
         if args.command:
             insn_list = asm_parser.parse_string(args.command)
+            functions = None
         elif args.lib_name:
             program = asm_parser.parse_file_program(args.input)
             insn_list = None
         else:
             insn_list = asm_parser.parse_file(args.input)
+            functions = None
     except FileNotFoundError:
         print(f"Error: Input file not found: {args.input}", file=sys.stderr)
         sys.exit(1)
@@ -281,7 +281,7 @@ def main():
     if args.output:
         with open(args.output, 'w', encoding='utf-8') as f:
             f.write(result)
-        print(f"Translated: {source_label} -> {args.output}")
+        print(f"Translated: {args.input} -> {args.output}")
     else:
         print(result)
 

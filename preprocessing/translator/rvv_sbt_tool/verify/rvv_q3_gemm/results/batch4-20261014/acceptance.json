@@ -1,0 +1,56 @@
+{
+  "operator": "ggml_gemm_q3_K_64x1_q8_K",
+  "hardware": "K3 A100 CPU8-15, 8 workers, VLEN1024, userspace 1.8GHz",
+  "shapes_M_N_K": [
+    [
+      32,
+      5632,
+      2048
+    ],
+    [
+      32,
+      2048,
+      5632
+    ],
+    [
+      32,
+      2048,
+      2048
+    ],
+    [
+      32,
+      256,
+      2048
+    ]
+  ],
+  "standalone_candidates": 9,
+  "ablation_pairs": 720,
+  "final_pairs": 200,
+  "all_final_pairs_positive": true,
+  "combined_full_state_records": 59634,
+  "all_candidate_full_state_records": 475344,
+  "target_hardware_vstart_entry": 7,
+  "source_vstart": 0,
+  "mask_patterns": [
+    "random",
+    "zero",
+    "one"
+  ],
+  "guard_probe_cases": 27,
+  "formal_byte_identical_files": 19,
+  "tests_passed": 1837,
+  "tests_skipped": 41,
+  "production_files": [
+    "src/riscv/extensions/rvv/backends/rvv1024_transition/execution.py",
+    "src/riscv/extensions/rvv/backends/rvv1024_transition/handlers/convert.py"
+  ],
+  "board_directory": "/home/yzgx/guoxuan/rvv-bench/rvv-q3-batch3-20261013/batch4-20261014",
+  "source_PC_labels": 1140,
+  "changed_blocks": 56,
+  "unchanged_blocks": 1084,
+  "guard_traps": 399,
+  "forward_assembly_unchanged": true,
+  "native_performance_boundary": "No new native 50-sample measurement; batch3 retained native results are only historical context.",
+  "index_unchanged": true,
+  "unchanged_original_files": 2658
+}

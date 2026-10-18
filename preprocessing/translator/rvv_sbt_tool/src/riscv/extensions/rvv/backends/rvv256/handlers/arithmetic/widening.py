@@ -19,6 +19,7 @@ from riscv.extensions.rvv.backends.rvv256.support import (
     _emit_state_ptr,
     _get_int_load_signed,
     _get_int_load_unsigned,
+    _emit_scalar_tail_vv,
     _get_int_store,
 )
 
@@ -196,6 +197,7 @@ def _build_vwaddu_wv_lines(context) -> list[str]:
     allocator = context.layout
     new_label = context.new_label
     lines = []
+    mask_suffix = ""
     operands = insn.operands
     if len(operands) != 3:
         raise InstructionValidationError(insn, f"Invalid operands for {insn.opcode}: {insn.op_str}")
@@ -389,6 +391,7 @@ def _build_vwsll_vi_lines(context) -> list[str]:
     allocator = context.layout
     new_label = context.new_label
     lines = []
+    mask_suffix = ""
     operands = insn.operands
     if len(operands) < 3:
         raise InstructionValidationError(insn, f"Invalid operands for {insn.opcode}: {insn.op_str}")
@@ -494,6 +497,7 @@ def _build_vwmul_vx_lines(context) -> list[str]:
     allocator = context.layout
     new_label = context.new_label
     lines = []
+    mask_suffix = ""
     operands = insn.operands
     if len(operands) < 3:
         raise InstructionValidationError(insn, f"Invalid operands for {insn.opcode}: {insn.op_str}")
@@ -606,6 +610,7 @@ def _build_vwmul_vv_lines(context) -> list[str]:
     allocator = context.layout
     new_label = context.new_label
     lines = []
+    mask_suffix = ""
     operands = insn.operands
     if len(operands) < 3:
         raise InstructionValidationError(insn, f"Invalid operands for {insn.opcode}: {insn.op_str}")
@@ -617,8 +622,7 @@ def _build_vwmul_vv_lines(context) -> list[str]:
     input_sew = state.sew
     output_sew = input_sew * 2
     if input_sew not in (8, 16, 32):
-        raise InstructionValidationError(
-            insn,
+        raise ValueError(
             f"vwmul.vv 当前仅支持输入 SEW=8/16/32 "
             f"(e8 -> e16, e16 -> e32, e32 -> e64), "
             f"实际为 SEW={state.sew}"
@@ -1080,6 +1084,8 @@ def _build_vwmacc_vx_lines(context) -> list[str]:
     chunk_bytes_out = chunk_n * (output_sew // 8)
     shift_amt = {8: 4, 16: 3, 32: 2}[input_sew]
     mask = chunk_n - 1
+    elem_bytes_in = input_sew // 8
+    elem_bytes_out = output_sew // 8
 
     vd_off = allocator.get_offset(vd)
     vs2_off = allocator.get_offset(vs2)
@@ -1148,6 +1154,10 @@ def _build_vwmacc_vx_lines(context) -> list[str]:
     lines.append(f"{after_main}:")
     lines.append("")
 
+    int_load_in = _get_int_load_signed(input_sew)
+    int_load_out = _get_int_load_signed(output_sew)
+    int_store = _get_int_store(output_sew)
+    tail_loop = new_label("vwmacc_vx_tail")
     end_label = new_label("vwmacc_vx_end")
     # ========== 尾部 RVV 回退 ==========
     lines.append(f"    # --- 尾部 RVV chunk: 剩余 {tail_count} 个元素 ---")
@@ -1304,6 +1314,7 @@ def _build_vwredsum_vs_lines(context) -> list[str]:
     allocator = context.layout
     new_label = context.new_label
     lines = []
+    mask_suffix = ""
     operands = list(insn.operands)
     is_masked = False
     if len(operands) > 0 and str(operands[-1]).strip().endswith(".t"):
@@ -1318,8 +1329,7 @@ def _build_vwredsum_vs_lines(context) -> list[str]:
 
     sew = state.sew
     if sew not in (8, 16, 32):
-        raise InstructionValidationError(
-            insn,
+        raise ValueError(
             f"vwredsum.vs 当前仅支持 SEW=8/16/32 "
             f"(输入 e8/e16/e32, 输出 e16/e32/e64), "
             f"实际 SEW={sew}"

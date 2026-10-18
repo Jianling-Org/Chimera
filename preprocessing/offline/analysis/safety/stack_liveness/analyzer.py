@@ -106,6 +106,10 @@ class StackLivenessAnalyzer:
             conditional=is_conditional_policy(self.unknown_stack_size_policy),
             external_leaf_proofs=(external_leaf_bindings.proofs if external_leaf_bindings else ()),
             external_leaf_rejections=(external_leaf_bindings.rejections if external_leaf_bindings else ()),
+            external_no_callback_interfaces=(external_leaf_bindings.no_callback_interfaces
+                                              if external_leaf_bindings else ()),
+            external_interface_rejections=(external_leaf_bindings.interface_rejections
+                                           if external_leaf_bindings else ()),
         )
 
 

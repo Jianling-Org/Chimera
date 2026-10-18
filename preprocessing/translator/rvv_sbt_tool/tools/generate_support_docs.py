@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """从三个后端 registry 生成指令支持文档。
 
-普通运行会原子更新 ``doc/developer/translator/supported-instructions.md``；``--check`` 只比较
+普通运行会原子更新 ``docs/SUPPORTED_INSTRUCTIONS.md``；``--check`` 只比较
 当前文件，适合 Makefile/CI 门禁。脚本只读取本仓库 Python 规格，不联网。
 """
 
@@ -9,14 +9,13 @@ from __future__ import annotations
 
 import argparse
 import os
-import stat
 from pathlib import Path
 import sys
-import uuid
+import tempfile
 
 
 TOOL_ROOT = Path(__file__).resolve().parents[1]
-DOC_PATH = TOOL_ROOT.parents[2] / "doc/developer/translator/supported-instructions.md"
+DOC_PATH = TOOL_ROOT / "docs/SUPPORTED_INSTRUCTIONS.md"
 if str(TOOL_ROOT / "src") not in sys.path:
     sys.path.insert(0, str(TOOL_ROOT / "src"))
 
@@ -164,9 +163,9 @@ def render() -> str:
         note=(
             "源语义 VLEN=1024，目标 VLEN=256。表中 mask 按“默认宽 profile / "
             "`--conservative`”排列；具体寄存器组形状仍由纯 validator 与 planner 检查。"
-            "`vle8ff.v` 按最多 32 字节分块执行，没有额外的 `VL <= 256` 容量上限；"
-            "后续分块的首元素 fault 仍可能错误触发异常，该边界尚未修复。"
-            "运行期限制见[已知限制](limitations.md)。"
+            "`vle8ff.v` 使用单次目标操作，在合法源状态下仅支持 "
+            "`VL <= min(VLMAX, 256)`；超容量在 guest 访存前拒绝。"
+            "运行期限制与审查修复状态见 `CODE_REVIEW_MERGED.md`。"
         ),
     )
     _render_registry(
@@ -193,22 +192,19 @@ def _write_atomic(path: Path, content: str) -> None:
     """同目录临时文件写完并 fsync 后原子替换。"""
 
     path.parent.mkdir(parents=True, exist_ok=True)
-    temporary = path.with_name(f".{path.name}.{uuid.uuid4().hex}")
-    descriptor = os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o666)
+    descriptor, temporary_name = tempfile.mkstemp(
+        prefix=f".{path.name}.", dir=path.parent, text=True
+    )
+    temporary = Path(temporary_name)
     try:
-        if path.exists():
-            os.fchmod(descriptor, stat.S_IMODE(path.stat().st_mode))
-        stream = os.fdopen(descriptor, "w", encoding="utf-8", newline="\n")
-        descriptor = None
-        with stream:
+        with os.fdopen(descriptor, "w", encoding="utf-8", newline="\n") as stream:
             stream.write(content)
             stream.flush()
             os.fsync(stream.fileno())
         os.replace(temporary, path)
     finally:
-        if descriptor is not None:
-            os.close(descriptor)
-        temporary.unlink(missing_ok=True)
+        if temporary.exists():
+            temporary.unlink()
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -222,7 +218,7 @@ def main(argv: list[str] | None = None) -> int:
         "--output",
         type=Path,
         default=DOC_PATH,
-        help="输出路径；默认写入 doc/developer/translator/supported-instructions.md",
+        help="输出路径；默认写入 docs/SUPPORTED_INSTRUCTIONS.md",
     )
     args = parser.parse_args(argv)
     expected = render()

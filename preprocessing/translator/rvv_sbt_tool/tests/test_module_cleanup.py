@@ -191,15 +191,16 @@ def test_duplicate_function_names_keep_distinct_address_based_targets():
 @pytest.mark.parametrize('entry', ['translate', 'translate_function', 'translate_program'])
 def test_transition_public_entries_validate_direction_once(monkeypatch, entry):
     import rvv_sbt_rvv1024 as translator
+    import riscv.extensions.rvv.backends.rvv1024_transition.backend as backend
 
-    original_profile = translator.make_transition_profile
+    original_lookup = backend.geometry_for_direction
     directions = []
 
-    def counted_profile(**kwargs):
-        directions.append((kwargs['source_vlenb'], kwargs['target_vlenb']))
-        return original_profile(**kwargs)
+    def counted_lookup(source, target):
+        directions.append((source, target))
+        return original_lookup(source, target)
 
-    monkeypatch.setattr(translator, 'make_transition_profile', counted_profile)
+    monkeypatch.setattr(backend, 'geometry_for_direction', counted_lookup)
     instructions = AsmParser().parse_string('vadd.vv v8, v16, v24')
     function = RVFunction('vector', 0, instructions)
     source = {

@@ -1,0 +1,238 @@
+{
+  "ffn_up_m32": {
+    "ime_native": {
+      "kde_mode_ms": 1.7589043827926183,
+      "median_ms": 1.758603425,
+      "mean_ms": 1.7627200592,
+      "min_ms": 1.75711012,
+      "max_ms": 1.93826116,
+      "bandwidth_ms": 0.011648511476896816,
+      "half_bandwidth_mode_ms": 1.7586662030183997,
+      "double_bandwidth_mode_ms": 1.7590665800808365,
+      "iterations": 56,
+      "samples": 50
+    },
+    "ime_translated_rvv": {
+      "kde_mode_ms": 3294.1939616418986,
+      "median_ms": 3326.107355,
+      "mean_ms": 3321.8276334,
+      "min_ms": 3006.37259,
+      "max_ms": 3486.4041700000002,
+      "bandwidth_ms": 56.857850596777496,
+      "half_bandwidth_mode_ms": 3251.8951789243956,
+      "double_bandwidth_mode_ms": 3334.772303586583,
+      "iterations": 1,
+      "samples": 50
+    },
+    "rvv_baseline": {
+      "kde_mode_ms": 6.9707332491224,
+      "median_ms": 6.9702958299999995,
+      "mean_ms": 6.9770815506,
+      "min_ms": 6.966800060000001,
+      "max_ms": 7.2684778,
+      "bandwidth_ms": 0.019346497383500486,
+      "half_bandwidth_mode_ms": 6.970303426637663,
+      "double_bandwidth_mode_ms": 6.971015188654178,
+      "iterations": 15,
+      "samples": 50
+    },
+    "shape": [
+      32,
+      5632,
+      2048
+    ],
+    "translated_over_rvv": 472.5749564519099,
+    "translated_over_ime": 1872.866992583017,
+    "int8_opt4": {
+      "kde_mode_ms": 79.20603067888487,
+      "median_ms": 79.20521869999999,
+      "mean_ms": 79.249465002,
+      "min_ms": 79.187625,
+      "max_ms": 80.952354,
+      "bandwidth_ms": 0.11578852534414551,
+      "half_bandwidth_mode_ms": 79.20588910737953,
+      "double_bandwidth_mode_ms": 79.20773012497787,
+      "iterations": 2,
+      "samples": 50
+    },
+    "candidate_over_rvv": 11.362654092215728,
+    "translation_speedup": 41.59019121911484
+  },
+  "ffn_down_m32": {
+    "ime_native": {
+      "kde_mode_ms": 1.7783377350653922,
+      "median_ms": 1.7781378,
+      "mean_ms": 1.7834392556,
+      "min_ms": 1.7743764700000002,
+      "max_ms": 1.93548904,
+      "bandwidth_ms": 0.011527625418726376,
+      "half_bandwidth_mode_ms": 1.7778458341571275,
+      "double_bandwidth_mode_ms": 1.7785470629384998,
+      "iterations": 57,
+      "samples": 50
+    },
+    "ime_translated_rvv": {
+      "kde_mode_ms": 3343.300333781891,
+      "median_ms": 3270.0460249999996,
+      "mean_ms": 3274.9516212,
+      "min_ms": 3152.25725,
+      "max_ms": 3378.2016700000004,
+      "bandwidth_ms": 31.56329258036155,
+      "half_bandwidth_mode_ms": 3350.261540955874,
+      "double_bandwidth_mode_ms": 3284.121114123681,
+      "iterations": 1,
+      "samples": 50
+    },
+    "rvv_baseline": {
+      "kde_mode_ms": 6.97043377286691,
+      "median_ms": 6.97082917,
+      "mean_ms": 6.9742166664,
+      "min_ms": 6.965283329999999,
+      "max_ms": 7.1133999999999995,
+      "bandwidth_ms": 0.009484071056929834,
+      "half_bandwidth_mode_ms": 6.970132027371788,
+      "double_bandwidth_mode_ms": 6.970942676781503,
+      "iterations": 15,
+      "samples": 50
+    },
+    "shape": [
+      32,
+      2048,
+      5632
+    ],
+    "translated_over_rvv": 479.6402121767532,
+    "translated_over_ime": 1880.0142784233012,
+    "int8_opt4": {
+      "kde_mode_ms": 79.35002050047873,
+      "median_ms": 80.08141674999999,
+      "mean_ms": 80.02815669,
+      "min_ms": 79.199333,
+      "max_ms": 83.63472900000001,
+      "bandwidth_ms": 0.4307091042061358,
+      "half_bandwidth_mode_ms": 79.21923231677823,
+      "double_bandwidth_mode_ms": 79.70141610271392,
+      "iterations": 2,
+      "samples": 50
+    },
+    "candidate_over_rvv": 11.383799500306049,
+    "translation_speedup": 42.133578702247725
+  },
+  "attn_q_m32": {
+    "ime_native": {
+      "kde_mode_ms": 0.5911083472948153,
+      "median_ms": 0.5912163675,
+      "mean_ms": 0.5918423046,
+      "min_ms": 0.5893278129999999,
+      "max_ms": 0.628670181,
+      "bandwidth_ms": 0.002451837907653975,
+      "half_bandwidth_mode_ms": 0.59116271341156,
+      "double_bandwidth_mode_ms": 0.591095082692241,
+      "iterations": 166,
+      "samples": 50
+    },
+    "ime_translated_rvv": {
+      "kde_mode_ms": 1268.499765137055,
+      "median_ms": 1268.408375,
+      "mean_ms": 1267.8686456,
+      "min_ms": 1245.3675,
+      "max_ms": 1270.01008,
+      "bandwidth_ms": 1.6168545580261555,
+      "half_bandwidth_mode_ms": 1268.4626338481053,
+      "double_bandwidth_mode_ms": 1268.513791260989,
+      "iterations": 1,
+      "samples": 50
+    },
+    "rvv_baseline": {
+      "kde_mode_ms": 2.3644809986537565,
+      "median_ms": 2.36446172,
+      "mean_ms": 2.365491202,
+      "min_ms": 2.36261337,
+      "max_ms": 2.4134011600000003,
+      "bandwidth_ms": 0.003197218652230466,
+      "half_bandwidth_mode_ms": 2.364445787713164,
+      "double_bandwidth_mode_ms": 2.3645038850710964,
+      "iterations": 43,
+      "samples": 50
+    },
+    "shape": [
+      32,
+      2048,
+      2048
+    ],
+    "translated_over_rvv": 536.4812683456917,
+    "translated_over_ime": 2145.968283043702,
+    "int8_opt4": {
+      "kde_mode_ms": 28.866624960817674,
+      "median_ms": 28.8660523,
+      "mean_ms": 28.895885214,
+      "min_ms": 28.8605836,
+      "max_ms": 29.680479,
+      "bandwidth_ms": 0.05958792518444874,
+      "half_bandwidth_mode_ms": 28.866599436195266,
+      "double_bandwidth_mode_ms": 28.867002792335683,
+      "iterations": 4,
+      "samples": 50
+    },
+    "candidate_over_rvv": 12.208440235829007,
+    "translation_speedup": 43.943473366175034
+  },
+  "attn_kv_m32": {
+    "ime_native": {
+      "kde_mode_ms": 0.0707709870574309,
+      "median_ms": 0.07077431995,
+      "mean_ms": 0.070780650562,
+      "min_ms": 0.07072609,
+      "max_ms": 0.0708714247,
+      "bandwidth_ms": 1.2757042418143093e-05,
+      "half_bandwidth_mode_ms": 0.0707722017468044,
+      "double_bandwidth_mode_ms": 0.0707737115508223,
+      "iterations": 711,
+      "samples": 50
+    },
+    "ime_translated_rvv": {
+      "kde_mode_ms": 158.61199864546967,
+      "median_ms": 158.61450000000002,
+      "mean_ms": 158.61843096,
+      "min_ms": 158.558875,
+      "max_ms": 158.72745799999998,
+      "bandwidth_ms": 0.014235872424787412,
+      "half_bandwidth_mode_ms": 158.60757771787848,
+      "double_bandwidth_mode_ms": 158.61216814220012,
+      "iterations": 1,
+      "samples": 50
+    },
+    "rvv_baseline": {
+      "kde_mode_ms": 0.27282603988013865,
+      "median_ms": 0.27279930799999996,
+      "mean_ms": 0.27280900664,
+      "min_ms": 0.272647444,
+      "max_ms": 0.272989971,
+      "bandwidth_ms": 3.4767884560110754e-05,
+      "half_bandwidth_mode_ms": 0.2728503177651965,
+      "double_bandwidth_mode_ms": 0.2728019697791535,
+      "iterations": 349,
+      "samples": 50
+    },
+    "shape": [
+      32,
+      256,
+      2048
+    ],
+    "translated_over_rvv": 581.3667885776339,
+    "translated_over_ime": 2241.2008824570366,
+    "int8_opt4": {
+      "kde_mode_ms": 3.596921100990275,
+      "median_ms": 3.59682516,
+      "mean_ms": 3.6003968174,
+      "min_ms": 3.59610714,
+      "max_ms": 3.73322617,
+      "bandwidth_ms": 0.009096384053030716,
+      "half_bandwidth_mode_ms": 3.5969195357463324,
+      "double_bandwidth_mode_ms": 3.597015781645725,
+      "iterations": 28,
+      "samples": 50
+    },
+    "candidate_over_rvv": 13.183936190880164,
+    "translation_speedup": 44.0966021194632
+  }
+}

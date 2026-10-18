@@ -64,16 +64,10 @@ def prepare(sources: Path, output: Path, translator_root: Path) -> None:
         "forward_profile": "wide_lmul=True",
         "translation_boundary": "one source instruction at a time",
     }
-    produced = []
     for key, name in OPERATORS.items():
-        if name not in snapshot.get("functions", {}):
-            raise ValueError(f"{sources}: missing operator {name!r}")
         source = snapshot["functions"][name]
-        function = next((f for f in AsmParser().parse_string_functions(source)
-                         if f.name == name), None)
-        if function is None:
-            raise ValueError(f"{sources}: could not parse operator {name!r}")
-        produced.extend((f"{key}.objdump.s", f"native_{key}.S", f"forward_{key}.S", f"reverse_{key}.S"))
+        function = next(f for f in AsmParser().parse_string_functions(source)
+                        if f.name == name)
         manifest["operators"][key] = {
             "symbol": name, "instruction_count": len(function.instructions),
             "objdump_sha256": hashlib.sha256(source.encode()).hexdigest(),
@@ -89,13 +83,17 @@ def prepare(sources: Path, output: Path, translator_root: Path) -> None:
         (output / f"native_{key}.S").write_text("\n".join(lines) + "\n")
         for direction, translator in (("forward", forward), ("reverse", reverse)):
             translated = renamed(function, f"translated_{key}")
-            assembly = translator(translated, tls_state=True, strict=True)
+            assembly = translator(translated, tls_state=True)
+            if any(token in assembly.lower()
+                   for token in ("fallback", "unimplemented", "# error:")):
+                raise ValueError(f"Incomplete translation: {direction}/{name}")
             (output / f"{direction}_{key}.S").write_text(assembly + "\n")
     for name in ("bench.c", "run.py", "paired.py"):
         (output / name).write_bytes(Path(__file__).with_name(name).read_bytes())
     (output / "source-snapshot.json").write_text(json.dumps(snapshot, indent=2) + "\n")
-    produced.extend(("bench.c", "run.py", "paired.py", "source-snapshot.json"))
-    manifest["payload_sha256"] = {name: sha(output / name) for name in sorted(produced)}
+    manifest["payload_sha256"] = {
+        path.name: sha(path) for path in sorted(output.iterdir()) if path.is_file()
+    }
     (output / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
     print(json.dumps({"output": str(output), "operators": manifest["operators"]}, indent=2))
 

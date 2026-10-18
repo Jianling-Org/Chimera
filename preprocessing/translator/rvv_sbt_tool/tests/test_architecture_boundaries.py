@@ -112,9 +112,9 @@ def test_rvv256_candidate_attempt_enforces_explicit_decision_contract():
     lowered = CandidateAttempt(CandidateStatus.LOWERED, assembly=("    nop",))
     assert not_applicable.assembly is None
     assert lowered.assembly == ("    nop",)
-    with pytest.raises(RuntimeError, match="NOT_APPLICABLE"):
+    with pytest.raises(ValueError, match="NOT_APPLICABLE"):
         CandidateAttempt(CandidateStatus.NOT_APPLICABLE, assembly=("    nop",))
-    with pytest.raises(RuntimeError, match="LOWERED"):
+    with pytest.raises(ValueError, match="LOWERED"):
         CandidateAttempt(CandidateStatus.LOWERED)
 
 

@@ -21,7 +21,6 @@ from riscv.extensions.rvv.translation.contracts import (
     LoweringStatus,
     UnsupportedInstructionError,
 )
-from riscv.extensions.rvv.runtime.access import STATE_BASE_MARKER
 from riscv.extensions.rvv.runtime.layout import SimulatedStateLayout
 from riscv.extensions.rvv.analysis.config import StateTracker
 from riscv.extensions.rvv.runtime.layout import CSR_OFFSETS
@@ -247,7 +246,7 @@ class VTypeDispatchEmitter:
         lines = [
             f"    # runtime vtype dispatch for {insn.opcode} {insn.op_str}".rstrip(),
             f"    li      {vtype_addr}, {CSR_OFFSETS['vtype']:#x}",
-            f"    add     {vtype_addr}, t6, {vtype_addr}  # {STATE_BASE_MARKER}",
+            f"    add     {vtype_addr}, t6, {vtype_addr}",
             f"    ld      {vtype_reg}, 0({vtype_addr})      # dispatch on simulated CSR.vtype",
         ]
         case_results: list[LoweringResult] = []

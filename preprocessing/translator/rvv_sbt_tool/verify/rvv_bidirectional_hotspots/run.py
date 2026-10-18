@@ -25,7 +25,7 @@ def command(direction, op, mode, n, samples, sample_ms, check_only=False):
             str(sample_ms), str(cpu), str(int(check_only))]
     # The kernel narrows ordinary processes to X100; opt out before exec on A100.
     if direction == "reverse":
-        return ["sh", "-c", 'printf 0 > /proc/set_ai_thread && exec "$@"', "sh", *args]
+        return ["sh", "-c", 'printf 0 > /proc/set_ai_thread; exec "$@"', "sh", *args]
     return args
 
 
@@ -35,8 +35,7 @@ def build():
         run([*flags, f"-DSOURCE_VLENB={source}", f"-DTARGET_VLENB={target}",
              "bench.c", *(f"native_{op}.S" for op in OPERATORS),
              *(f"{direction}_{op}.S" for op in OPERATORS), "-lm", "-o", f"bench-{direction}"])
-        with (HERE / f"{direction}.dis").open("w") as output:
-            run(["objdump", "-d", f"bench-{direction}"], stdout=output)
+        run(["objdump", "-d", f"bench-{direction}"], stdout=(HERE / f"{direction}.dis").open("w"))
     env = {"uname": run(["uname", "-a"], capture_output=True).stdout.strip(),
            "gcc": run(["gcc", "--version"], capture_output=True).stdout.splitlines()[0],
            "perf": run(["perf", "--version"], capture_output=True).stdout.strip(),
@@ -54,21 +53,8 @@ def measure(action, samples, sample_ms):
                 for n in sizes:
                     for mode in ("native", "translated"):
                         start = time.monotonic()
-                        prefix = HERE / f"{action}-{direction}-{op}-{n}-{mode}"
-                        try:
-                            result = run(command(direction, op, mode, n, samples, sample_ms, action == "check"), capture_output=True)
-                        except subprocess.CalledProcessError as error:
-                            prefix.with_suffix(".stdout").write_text(error.stdout or "")
-                            prefix.with_suffix(".stderr").write_text(error.stderr or "")
-                            raise RuntimeError(f"{prefix}: command failed ({error.returncode}); output saved") from error
-                        prefix.with_suffix(".stdout").write_text(result.stdout)
-                        prefix.with_suffix(".stderr").write_text(result.stderr)
-                        try:
-                            record = json.loads(result.stdout)
-                            if not isinstance(record, dict):
-                                raise ValueError("expected one JSON object")
-                        except ValueError as error:
-                            raise ValueError(f"{prefix}: invalid measurement: {error}") from error
+                        result = run(command(direction, op, mode, n, samples, sample_ms, action == "check"), capture_output=True)
+                        record = json.loads(result.stdout)
                         record.update(direction=direction, process_seconds=time.monotonic() - start)
                         log.write(json.dumps(record) + "\n"); log.flush()
                         print(json.dumps(record), flush=True)
@@ -85,14 +71,11 @@ def profile(changed_only, selected_direction=None, selected_operators=None):
                 continue
             prefix = HERE / f"perf-{direction}-{op}"
             args = command(direction, op, "translated", 2048, 3, 400)
-            with prefix.with_suffix(".stat").open("w") as err, prefix.with_suffix(".stat.json").open("w") as out:
-                run(["perf", "stat", "-x", ",", "-e", "cycles:u,instructions:u,branches:u,branch-misses:u", "--", *args], stdout=out, stderr=err)
-            with prefix.with_suffix(".record.json").open("w") as out, prefix.with_suffix(".record.stderr").open("w") as err:
-                run(["perf", "record", "-e", "cycles:u", "-F", "999", "-o", str(prefix.with_suffix(".data")), "--", *args], stdout=out, stderr=err)
-            with prefix.with_suffix(".report").open("w") as out:
-                run(["perf", "report", "--stdio", "--no-children", "-i", str(prefix.with_suffix(".data"))], stdout=out)
-            with prefix.with_suffix(".annotate").open("w") as out:
-                run(["perf", "annotate", "--stdio", "--no-source", "--symbol", f"translated_{op}", "-i", str(prefix.with_suffix(".data"))], stdout=out)
+            with prefix.with_suffix(".stat").open("w") as err:
+                run(["perf", "stat", "-x", ",", "-e", "cycles:u,instructions:u,branches:u,branch-misses:u", "--", *args], stdout=prefix.with_suffix(".stat.json").open("w"), stderr=err)
+            run(["perf", "record", "-e", "cycles:u", "-F", "999", "-o", str(prefix.with_suffix(".data")), "--", *args], stdout=prefix.with_suffix(".record.json").open("w"), stderr=prefix.with_suffix(".record.stderr").open("w"))
+            run(["perf", "report", "--stdio", "--no-children", "-i", str(prefix.with_suffix(".data"))], stdout=prefix.with_suffix(".report").open("w"))
+            run(["perf", "annotate", "--stdio", "--no-source", "--symbol", f"translated_{op}", "-i", str(prefix.with_suffix(".data"))], stdout=prefix.with_suffix(".annotate").open("w"))
             print(json.dumps({"profiled": str(prefix)}), flush=True)
 
 

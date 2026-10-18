@@ -103,13 +103,3 @@ python3 verify/rvv256_wide/run_verify.py bench-run --case all
 宽路径的 masked case 必须比较完整状态块、前后 64B canary（哨兵区）和相关内存。bit-packed `v0`、`mu` 未命中元素、`vl` 之外的 mask bit，以及尾部元素都必须纳入差分。
 
 `report_codegen.py` 输出的 `vset`、`vector_load`、`vector_store` 是静态文本计数。宽路径为完整块和尾部分别保留正文，静态数量可能增加；动态执行次数应按运行时 `vl` 和目标 LMUL 统计，不能从静态行数推导性能。
-
-The legacy `default_*` case IDs remain accepted by `--case` because existing
-consumers use them; `list` displays their `conservative_*` names and the exact
-stable ID. Profile checks distinguish wide arithmetic from shared native mask
-and whole-register paths. LLVM assembly tools default to PATH names and can be
-selected explicitly with `--llvm-mc` and `--llvm-objdump`.
-
-`report_codegen.py` counts `wide_blocks` using the exact `RVV256-WIDE:` marker,
-separately from masked, commit and reduction markers. Vector-store counts exclude
-shift and slide arithmetic. Historical metric JSON files are unchanged.

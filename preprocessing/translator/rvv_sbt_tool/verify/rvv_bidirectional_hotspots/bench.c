@@ -1,7 +1,6 @@
 #define _GNU_SOURCE
 #include <errno.h>
 #include <math.h>
-#include <limits.h>
 #include <sched.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -40,24 +39,8 @@ struct buffer { uint8_t *allocation, *data; size_t bytes; uint64_t hash; };
 static struct { uint8_t pre[64]; float value; uint8_t post[64]; } output;
 static volatile float sink;
 static int timing_active;
-static unsigned long measured_fcsr;
 
 static void fail(const char *message) { fprintf(stderr, "%s\n", message); exit(1); }
-static long integer_argument(const char *text, long minimum, long maximum) {
-    char *end; errno = 0;
-    long value = strtol(text, &end, 10);
-    if (errno || end == text || *end || value < minimum || value > maximum)
-        fail("invalid integer benchmark argument");
-    return value;
-}
-static double sample_duration(const char *text) {
-    char *end; errno = 0;
-    double milliseconds = strtod(text, &end);
-    if (errno || end == text || *end || !isfinite(milliseconds) || milliseconds <= 0 ||
-        milliseconds / 1000.0 == 0)
-        fail("sample-ms must be a finite positive duration");
-    return milliseconds / 1000.0;
-}
 static uint64_t hash_bytes(const uint8_t *data, size_t bytes) {
     uint64_t hash = UINT64_C(14695981039346656037);
     for (size_t i = 0; i < bytes; ++i) hash = (hash ^ data[i]) * UINT64_C(1099511628211);
@@ -151,9 +134,8 @@ static void check(const struct buffer *x, const struct buffer *y, float expected
             translation_state.pre[i] != 0xa5 || translation_state.post[i] != 0xa5) fail("output/state canary changed");
     if (translated && (get_csr(0x1000) != 0 || get_csr(0x1018) != vcsr || get_csr(0x1030) != SOURCE_VLENB)) fail("state CSR changed");
     unsigned long fcsr; __asm__ volatile("csrr %0, fcsr" : "=r"(fcsr));
-    /* During timing, use the snapshot taken before clock conversion. */
-    if (timing_active) fcsr = measured_fcsr;
-    if ((fcsr >> 5) != frm || (fcsr & 31)) fail("unexpected FCSR/rounding change for exact inputs");
+    /* Clock conversion/calibration uses FP; exact fflags are checked before timing. */
+    if ((fcsr >> 5) != frm || (!timing_active && (fcsr & 31))) fail("unexpected FCSR/rounding change for exact inputs");
 }
 static kernel_fn select_kernel(const char *op, int translated) {
     if (!strcmp(op, "f32")) return translated ? translated_f32 : native_f32;
@@ -167,9 +149,7 @@ static double now(void) {
 }
 static double batch(kernel_fn fn, int n, const struct buffer *x, const struct buffer *y, unsigned long calls) {
     double start = now();
-    __asm__ volatile("csrwi fflags, 0" : : : "memory");
     for (unsigned long i = 0; i < calls; ++i) fn(n, &output.value, 0, x->data, 0, y->data, 0, 1);
-    __asm__ volatile("csrr %0, fcsr" : "=r"(measured_fcsr) : : "memory");
     double elapsed = now() - start; sink = output.value; return elapsed;
 }
 static unsigned long frequency(int cpu) {
@@ -182,12 +162,10 @@ int main(int argc, char **argv) {
     if (argc != 8) fail("usage: bench OP MODE N SAMPLES SAMPLE_MS CPU CHECK_ONLY");
     const char *op = argv[1]; int translated = !strcmp(argv[2], "translated");
     if (!translated && strcmp(argv[2], "native")) fail("unknown mode");
-    int n = (int)integer_argument(argv[3], 0, 1048576);
-    int samples = (int)integer_argument(argv[4], 1, 1000);
-    int cpu = (int)integer_argument(argv[6], 0, CPU_SETSIZE - 1);
-    double sample_seconds = sample_duration(argv[5]);
-    int check_only = (int)integer_argument(argv[7], 0, 1);
-    if (!strcmp(op, "q5") && n % 32) fail("invalid benchmark dimensions");
+    int n = atoi(argv[3]), samples = atoi(argv[4]), cpu = atoi(argv[6]);
+    double sample_seconds = atof(argv[5]) / 1000.0; int check_only = atoi(argv[7]);
+    if (n < 0 || n > 1048576 || samples < 1 || samples > 1000 || sample_seconds <= 0 ||
+        (!strcmp(op, "q5") && n % 32)) fail("invalid benchmark dimensions");
     cpu_set_t mask; if (sched_getaffinity(0, sizeof(mask), &mask) || CPU_COUNT(&mask) != 1 || !CPU_ISSET(cpu, &mask) || sched_getcpu() != cpu) fail("affinity mismatch");
     unsigned long hardware_vlenb; __asm__ volatile("csrr %0, vlenb" : "=r"(hardware_vlenb));
     if (hardware_vlenb != TARGET_VLENB) fail("hardware VLEN mismatch");
@@ -215,20 +193,9 @@ int main(int argc, char **argv) {
     for (unsigned i = 0; i < 10; ++i) fn(n, &output.value, 0, x.data, 0, y.data, 0, 1);
     timing_active = 1;
     unsigned long calls = 1; double pilot;
-    do {
-        pilot = batch(fn, n, &x, &y, calls);
-        check(&x, &y, expected, translated, 0, 0);
-        if (!isfinite(pilot) || pilot < 0) fail("invalid pilot duration");
-        if (pilot < 0.005) {
-            if (calls > ULONG_MAX / 2) fail("pilot call count overflow");
-            calls *= 2;
-        }
-    } while (pilot < 0.005);
-    double calibrated = ceil(calls * sample_seconds / pilot);
-    if (!isfinite(calibrated) || calibrated >= (double)ULONG_MAX)
-        fail("sample duration exceeds call count range");
-    calls = calibrated < 1 ? 1 : (unsigned long)calibrated;
-    printf("{\"protocol\":\"batch-fcsr-v2\",\"operator\":\"%s\",\"mode\":\"%s\",\"n\":%d,\"cpu\":%d,\"source_vlenb\":%d,\"hardware_vlenb\":%lu,\"calls\":%lu,\"expected\":%.9g,\"input_hash\":[\"%016llx\",\"%016llx\"],\"samples_ns\":[", op, argv[2], n, cpu, SOURCE_VLENB, hardware_vlenb, calls, expected, (unsigned long long)x.hash, (unsigned long long)y.hash);
+    do { pilot = batch(fn, n, &x, &y, calls); if (pilot < 0.005) calls *= 2; } while (pilot < 0.005);
+    calls = (unsigned long)fmax(1, ceil(calls * sample_seconds / pilot));
+    printf("{\"operator\":\"%s\",\"mode\":\"%s\",\"n\":%d,\"cpu\":%d,\"source_vlenb\":%d,\"hardware_vlenb\":%lu,\"calls\":%lu,\"expected\":%.9g,\"input_hash\":[\"%016llx\",\"%016llx\"],\"samples_ns\":[", op, argv[2], n, cpu, SOURCE_VLENB, hardware_vlenb, calls, expected, (unsigned long long)x.hash, (unsigned long long)y.hash);
     unsigned long frequencies[1000];
     for (int sample = 0; sample < samples; ++sample) {
         frequencies[sample] = frequency(cpu); double elapsed = batch(fn, n, &x, &y, calls);

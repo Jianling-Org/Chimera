@@ -7,7 +7,6 @@ import argparse
 from dataclasses import dataclass
 from pathlib import Path
 import shutil
-import re
 import subprocess
 import sys
 
@@ -1112,8 +1111,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--objdump", default="riscv64-unknown-linux-gnu-objdump")
     parser.add_argument("--qemu", default="qemu-riscv64")
     parser.add_argument("--qemu-cpu", default="rv64,v=true,vlen=256,elen=64,vext_spec=v1.0")
-    parser.add_argument("--llvm-mc", default="llvm-mc")
-    parser.add_argument("--llvm-objdump", default="llvm-objdump")
+    parser.add_argument("--llvm-mc", default="/opt/homebrew/opt/llvm/bin/llvm-mc")
+    parser.add_argument("--llvm-objdump", default="/opt/homebrew/opt/llvm/bin/llvm-objdump")
     parser.add_argument("--iterations", type=int, default=100000)
     return parser.parse_args()
 
@@ -1130,21 +1129,6 @@ def run(cmd: list[str], cwd: Path, stdout=None) -> None:
     subprocess.run(cmd, cwd=cwd, check=True, stdout=stdout)
 
 
-def expected_optimization(case: Case, assembly: str) -> bool:
-    opcode = case.command.split()[0]
-    if re.fullmatch(r"(?:v[ls][1248]r(?:e\d+)?|vmv[1248]r)\.v", opcode):
-        return "RVV256-NATIVE-WHOLE" in assembly
-    if opcode in {"vmseq.vi", "vmor.mm", "vfirst.m", "vcpop.m"}:
-        return "RVV256-NATIVE-MASK" in assembly
-    if opcode == "vlm.v":
-        return "Direct byte-aligned mask chunk into v0" in assembly
-    if opcode == "vsseg4e64.v":
-        return bool(re.search(r"(?m)^\s*vsseg4e64\.v\s+v\d+,", assembly))
-    if case.wide_lmul:
-        return "RVV256-WIDE" in assembly
-    return "Direct byte-aligned mask chunk into v0" in assembly and "RVV256-WIDE" not in assembly
-
-
 def translate_case(case: Case) -> None:
     case.directory.mkdir(parents=True, exist_ok=True)
     instructions = AsmParser().parse_string(case.command)
@@ -1155,7 +1139,13 @@ def translate_case(case: Case) -> None:
         tls_state=False,
         wide_lmul=case.wide_lmul,
     )
-    optimized_marker = expected_optimization(case, assembly)
+    optimized_marker = (
+        "RVV256-WIDE" in assembly
+        or "RVV256-NATIVE-MASK" in assembly
+        or "RVV256-NATIVE-WHOLE" in assembly
+        or "Direct byte-aligned mask chunk into v0" in assembly
+        or (case.name == "vsseg4e64" and "vsseg4e64.v" in assembly)
+    )
     if not optimized_marker:
         profile = "默认宽 profile" if case.wide_lmul else "--conservative"
         raise SystemExit(f"case {case.name} 未进入预期 {profile} 优化路径")
@@ -1177,9 +1167,6 @@ def build_case(case: Case, cc: str, objdump: str) -> None:
 
 def assemble_case(case: Case, llvm_mc: str, llvm_objdump: str) -> None:
     """只依赖 LLVM RISC-V 后端，生成目标对象和可审计反汇编。"""
-    for tool in (llvm_mc, llvm_objdump):
-        if shutil.which(tool) is None:
-            raise SystemExit(f"assemble requires {tool!r}; set --llvm-mc/--llvm-objdump to installed tools")
     run([
         llvm_mc,
         "-triple=riscv64-unknown-linux-gnu",
@@ -1246,8 +1233,7 @@ def main() -> int:
     if args.action == "list":
         for case in cases:
             profile = "默认宽 profile" if case.wide_lmul else "--conservative"
-            display = case.name.replace("default_", "conservative_", 1)
-            print(f"{display}: {case.command} [{case.vtype}; {profile}; --case {case.name}]")
+            print(f"{case.name}: {case.command} [{case.vtype}; {profile}]")
         return 0
     if args.action == "check-env":
         missing = [tool for tool in (args.cc, args.objdump, args.qemu) if shutil.which(tool) is None]

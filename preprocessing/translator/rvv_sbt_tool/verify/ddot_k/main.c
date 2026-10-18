@@ -50,7 +50,7 @@ int main() {
         diff = -diff;
     }
 
-    if (!(diff <= EPSILON)) {
+    if (diff > EPSILON) {
         printf("DDOT verification FAILED:\n");
         printf("Expected = %.12f, Got = %.12f, Diff = %.12f\n", expected, result, diff);
         return 1;

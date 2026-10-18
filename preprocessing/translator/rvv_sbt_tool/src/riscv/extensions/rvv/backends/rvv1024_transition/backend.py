@@ -6,6 +6,7 @@ from riscv.extensions.rvv.translation.contracts import BackendProfile
 from riscv.extensions.rvv.runtime.geometry import (
     RVV256_TO_RVV1024_GEOMETRY,
     TranslationGeometry,
+    geometry_for_direction,
 )
 from riscv.extensions.rvv.translation.contracts import (
     HandlerContext,
@@ -28,14 +29,15 @@ def make_transition_profile(
 ) -> BackendProfile:
     """建立过渡后端配置，明确 instruction failure 的 fallback 策略。
 
-    本后端只接受 32→128；显式 geometry 与数值方向参数必须一致。
+    方向参数经几何白名单校验；一期只登记 32→128。默认值直接来自几何
+    对象，避免 profile 与 geometry 模块各自维护一份 32/128 字面量。
     """
 
-    resolved = RVV256_TO_RVV1024_GEOMETRY
-    if (source_vlenb, target_vlenb) != (resolved.source_vlenb, resolved.target_vlenb):
-        raise ValueError("过渡 profile 只支持 RVV256→RVV1024 (32→128)")
-    if geometry is not None and geometry != resolved:
-        raise ValueError("过渡 profile 的 geometry 必须为 RVV256→RVV1024 (32→128)")
+    if geometry is not None:
+        geometry_for_direction(geometry.source_vlenb, geometry.target_vlenb)
+        resolved = geometry
+    else:
+        resolved = geometry_for_direction(source_vlenb, target_vlenb)
 
     return BackendProfile(
         name="rvv256-to-rvv1024-transition-experimental",

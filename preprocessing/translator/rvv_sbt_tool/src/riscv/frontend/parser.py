@@ -139,8 +139,8 @@ class AsmParser:
                 continue
 
             if stripped.startswith('Disassembly of section'):
+                in_text_section = ('.text' in stripped)
                 section = stripped.removeprefix('Disassembly of section').strip().removesuffix(':')
-                in_text_section = section == '.text' or section.startswith('.text.')
                 in_plt_section = section == '.plt' or section.startswith('.plt.')
                 # PLT entries supply address/symbol facts for call routing, but
                 # section boundaries must never extend the preceding function.
@@ -225,8 +225,7 @@ class AsmParser:
                 continue
 
             if stripped.startswith('Disassembly of section'):
-                section = stripped.removeprefix('Disassembly of section').strip().removesuffix(':')
-                in_text_section = section == '.text' or section.startswith('.text.')
+                in_text_section = ('.text' in stripped)
                 continue
 
             # 跳过文件头等非指令行

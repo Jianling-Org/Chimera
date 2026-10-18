@@ -69,7 +69,7 @@ def main():
     p.add_argument("--historical", type=Path, required=True, help="operator-8c8t-v256 directory")
     p.add_argument("--out", type=Path, required=True)
     args = p.parse_args()
-    native = args.historical / "native.c"
+    native = args.historical / "sbt-1024-20261009/repeat50-20261009/native.c"
     source = native.read_text()
     if hashlib.sha256(native.read_bytes()).hexdigest() != HISTORICAL_SHA:
         raise ValueError("historical driver changed; review before adapting")
@@ -85,10 +85,7 @@ def main():
     assert source.count(before) == 1
     source = source.replace(before, CALL)
     source = source.replace('if (argc != 6', 'if (argc != 7')
-    source = source.replace('    stride = n+PAD; blocks = k/256;', '''    if (argv[6][0] < '0' || argv[6][0] > '2' || argv[6][1]) return 2;
-    implementation=argv[6][0]-'0';
-    if (n/64 < THREADS && THREADS % (n/64)) return 2;
-    stride = n+PAD; blocks = k/256;''')
+    source = source.replace('    stride = n+PAD; blocks = k/256;', '    implementation=atoi(argv[6]); if(implementation<0 || implementation>2) return 2;\n    stride = n+PAD; blocks = k/256;')
     source = source.replace('    prepare();', '''    Buffer iwb = buffer((size_t)(n/32)*blocks*sizeof(I3));
     Buffer ixb = buffer((size_t)(m/4)*blocks*sizeof(I8));
     ime_weights=(I3 *)iwb.data; ime_inputs=(I8 *)ixb.data;

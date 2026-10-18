@@ -1,5 +1,5 @@
 
-llama-perplexity:     file format elf64-littleriscv
+/home/yzgx/.chimera/releases/10338f4718330ba47634d12c/examples/llamacpp/remediated/llama-perplexity:     file format elf64-littleriscv
 
 
 Disassembly of section .text:

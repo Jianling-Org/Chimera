@@ -37,6 +37,7 @@ def _emit_vext_vf(
     loop_prefix = f"{'vsext' if signed else 'vzext'}_vf{factor}"
 
     lines = []
+    mask_suffix = ""
     operands = insn.operands
     if len(operands) < 2:
         raise InstructionValidationError(insn, f"Invalid operands for {insn.opcode}: {insn.op_str}")
@@ -187,6 +188,7 @@ def _build_vwcvtu_x_x_v_lines(context) -> list[str]:
     allocator = context.layout
     new_label = context.new_label
     lines = []
+    mask_suffix = ""
     operands = insn.operands
     if len(operands) < 2:
         raise InstructionValidationError(insn, f"Invalid operands for {insn.opcode}: {insn.op_str}")
@@ -399,6 +401,7 @@ def _build_vncvt_x_x_w_lines(context) -> list[str]:
     allocator = context.layout
     new_label = context.new_label
     lines = []
+    mask_suffix = ""
     operands = insn.operands
     if len(operands) < 2:
         raise InstructionValidationError(insn, f"Invalid operands for {insn.opcode}: {insn.op_str}")
@@ -515,6 +518,7 @@ def _emit_vnsr_wi(
     loop_prefix = "vnsra_wi" if signed else "vnsrl_wi"
 
     lines = []
+    mask_suffix = ""
     operands = list(insn.operands)
     is_masked = False
     if len(operands) > 0 and str(operands[-1]).strip().endswith(".t"):
@@ -554,6 +558,8 @@ def _emit_vnsr_wi(
         shift_amt += 1
     mask = chunk_n - 1
 
+    elem_bytes_in = input_sew // 8
+    elem_bytes_out = output_sew // 8
 
     vd_off = allocator.get_offset(vd)
     vs2_off = allocator.get_offset(vs2)
@@ -573,6 +579,8 @@ def _emit_vnsr_wi(
     if is_masked:
         mask_bit_idx = temps.alloc_gpr()
         v0_base = temps.alloc_gpr()
+    int_load_instr = _get_int_load_signed(input_sew) if signed else _get_int_load_unsigned(input_sew)
+    int_store_instr = _get_int_store(output_sew)
 
     lines.append(f"# {opcode} {vd}, {vs2}, {uimm} (256-bit mode)")
     lines.append(

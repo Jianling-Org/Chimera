@@ -16,6 +16,8 @@ from ..toolchain.objdump import LinuxObjdump
 
 CONTRACT_CAPABILITY = "external-scalar-leaf-contracts"
 CONTRACT_FORMAT = "chimera-external-scalar-leaf-v1"
+CONTRACT_FORMAT_V2 = "chimera-external-call-contracts-v2"
+MEMCPY_NO_CALLBACK_BASIS = "standard-libc-memcpy-no-application-callback-v1"
 # A deliberately small language: no vector, CSR, system, indirect jump or call.
 _SCALAR = frozenset("""
     nop li mv lui auipc add addi addw addiw sub subw neg negw
@@ -42,6 +44,8 @@ def normalize_leaf_contracts(values=()) -> tuple[dict[str, str], ...]:
             raise ValueError("scalar leaf library must be a basename")
         if not isinstance(digest, str) or not re.fullmatch(r"[0-9a-f]{64}", digest):
             raise ValueError("scalar leaf provider requires a lowercase sha256")
+        if symbol == "memcpy":
+            raise ValueError("memcpy is handled by the automatic standard-interface contract")
         if symbol in seen:
             raise ValueError("duplicate scalar leaf symbol")
         seen.add(symbol)
@@ -53,12 +57,20 @@ def normalize_leaf_contracts(values=()) -> tuple[dict[str, str], ...]:
 class ExternalLeafBindings:
     proofs: tuple[dict, ...] = ()
     rejections: tuple[dict, ...] = ()
+    no_callback_interfaces: tuple[dict, ...] = ()
+    interface_rejections: tuple[dict, ...] = ()
 
     @property
     def closed_targets(self) -> frozenset[int]:
-        return frozenset(item["target"] for item in self.proofs)
+        return frozenset(item["target"] for item in
+                         (*self.proofs, *self.no_callback_interfaces))
 
     def payload(self) -> dict:
+        if self.no_callback_interfaces or self.interface_rejections:
+            return {"format": CONTRACT_FORMAT_V2, "proofs": list(self.proofs),
+                    "rejections": list(self.rejections),
+                    "no_callback_interfaces": list(self.no_callback_interfaces),
+                    "interface_rejections": list(self.interface_rejections)}
         return {"format": CONTRACT_FORMAT, "proofs": list(self.proofs),
                 "rejections": list(self.rejections)}
 

@@ -1,0 +1,81 @@
+{
+  "pass": true,
+  "files": [
+    {
+      "file": "payload/forward.S",
+      "hardware_validated_sha256": "91550f5ec6d4f43a9e3c41068b3f2fcbdc35797ad4122e85e103a1a9698993d9"
+    },
+    {
+      "file": "payload/reverse.S",
+      "hardware_validated_sha256": "22b9060519fcf4dee63a177a6fbbe2f8e6b94afca563df4136f3e8d098ed61eb"
+    },
+    {
+      "file": "payload/translated.c",
+      "hardware_validated_sha256": "9a03da996270722e8b52819f5c9b6bb86797517cc4ef431b4b423ed371735c3d"
+    },
+    {
+      "file": "payload/paired.c",
+      "hardware_validated_sha256": "e15b8075f1552b29d43cfa1a4f7588863d770799b0aadaa7ef317a01f5f38cc4"
+    },
+    {
+      "file": "payload/kernel.bin",
+      "hardware_validated_sha256": "cf0ff6fde59c0460beca8148794d70dc6bb7eeaff4c92d9525154691af16f80b"
+    },
+    {
+      "file": "state/native.S",
+      "hardware_validated_sha256": "16386331d0ca4aadc6903346602e6e3f94fffd845a6fa76b6ea328553bbeb0b2"
+    },
+    {
+      "file": "state/candidate.S",
+      "hardware_validated_sha256": "3540d25ab1dad10368b955db75c5ec767c5efbf6205d2b5fa0a5097fd9ca095b"
+    },
+    {
+      "file": "state/main.c",
+      "hardware_validated_sha256": "c0890e86693bde44cdaf117f61d83347b700b3add434046a0f0605fbb4887225"
+    },
+    {
+      "file": "state/cases.h",
+      "hardware_validated_sha256": "05ae5b64ecaed4a39f28a1b324792b54bde03ab563175a2d10ff8b9d6017130d"
+    },
+    {
+      "file": "mac/native.S",
+      "hardware_validated_sha256": "1f465bba2626dc5ca5c8e03a19dc93714c4a64cfece3b68f9ef6d65bb6b321ce"
+    },
+    {
+      "file": "mac/candidate.S",
+      "hardware_validated_sha256": "8047eb5c4c33c3b1be47a1a1d51291cd3ea696bcc66bde4ab6c3d7c1926d55a6"
+    },
+    {
+      "file": "mac/main.c",
+      "hardware_validated_sha256": "c80e2e4d20a5cc45f5b0d24a989d4b208f1324435b23ae47ccabca2a64ee4807"
+    },
+    {
+      "file": "mac/cases.h",
+      "hardware_validated_sha256": "0bf16ae1a7882dcca9f1568109c0a215d3eec5277c711401c49cba39a4147e8a"
+    },
+    {
+      "file": "guard/mask/instruction.S",
+      "hardware_validated_sha256": "fd1f0b72992e7126d0288e966cb14e9b4a87fa15e0e87f51fbe9184aded8a6a2"
+    },
+    {
+      "file": "guard/mask/main.c",
+      "hardware_validated_sha256": "d00de28c7c927278608a5ffc0996050ae2f3d1eb614467742103516670705e72"
+    },
+    {
+      "file": "guard/extend/instruction.S",
+      "hardware_validated_sha256": "bcb58b8ddbe4f34b89062eb9ec750e4d093a80e37cbe10f5a8b9a4d0d9735930"
+    },
+    {
+      "file": "guard/extend/main.c",
+      "hardware_validated_sha256": "32dda9fa49a60472193568ca75e3931c6190629183cf20cf7b12b63d279cafc1"
+    },
+    {
+      "file": "guard/mac/instruction.S",
+      "hardware_validated_sha256": "4403e7b0c962df039a8f8a6ec46af3ef9b8b0ae33632a0246258bedfb1370d34"
+    },
+    {
+      "file": "guard/mac/main.c",
+      "hardware_validated_sha256": "f330a383024deeccf8d2d53d56b0575848463fa62eac4d262a5aadfe74af2830"
+    }
+  ]
+}

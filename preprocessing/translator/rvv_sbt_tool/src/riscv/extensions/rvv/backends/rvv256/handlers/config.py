@@ -1,7 +1,6 @@
 # src/riscv/extensions/rvv/backends/rvv256/handlers/config.py
 """256-bit RVV 模式配置指令 handler"""
 
-from riscv.frontend.literals import parse_integer_literal
 from riscv.extensions.rvv.analysis.model import LEGAL_LMULS
 from riscv.frontend.model import RVInstruction
 from riscv.extensions.rvv.analysis.config import StateTracker
@@ -161,7 +160,7 @@ def _build_vsetivli_lines(context) -> list[str]:
     rd_is_zero = (rd == 'zero' or rd == 'x0')
 
     try:
-        uimm = parse_integer_literal(uimm_str)
+        uimm = int(uimm_str, 16) if uimm_str.startswith('0x') else int(uimm_str)
     except ValueError:
         raise InstructionValidationError(insn, f"Invalid uimm for vsetivli: {insn.op_str}")
 
@@ -281,8 +280,6 @@ def _build_vsetvl_lines(context) -> list[str]:
 
     # vill 或本 backend 不支持的 vtype 编码按非法 vtype 处理。
     lines.append(f"    bltz    {rs2}, {invalid_label}              # incoming vtype has vill set")
-    lines.append(f"    srli    {tmp}, {rs2}, 8")
-    lines.append(f"    bnez    {tmp}, {invalid_label}              # vtype reserved bits [62:8] set")
 
     # SEW 编码提取 (addr_sew_vl 复用为 sew_enc)
     lines.append(f"    srli    {addr_sew_vl}, {rs2}, 3")

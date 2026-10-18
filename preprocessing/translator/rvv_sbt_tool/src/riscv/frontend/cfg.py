@@ -124,6 +124,7 @@ class CFGBuilder:
                     instruction,
                     next_address=next_address,
                     target=target,
+                    target_known_globally=target_known_globally,
                 ))
 
         leaders = {ordered_addresses[0]}
@@ -308,6 +309,7 @@ class CFGBuilder:
         *,
         next_address: int | None,
         target: int | None,
+        target_known_globally: bool,
     ) -> list[ControlFlowEdge]:
         """把一条指令的控制流事实记录为可审计的文本边。"""
 
@@ -381,7 +383,24 @@ class CFGBuilder:
                 add(CFGEdgeKind.FALLTHROUGH, next_address, resolved=True)
             return edges
 
-        raise AssertionError(f"Not a control transfer: {opcode}")
+        # 普通指令只在存在顺序后继时记录 fall-through；函数末尾没有目标
+        # 并不构造一个虚假的地址，也不会影响旧的 CFG block 逻辑。
+        if next_address is not None:
+            add(CFGEdgeKind.FALLTHROUGH, next_address, resolved=True)
+        return edges
+
+    @staticmethod
+    def _target_operand_index(instruction: RVInstruction) -> int | None:
+        opcode = instruction.opcode.lower()
+        if opcode in {"j", "call", "tail"}:
+            return 0 if instruction.operands else None
+        if opcode == "jal":
+            return len(instruction.operands) - 1 if instruction.operands else None
+        if opcode in {"beqz", "bnez", "bltz", "bgez", "blez", "bgtz"}:
+            return 1 if len(instruction.operands) > 1 else None
+        if opcode in {"beq", "bne", "blt", "bge", "bltu", "bgeu"}:
+            return 2 if len(instruction.operands) > 2 else None
+        return None
 
     @staticmethod
     def _is_control_transfer(instruction: RVInstruction) -> bool:

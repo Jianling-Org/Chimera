@@ -136,13 +136,11 @@ def lower(context, plan):
     lines += (["    srli t0, t1, 3"] if mode.kind == "pack" else
               [f"    ld t0, {block.VTYPE_OFFSET}(sp)", "    srli t0, t0, 3"])
     lines.append("    andi t0, t0, 7")
-    if mode.kind in {"pack", "unpack"} and imm:
+    if mode.kind == "pack" and imm:
         # Nonzero immediates fix the chunk width independently of SEW. Retain
         # the supported-width check but emit only one copy of the payload.
-        payload = (_pack(frame, 8 << imm) if mode.kind == "pack" else
-                   _unpack(frame, 8 << imm, context.new_label("chunks")))
         lines += ["    li t1, 3", f"    bgtu t0, t1, {fail}",
-                  *payload, *block.end(frame, vd, fail, done)]
+                  *_pack(frame, 8 << imm), *block.end(frame, vd, fail, done)]
         return LoweringResult.lowered(lines)
     variants = []
     for sew in sorted(plan.spec.supported_sews):

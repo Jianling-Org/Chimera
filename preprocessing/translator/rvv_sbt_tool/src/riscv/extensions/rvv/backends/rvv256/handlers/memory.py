@@ -21,7 +21,7 @@ from riscv.extensions.rvv.runtime.layout import SimulatedStateLayout
 from riscv.extensions.rvv.translation.contracts import InstructionValidationError
 from riscv.extensions.rvv.runtime.layout import CSR_OFFSETS
 from riscv.extensions.rvv.backends.rvv256.temp_regs import VRegTempAllocator
-from riscv.extensions.rvv.translation.temps import TempRegisterAllocator, record_vreg_group
+from riscv.extensions.rvv.translation.temps import TempRegisterAllocator
 from riscv.extensions.rvv.backends.rvv256.support import (
     _chunk_size,
     _emit_mask_setup,
@@ -903,10 +903,9 @@ def _build_vle8ff_v_lines(context) -> list[str]:
     """
     翻译 vle8ff.v 指令 (256-bit 模式)
 
-    首块最多加载32字节；后续块屏蔽元素0，最多加载31个新字节。
-    后续块的源/目的基址退一字节，但屏蔽位置不访问内存，避免重复读取。
-    因此只有源元素0能触发首元素异常；其他 fault 缩短硬件 vl，扣除
-    屏蔽前缀后同步模拟 CSR.vl，无需 Runtime 异常恢复。
+    使用实际 RVV `vle8ff.v` 做 256-bit chunk load。若非首元素 fault 使
+    硬件 `vl` 小于当前 chunk AVL，则同步缩短 simulated CSR.vl 为已加载总数。
+    首元素 fault 仍按硬件 trap 路径处理，不在翻译块内吞掉异常。
     """
     insn = context.instruction
     allocator = context.layout
@@ -923,7 +922,6 @@ def _build_vle8ff_v_lines(context) -> list[str]:
 
     vtemps = VRegTempAllocator(insn)
     temp_vreg = vtemps.alloc_vreg()
-    record_vreg_group("v0", 1)
 
     temps = context.temp_register_allocator
     remaining = temps.alloc_gpr()
@@ -949,24 +947,16 @@ def _build_vle8ff_v_lines(context) -> list[str]:
     lines.append(f"    li      {loaded_total}, 0")
     lines.append(f"{loop_label}:")
     lines.append(f"    beqz    {remaining}, {end_label}")
-    lines.append(f"    snez    {tmp}, {loaded_total}            # masked prefix after the first chunk")
-    lines.append(f"    add     {avl}, {remaining}, {tmp}")
-    lines.append(f"    li      {actual_vl}, 32")
-    lines.append(f"    bleu    {avl}, {actual_vl}, {avl_ready}")
-    lines.append(f"    mv      {avl}, {actual_vl}")
+    lines.append(f"    li      {avl}, 32")
+    lines.append(f"    bltu    {avl}, {remaining}, {avl_ready}   # use 32 when remaining > 32")
+    lines.append(f"    mv      {avl}, {remaining}                # final partial chunk")
     lines.append(f"{avl_ready}:")
     lines.append(f"    vsetvli zero, {avl}, e8, m1, ta, ma")
-    lines.append(f"    vid.v   {temp_vreg}")
-    lines.append(f"    vmsgeu.vx v0, {temp_vreg}, {tmp}")
-    lines.append(f"    sub     {mem_ptr}, {mem_ptr}, {tmp}")
-    lines.append(f"    sub     {vd_ptr}, {vd_ptr}, {tmp}")
-    lines.append(f"    vle8ff.v {temp_vreg}, ({mem_ptr}), v0.t")
-    lines.append(f"    csrr    {actual_vl}, vl                   # hardware vl includes the masked prefix")
-    lines.append(f"    vse8.v  {temp_vreg}, ({vd_ptr}), v0.t")
+    lines.append(f"    vle8ff.v {temp_vreg}, ({mem_ptr})")
+    lines.append(f"    csrr    {actual_vl}, vl                   # actual elements loaded by vle8ff")
+    lines.append(f"    vse8.v  {temp_vreg}, ({vd_ptr})")
     lines.append(f"    add     {mem_ptr}, {mem_ptr}, {actual_vl}")
     lines.append(f"    add     {vd_ptr}, {vd_ptr}, {actual_vl}")
-    lines.append(f"    sub     {actual_vl}, {actual_vl}, {tmp}   # exclude the masked prefix")
-    lines.append(f"    sub     {avl}, {avl}, {tmp}")
     lines.append(f"    add     {loaded_total}, {loaded_total}, {actual_vl}")
     lines.append(f"    beq     {actual_vl}, {avl}, {full_chunk}")
     lines.append(f"    j       {trim_label}                      # non-first fault trimmed vl")
@@ -1441,10 +1431,83 @@ def _build_vs8r_v_lines(context) -> list[str]:
 
 
 def _build_vl4r_v_lines(context) -> list[str]:
-    return _emit_vlr_like(
-        context.instruction, context.state, context.layout, context.new_label,
-        "vl4r.v", eew=8, nf=4,
-    )
+    """
+    翻译 vl4r.v 指令 (256-bit 模式)
+
+    格式: vl4r.v vd, (rs1)
+    语义: 从内存加载 512 字节到连续 4 个向量寄存器 vd..vd+3
+    不依赖 vl, 总是加载完整的 4 个 vregs.
+
+    策略:
+    - 16 个块, 每块 32 字节
+    - 每个块: vle32.v 从内存加载 -> vse32.v 写回 sim_state
+    - 指针连续前进
+    :return: 生成的汇编代码行列表
+    """
+    insn = context.instruction
+    allocator = context.layout
+    new_label = context.new_label
+    lines = []
+    operands = insn.operands
+    if len(operands) < 2:
+        raise InstructionValidationError(insn, f"Invalid operands for {insn.opcode}: {insn.op_str}")
+
+    vd = str(operands[0])
+    rs1 = str(operands[1]).strip('()')
+
+    # 四个连续槽位的总字节数必须读取统一 ABI 布局，不能在 handler 中复制
+    # 128 B 常量；当前合同仍会得到 512 B。
+    total_bytes = 4 * allocator.vreg_size
+    chunk_bytes = 32  # 每个块 32 字节 (256-bit)
+    num_chunks = total_bytes // chunk_bytes  # 16
+
+    # vd 基址偏移
+    vd_base_off = allocator.get_offset(vd)
+
+    # 分配临时向量寄存器
+    vtemps = VRegTempAllocator(insn)
+    temp_vreg = vtemps.alloc_vreg()
+
+    # 分配 GPR
+    temps = context.temp_register_allocator
+    mem_ptr = temps.alloc_gpr()
+    vd_ptr = temps.alloc_gpr()
+    chunk_count = temps.alloc_gpr()
+    temp = temps.alloc_gpr()
+
+    lines.append(f"# vl4r.v {vd}, ({rs1}) (256-bit mode)")
+    lines.append(f"# Semantic: load 512B into {vd}..v{int(vd[1:])+3} from mem[{rs1}]")
+    lines.append("")
+
+    # 拷贝内存基址
+    lines.append(f"    mv      {mem_ptr}, {rs1}")
+    lines.append("")
+
+    # 计算 vd 基址
+    lines.append(f"    li      {vd_ptr}, {vd_base_off:#x}")
+    lines.append(f"    add     {vd_ptr}, t6, {vd_ptr}            # {vd_ptr} = &{vd}")
+    lines.append("")
+
+    # 循环 16 个块
+    lines.append(f"    li      {chunk_count}, {num_chunks}")
+    main_loop = new_label("vl4r_main")
+    after_main = new_label("vl4r_after")
+
+    lines.append(f"    # --- 主循环: 每块 {chunk_bytes} 字节, 共 {num_chunks} 块 ---")
+    lines.append(f"{main_loop}:")
+    # 8 × e32 = 32 字节, 等于 _chunk_bytes()
+    lines.append(f"    vsetivli zero, 8, e32, m1, ta, ma")
+    lines.append("")
+    lines.append(f"    vle32.v {temp_vreg}, ({mem_ptr})              # 从内存加载 32 字节")
+    lines.append(f"    vse32.v {temp_vreg}, ({vd_ptr})               # 写回 sim_state")
+    lines.append("")
+    lines.append(f"    addi    {mem_ptr}, {mem_ptr}, {chunk_bytes}")
+    lines.append(f"    addi    {vd_ptr}, {vd_ptr}, {chunk_bytes}")
+    lines.append(f"    addi    {chunk_count}, {chunk_count}, -1")
+    lines.append(f"    bnez    {chunk_count}, {main_loop}")
+    lines.append(f"{after_main}:")
+
+    return lines
 
 
 # ============================================================================
@@ -1806,7 +1869,6 @@ def _build_vsseg4e64_v_lines(context) -> list[str]:
     # v8/v10/v12/v14 是一个合法的 NF=4、LMUL=m2 临时 tuple。源 v24 等
     # 名字只描述模拟状态槽，并不是翻译块入口处的 live 物理 vreg。
     target_fields = ("v8", "v10", "v12", "v14")
-    record_vreg_group("v8", 8)
     chunk_n = 8
     field_step = 64
     memory_step = chunk_n * 4 * 8

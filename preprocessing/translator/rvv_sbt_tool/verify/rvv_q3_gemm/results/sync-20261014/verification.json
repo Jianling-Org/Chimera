@@ -1,0 +1,67 @@
+{
+  "date": "2026-10-14",
+  "isolated_tests": {
+    "passed": 1828,
+    "skipped": 41,
+    "seconds": 44.65
+  },
+  "backend_quality": "PASS",
+  "support_docs": "PASS",
+  "main_files": [
+    {
+      "file": "forward.S",
+      "identical": true,
+      "sha256": "91550f5ec6d4f43a9e3c41068b3f2fcbdc35797ad4122e85e103a1a9698993d9"
+    },
+    {
+      "file": "reverse.S",
+      "identical": true,
+      "sha256": "9503d12da066f5aaf564c9e769031c643b395be88ae2ec73924b4be47511dab7"
+    },
+    {
+      "file": "kernel.bin",
+      "identical": true,
+      "sha256": "cf0ff6fde59c0460beca8148794d70dc6bb7eeaff4c92d9525154691af16f80b"
+    },
+    {
+      "file": "translated.c",
+      "identical": true,
+      "sha256": "9a03da996270722e8b52819f5c9b6bb86797517cc4ef431b4b423ed371735c3d"
+    },
+    {
+      "file": "paired.c",
+      "identical": true,
+      "sha256": "e15b8075f1552b29d43cfa1a4f7588863d770799b0aadaa7ef317a01f5f38cc4"
+    }
+  ],
+  "reverse_state": {
+    "hardware_vstart_entry": 7,
+    "files": [
+      {
+        "file": "state/native.S",
+        "identical": true,
+        "sha256": "1f465bba2626dc5ca5c8e03a19dc93714c4a64cfece3b68f9ef6d65bb6b321ce"
+      },
+      {
+        "file": "state/candidate.S",
+        "identical": true,
+        "sha256": "ad0579a9e685dd777ddbcd833fab85e5a868faf266ac7a066f0bdfed16cca2c0"
+      },
+      {
+        "file": "state/main.c",
+        "identical": true,
+        "sha256": "c80e2e4d20a5cc45f5b0d24a989d4b208f1324435b23ae47ccabca2a64ee4807"
+      },
+      {
+        "file": "state/cases.h",
+        "identical": true,
+        "sha256": "0bf16ae1a7882dcca9f1568109c0a215d3eec5277c711401c49cba39a4147e8a"
+      }
+    ]
+  },
+  "removed_builder": "_build_vfwmacc_vv_lines",
+  "optimized_hotspots_ignore_conservative_profile": true,
+  "strict_one_to_N": true,
+  "runtime_abi_changed": false,
+  "target_rebenchmark": false
+}

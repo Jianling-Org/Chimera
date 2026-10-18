@@ -47,6 +47,11 @@ class VRegTempAllocator:
             f"RVV1024 临时向量寄存器不足，无法分配 m{width} 组"
         )
 
+    def alloc_group_for_lmul(self, lmul: float) -> str:
+        """按普通数据 LMUL 分配组；分数 LMUL 使用一个物理寄存器。"""
+        width = int(lmul) if lmul >= 1 else 1
+        return self.alloc_vreg_group(width)
+
     def alloc_groups(self, widths: Iterable[int]) -> list[str]:
         """按给定顺序分配多组，失败时不返回部分结果给调用方。"""
         snapshot = list(self._free)

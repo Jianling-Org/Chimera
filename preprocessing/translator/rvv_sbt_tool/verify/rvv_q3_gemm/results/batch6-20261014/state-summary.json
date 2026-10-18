@@ -1,0 +1,102 @@
+{
+  "rows": [
+    {
+      "candidate": "keep_vd_addr",
+      "entry": "candidate",
+      "cases": 8766,
+      "source_vlenb": 32,
+      "hardware_vlenb": 128,
+      "full_state": "PASS"
+    },
+    {
+      "candidate": "keep_vd_addr",
+      "entry": "candidate-equal",
+      "cases": 8766,
+      "source_vlenb": 32,
+      "hardware_vlenb": 128,
+      "full_state": "PASS"
+    },
+    {
+      "candidate": "compact_base",
+      "entry": "candidate",
+      "cases": 8766,
+      "source_vlenb": 32,
+      "hardware_vlenb": 128,
+      "full_state": "PASS"
+    },
+    {
+      "candidate": "compact_base",
+      "entry": "candidate-equal",
+      "cases": 8766,
+      "source_vlenb": 32,
+      "hardware_vlenb": 128,
+      "full_state": "PASS"
+    },
+    {
+      "candidate": "restore_addr_last",
+      "entry": "candidate",
+      "cases": 8766,
+      "source_vlenb": 32,
+      "hardware_vlenb": 128,
+      "full_state": "PASS"
+    },
+    {
+      "candidate": "restore_addr_last",
+      "entry": "candidate-equal",
+      "cases": 8766,
+      "source_vlenb": 32,
+      "hardware_vlenb": 128,
+      "full_state": "PASS"
+    },
+    {
+      "candidate": "keep_restore_last",
+      "entry": "candidate",
+      "cases": 8766,
+      "source_vlenb": 32,
+      "hardware_vlenb": 128,
+      "full_state": "PASS"
+    },
+    {
+      "candidate": "keep_restore_last",
+      "entry": "candidate-equal",
+      "cases": 8766,
+      "source_vlenb": 32,
+      "hardware_vlenb": 128,
+      "full_state": "PASS"
+    },
+    {
+      "candidate": "accepted",
+      "entry": "candidate",
+      "cases": 8766,
+      "source_vlenb": 32,
+      "hardware_vlenb": 128,
+      "full_state": "PASS"
+    },
+    {
+      "candidate": "accepted",
+      "entry": "candidate-equal",
+      "cases": 8766,
+      "source_vlenb": 32,
+      "hardware_vlenb": 128,
+      "full_state": "PASS"
+    },
+    {
+      "candidate": "compact_helper",
+      "entry": "helper ABI",
+      "cases": 8766,
+      "source_vlenb": 32,
+      "hardware_vlenb": 128,
+      "full_state": "PASS"
+    },
+    {
+      "candidate": "accepted_helper",
+      "entry": "helper ABI",
+      "cases": 8766,
+      "source_vlenb": 32,
+      "hardware_vlenb": 128,
+      "full_state": "PASS"
+    }
+  ],
+  "all_records": 105192,
+  "accepted_records": 26298
+}

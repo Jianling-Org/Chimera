@@ -36,7 +36,6 @@
 #error Unsupported translation direction
 #endif
 enum { THREADS = 8, GUARD = 64, PAD = 16, SAMPLES = BENCH_SAMPLES };
-_Static_assert(SAMPLES == 3 || SAMPLES == 50, "supported sample counts: pilot=3, full=50");
 enum { GATE_NONE, GATE_INIT, GATE_BEFORE, GATE_AFTER };
 typedef struct { uint16_t d[64]; uint8_t hmask[32*64], qs[64*64], scales[12*64]; } Q3;
 typedef struct { float d[4]; int8_t qs[256*4]; int16_t bsums[64]; } Q8;
@@ -83,10 +82,7 @@ static unsigned long frequency_khz(int cpu) {
     snprintf(path, sizeof(path), "/sys/devices/system/cpu/cpu%d/cpufreq/scaling_cur_freq", cpu);
     FILE * stream = fopen(path, "r");
     unsigned long value;
-    if (!stream) { fprintf(stderr, "cannot read CPU frequency: %s\n", path); exit(1); }
-    int parsed = fscanf(stream, "%lu", &value);
-    int closed = fclose(stream);
-    if (parsed != 1 || closed) { fprintf(stderr, "invalid CPU frequency: %s\n", path); exit(1); }
+    if (!stream || fscanf(stream, "%lu", &value) != 1 || fclose(stream)) abort();
     return value;
 }
 
@@ -196,12 +192,7 @@ static void compute(int iterations, int check_environment) {
             __asm__ volatile ("csrr %0, vlenb" : "=r"(hardware_vlenb));
             unsigned long frequency = frequency_khz(expected_cpu);
             if (actual_cpu != expected_cpu || mask != (1ul << expected_cpu) ||
-                hardware_vlenb != TARGET_VLENB || frequency != TARGET_FREQ_KHZ || !rows || !cols) {
-                fprintf(stderr, "worker=%d cpu=%d expected_cpu=%d affinity=%lu vlenb=%lu expected_vlenb=%d frequency_khz=%lu expected_frequency_khz=%lu rows=%d cols=%d\n",
-                        t, actual_cpu, expected_cpu, mask, hardware_vlenb, TARGET_VLENB,
-                        frequency, TARGET_FREQ_KHZ, rows, cols);
-                exit(1);
-            }
+                hardware_vlenb != TARGET_VLENB || frequency != TARGET_FREQ_KHZ || !rows || !cols) abort();
             if (check_environment == GATE_AFTER) {
                 cpu_after[t] = actual_cpu;
                 final_vlenb[t] = hardware_vlenb;
@@ -263,10 +254,6 @@ int main(int argc, char ** argv) {
     if (argc != 6 || (strcmp(argv[1], "prepare") && strcmp(argv[1], "measure"))) return 2;
     m = atoi(argv[2]); n = atoi(argv[3]); k = atoi(argv[4]);
     if (m < 8 || m > 64 || m%8 || n < 256 || n > 5632 || n%64 || k < 256 || k > 5632 || k%256) return 2;
-    if (n / 64 < THREADS && THREADS % (n / 64)) {
-        fputs("column tiles must divide the eight workers when N < 512\n", stderr);
-        return 2;
-    }
     stride = n+PAD; blocks = k/256;
     Buffer wb = buffer((size_t)(n/64)*blocks*sizeof(Q3));
     Buffer xb = buffer((size_t)(m/4)*blocks*sizeof(Q8));

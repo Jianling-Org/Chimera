@@ -150,10 +150,15 @@ def validate_state_layout_compatibility(geometry: TranslationGeometry) -> Simula
 
     源 VLENB 描述的是 payload 解释方式；CSR 页和总大小始终来自固定
     ABI。两路径的 payload 语义不同（128B 槽 vs 32B 紧凑），但 CSR 页
-    共享；几何的算术约束已由 TranslationGeometry 构造器验证。
+    共享，因此这里只验证几何的算术自洽性。
     """
 
-    return SimulatedStateLayout(vlenb=geometry.source_vlenb)
+    layout = SimulatedStateLayout(vlenb=geometry.source_vlenb)
+    if 32 * geometry.source_vlenb > layout.get_total_size():
+        raise ValueError(
+            f"几何 {geometry} 的源 payload 超出状态 ABI 总大小"
+        )
+    return layout
 
 
 __all__ = [

@@ -9,9 +9,7 @@ import argparse
 import hashlib
 import os
 import shutil
-import stat
 import subprocess
-import uuid
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -170,8 +168,7 @@ def resolve_objdump(explicit: str | None) -> str:
     ])
 
     for candidate in candidates:
-        candidate = shutil.which(candidate) if candidate else None
-        if not candidate or not Path(candidate).is_file() or not os.access(candidate, os.X_OK):
+        if not candidate:
             continue
         if candidate.endswith("/xcrun") or candidate == "xcrun":
             probe = subprocess.run(
@@ -182,30 +179,13 @@ def resolve_objdump(explicit: str | None) -> str:
             )
             if probe.returncode == 0:
                 path = probe.stdout.strip()
-                if Path(path).is_file() and os.access(path, os.X_OK):
+                if path:
                     return path
             continue
-        return candidate
+        if Path(candidate).exists():
+            return candidate
 
     raise SystemExit("No usable llvm-objdump found.")
-
-
-def _run_to_file(command: list[str], output_path: Path, *, cwd: Path | None = None) -> None:
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    temporary = output_path.with_name(f".{output_path.name}.{uuid.uuid4().hex}")
-    descriptor = os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o666)
-    try:
-        if output_path.exists():
-            os.fchmod(descriptor, stat.S_IMODE(output_path.stat().st_mode))
-        out = os.fdopen(descriptor, "wb")
-        descriptor = None
-        with out:
-            subprocess.run(command, check=True, stdout=out, cwd=cwd)
-        os.replace(temporary, output_path)
-    finally:
-        if descriptor is not None:
-            os.close(descriptor)
-        temporary.unlink(missing_ok=True)
 
 
 def run_objdump(objdump_bin: str, input_path: Path, output_path: Path) -> None:
@@ -216,7 +196,14 @@ def run_objdump(objdump_bin: str, input_path: Path, output_path: Path) -> None:
         invocation_path = input_path.resolve()
         cwd = None
 
-    _run_to_file([objdump_bin, "-d", str(invocation_path)], output_path, cwd=cwd)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    with output_path.open("w") as out:
+        subprocess.run(
+            [objdump_bin, "-d", str(invocation_path)],
+            check=True,
+            stdout=out,
+            cwd=cwd,
+        )
 
 
 def resolve_ar(explicit: str | None) -> str:
@@ -231,8 +218,7 @@ def resolve_ar(explicit: str | None) -> str:
     ])
 
     for candidate in candidates:
-        candidate = shutil.which(candidate) if candidate else None
-        if candidate and Path(candidate).is_file() and os.access(candidate, os.X_OK):
+        if candidate and Path(candidate).exists():
             return candidate
 
     raise SystemExit("No usable ar found.")
@@ -257,7 +243,7 @@ def resolve_archive_member(ar_bin: str, archive_path: Path, member: str) -> str:
     raise SystemExit(f"Archive member not found: {member} in {archive_path}")
 
 
-def _validate_archive(archive_path: Path) -> None:
+def extract_archive_member(ar_bin: str, archive_path: Path, member: str, output_path: Path) -> None:
     if not archive_path.exists():
         raise SystemExit(f"Missing archive file: {archive_path}")
     digest = hashlib.sha256()
@@ -269,31 +255,20 @@ def _validate_archive(archive_path: Path) -> None:
             "OpenBLAS archive SHA-256 mismatch: "
             f"expected={OPENBLAS_ARCHIVE_SHA256} actual={digest.hexdigest()}"
         )
-
-
-def extract_archive_member(
-    ar_bin: str,
-    archive_path: Path,
-    member: str,
-    output_path: Path,
-    *,
-    verified_archives: set[Path] | None = None,
-) -> None:
-    archive_path = archive_path.resolve()
-    if verified_archives is None or archive_path not in verified_archives:
-        _validate_archive(archive_path)
-        if verified_archives is not None:
-            verified_archives.add(archive_path)
     resolved_member = resolve_archive_member(ar_bin, archive_path, member)
-    _run_to_file([ar_bin, "p", str(archive_path), resolved_member], output_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    with output_path.open("wb") as out:
+        subprocess.run(
+            [ar_bin, "p", str(archive_path), resolved_member],
+            check=True,
+            stdout=out,
+        )
 
 
 def ensure_object_file(
     case: FixtureCase,
     ar_bin: str | None,
     archive_override: Path | None = None,
-    *,
-    verified_archives: set[Path] | None = None,
 ) -> Path:
     if case.obj_path.exists() and case.obj_path.stat().st_size > 0:
         return case.obj_path
@@ -301,11 +276,11 @@ def ensure_object_file(
         case.obj_path.unlink()
     archive_path = archive_override or case.archive_path
     if archive_path and case.archive_member:
-        ar_bin = resolve_ar(ar_bin)
-        extract_archive_member(
-            ar_bin, archive_path, case.archive_member, case.obj_path,
-            verified_archives=verified_archives,
-        )
+        if not ar_bin:
+            raise SystemExit(
+                f"Missing object file: {case.obj_path}. Extraction requires a usable `ar`."
+            )
+        extract_archive_member(ar_bin, archive_path, case.archive_member, case.obj_path)
         return case.obj_path
     raise SystemExit(f"Missing object file: {case.obj_path}")
 
@@ -374,15 +349,11 @@ def generate_named(
     objdump_bin: str,
     ar_bin: str | None,
     archive_override: Path | None = None,
-    *,
-    verified_archives: set[Path] | None = None,
 ) -> int:
     if case_name not in CASES:
         raise SystemExit(f"Unknown fixture case: {case_name}")
     fixture = CASES[case_name]
-    input_path = ensure_object_file(
-        fixture, ar_bin, archive_override, verified_archives=verified_archives,
-    )
+    input_path = ensure_object_file(fixture, ar_bin, archive_override)
     run_objdump(objdump_bin, input_path, fixture.objdump_path)
     print(f"Generated: {fixture.objdump_path}")
     return 0
@@ -390,17 +361,13 @@ def generate_named(
 
 def extract_named(
     case_name: str,
-    ar_bin: str | None,
+    ar_bin: str,
     archive_override: Path | None = None,
-    *,
-    verified_archives: set[Path] | None = None,
 ) -> int:
     if case_name not in CASES:
         raise SystemExit(f"Unknown fixture case: {case_name}")
     fixture = CASES[case_name]
-    ensure_object_file(
-        fixture, ar_bin, archive_override, verified_archives=verified_archives,
-    )
+    ensure_object_file(fixture, ar_bin, archive_override)
     print(f"Prepared: {fixture.obj_path}")
     return 0
 
@@ -426,12 +393,11 @@ def main() -> int:
     if args.action == "list":
         return list_cases()
 
-    ar_bin = args.ar_bin
-    verified_archives: set[Path] = set()
+    ar_bin = resolve_ar(args.ar_bin)
 
     if args.action == "extract-all":
         for case_name in sorted(CASES):
-            extract_named(case_name, ar_bin, archive_override, verified_archives=verified_archives)
+            extract_named(case_name, ar_bin, archive_override)
         return 0
 
     if args.action == "extract":
@@ -443,10 +409,7 @@ def main() -> int:
 
     if args.action == "generate-all":
         for case_name in sorted(CASES):
-            generate_named(
-                case_name, objdump_bin, ar_bin, archive_override,
-                verified_archives=verified_archives,
-            )
+            generate_named(case_name, objdump_bin, ar_bin, archive_override)
         return 0
 
     if args.action == "generate":

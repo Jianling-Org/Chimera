@@ -13,7 +13,6 @@ from bisect import bisect_right
 import re
 from typing import Iterable, Optional
 
-from riscv.frontend.literals import parse_integer_literal
 from riscv.frontend.model import PLTTarget, RVFunction, RVInstruction, RVProgram
 from riscv.registers import normalize_gpr_name
 
@@ -82,7 +81,7 @@ class TextProgramIndex:
             for instruction in function.instructions:
                 function_by_instruction[instruction.address] = function
                 if instruction.label:
-                    label_to_address.setdefault(instruction.label, instruction.address)
+                    label_to_address[instruction.label] = instruction.address
                     if instruction.label.isdigit():
                         numeric_label_addresses.setdefault(instruction.label, []).append(
                             instruction.address
@@ -147,7 +146,7 @@ class TextProgramIndex:
                     base, offset_text = operands[1:]
                 elif len(operands) <= 2:
                     target = operands[-1]
-                    match = re.fullmatch(r"([+-]?(?:0[xX][0-9a-fA-F]+|0[bB][01]+|[0-9]+))?\((\w+)\)", target)
+                    match = re.fullmatch(r"(-?(?:0x[0-9a-fA-F]+|[0-9]+))?\((\w+)\)", target)
                     base = match.group(2) if match else target
                     offset_text = (match.group(1) or "0") if match else "0"
                 else:
@@ -157,8 +156,11 @@ class TextProgramIndex:
                         or base_reg != normalize_gpr_name(previous.operands[0])):
                     continue
                 try:
-                    upper = self.auipc_displacement(previous)
-                    offset = parse_integer_literal(offset_text)
+                    # Match objdump's hexadecimal AUIPC immediate convention.
+                    upper = (int(str(previous.operands[1]), 16) & 0xfffff) << 12
+                    if upper & 0x80000000:
+                        upper -= 0x100000000
+                    offset = int(offset_text, 0)
                 except ValueError:
                     continue
                 if not -2048 <= offset <= 2047:
@@ -167,14 +169,6 @@ class TextProgramIndex:
                 if address in targets:
                     candidates[insn.address] = targets[address]
         return candidates
-
-    @staticmethod
-    def auipc_displacement(instruction: RVInstruction) -> int:
-        """Decode the source-specific immediate and sign-extend the U-immediate."""
-        token = str(instruction.operands[1])
-        immediate = int(token, 16) if instruction.raw_bytes_hex else parse_integer_literal(token)
-        value = (immediate & 0xfffff) << 12
-        return value - 0x100000000 if value & 0x80000000 else value
 
     @staticmethod
     def _plt_got_address(stub: RVFunction) -> int | None:
@@ -191,7 +185,7 @@ class TextProgramIndex:
         base = normalize_gpr_name(upper.operands[0])
         loaded = normalize_gpr_name(load.operands[0])
         memory = re.fullmatch(
-            r"([+-]?(?:0[xX][0-9a-fA-F]+|0[bB][01]+|[0-9]+))?\((\w+)\)", str(load.operands[1])
+            r"(-?(?:0x[0-9a-fA-F]+|[0-9]+))?\((\w+)\)", str(load.operands[1])
         )
         jump_memory = re.fullmatch(r"(?:0|0x0)?\((\w+)\)", str(jump.operands[1]))
         jump_base = jump_memory.group(1) if jump_memory else str(jump.operands[1])
@@ -201,8 +195,10 @@ class TextProgramIndex:
                 or normalize_gpr_name(jump_base) != loaded):
             return None
         try:
-            displacement = TextProgramIndex.auipc_displacement(upper)
-            offset = parse_integer_literal(memory.group(1) or "0")
+            displacement = (int(str(upper.operands[1]), 16) & 0xfffff) << 12
+            if displacement & 0x80000000:
+                displacement -= 0x100000000
+            offset = int(memory.group(1) or "0", 0)
         except ValueError:
             return None
         if not -2048 <= offset <= 2047:
@@ -264,10 +260,7 @@ class TextProgramIndex:
         # 字段时才采用 objdump 语义，避免改变片段模式的操作数解释。
         if instruction.raw_bytes_hex and re.fullmatch(r"[0-9a-fA-F]+", operand):
             return int(operand, 16)
-        try:
-            return parse_integer_literal(operand)
-        except ValueError:
-            return None
+        return self.parse_integer(operand)
 
     def _resolve_name(
         self,
@@ -350,6 +343,18 @@ class TextProgramIndex:
             return str(instruction.operands[0]).strip().lower() not in {"x0", "zero"}
         return False
 
+    @staticmethod
+    def is_tail_call(instruction: RVInstruction) -> bool:
+        """判断伪指令 ``tail`` 或 ``jal x0`` 是否代表尾调用。"""
+
+        opcode = instruction.opcode.lower()
+        if opcode == "tail":
+            return True
+        return (
+            opcode == "jal"
+            and len(instruction.operands) > 1
+            and str(instruction.operands[0]).strip().lower() in {"x0", "zero"}
+        )
 
 
 __all__ = ["TextProgramIndex"]

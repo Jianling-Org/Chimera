@@ -212,6 +212,7 @@ def _get_float_instr(suffix: str, sew: int) -> str:
             'abs': 'fabs.h',
             'neg': 'fneg.h',
             'nmsub': 'fnmsub.h',
+            'nmsub': 'fnmsub.h',
         }
     elif sew == 32:
         instr_map = {
@@ -224,6 +225,7 @@ def _get_float_instr(suffix: str, sew: int) -> str:
             'abs': 'fabs.s',
             'neg': 'fneg.s',
             'nmsub': 'fnmsub.s',
+            'nmsub': 'fnmsub.s',
         }
     elif sew == 64:
         instr_map = {
@@ -235,6 +237,7 @@ def _get_float_instr(suffix: str, sew: int) -> str:
             'mul': 'fmul.d',
             'abs': 'fabs.d',
             'neg': 'fneg.d',
+            'nmsub': 'fnmsub.d',
             'nmsub': 'fnmsub.d',
         }
     else:
@@ -373,8 +376,8 @@ def _emit_scalar_tail_int_vv(
     if sew == 8:
         lines.append(f"    andi    {tmp0}, {tmp0}, 0xFF")
     elif sew == 16:
-        lines.append(f"    li      {tmp1}, 0xFFFF")
-        lines.append(f"    and     {tmp0}, {tmp0}, {tmp1}")
+        lines.append(f"    li      {mask_tmp2}, 0xFFFF")
+        lines.append(f"    and     {tmp0}, {tmp0}, {mask_tmp2}")
     elif sew == 32:
         lines.append(f"    slli    {tmp0}, {tmp0}, 32")
         lines.append(f"    srli    {tmp0}, {tmp0}, 32")
@@ -403,14 +406,16 @@ def _emit_scalar_tail_vv(
     tail_label: str,
     end_label: str,
     op_type: str = 'madd',
+    widen: bool = False,
     is_masked: bool = False,
     mask_bit_idx: str = "",
     v0_base: str = "",
     mask_tmp1: str = "",
     mask_tmp2: str = "",
 ) -> None:
-    store_instr = _get_float_instr('store', sew)
-    elem_bytes = sew // 8
+    store_instr = _get_float_instr('store', sew if not widen else sew * 2)
+    elem_bytes_in = sew // 8
+    elem_bytes_out = (sew * 2) // 8 if widen else sew // 8
 
     lines.append(f"{tail_label}:                              # 标量尾部回退")
     lines.append(f"    beqz    {tail_reg}, {end_label}")
@@ -419,36 +424,62 @@ def _emit_scalar_tail_vv(
     if is_masked:
         _emit_mask_extraction_tail(lines, mask_bit_idx, v0_base, mask_tmp1, mask_tmp2, skip_label)
 
-    load_instr = _get_float_instr('load', sew)
+    if widen:
+        load_instr_in = _get_float_instr('load', sew)
+        load_instr_out = _get_float_instr('load', sew * 2)
 
-    lines.append(f"    {load_instr:<8} ft0, 0({vs2_ptr})          # ft0 = {vs2_ptr}[0]")
-    lines.append(f"    {load_instr:<8} ft1, 0({vs1_ptr})          # ft1 = {vs1_ptr}[0]")
+        lines.append(f"    {load_instr_in:<8} ft0, 0({vs2_ptr})         # ft0 = {vs2_ptr}[0]")
+        lines.append(f"    {load_instr_in:<8} ft1, 0({vs1_ptr})         # ft1 = {vs1_ptr}[0]")
+        if sew == 32:
+            lines.append(f"    fcvt.d.s ft0, ft0                     # widen to 64-bit")
+            lines.append(f"    fcvt.d.s ft1, ft1                     # widen to 64-bit")
+            fma_instr = "fmadd.d"
+        elif sew == 16:
+            lines.append(f"    fcvt.s.h ft0, ft0                     # widen to 32-bit")
+            lines.append(f"    fcvt.s.h ft1, ft1                     # widen to 32-bit")
+            fma_instr = "fmadd.s"
+        else:
+            raise ValueError(f"宽化浮点尾部不支持 SEW={sew}")
 
-    if op_type == 'madd':
-        lines.append(f"    {load_instr:<8} ft2, 0({vd_ptr})           # ft2 = {vd_ptr}[0]")
-        op_instr = _get_float_instr('madd', sew)
-        lines.append(f"    {op_instr:<8} ft2, ft0, ft1, ft2           # ft2 = ft0 * ft1 + ft2")
+        lines.append(f"    {load_instr_out:<8} ft2, 0({vd_ptr})          # ft2 = {vd_ptr}[0]")
+
+        if op_type == 'madd':
+            lines.append(f"    {fma_instr} ft2, ft0, ft1, ft2               # ft2 = ft0 * ft1 + ft2")
+        else:
+            lines.append(f"    {fma_instr} ft2, ft0, ft1, ft2               # ft2 = ft0 * ft1 + ft2")
+
         lines.append(f"    {store_instr:<8} ft2, 0({vd_ptr})           # 写回 {vd_ptr}[0]")
-    elif op_type == 'add':
-        op_instr = _get_float_instr('add', sew)
-        lines.append(f"    {op_instr:<8} ft2, ft1, ft0                # ft2 = ft1 + ft0")
-        lines.append(f"    {store_instr:<8} ft2, 0({vd_ptr})           # 写回 {vd_ptr}[0]")
-    elif op_type == 'sub':
-        op_instr = _get_float_instr('sub', sew)
-        lines.append(f"    {op_instr:<8} ft2, ft0, ft1                # ft2 = ft0 - ft1 = vs2[i] - vs1[i]")
-        lines.append(f"    {store_instr:<8} ft2, 0({vd_ptr})           # 写回 {vd_ptr}[0]")
-    elif op_type == 'mul':
-        op_instr = _get_float_instr('mul', sew)
-        lines.append(f"    {op_instr:<8} ft2, ft1, ft0                # ft2 = ft1 * ft0")
-        lines.append(f"    {store_instr:<8} ft2, 0({vd_ptr})           # 写回 {vd_ptr}[0]")
+    else:
+        load_instr = _get_float_instr('load', sew)
+
+        lines.append(f"    {load_instr:<8} ft0, 0({vs2_ptr})          # ft0 = {vs2_ptr}[0]")
+        lines.append(f"    {load_instr:<8} ft1, 0({vs1_ptr})          # ft1 = {vs1_ptr}[0]")
+
+        if op_type == 'madd':
+            lines.append(f"    {load_instr:<8} ft2, 0({vd_ptr})           # ft2 = {vd_ptr}[0]")
+            op_instr = _get_float_instr('madd', sew)
+            lines.append(f"    {op_instr:<8} ft2, ft0, ft1, ft2           # ft2 = ft0 * ft1 + ft2")
+            lines.append(f"    {store_instr:<8} ft2, 0({vd_ptr})           # 写回 {vd_ptr}[0]")
+        elif op_type == 'add':
+            op_instr = _get_float_instr('add', sew)
+            lines.append(f"    {op_instr:<8} ft2, ft1, ft0                # ft2 = ft1 + ft0")
+            lines.append(f"    {store_instr:<8} ft2, 0({vd_ptr})           # 写回 {vd_ptr}[0]")
+        elif op_type == 'sub':
+            op_instr = _get_float_instr('sub', sew)
+            lines.append(f"    {op_instr:<8} ft2, ft0, ft1                # ft2 = ft0 - ft1 = vs2[i] - vs1[i]")
+            lines.append(f"    {store_instr:<8} ft2, 0({vd_ptr})           # 写回 {vd_ptr}[0]")
+        elif op_type == 'mul':
+            op_instr = _get_float_instr('mul', sew)
+            lines.append(f"    {op_instr:<8} ft2, ft1, ft0                # ft2 = ft1 * ft0")
+            lines.append(f"    {store_instr:<8} ft2, 0({vd_ptr})           # 写回 {vd_ptr}[0]")
 
     if is_masked:
         lines.append(f"{skip_label}:")
         lines.append(f"    addi    {mask_bit_idx}, {mask_bit_idx}, 1")
 
-    lines.append(f"    addi    {vs2_ptr}, {vs2_ptr}, {elem_bytes}")
-    lines.append(f"    addi    {vs1_ptr}, {vs1_ptr}, {elem_bytes}")
-    lines.append(f"    addi    {vd_ptr}, {vd_ptr}, {elem_bytes}")
+    lines.append(f"    addi    {vs2_ptr}, {vs2_ptr}, {elem_bytes_in}")
+    lines.append(f"    addi    {vs1_ptr}, {vs1_ptr}, {elem_bytes_in}")
+    lines.append(f"    addi    {vd_ptr}, {vd_ptr}, {elem_bytes_out}")
     lines.append(f"    addi    {tail_reg}, {tail_reg}, -1")
     lines.append(f"    j       {tail_label}")
     lines.append(f"{end_label}:")

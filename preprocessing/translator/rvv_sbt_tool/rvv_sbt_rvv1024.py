@@ -9,12 +9,8 @@
 
 from __future__ import annotations
 
-from dataclasses import replace
 import argparse
-import os
 import sys
-import traceback
-import uuid
 
 from pathlib import Path
 
@@ -109,18 +105,14 @@ def translate_function(
     raw: bool = False,
     tls_state: bool = True,
     state_base_mode: str = "initial-exec",
-    strict: bool = False,
 ) -> str:
-    """翻译单个函数；source_file 仅为兼容参数，strict 拒绝不完整输出。"""
+    """翻译单个 ``RVFunction``；无法确定入口 vtype 时生成安全 fallback。"""
     if not isinstance(function, RVFunction):
         raise TypeError("translate_function() 需要 RVFunction；片段请使用 translate()")
     profile = make_transition_profile(
         source_vlenb=source_vlenb,
         target_vlenb=target_vlenb,
     )
-
-    if strict:
-        profile = replace(profile, fallback_policy="raise")
 
     def run_preflight(prepared_program: RVProgram, prepared_analysis):
         prepared_function = prepared_program.functions[0]
@@ -175,7 +167,7 @@ def translate_program(
     state_base_mode: str = "initial-exec",
     runtime_vtype_guard: bool = True,
 ) -> str:
-    """翻译完整 objdump，保持地址标签合同；source_file 仅为兼容参数。"""
+    """翻译完整 objdump 输入，并保持现有 offset-map/地址标签合同。"""
     if not isinstance(program, RVProgram):
         raise TypeError("translate_program() 需要 RVProgram；请先构造统一程序对象")
     profile = make_transition_profile(
@@ -294,32 +286,11 @@ def main() -> None:
     except Exception as exc:
         # 其他异常表示翻译器内部错误，仍不得在 -o 路径留下半成品。
         print(f"翻译器内部错误: {exc}", file=sys.stderr)
-        traceback.print_exc()
-        raise SystemExit(1) from exc
+        raise SystemExit(1)
 
     if args.output:
-        destination = Path(args.output)
-        temporary = None
-        descriptor = None
-        try:
-            candidate = destination.with_name(f".{destination.name}.{uuid.uuid4().hex}")
-            descriptor = os.open(candidate, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o666)
-            temporary = candidate
-            if destination.exists():
-                os.fchmod(descriptor, destination.stat().st_mode & 0o777)
-            output = os.fdopen(descriptor, "w", encoding="utf-8")
-            descriptor = None
-            with output:
-                output.write(result)
-            temporary.replace(destination)
-        except OSError as exc:
-            print(f"输出失败 {destination}: {exc}", file=sys.stderr)
-            raise SystemExit(1) from exc
-        finally:
-            if descriptor is not None:
-                os.close(descriptor)
-            if temporary is not None:
-                temporary.unlink(missing_ok=True)
+        with open(args.output, "w", encoding="utf-8") as output:
+            output.write(result)
         print(f"已翻译: {source_label} -> {args.output}")
     else:
         print(result)

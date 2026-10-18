@@ -10,6 +10,7 @@ from __future__ import annotations
 from typing import List
 
 from riscv.extensions.rvv.backends.rvv1024_transition import state_view
+from riscv.extensions.rvv.analysis.model import LEGAL_LMULS
 from riscv.extensions.rvv.analysis.config import StateTracker
 from riscv.extensions.rvv.translation.temps import TempRegisterAllocator, record_vreg_group
 from riscv.extensions.rvv.backends.rvv1024_transition.execution import (
@@ -32,6 +33,7 @@ from riscv.extensions.rvv.backends.rvv1024_transition.operands import (
 )
 
 
+_LEGAL_LMULS = LEGAL_LMULS
 
 
 
@@ -61,6 +63,7 @@ def _emit_unit_load(
             # Source e32/m8 has 64 lanes, which fit target e32/m2.
             execution_lmul_token = "m2"
             _, group_width = _effective_lmul(2, sew, eew)
+        state_view
         requested_widths = [group_width]
         if mask_source is not None:
             requested_widths.append(1)
@@ -126,6 +129,7 @@ def _emit_unit_store(
     try:
         sew, lmul, lmul_token, _ = _source_shape(state)
         emul, group_width = _effective_lmul(lmul, sew, eew)
+        state_view
         requested_widths = [group_width]
         if mask_source is not None:
             requested_widths.append(1)
@@ -187,6 +191,7 @@ def _emit_strided_load(
     try:
         sew, lmul, lmul_token, _ = _source_shape(state)
         emul, group_width = _effective_lmul(lmul, sew, eew)
+        state_view
         requested_widths = [group_width]
         if mask_source is not None:
             requested_widths.append(1)
@@ -251,6 +256,7 @@ def _emit_strided_store(
     try:
         sew, lmul, lmul_token, _ = _source_shape(state)
         emul, group_width = _effective_lmul(lmul, sew, eew)
+        state_view
         requested_widths = [group_width]
         if mask_source is not None:
             requested_widths.append(1)
@@ -314,6 +320,7 @@ def _emit_unordered_indexed_load(
     try:
         sew, source_lmul, lmul_token, group_width = _source_shape(state)
         index_emul, index_width = _effective_lmul(source_lmul, sew, index_eew)
+        state_view
         temp_vd, temp_index = _allocate_vector_groups([group_width, index_width])
         temps = TempRegisterAllocator(insn, reserved_gprs=("t6",))
         vl_reg = temps.alloc_gpr()
@@ -385,6 +392,7 @@ def _emit_segment_memory(
                 f"NF={field_count} 与 EMUL={emul:g} 需要 {field_count * field_width} 个物理寄存器，超出 RVV segment 上限"
             )
         source_fields = _segment_field_registers(first_vreg, field_width, field_count)
+        state_view
         temp_fields = _allocate_vector_groups([field_width] * field_count)
         temp_numbers = [int(temp[1:]) for temp in temp_fields]
         expected_numbers = [temp_numbers[0] + index * field_width for index in range(field_count)]
@@ -445,6 +453,7 @@ def _emit_vsm(
         return _error(insn, "vsm.v 只支持无掩码 vs3, (rs1) form")
     vs3, address = operands
     try:
+        state_view
         (temp_vs3,) = _allocate_vector_groups([1])
         temps = TempRegisterAllocator(insn, reserved_gprs=("t6",))
         vl_reg = temps.alloc_gpr()
@@ -479,6 +488,7 @@ def _emit_whole_move(insn,  factor: int) -> List[str]:
         return _error(insn, "整寄存器 move 只接受无掩码 vd, vs2")
     vd, vs2 = operands
     try:
+        state_view
         # N 个源物理寄存器是 N*32B；目标 e8 transfer 至多用 m2。
         transfer_width = 1 if factor <= 4 else 2
         (temp,) = _allocate_vector_groups([transfer_width])
@@ -522,6 +532,7 @@ def _emit_whole_register_memory(
         return _error(insn, f"whole-register {role} 只支持无掩码 vreg, (rs1) form")
     vreg, address = operands
     try:
+        state_view
         transfer_width = 1 if factor <= 4 else 2
         (temp,) = _allocate_vector_groups([transfer_width])
         temps = TempRegisterAllocator(insn, reserved_gprs=("t6",))

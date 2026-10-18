@@ -6,9 +6,7 @@ from typing import Callable, List, Sequence
 from riscv.extensions.rvv.analysis.model import LMUL_TOKENS
 from riscv.extensions.rvv.translation.lowering import AssemblyFragments
 from riscv.extensions.rvv.analysis.config import StateTracker
-from riscv.extensions.rvv.translation.temps import (
-    TempRegisterAllocationError, TempRegisterAllocator, record_vreg_group,
-)
+from riscv.extensions.rvv.translation.temps import TempRegisterAllocator, record_vreg_group
 from riscv.extensions.rvv.backends.rvv1024_transition import state_view
 from riscv.extensions.rvv.backends.rvv1024_transition.temp_regs import VRegTempAllocator
 from riscv.frontend.model import RVInstruction
@@ -170,6 +168,10 @@ def _emit_vector_write(
         temps = TempRegisterAllocator(insn, reserved_gprs=("t6",))
         vl_reg = temps.alloc_gpr()
         address_reg = temps.alloc_gpr()
+        transfer_avl_reg = (
+            vl_reg if native_opcode == "vadd.vi" and mask_source is not None
+            and sew == 16 and lmul == 1 else temps.alloc_gpr()
+        )
     except (ValueError, TypeError) as exc:
         return _error(insn, str(exc))
 
@@ -207,10 +209,7 @@ def _emit_vector_write(
         lines.append(f"    vse{sew}.v {temp_vd}, ({address_reg})")
         return lines
 
-    try:
-        transfer_avl_reg = temps.alloc_gpr()
-    except TempRegisterAllocationError as exc:
-        return _error(insn, str(exc))
+
     if active_commit:
         _emit_execution_vsetvl(lines, vl_reg, sew, lmul_token)
         if reads_old_vd:

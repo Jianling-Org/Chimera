@@ -35,7 +35,6 @@ from riscv.extensions.rvv.translation.contracts import (
     LoweringStatus,
 )
 from riscv.extensions.rvv.translation.vstart import apply_vstart_policy
-from riscv.extensions.rvv.translation.temps import TempRegisterAllocationError
 
 
 class CandidateStatus(str, Enum):
@@ -55,9 +54,9 @@ class CandidateAttempt:
     def __post_init__(self) -> None:
         if self.status is CandidateStatus.LOWERED:
             if self.assembly is None:
-                raise RuntimeError("LOWERED 候选必须携带汇编结果")
+                raise ValueError("LOWERED 候选必须携带汇编结果")
         elif self.assembly is not None:
-            raise RuntimeError("NOT_APPLICABLE 候选不能携带汇编结果")
+            raise ValueError("NOT_APPLICABLE 候选不能携带汇编结果")
 
 
 def rvv256_fallback_result(
@@ -137,6 +136,7 @@ class RVV256Lowerer:
         if attempt.status is CandidateStatus.LOWERED:
             return attempt.assembly
 
+        operands = tuple(str(item).strip() for item in insn.operands)
         is_masked = peek_mask_operand(insn) is not None
 
         # mask compare/logic/scan 在两种 profile 都有显式实现，且必须先于
@@ -217,7 +217,7 @@ class RVV256Lowerer:
             )
         except InstructionValidationError as exc:
             return rvv256_fallback_result(exc.status, exc.diagnostic)
-        except TempRegisterAllocationError as exc:
+        except ValueError as exc:
             diagnostic = LoweringDiagnostic(
                 "invalid-form", f"{context.instruction.opcode}: {exc}"
             )

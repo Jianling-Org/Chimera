@@ -38,8 +38,7 @@ def parse_source(source: str) -> tuple[RVProgram, tuple[SourceLine, ...]]:
         code = original.split("#", 1)[0].strip()
         if ";" in code or "/*" in code or "*/" in code or "\\" in code:
             raise ValueError(f"line {number}: use one decoded instruction per line")
-        if (AsmParser.OBJDUMP_LABEL_PATTERN.match(code)
-                or re.match(r"^[0-9a-fA-F]+:\s+(?:[0-9a-fA-F]{4}|[0-9a-fA-F]{8})\s", code)):
+        if AsmParser.OBJDUMP_PATTERN.match(code) or AsmParser.OBJDUMP_LABEL_PATTERN.match(code):
             raise ValueError("IME native entry accepts symbolic assembly, not objdump")
         prefix = ""
         while match := _LABEL.match(code):
@@ -47,8 +46,6 @@ def parse_source(source: str) -> tuple[RVProgram, tuple[SourceLine, ...]]:
             prefix += f"{label}:\n"
             normalized.append(f"{label}:")
             code = code[match.end():].strip()
-        if code.startswith(("Disassembly of section", "file format")):
-            raise ValueError("IME native entry accepts symbolic assembly, not objdump")
         if code.startswith("."):
             directive = code.split()[0]
             if (directive in _ENCODING_DIRECTIVES | _EXPANSION_DIRECTIVES

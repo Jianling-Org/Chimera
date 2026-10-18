@@ -1,0 +1,50 @@
+{
+  "operator": "ggml_gemm_q3_K_64x1_q8_K",
+  "hardware": "K3 A100 CPU8-15, 8 workers, VLEN1024, userspace 1.8GHz",
+  "shapes_M_N_K": [
+    [
+      32,
+      5632,
+      2048
+    ],
+    [
+      32,
+      2048,
+      5632
+    ],
+    [
+      32,
+      2048,
+      2048
+    ],
+    [
+      32,
+      256,
+      2048
+    ]
+  ],
+  "standalone_candidates": 4,
+  "ablation_pairs": 320,
+  "accepted_final_pairs": 200,
+  "accepted_all_pairs_positive": true,
+  "accepted_full_state_records": 26298,
+  "all_state_records": 105192,
+  "accepted_guard_probes": 9,
+  "target_hardware_vstart_entry": 7,
+  "source_vstart": 0,
+  "formal_byte_identical_files": 17,
+  "production_files": [
+    "src/riscv/extensions/rvv/backends/rvv1024_transition/execution.py"
+  ],
+  "source_PC_labels": 1140,
+  "changed_blocks": 32,
+  "unchanged_blocks": 1108,
+  "guard_traps": 399,
+  "forward_assembly_unchanged": true,
+  "board_directory": "/home/yzgx/guoxuan/rvv-bench/rvv-q3-batch3-20261013/batch6-20261014",
+  "selection": "Retain vd pointer in dead VL temporary only. Compact-state-base and restore-order metadata experiments not integrated.",
+  "index_unchanged": true,
+  "tests_passed": 1858,
+  "tests_skipped": 41,
+  "unchanged_original_files": 3673
+}

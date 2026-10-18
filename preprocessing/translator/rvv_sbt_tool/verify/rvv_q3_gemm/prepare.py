@@ -44,10 +44,8 @@ def prepare(references, output, translator_root=ROOT):
 
     workload = json.loads((HERE / "workload.json").read_text())
     source = HERE / "source.dump"
-    function = next((function for function in AsmParser().parse_file_functions(source)
-                     if function.name == workload["primary_symbol"]), None)
-    if function is None:
-        raise ValueError(f"{source}: missing primary symbol {workload['primary_symbol']!r}")
+    function = next(function for function in AsmParser().parse_file_functions(source)
+                    if function.name == workload["primary_symbol"])
     encoded = bytearray()
     for match in re.finditer(r"(?m)^\s*([0-9a-f]+):\s+([0-9a-f]+)\s+", source.read_text()):
         pc, word = int(match[1], 16), match[2]
@@ -64,10 +62,13 @@ def prepare(references, output, translator_root=ROOT):
         'bench_kernel:\n.incbin "kernel.bin"\n.size bench_kernel,.-bench_kernel\n'
     )
     for direction, translate in (("forward", forward), ("reverse", reverse)):
-        assembly = translate(relabeled(function), tls_state=True, strict=True)
+        assembly = translate(relabeled(function), tls_state=True)
+        if any(token in assembly.lower() for token in
+               ("fallback", "unsupported", "unimplemented", "# error:")):
+            raise ValueError(f"Incomplete {direction} translation")
         (output / f"{direction}.S").write_text(assembly + "\n")
     for name in ("translated.c", "build.sh", "run.py", "workload.json",
-                 "paired.c", "build_paired.sh", "run_paired.py", "validation.py"):
+                 "paired.c", "build_paired.sh", "run_paired.py"):
         shutil.copy2(HERE / name, output / name)
     for name, expected in workload["reference_sha256"].items():
         path = references / f"{name}.ref"

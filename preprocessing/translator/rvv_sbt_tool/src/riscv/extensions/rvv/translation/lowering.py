@@ -33,7 +33,7 @@ AssemblyLineBuilder: TypeAlias = Callable[
     [HandlerContext], AssemblyBuilderOutput
 ]
 AssemblyPostprocessor: TypeAlias = Callable[
-    [HandlerContext, LoweringPlan, AssemblyFragments], AssemblyFragments
+    [HandlerContext, LoweringPlan, AssemblyFragments], AssemblyBuilderOutput
 ]
 
 

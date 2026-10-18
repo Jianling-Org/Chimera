@@ -1,0 +1,27 @@
+{
+  "operator": "ggml_gemm_q3_K_64x1_q8_K",
+  "hardware": "K3 A100 CPU8-15, 8 workers, VLEN1024, userspace 1.8GHz",
+  "final_pairs": 200,
+  "all_final_pairs_improved": true,
+  "general_state_records": 51624,
+  "general_equal_CSR_records": 51624,
+  "hot_state_records": 26424,
+  "mac_state_records": 8766,
+  "full_state_records_total": 138438,
+  "target_input_hardware_vstart": 7,
+  "source_vstart": 0,
+  "guard_probes": 9,
+  "formal_byte_identical_files": 20,
+  "tests_passed": 1825,
+  "tests_skipped": 41,
+  "production_files": [
+    "src/riscv/extensions/rvv/backends/rvv1024_transition/lowering.py"
+  ],
+  "board_directory": "/home/yzgx/guoxuan/rvv-bench/rvv-q3-batch3-20261013",
+  "ablation_boundary": "Component counterfactual deltas are marginal, nonadditive, not isolated latency. MAC probes use zero vectors to keep all delete-operation variants independently correct. State-base acquisition uses worker-private pointers rather than production TLS. Source-VL diagnostic changes LMUL to preserve source VLMAX on target hardware; not a production translation.",
+  "index_unchanged": true,
+  "unchanged_original_files": 2453,
+  "diagnostic_pairs_total": 1860,
+  "diagnostic_mode_comparisons": 93,
+  "pack_read_unpack_write_comparisons": 18
+}

@@ -40,7 +40,7 @@ at, and above its signed output limits. Initial vcsr varies through all eight
 values, so accidentally setting vxsat or using vxrm is observable. Unsupported
 widths reject with preserved state. The final report separates completed and
 rejected cases. These tests validate the explicit layout interpretation in
-[IME contract](../../../../../doc/developer/translator/ime-rvv.md), not an independently established A100 hardware model.
+`docs/IME_RVV.md`, not an independently established A100 hardware model.
 
 ## A100 Linux differential comparison
 

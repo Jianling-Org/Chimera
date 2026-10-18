@@ -94,6 +94,8 @@ def _compute_summary(
         "external_scalar_leaves": {
             "proofs": list(getattr(stack, "external_leaf_proofs", ())),
             "rejections": list(getattr(stack, "external_leaf_rejections", ())),
+            "no_callback_interfaces": list(getattr(stack, "external_no_callback_interfaces", ())),
+            "interface_rejections": list(getattr(stack, "external_interface_rejections", ())),
         },
     }
 
@@ -217,7 +219,7 @@ class SafetyStep:
         program = context.require_global("programs")[main.module_id]
         leaf_bindings = bind_external_scalar_leaves(main.selected_path, program,
             context.require_global("modules"), self.external_scalar_leaf_contracts,
-            objdump=context.config.tools.objdump) if self.external_scalar_leaf_contracts else ExternalLeafBindings()
+            objdump=context.config.tools.objdump)
         if self.external_scalar_leaf_contracts and leaf_bindings.rejections:
             raise ValueError("external scalar leaf contract could not be rebound during prepare: "
                              + str(leaf_bindings.rejections))
@@ -275,7 +277,7 @@ class SafetyStep:
             vector_configs=None,
             vector_liveness=None,
             stack_liveness=None,
-            safety=safety,
+            safety=safety.without_intermediates(),
             warnings=stack.warnings,
             summary=_compute_summary(
                 module_id=main.module_id,
@@ -346,4 +348,4 @@ class SafetyStep:
         # The safety JSON stays a prepare-internal product (consumed by
         # patch-safepoints and rebuild replay); it is not published as a
         # manifest artifact.
-        return context.put_global("safety_analysis", result)
+        return context.put_global("safety_analysis", result.for_patching())

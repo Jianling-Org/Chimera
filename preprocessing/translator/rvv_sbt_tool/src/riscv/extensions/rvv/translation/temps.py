@@ -31,7 +31,7 @@ _ACTIVE_CAPTURE: ContextVar[ClobberCapture | None] = ContextVar(
 
 @contextmanager
 def capture_clobbers() -> Iterator[ClobberCapture]:
-    """建立隔离的采集作用域；嵌套退出后恢复外层，不合并内层记录。"""
+    """建立可嵌套的单次采集作用域。"""
 
     capture = ClobberCapture()
     token = _ACTIVE_CAPTURE.set(capture)
@@ -74,10 +74,6 @@ FPR_TEMP_POOL = (
     "ft0", "ft1", "ft2", "ft3", "ft4", "ft5",
     "ft6", "ft7", "ft8", "ft9", "ft10", "ft11",
 )
-
-
-class TempRegisterAllocationError(ValueError):
-    """The current instruction needs more temporaries than the available pool."""
 
 
 class TempRegisterAllocator:
@@ -131,12 +127,12 @@ class TempRegisterAllocator:
             inferred_gprs, inferred_fprs = collect_scalar_register_uses(insn)
 
         self._blocked_gprs = (
-            {normalize_gpr_name(str(reg)) for reg in reserved_gprs} |
+            set(reserved_gprs) |
             explicit_gprs |
             inferred_gprs
         )
         self._blocked_fprs = (
-            {normalize_fpr_name(str(reg)) for reg in reserved_fprs} |
+            set(reserved_fprs) |
             explicit_fprs |
             inferred_fprs
         )
@@ -149,7 +145,7 @@ class TempRegisterAllocator:
         分配一个不与当前语义冲突的 GPR temp。
         """
         if not self._free_gprs:
-            raise TempRegisterAllocationError("可用的 GPR 临时寄存器不足，无法继续翻译当前指令")
+            raise ValueError("可用的 GPR 临时寄存器不足，无法继续翻译当前指令")
         register = self._free_gprs.pop(0)
         record_gpr(register)
         return register
@@ -159,7 +155,7 @@ class TempRegisterAllocator:
         分配一个不与当前语义冲突的 FPR temp。
         """
         if not self._free_fprs:
-            raise TempRegisterAllocationError("可用的 FPR 临时寄存器不足，无法继续翻译当前指令")
+            raise ValueError("可用的 FPR 临时寄存器不足，无法继续翻译当前指令")
         register = self._free_fprs.pop(0)
         record_fpr(register)
         return register

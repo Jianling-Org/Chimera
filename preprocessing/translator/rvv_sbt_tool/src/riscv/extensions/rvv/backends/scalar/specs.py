@@ -70,9 +70,7 @@ def _validator(min_operands: int):
 
     def validate(context: HandlerContext) -> tuple[str, ...]:
         operands = tuple(str(operand).strip() for operand in context.instruction.operands)
-        mask = operands[-1].lower() if operands and operands[-1].lower().endswith(".t") else None
-        if mask is not None:
-            operands = (*operands[:-1], mask)
+        mask = operands[-1].lower() if operands and operands[-1].endswith(".t") else None
         base_count = len(operands) - (1 if mask is not None else 0)
         if base_count < min_operands:
             raise InstructionValidationError(
@@ -105,13 +103,13 @@ def _semantic_outputs(
     insn = context.instruction
     if not insn.operands:
         return frozenset()
-    if insn.opcode in {"vsetvli", "vsetivli", "vsetvl",
+    if insn.opcode in {"vsetvli", "vsetivli", "vsetvl", "vmv.x.s",
                         "csrr", "csrrw", "csrrwi", "csrrs", "csrrsi", "csrrc", "csrrci"}:
         register = normalize_gpr_name(str(insn.operands[0]))
-        return frozenset({register}) if register and register != "zero" else frozenset()
+        return frozenset({register}) if register else frozenset()
     if insn.opcode == "vfmv.f.s":
         register = normalize_fpr_name(str(insn.operands[0]))
-        return frozenset({register}) if register and register != "zero" else frozenset()
+        return frozenset({register}) if register else frozenset()
     return frozenset()
 
 
@@ -151,7 +149,7 @@ def _register(
         mask_policy=mask_policy,
         tail_policy=(
             TailPolicy.NOT_APPLICABLE
-            if category in {"config", "memory-store", "csr"}
+            if category in {"memory-store", "csr"}
             else TailPolicy.UNDISTURBED
         ),
         vstart_policy=(

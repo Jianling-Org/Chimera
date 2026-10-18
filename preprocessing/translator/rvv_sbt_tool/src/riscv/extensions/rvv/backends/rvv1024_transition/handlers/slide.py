@@ -24,6 +24,7 @@ from __future__ import annotations
 
 from typing import List
 
+from riscv.extensions.rvv.backends.rvv1024_transition import state_view
 from riscv.extensions.rvv.analysis.config import StateTracker
 from riscv.extensions.rvv.translation.temps import TempRegisterAllocator, record_vreg_group
 from riscv.extensions.rvv.backends.rvv1024_transition.execution import (
@@ -116,6 +117,7 @@ def _emit_slide(
         source_vlmax = state.get_vlmax()
         if source_vlmax <= 0:
             raise ValueError(f"{native_opcode} 需要正的 source VLMAX，当前为 {source_vlmax}")
+        state_view
         requested_widths = [group_width, group_width]
         if mask_source is not None:
             requested_widths.append(1)

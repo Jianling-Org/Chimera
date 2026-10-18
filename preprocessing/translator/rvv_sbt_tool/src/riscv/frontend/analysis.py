@@ -3,7 +3,6 @@
 from riscv.frontend.cfg import CFGBuilder
 from riscv.frontend.call_graph import CallGraphBuilder
 from riscv.frontend.text_index import TextProgramIndex
-from riscv.frontend.model import CFGEdgeKind
 from riscv.frontend.model import (
     FunctionStructure,
     ProgramStructure,
@@ -33,8 +32,8 @@ def analyze_structure(program: RVProgram) -> ProgramStructure:
         )
     metrics = StructureMetrics(
         direct_edge_count=sum(
-            edge.resolved and edge.kind in {
-                CFGEdgeKind.CONDITIONAL_BRANCH, CFGEdgeKind.UNCONDITIONAL_JUMP, CFGEdgeKind.DIRECT_CALL, CFGEdgeKind.TAIL_CALL,
+            edge.resolved and edge.kind.value in {
+                "conditional-branch", "unconditional-jump", "direct-call", "tail-call",
             }
             for function in functions.values() for edge in function.cfg.edges
         ),
@@ -68,11 +67,11 @@ def validate_structure(program: RVProgram, structure: ProgramStructure) -> None:
 
         for edge in function_structure.cfg.edges:
             if edge.target_address is None:
-                if edge.resolved and edge.kind in {
-                    CFGEdgeKind.CONDITIONAL_BRANCH,
-                    CFGEdgeKind.UNCONDITIONAL_JUMP,
-                    CFGEdgeKind.DIRECT_CALL,
-                    CFGEdgeKind.TAIL_CALL,
+                if edge.resolved and edge.kind.value in {
+                    "conditional-branch",
+                    "unconditional-jump",
+                    "direct-call",
+                    "tail-call",
                 }:
                     raise ValueError(
                         f"函数 {function.name} 的控制流边缺少已声明目标: "

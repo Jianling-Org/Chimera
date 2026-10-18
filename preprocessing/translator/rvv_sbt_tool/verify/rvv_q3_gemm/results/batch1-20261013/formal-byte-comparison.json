@@ -1,0 +1,22 @@
+{
+  "kernel.bin": {
+    "byte_identical": true,
+    "sha256": "cf0ff6fde59c0460beca8148794d70dc6bb7eeaff4c92d9525154691af16f80b",
+    "bytes": 3580
+  },
+  "kernel.S": {
+    "byte_identical": true,
+    "sha256": "6dc26bf7ba893caf80b589fb91cb4c5974ed8a4b3a2abcca2a527abdb7c77a37",
+    "bytes": 124
+  },
+  "forward.S": {
+    "byte_identical": true,
+    "sha256": "91550f5ec6d4f43a9e3c41068b3f2fcbdc35797ad4122e85e103a1a9698993d9",
+    "bytes": 496488
+  },
+  "reverse.S": {
+    "byte_identical": true,
+    "sha256": "6acc04a88c1e28d77418da646c03d1f7ef2a08ab972b0b22fc7f6b905bd888dc",
+    "bytes": 896640
+  }
+}

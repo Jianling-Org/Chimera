@@ -419,7 +419,7 @@ class ProgramStructure:
     plt_candidates: dict[int, PLTTarget]
 
 
-def compute_program_fingerprint(program: RVProgram) -> str:
+def compute_program_fingerprint(program: object) -> str:
     """为 ``RVProgram`` 计算与汇编语义相关的稳定输入指纹。
 
     指纹只包含解析后的源程序事实：函数身份、指令地址、操作码、操作
@@ -428,12 +428,12 @@ def compute_program_fingerprint(program: RVProgram) -> str:
     一个发射器依赖的源字段都会使旧分析失效。
     """
 
-    functions = program.functions
+    functions = getattr(program, "functions", ())
     digest = hashlib.sha256()
     digest.update(b"[")
     for index, function in enumerate(functions):
         instructions: list[dict[str, object]] = []
-        for instruction in function.instructions:
+        for instruction in getattr(function, "instructions", ()):
             instructions.append(
                 {
                     "address": instruction.address,

@@ -197,15 +197,8 @@ class ProgramEmitter:
 
         # 函数返回 (如果没有显式的 ret, 且非 raw 模式)
         if not raw:
-            last = next((i for i in reversed(insn_list) if i.opcode), None)
-            terminates = last is not None and (
-                last.opcode in {"ret", "jr", "j", "tail", "c.j", "c.jr"}
-                or (last.opcode == "jalr" and len(last.operands) > 1
-                    and str(last.operands[0]).lower() in {"zero", "x0"})
-                or (last.opcode == "jal" and len(last.operands) > 1
-                    and str(last.operands[0]).lower() in {"zero", "x0"})
-            )
-            if not terminates:
+            last_opcodes = [i.opcode for i in insn_list if i.opcode]
+            if 'ret' not in last_opcodes:
                 lines.append("    ret")
                 lines.append("")
 
@@ -299,6 +292,13 @@ class ProgramEmitter:
             if "@plt" not in function.name
         )
         if not text_only:
+            prefix = 'chimera_' + self.control_flow.sanitize_symbol_component(lib_name)
+            yield '    .pushsection .data.rel.ro.chimera_no_link,"aw",@progbits'
+            yield '    .balign 8'
+            yield f'    .globl {prefix}_no_link_entries'
+            yield f'    .protected {prefix}_no_link_entries'
+            yield f'{prefix}_no_link_entries:'
+            yield '    .popsection'
             yield "    .text"
             yield ""
 
@@ -342,6 +342,17 @@ class ProgramEmitter:
             section_instructions += len(function.instructions)
 
         if not text_only:
+            yield '    .pushsection .data.rel.ro.chimera_no_link,"aw",@progbits'
+            yield f'.Lchimera_no_link_end_{prefix}:'
+            yield '    .popsection'
+            yield '    .pushsection .rodata'
+            yield '    .balign 8'
+            for suffix, value in [('no_link_abi', '1'), ('no_link_count', f'(.Lchimera_no_link_end_{prefix} - {prefix}_no_link_entries) / 32')]:
+                yield f'    .globl {prefix}_{suffix}'
+                yield f'    .protected {prefix}_{suffix}'
+                yield f'{prefix}_{suffix}:'
+                yield f'    .quad {value}'
+            yield '    .popsection'
             yield from self._emit_program_data_definitions(lib_name)
             yield ""
 
@@ -363,6 +374,8 @@ class ProgramEmitter:
         # ``emit`` 已在进入函数循环前消费一次性准备结果。
         # 这里不能重复计算输入指纹；完整 dump 的函数数和指令数都可能
         # 很大，函数级重复校验会把线性发射退化为近似平方级开销。
+        if context.analysis is None:
+            raise ValueError("程序级函数发射需要先完成 CFG/vtype 分析")
         function_analysis = context.analysis.for_function(function.start_addr)
         if function_analysis is None:
             raise ValueError(
@@ -478,6 +491,7 @@ class ProgramEmitter:
                         base_delta_symbol=original_base_symbol,
                         context=control_context,
                         active_long_jump_veneers=active_long_jump_veneers,
+                        emit_indirect_sites=not text_only,
                     )
                 )
 

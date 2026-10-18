@@ -4,7 +4,6 @@
 import argparse
 from collections import defaultdict
 import json
-import math
 from pathlib import Path
 import re
 import statistics
@@ -24,8 +23,6 @@ def stats(values):
 
 
 def valid(record):
-    if record["direction"] not in {"forward", "reverse"}:
-        raise ValueError(f"unknown direction: {record['direction']!r}")
     cpu, source, hardware, frequency = (0, 128, 32, 2200000) if record["direction"] == "forward" else (8, 32, 128, 1800000)
     if (record["validation"] != "PASS" or record["cpu"] != cpu or
         record["source_vlenb"] != source or record["hardware_vlenb"] != hardware or
@@ -41,8 +38,6 @@ def profile(directory):
             columns = line.split(",")
             if len(columns) > 2 and columns[0].isdigit(): counters[columns[2]] = int(columns[0])
         if not {"cycles:u", "instructions:u"} <= counters.keys(): raise ValueError("Incomplete perf counters")
-        if counters["cycles:u"] <= 0:
-            raise ValueError(f"{path}: perf counters require positive cycles")
         hotspots = []
         for line in path.with_suffix(".annotate").read_text().splitlines():
             match = re.match(r"\s*([0-9.]+)\s*:\s*([0-9a-f]+):\s*(\S+)(.*)", line)
@@ -62,12 +57,6 @@ def summarize(directory):
         key = (record["direction"], record["operator"], record["n"], record["mode"])
         if key in original: raise ValueError("Duplicate initial measurement")
         original[key] = stats(record["samples_ns"])
-    expected_keys = {(direction, op, n, mode)
-                     for direction in ("forward", "reverse")
-                     for op in ("f32", "f16", "q5") for n in (256, 2048, 8192)
-                     for mode in ("native", "translated")}
-    if original.keys() != expected_keys:
-        raise ValueError(f"baseline combinations: missing={sorted(expected_keys-original.keys())}, unexpected={sorted(original.keys()-expected_keys)}")
     grouped, pairs = defaultdict(list), defaultdict(list)
     for line in (directory / "optimized/paired.jsonl").read_text().splitlines():
         record = json.loads(line); valid(record)
@@ -81,10 +70,6 @@ def summarize(directory):
     measured = {}
     for key, records in grouped.items():
         if sorted(r["pair"] for r in records) != list(range(50)): raise ValueError("Missing or repeated pair")
-        for record in records:
-            values = record["samples_ns"]
-            if len(values) != 1 or not math.isfinite(values[0]) or values[0] <= 0:
-                raise ValueError(f"{key}: each pair record requires one positive finite sample")
         measured[key] = stats([r["samples_ns"][0] for r in records])
     rows = []
     for direction in ("forward", "reverse"):

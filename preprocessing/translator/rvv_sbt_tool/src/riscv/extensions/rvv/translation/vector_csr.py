@@ -102,9 +102,8 @@ def _build_vector_csr_lines(context) -> list[str]:
         return []
 
     temps = context.temp_register_allocator
-    if name != "vlenb":
-        addr = temps.alloc_gpr()
-        raw = temps.alloc_gpr()
+    addr = temps.alloc_gpr()
+    raw = temps.alloc_gpr()
     old = temps.alloc_gpr()
     lines = [f"    # {insn.opcode}: simulated CSR.{name}"]
     if name == "vlenb":

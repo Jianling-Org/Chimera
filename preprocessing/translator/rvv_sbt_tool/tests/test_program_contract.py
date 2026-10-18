@@ -81,7 +81,7 @@ def test_pipeline_rejects_missing_vector_instruction_analysis(monkeypatch):
     analysis = analyze_program(program)
     function_analysis = analysis.functions[0x1000]
     function_analysis.instructions.pop(0x1004)
-    monkeypatch.setattr(pipeline_module, "analyze_program", lambda _program, **_kwargs: analysis)
+    monkeypatch.setattr(pipeline_module, "analyze_program", lambda _program: analysis)
     pipeline = TranslationPipeline(object())
     with pytest.raises(ValueError, match="缺少 InstructionAnalysis"):
         pipeline.prepare(program, backend_profile=_profile())
@@ -169,9 +169,9 @@ def test_jal_probe_rounds_reuse_single_preparation(monkeypatch):
     original_fingerprint = cfg_pipeline_module.compute_program_fingerprint
     original_validation = pipeline_module._validate_analyzed_program
 
-    def counted_analysis(program, **kwargs):
+    def counted_analysis(program):
         counts["analysis"] += 1
-        return original_analysis(program, **kwargs)
+        return original_analysis(program)
 
     def counted_fingerprint(program):
         counts["fingerprint"] += 1

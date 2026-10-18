@@ -5,9 +5,6 @@ raw ``vN`` 的 ``byte(i // 8)`` 的 bit ``i % 8``。由于本阶段固定源
 VLEN=256 bit，任意合法源 ``VL`` 最多为 256；所以一个源物理寄存器的低
 32B 足以承载所有可能被指令观察的 mask bit。
 
-mask destination 与 ``v0.t`` 执行掩码是不同语义；无掩码 form 仍通过
-公共操作数 helper 拒绝额外执行掩码。
-
 本模块不直接用 ``SimulatedStateLayout.get_offset('vN')``。所有 mask 与数据向量
 都经由 ``state_view`` 以 ``simulated_cpu_state + N * 32`` Pack/Unpack，
 避免把旧 128B 逻辑槽位误用到 RVV256 原生迁移状态。
@@ -17,6 +14,7 @@ from __future__ import annotations
 
 from typing import List, Sequence
 
+from riscv.extensions.rvv.backends.rvv1024_transition import state_view
 from riscv.extensions.rvv.translation.lowering import AssemblyFragments
 from riscv.extensions.rvv.analysis.config import StateTracker
 from riscv.extensions.rvv.translation.temps import TempRegisterAllocator, record_vreg_group
@@ -31,8 +29,21 @@ from riscv.extensions.rvv.backends.rvv1024_transition.operands import (
     _error,
     _parse_simm5,
     _source_shape,
-    _unmasked_operands,
 )
+
+
+def _plain_operands(insn, expected: int) -> list[str] | None:
+    """取得无 ``*.t`` 后缀的固定数量操作数。
+
+    mask-producing 指令的 mask destination 与普通 ``v0.t`` 执行掩码是两种
+    完全不同的语义。本批只支持无掩码 compare/mask logic；若带 ``*.t``，
+    必须由预检标为结构化拒绝，不能悄悄将它解释为普通 mask 输入；反向 profile
+    会进一步生成带诊断的 ``ebreak``。
+    """
+    operands = [str(operand).strip() for operand in insn.operands]
+    if len(operands) != expected or any(operand.endswith(".t") for operand in operands):
+        return None
+    return operands
 
 
 def _emit_mask_result(
@@ -55,6 +66,7 @@ def _emit_mask_result(
     """
     try:
         sew, lmul, lmul_token, group_width = _source_shape(state)
+        state_view
         temp_vd, *temp_sources = _allocate_vector_groups(
             [1, *([group_width] * len(vector_sources))]
         )
@@ -103,12 +115,13 @@ def _emit_mask_logic(
     source_count: int,
 ) -> List[str]:
     """发射 ``vmor.mm``、``vmand.mm`` 与 ``vmnot.m`` 的 raw mask 闭环。"""
-    operands = _unmasked_operands(insn, 1 + source_count)
+    operands = _plain_operands(insn, 1 + source_count)
     if operands is None:
         return _error(insn, f"{native_opcode} 只支持无掩码固定操作数 form")
     vd, *sources = operands
     try:
         sew, _, lmul_token, _ = _source_shape(state)
+        state_view
         temp_vd, *temp_sources = _allocate_vector_groups([1] * (1 + source_count))
         temps = TempRegisterAllocator(insn, reserved_gprs=("t6",))
         vl_reg = temps.alloc_gpr()
@@ -148,12 +161,13 @@ def _emit_mask_clear(insn, state) -> List[str]:
     最后 Unpack 回紧凑 RVV256 state。这样既保留了迁移状态 ABI，也不会把
     源状态中的 ``vN`` 误当成目标硬件 ``vN``。
     """
-    operands = _unmasked_operands(insn, 1)
+    operands = _plain_operands(insn, 1)
     if operands is None:
         return _error(insn, "vmclr.m 只支持无掩码 vd form")
     (vd,) = operands
     try:
         sew, _, lmul_token, _ = _source_shape(state)
+        state_view
         (temp_vd,) = _allocate_vector_groups([1])
         temps = TempRegisterAllocator(insn, reserved_gprs=("t6",))
         vl_reg = temps.alloc_gpr()
@@ -188,12 +202,13 @@ def _emit_mask_scan(
     native_opcode: str,
 ) -> List[str] | AssemblyFragments:
     """发射 ``vfirst.m`` / ``vcpop.m``，只读 source mask 并写标量结果。"""
-    operands = _unmasked_operands(insn, 2)
+    operands = _plain_operands(insn, 2)
     if operands is None:
         return _error(insn, f"{native_opcode} 只支持无掩码 rd, vs2 form")
     rd, vs2 = operands
     try:
         sew, _, lmul_token, _ = _source_shape(state)
+        state_view
         (temp_vs2,) = _allocate_vector_groups([1])
         temps = TempRegisterAllocator(insn, reserved_gprs=("t6",))
         vl_reg = temps.alloc_gpr()
@@ -252,6 +267,7 @@ def _emit_vmerge(
 
     try:
         sew, lmul, lmul_token, group_width = _source_shape(state)
+        state_view
         requested_widths = [group_width, group_width]
         if kind == "vv":
             requested_widths.append(group_width)
@@ -311,12 +327,13 @@ def _build_vlm_v_lines(context) -> list[str]:
     insn = context.instruction
     state = context.state
 
-    operands = _unmasked_operands(insn, 2)
+    operands = _plain_operands(insn, 2)
     if operands is None:
         return _error(insn, "vlm.v 只支持无掩码 vd, (rs1) form")
     vd, address = operands
     try:
         sew, _, lmul_token, _ = _source_shape(state)
+        state_view
         (temp_vd,) = _allocate_vector_groups([1])
         temps = context.temp_register_allocator
         vl_reg = temps.alloc_gpr()
@@ -347,7 +364,7 @@ def _build_vmseq_vi_lines(context) -> list[str]:
     insn = context.instruction
     state = context.state
 
-    operands = _unmasked_operands(insn, 3)
+    operands = _plain_operands(insn, 3)
     if operands is None:
         return _error(insn, "vmseq.vi 只支持无掩码 vd, vs2, simm5")
     vd, vs2, raw_imm = operands
@@ -365,7 +382,7 @@ def _build_vmseq_vx_lines(context) -> list[str]:
     insn = context.instruction
     state = context.state
 
-    operands = _unmasked_operands(insn, 3)
+    operands = _plain_operands(insn, 3)
     if operands is None:
         return _error(insn, "vmseq.vx 只支持无掩码 vd, vs2, rs1")
     vd, vs2, rs1 = operands
@@ -379,7 +396,7 @@ def _build_vmsne_vv_lines(context) -> list[str]:
     insn = context.instruction
     state = context.state
 
-    operands = _unmasked_operands(insn, 3)
+    operands = _plain_operands(insn, 3)
     if operands is None:
         return _error(insn, "vmsne.vv 只支持无掩码 vd, vs2, vs1")
     vd, vs2, vs1 = operands
@@ -393,7 +410,7 @@ def _build_vmsne_vi_lines(context) -> list[str]:
     insn = context.instruction
     state = context.state
 
-    operands = _unmasked_operands(insn, 3)
+    operands = _plain_operands(insn, 3)
     if operands is None:
         return _error(insn, "vmsne.vi 只支持无掩码 vd, vs2, simm5")
     vd, vs2, raw_imm = operands
@@ -411,7 +428,7 @@ def _build_vmsne_vx_lines(context) -> list[str]:
     insn = context.instruction
     state = context.state
 
-    operands = _unmasked_operands(insn, 3)
+    operands = _plain_operands(insn, 3)
     if operands is None:
         return _error(insn, "vmsne.vx 只支持无掩码 vd, vs2, rs1")
     vd, vs2, rs1 = operands
@@ -431,7 +448,7 @@ def _build_vmsle_vi_lines(context) -> list[str]:
     insn = context.instruction
     state = context.state
 
-    operands = _unmasked_operands(insn, 3)
+    operands = _plain_operands(insn, 3)
     if operands is None:
         return _error(insn, "vmsle.vi 只支持无掩码 vd, vs2, simm5")
     vd, vs2, raw_imm = operands
@@ -452,7 +469,7 @@ def _emit_unsigned_mask_vi(insn, state,  *, native_opcode: str) -> List[str]:
     unsigned 元素语义解释该扩展后的位模式。因此必须复用 `_parse_simm5`，
     不能把 ``-1`` 偷换为一个 host 整数范围不同的常量。
     """
-    operands = _unmasked_operands(insn, 3)
+    operands = _plain_operands(insn, 3)
     if operands is None:
         return _error(insn, f"{native_opcode} 只支持无掩码 vd, vs2, simm5")
     vd, vs2, raw_imm = operands
@@ -468,7 +485,7 @@ def _emit_unsigned_mask_vi(insn, state,  *, native_opcode: str) -> List[str]:
 
 def _emit_mask_vx(insn, state,  *, native_opcode: str) -> List[str]:
     """发射无掩码 ``vd, vs2, rs1`` 比较，保持 scalar operand 原始位置。"""
-    operands = _unmasked_operands(insn, 3)
+    operands = _plain_operands(insn, 3)
     if operands is None:
         return _error(insn, f"{native_opcode} 只支持无掩码 vd, vs2, rs1")
     vd, vs2, rs1 = operands
@@ -480,7 +497,7 @@ def _emit_mask_vx(insn, state,  *, native_opcode: str) -> List[str]:
 
 def _emit_mask_vv(insn, state,  *, native_opcode: str) -> List[str]:
     """发射无掩码 ``vd, vs2, vs1`` 比较并把 bit-packed 结果写回 raw state。"""
-    operands = _unmasked_operands(insn, 3)
+    operands = _plain_operands(insn, 3)
     if operands is None:
         return _error(insn, f"{native_opcode} 只支持无掩码 vd, vs2, vs1")
     vd, vs2, vs1 = operands

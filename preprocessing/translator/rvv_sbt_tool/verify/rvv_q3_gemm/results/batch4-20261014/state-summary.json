@@ -1,0 +1,236 @@
+{
+  "rows": [
+    {
+      "candidate": "mask_active",
+      "mask_pattern": "random",
+      "cases": 16956,
+      "source_vlenb": 32,
+      "hardware_vlenb": 128,
+      "full_state": "PASS"
+    },
+    {
+      "candidate": "mask_active",
+      "mask_pattern": "zero",
+      "cases": 16956,
+      "source_vlenb": 32,
+      "hardware_vlenb": 128,
+      "full_state": "PASS"
+    },
+    {
+      "candidate": "mask_active",
+      "mask_pattern": "one",
+      "cases": 16956,
+      "source_vlenb": 32,
+      "hardware_vlenb": 128,
+      "full_state": "PASS"
+    },
+    {
+      "candidate": "mask_tight",
+      "mask_pattern": "random",
+      "cases": 16956,
+      "source_vlenb": 32,
+      "hardware_vlenb": 128,
+      "full_state": "PASS"
+    },
+    {
+      "candidate": "mask_tight",
+      "mask_pattern": "zero",
+      "cases": 16956,
+      "source_vlenb": 32,
+      "hardware_vlenb": 128,
+      "full_state": "PASS"
+    },
+    {
+      "candidate": "mask_tight",
+      "mask_pattern": "one",
+      "cases": 16956,
+      "source_vlenb": 32,
+      "hardware_vlenb": 128,
+      "full_state": "PASS"
+    },
+    {
+      "candidate": "mask_direct",
+      "mask_pattern": "random",
+      "cases": 16956,
+      "source_vlenb": 32,
+      "hardware_vlenb": 128,
+      "full_state": "PASS"
+    },
+    {
+      "candidate": "mask_direct",
+      "mask_pattern": "zero",
+      "cases": 16956,
+      "source_vlenb": 32,
+      "hardware_vlenb": 128,
+      "full_state": "PASS"
+    },
+    {
+      "candidate": "mask_direct",
+      "mask_pattern": "one",
+      "cases": 16956,
+      "source_vlenb": 32,
+      "hardware_vlenb": 128,
+      "full_state": "PASS"
+    },
+    {
+      "candidate": "mask_direct_alias",
+      "mask_pattern": "random",
+      "cases": 16956,
+      "source_vlenb": 32,
+      "hardware_vlenb": 128,
+      "full_state": "PASS"
+    },
+    {
+      "candidate": "mask_direct_alias",
+      "mask_pattern": "zero",
+      "cases": 16956,
+      "source_vlenb": 32,
+      "hardware_vlenb": 128,
+      "full_state": "PASS"
+    },
+    {
+      "candidate": "mask_direct_alias",
+      "mask_pattern": "one",
+      "cases": 16956,
+      "source_vlenb": 32,
+      "hardware_vlenb": 128,
+      "full_state": "PASS"
+    },
+    {
+      "candidate": "extend_active",
+      "mask_pattern": "random",
+      "cases": 16956,
+      "source_vlenb": 32,
+      "hardware_vlenb": 128,
+      "full_state": "PASS"
+    },
+    {
+      "candidate": "extend_active",
+      "mask_pattern": "zero",
+      "cases": 16956,
+      "source_vlenb": 32,
+      "hardware_vlenb": 128,
+      "full_state": "PASS"
+    },
+    {
+      "candidate": "extend_active",
+      "mask_pattern": "one",
+      "cases": 16956,
+      "source_vlenb": 32,
+      "hardware_vlenb": 128,
+      "full_state": "PASS"
+    },
+    {
+      "candidate": "extend_tight",
+      "mask_pattern": "random",
+      "cases": 16956,
+      "source_vlenb": 32,
+      "hardware_vlenb": 128,
+      "full_state": "PASS"
+    },
+    {
+      "candidate": "extend_tight",
+      "mask_pattern": "zero",
+      "cases": 16956,
+      "source_vlenb": 32,
+      "hardware_vlenb": 128,
+      "full_state": "PASS"
+    },
+    {
+      "candidate": "extend_tight",
+      "mask_pattern": "one",
+      "cases": 16956,
+      "source_vlenb": 32,
+      "hardware_vlenb": 128,
+      "full_state": "PASS"
+    },
+    {
+      "candidate": "mask_direct_alias_gpr",
+      "mask_pattern": "random",
+      "cases": 16956,
+      "source_vlenb": 32,
+      "hardware_vlenb": 128,
+      "full_state": "PASS"
+    },
+    {
+      "candidate": "mask_direct_alias_gpr",
+      "mask_pattern": "zero",
+      "cases": 16956,
+      "source_vlenb": 32,
+      "hardware_vlenb": 128,
+      "full_state": "PASS"
+    },
+    {
+      "candidate": "mask_direct_alias_gpr",
+      "mask_pattern": "one",
+      "cases": 16956,
+      "source_vlenb": 32,
+      "hardware_vlenb": 128,
+      "full_state": "PASS"
+    },
+    {
+      "candidate": "extend_tight_gpr",
+      "mask_pattern": "random",
+      "cases": 16956,
+      "source_vlenb": 32,
+      "hardware_vlenb": 128,
+      "full_state": "PASS"
+    },
+    {
+      "candidate": "extend_tight_gpr",
+      "mask_pattern": "zero",
+      "cases": 16956,
+      "source_vlenb": 32,
+      "hardware_vlenb": 128,
+      "full_state": "PASS"
+    },
+    {
+      "candidate": "extend_tight_gpr",
+      "mask_pattern": "one",
+      "cases": 16956,
+      "source_vlenb": 32,
+      "hardware_vlenb": 128,
+      "full_state": "PASS"
+    },
+    {
+      "candidate": "combined",
+      "mask_pattern": "random",
+      "cases": 16956,
+      "source_vlenb": 32,
+      "hardware_vlenb": 128,
+      "full_state": "PASS"
+    },
+    {
+      "candidate": "combined",
+      "mask_pattern": "zero",
+      "cases": 16956,
+      "source_vlenb": 32,
+      "hardware_vlenb": 128,
+      "full_state": "PASS"
+    },
+    {
+      "candidate": "combined",
+      "mask_pattern": "one",
+      "cases": 16956,
+      "source_vlenb": 32,
+      "hardware_vlenb": 128,
+      "full_state": "PASS"
+    },
+    {
+      "candidate": "mac_gpr",
+      "cases": 8766,
+      "source_vlenb": 32,
+      "hardware_vlenb": 128,
+      "full_state": "PASS"
+    },
+    {
+      "candidate": "combined-mac",
+      "cases": 8766,
+      "source_vlenb": 32,
+      "hardware_vlenb": 128,
+      "full_state": "PASS"
+    }
+  ],
+  "combined_records": 59634,
+  "all_candidate_records": 475344
+}

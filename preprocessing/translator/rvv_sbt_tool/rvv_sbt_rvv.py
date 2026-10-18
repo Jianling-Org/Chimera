@@ -11,7 +11,6 @@ Usage:
 """
 
 import sys
-from dataclasses import replace
 import argparse
 import gc
 import tempfile
@@ -138,22 +137,20 @@ def translate_function(
     tls_state=True,
     state_base_mode="initial-exec",
     wide_lmul=True,
-    *,
-    strict: bool = False,
 ):
-    """翻译单个函数；strict=True 在不支持的形态处拒绝生成输出。"""
+    """翻译单个 ``RVFunction``；片段入口使用显式 ``init_vtype``。"""
     if not isinstance(function, RVFunction):
         raise TypeError("translate_function() 需要 RVFunction；片段请使用 translate()")
 
-    profile = make_rvv256_profile(wide_lmul=wide_lmul, source_vlenb=vlenb)
-    if strict:
-        profile = replace(profile, fallback_policy="raise")
     pipeline = TranslationPipeline(
         _make_emitter(vlenb=vlenb, state_base_mode=state_base_mode)
     )
     prepared = pipeline.prepare(
         RVProgram(functions=[function]),
-        backend_profile=profile,
+        backend_profile=make_rvv256_profile(
+            wide_lmul=wide_lmul,
+            source_vlenb=vlenb,
+        ),
         init_vtype=init_vtype,
     )
     return pipeline.emit_function(
@@ -526,7 +523,7 @@ def main():
         '--jal-range-fixup-compiler-arg',
         action='append',
         default=[],
-        help='替换默认编译器参数（仍保留 -fPIC），可重复使用；必须给出完整 ISA/ABI，例如 -march=rv64gcv 和 -mabi=lp64d',
+        help='传给范围修正编译器的参数，可重复使用；例如 --jal-range-fixup-compiler-arg=-march=rv64gcv',
     )
     parser.add_argument(
         '--jal-range-fixup-max-iterations',
@@ -542,8 +539,6 @@ def main():
         help='使用原有保守 RVV256 profile（禁用宽 LMUL 热点路径）'
     )
     args = parser.parse_args()
-    if args.command and (args.input or args.lib_name):
-        parser.error("-c/--command 不能与输入文件或 lib_name 同时使用")
 
     # 必须提供 input 文件或 -c 命令
     if not args.input and not args.command:

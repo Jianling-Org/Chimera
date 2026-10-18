@@ -1,5 +1,11 @@
 # Chimera LLVM 集成架构
 
+本文描述 `chimera/preprocessing/offline/toolchain/llvm-21.1.0` 的最终架构。它是**当前实现**的权威说明：内容以代码、patch 和测试为唯一事实来源，不提出替代方案。
+
+面向未来的维护者；不记录开发过程或历史讨论。
+
+---
+
 ## 1. 工程形态
 
 `chimera/preprocessing/offline/toolchain/llvm-21.1.0/` 是一个独立的 CMake project，构建三个互相独立的 LLVM pass plugin，并携带一份按顺序应用到 LLVM 源码的 patch series。
@@ -223,7 +229,7 @@ SVF 通过 static archive 链接进 `ChimeraFunctionPointer.so`：
 - 允许动态依赖 `libLLVM.so.21.1`；
 - 不允许动态依赖 `libSvfLLVM.so` / `libSvfCore.so`。
 
-`SVF::SvfLLVM` 的导出目标带有 LLVM 传递链接项。构建时保留静态 SVF 库，移除这些传递项，并由 LLVM pass-plugin 构建规则链接当前工具链的 LLVM 依赖，避免在插件中再链接另一份 LLVM。
+CMake 中为消除 `SVF::SvfLLVM` 对 `LLVM` 的 transitive dependency，有意识地保留一个 workaround：删除 `SVF::SvfLLVM` 传递的 `LLVM` 项，再显式链接 LLVM plugin 所需依赖。这是**当前接受的实现**，不是待修 bug。
 
 ---
 

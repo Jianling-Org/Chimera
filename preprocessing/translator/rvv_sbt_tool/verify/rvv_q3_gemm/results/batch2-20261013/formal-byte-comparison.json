@@ -1,0 +1,34 @@
+{
+  "forward.S": {
+    "identical_to_hardware_tested": true,
+    "sha256": "91550f5ec6d4f43a9e3c41068b3f2fcbdc35797ad4122e85e103a1a9698993d9"
+  },
+  "reverse.S": {
+    "identical_to_hardware_tested": true,
+    "sha256": "22b248b64c43e975babf463b5e110b33631894fa395df5fec28364349c5b5b04"
+  },
+  "kernel.S": {
+    "identical_to_hardware_tested": true,
+    "sha256": "6dc26bf7ba893caf80b589fb91cb4c5974ed8a4b3a2abcca2a527abdb7c77a37"
+  },
+  "kernel.bin": {
+    "identical_to_hardware_tested": true,
+    "sha256": "cf0ff6fde59c0460beca8148794d70dc6bb7eeaff4c92d9525154691af16f80b"
+  },
+  "state/candidate.S": {
+    "identical_to_hardware_tested": true,
+    "sha256": "090f90beaf7fc3ee0ac39b78c46819a7a39c9b0987e95827629c9dbd696094fa"
+  },
+  "state/main.c": {
+    "identical_to_hardware_tested": true,
+    "sha256": "ec331f84ab1e8c9c87f9ec9f5583153a4672e9e4098295bc0e6c47bc4c3728a8"
+  },
+  "state/native.S": {
+    "identical_to_hardware_tested": true,
+    "sha256": "6468899f81bd8e6dc2e51b12953eb4b2f37287718acd2ffe291d3560b71c74f2"
+  },
+  "state/cases.h": {
+    "identical_to_hardware_tested": true,
+    "sha256": "6ec295c9b93219ba8692e8bc2ec7c9e017cf5ba3e19050bee51ea6dca46edc1b"
+  }
+}

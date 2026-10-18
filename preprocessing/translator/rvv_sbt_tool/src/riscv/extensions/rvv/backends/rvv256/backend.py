@@ -35,14 +35,14 @@ def make_rvv256_profile(
     ``geometry`` 允许显式传入，但必须与已登记方向一致。
     """
 
-    resolved = RVV1024_TO_RVV256_GEOMETRY
+    resolved = geometry or RVV1024_TO_RVV256_GEOMETRY
     if source_vlenb is not None:
         # 经由白名单解析方向，未登记的组合立即失败。
         resolved = geometry_for_direction(
             source_vlenb, RVV1024_TO_RVV256_GEOMETRY.target_vlenb
         )
-    if geometry is not None and geometry != resolved:
-        raise ValueError(f"RVV256 geometry 与已登记的 1024→256 方向不一致: {geometry}")
+    elif geometry is not None:
+        geometry_for_direction(geometry.source_vlenb, geometry.target_vlenb)
     return BackendProfile(
         name="rvv256-wide" if wide_lmul else "rvv256-conservative",
         source_vlenb=resolved.source_vlenb,

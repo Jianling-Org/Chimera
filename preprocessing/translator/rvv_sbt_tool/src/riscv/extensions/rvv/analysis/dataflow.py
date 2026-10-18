@@ -26,12 +26,9 @@ from riscv.extensions.rvv.analysis.model import (
     UNKNOWN_UNREACHABLE_CANDIDATE,
     UNKNOWN_VTYPE_CANDIDATE,
     VTypeCandidate,
-    VTypeSpec,
 )
 from riscv.frontend.call_graph import bottom_up_sccs
 from riscv.frontend.text_index import TextProgramIndex
-from riscv.frontend.literals import parse_integer_literal
-from riscv.registers import normalize_gpr_name
 from riscv.frontend.model import ProgramStructure, FunctionStructure
 
 
@@ -49,6 +46,10 @@ NO_SCALAR_DESTINATION_OPS = CONDITIONAL_BRANCH_OPS | SCALAR_STORE_OPS | {
     "j", "jr", "ret", "tail", "call", "ecall", "ebreak", "fence", "fence.i",
     "nop", "csrw", "csrs", "csrc", "csrwi", "csrsi", "csrci",
 }
+SCALAR_REGISTER_RE = re.compile(
+    r"^(?:x(?:[0-9]|[12][0-9]|3[01])|zero|ra|sp|gp|tp|fp|"
+    r"t[0-6]|s(?:[0-9]|1[01])|a[0-7])$"
+)
 CALL_CLOBBERED = {
     "ra", "a0", "a1", "a2", "a3", "a4", "a5", "a6", "a7",
     "t0", "t1", "t2", "t3", "t4", "t5", "t6",
@@ -802,7 +803,11 @@ class VectorConfigAnalyzer:
         operation = instruction.opcode.lower()
         destination = self._defined_scalar_register(instruction)
 
-        if TextProgramIndex.is_call(instruction):
+        if operation in {"call", "jalr"} or (
+            operation == "jal"
+            and len(instruction.operands) > 1
+            and str(instruction.operands[0]).lower() not in {"x0", "zero"}
+        ):
             for register in CALL_CLOBBERED:
                 constants.pop(register, None)
 
@@ -812,8 +817,7 @@ class VectorConfigAnalyzer:
         # 先删除旧值；下面只有在确定新值时才重新写入。
         incoming_constants = dict(constants)
         constants.pop(destination, None)
-        operands = [normalize_gpr_name(str(operand)) or str(operand).strip().lower()
-                    for operand in instruction.operands]
+        operands = [str(operand).strip().lower() for operand in instruction.operands]
 
         value: int | None = None
         if operation == "li" and len(operands) >= 2:
@@ -848,16 +852,28 @@ class VectorConfigAnalyzer:
             return "ra"
         if operation == "jalr" and len(operands) == 1:
             return "ra"
-        destination = normalize_gpr_name(str(operands[0]))
-        return destination if destination != "zero" else None
+        destination = str(operands[0]).strip().lower()
+        if destination in {"zero", "x0"}:
+            return None
+        return destination if SCALAR_REGISTER_RE.fullmatch(destination) else None
+
+    @staticmethod
+    def _may_change_vtype(instruction: RVInstruction) -> bool:
+        """判断是否需要在调用后丢弃当前 vtype 静态事实。"""
+
+        operation = instruction.opcode.lower()
+        if operation in {"call", "jalr"}:
+            return True
+        if operation != "jal" or len(instruction.operands) <= 1:
+            return False
+        return str(instruction.operands[0]).strip().lower() not in {"x0", "zero"}
 
     def _decode_vset(
         self,
         instruction: RVInstruction,
         constants: dict[str, int],
     ) -> VTypeCandidate:
-        operands = [normalize_gpr_name(str(operand)) or str(operand).strip().lower()
-                    for operand in instruction.operands]
+        operands = [str(operand).strip().lower() for operand in instruction.operands]
         operation = instruction.opcode.lower()
         if len(operands) < 2:
             return VTypeCandidate(
@@ -940,11 +956,10 @@ class VectorConfigAnalyzer:
             immediate = cls._parse_integer(operand)
             if immediate is not None:
                 return AVLInfo(kind=AVLKind.CONSTANT, value=immediate)
-        key = normalize_gpr_name(operand) or operand
-        if key in constants:
+        if operand in constants:
             return AVLInfo(
                 kind=AVLKind.CONSTANT,
-                value=constants[key],
+                value=constants[operand],
                 register=operand,
             )
         return AVLInfo(kind=AVLKind.UNKNOWN, register=operand)
@@ -952,9 +967,12 @@ class VectorConfigAnalyzer:
     @staticmethod
     def _parse_integer(value: str) -> int | None:
         try:
-            return parse_integer_literal(value)
+            return int(value, 0)
         except ValueError:
-            return None
+            try:
+                return int(value, 16)
+            except ValueError:
+                return None
 
 
 __all__ = ["VectorConfigAnalyzer"]

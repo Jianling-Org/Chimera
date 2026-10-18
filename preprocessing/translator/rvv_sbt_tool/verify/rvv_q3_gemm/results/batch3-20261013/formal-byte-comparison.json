@@ -1,0 +1,85 @@
+{
+  "pass": true,
+  "files": [
+    {
+      "file": "payload/forward.S",
+      "hardware_validated_sha256": "91550f5ec6d4f43a9e3c41068b3f2fcbdc35797ad4122e85e103a1a9698993d9"
+    },
+    {
+      "file": "payload/reverse.S",
+      "hardware_validated_sha256": "f5babaccb59653f7f81aa633d22ffddb805925ba9a54f889614365fde887c6a5"
+    },
+    {
+      "file": "payload/translated.c",
+      "hardware_validated_sha256": "9a03da996270722e8b52819f5c9b6bb86797517cc4ef431b4b423ed371735c3d"
+    },
+    {
+      "file": "payload/paired.c",
+      "hardware_validated_sha256": "e15b8075f1552b29d43cfa1a4f7588863d770799b0aadaa7ef317a01f5f38cc4"
+    },
+    {
+      "file": "payload/kernel.bin",
+      "hardware_validated_sha256": "cf0ff6fde59c0460beca8148794d70dc6bb7eeaff4c92d9525154691af16f80b"
+    },
+    {
+      "file": "state/native.S",
+      "hardware_validated_sha256": "cf86044d598682352f5df694b19b00a1ef9bc4e8831bba4cefb93b2b64c6b515"
+    },
+    {
+      "file": "state/candidate.S",
+      "hardware_validated_sha256": "d1b1f7ec6b6c56273003c75a05c71565b3b1da5664b7ed46c68cd7de72e25010"
+    },
+    {
+      "file": "state/candidate-equal.S",
+      "hardware_validated_sha256": "48f7ec3dc9d4df24ad4975592c585dda113bff946186eac9b23c86cdf87a98d8"
+    },
+    {
+      "file": "state/main.c",
+      "hardware_validated_sha256": "fa068b7912e35f2ab867810ec2f1452faf8d453d3aa7de86f90d8a69ba930f3f"
+    },
+    {
+      "file": "state/cases.h",
+      "hardware_validated_sha256": "366508e7dc13d1b0c3c0fd11ea8e58ef5ba761a9ae19b20f11f0da8de5833f8b"
+    },
+    {
+      "file": "hot/native.S",
+      "hardware_validated_sha256": "cf5ba1db1bd0f669da226f407f311579d14695106a8185cb132209f140f5dcf4"
+    },
+    {
+      "file": "hot/candidate.S",
+      "hardware_validated_sha256": "c004d7e628cf209580c84b9ab7d88a1395455903e5ff7a1d2d32e8f35618721c"
+    },
+    {
+      "file": "hot/main.c",
+      "hardware_validated_sha256": "ec331f84ab1e8c9c87f9ec9f5583153a4672e9e4098295bc0e6c47bc4c3728a8"
+    },
+    {
+      "file": "hot/cases.h",
+      "hardware_validated_sha256": "b28f10f27b43b9cfb6cccefd6973a9ea5fbba25e0f3f917f28c91f44a36850b5"
+    },
+    {
+      "file": "mac/native.S",
+      "hardware_validated_sha256": "1f465bba2626dc5ca5c8e03a19dc93714c4a64cfece3b68f9ef6d65bb6b321ce"
+    },
+    {
+      "file": "mac/candidate.S",
+      "hardware_validated_sha256": "a0903139562be74df1024797d8a20a71c28356d29bde084af37a2d48a7064a9e"
+    },
+    {
+      "file": "mac/main.c",
+      "hardware_validated_sha256": "c80e2e4d20a5cc45f5b0d24a989d4b208f1324435b23ae47ccabca2a64ee4807"
+    },
+    {
+      "file": "mac/cases.h",
+      "hardware_validated_sha256": "0bf16ae1a7882dcca9f1568109c0a215d3eec5277c711401c49cba39a4147e8a"
+    },
+    {
+      "file": "guard/instruction.S",
+      "hardware_validated_sha256": "c81a3597cdf060288f83dc8a761d70b0f9bb97233584e9678f33732f48fc16f9"
+    },
+    {
+      "file": "guard/main.c",
+      "hardware_validated_sha256": "721fc18920bdd9e30046c84cddca7d962e15c6d66699fd2adc3eccbfabcea606"
+    }
+  ]
+}

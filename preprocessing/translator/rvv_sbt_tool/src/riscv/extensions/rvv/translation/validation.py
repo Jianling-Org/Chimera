@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from riscv.frontend.literals import parse_integer_literal
 import re
 
 from riscv.extensions.rvv.analysis.model import LEGAL_LMULS
@@ -20,13 +19,6 @@ def validate_source_operands(context, operands: tuple[str, ...]) -> None:
         )
 
     if spec.category == "config":
-        if insn.opcode == "vsetivli":
-            try:
-                value = parse_integer_literal(operands[1])
-            except ValueError:
-                reject("vsetivli uimm must be an integer in 0..31")
-            if not 0 <= value <= 31:
-                reject("vsetivli uimm must be in 0..31")
         if insn.opcode != "vsetvl":
             if operands[2] not in {"e8", "e16", "e32", "e64"}:
                 reject("Vector configuration supports SEW=8/16/32/64 only")
@@ -44,7 +36,7 @@ def validate_source_operands(context, operands: tuple[str, ...]) -> None:
             reject(f"{insn.opcode} does not support LMUL={state.lmul:g}")
 
     opcode = insn.opcode
-    masked = bool(operands and operands[-1].lower() == "v0.t")
+    masked = bool(operands and operands[-1] == "v0.t")
     base = operands[:-1] if masked else operands
     if opcode == "vadd.vi":
         try:
@@ -69,9 +61,6 @@ def validate_source_operands(context, operands: tuple[str, ...]) -> None:
             if not 0 <= number < 32:
                 reject(f"Vector register out of range: {operand}")
             vectors[index] = number
-    for index, role in enumerate(spec.operand_order):
-        if re.search(r"(?:^|-)(?:vd|vs[123])(?:$|-)", role) and index not in vectors:
-            reject(f"Operand {index + 1} must be a vector register")
     if not vectors:
         return
 
@@ -123,10 +112,6 @@ def validate_source_operands(context, operands: tuple[str, ...]) -> None:
         shapes[0] = (1, 1.0)
     if opcode == "vrgatherei16.vv":
         shapes[2] = (16, lmul * 16 / sew)
-
-    for index in shapes:
-        if index not in vectors:
-            reject(f"Operand {index + 1} must be a vector register")
 
     segment = re.search(r"seg([2-8])e", opcode) if memory else None
     if segment:

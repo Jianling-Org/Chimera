@@ -17,7 +17,6 @@ lowering，而 lowerer 又要读取每个规格的 builder 绑定。把元数据
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Literal
 
 from riscv.extensions.rvv.translation.lowering import AssemblyLineBuilder
 from riscv.extensions.rvv.translation.contracts import InstructionSpec
@@ -30,8 +29,8 @@ class RVV256SameWidthSpec:
     operand_form: str
     vector_operand_positions: tuple[int, ...]
     scalar_operand_position: int | None
-    allowed_sews: tuple[int, ...] = ()  # Empty: no restriction beyond the instruction spec.
-    lowering: Literal["direct", "not_base_v", "and_not_base_v"] = "direct"
+    allowed_sews: tuple[int, ...] = ()
+    lowering: str = "direct"
 
 
 @dataclass(frozen=True, slots=True)

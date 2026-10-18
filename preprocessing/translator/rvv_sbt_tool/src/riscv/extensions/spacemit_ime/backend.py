@@ -117,7 +117,7 @@ def _int8_dot(frame: block.FrameLayout, mode: IntegerMode, inner: str,
     if not direct:
         lines += [f"    addi t2, sp, {frame.c_offset}", "    vl2re32.v v4, (t2)"]
     lines += [
-        "    li t3, 16", f"{inner}:",
+        "    li t6, 255", "    li t3, 16", f"{inner}:",
         "    lw t4, 0(t1)", "    lw t5, 4(t1)",
         "    vmv.v.x v6, t4", "    vmerge.vxm v6, v6, t5, v0", "    vsll.vv v6, v6, v2",
     ]

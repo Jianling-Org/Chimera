@@ -16,49 +16,35 @@ original = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(original)
 
 
-def replace_once(text, before, after):
-    count = text.count(before)
-    if count != 1:
-        raise ValueError(f"statecheck template expected one {before!r}, found {count}")
-    return text.replace(before, after)
-
-
 def wrapper(symbol, body, source_vlenb, native, command):
     text = original.wrapper(symbol, body, source_vlenb, native, command)
-    if not ('(' not in command):
-        raise ValueError("statecheck invariant failed: '(' not in command")
-    text = replace_once(text, '    la a0, memory_data\n', '')
+    assert '(' not in command
+    text = text.replace('    la a0, memory_data\n', '')
     scalar_seed = f'    li x5, {0x12340000 + 5 * 313}\n'
-    if not (text.count(scalar_seed) == 1):
-        raise ValueError('statecheck invariant failed: text.count(scalar_seed) == 1')
-    text = replace_once(text, scalar_seed, f'    li x1, {0x12340000 + 313}\n' + scalar_seed)
+    assert text.count(scalar_seed) == 1
+    text = text.replace(scalar_seed, f'    li x1, {0x12340000 + 313}\n' + scalar_seed)
     if command.startswith('vmacc.vx '):
         scalar_reg = command.split(',')[1].strip()
-        if not (scalar_reg not in {'t0', 'x5', 'sp', 'x2', 'gp', 'x3', 'tp', 'x4'}):
-            raise ValueError("statecheck invariant failed: scalar_reg not in {'t0', 'x5', 'sp', 'x2', 'gp', 'x3', 'tp', 'x4'}")
+        assert scalar_reg not in {'t0', 'x5', 'sp', 'x2', 'gp', 'x3', 'tp', 'x4'}
         scalar_end = f'    li x31, {0x12340000 + 31 * 313}\n'
-        if not (text.count(scalar_end) == 1):
-            raise ValueError('statecheck invariant failed: text.count(scalar_end) == 1')
-        text = replace_once(text, scalar_end, scalar_end +
+        assert text.count(scalar_end) == 1
+        text = text.replace(scalar_end, scalar_end +
             f'    la t0, input_scalar\n    ld {scalar_reg}, 0(t0)\n'
             f'    li t0, {0x12340000 + 5 * 313}\n')
     if native:
-        if not (text.count('    csrw vstart, zero\n') == 1):
-            raise ValueError("statecheck invariant failed: text.count('    csrw vstart, zero\\n') == 1")
-        text = replace_once(text, '    csrw vstart, zero\n',
+        assert text.count('    csrw vstart, zero\n') == 1
+        text = text.replace('    csrw vstart, zero\n',
             '    la t0, input_vstart\n    ld t0, 0(t0)\n    csrw vstart, t0\n'
             '    la t1, observed_input_vstart\n    csrr t0, vstart\n    sd t0, 0(t1)\n')
     capture = '    la t0, actual_vcsr\n    csrr t1, vcsr\n    sd t1, 0(t0)\n'
-    if not (text.count(capture) == 1):
-        raise ValueError('statecheck invariant failed: text.count(capture) == 1')
-    text = replace_once(text, capture, capture +
+    assert text.count(capture) == 1
+    text = text.replace(capture, capture +
         '    la t0, actual_vstart\n    csrr t1, vstart\n    sd t1, 0(t0)\n')
     if native:
         late_start = ('    la t0, simulated_cpu_state\n    li t1, 4096\n'
                       '    add t0, t0, t1\n    csrr t1, vstart\n    sd t1, 0(t0)\n')
-        if not (text.count(late_start) == 1):
-            raise ValueError('statecheck invariant failed: text.count(late_start) == 1')
-        text = replace_once(text, late_start, late_start.replace('    csrr t1, vstart\n',
+        assert text.count(late_start) == 1
+        text = text.replace(late_start, late_start.replace('    csrr t1, vstart\n',
             '    la t1, actual_vstart\n    ld t1, 0(t1)\n'))
     return text
 
@@ -96,36 +82,35 @@ def selected_cases(direction):
 
 def c_source(metadata, direction):
     text = ORIGINAL.with_suffix('.c').read_text()
-    text = replace_once(text, '#define RECORD_SIZE (STATE_SIZE + MEMORY_SIZE + 512 + 16)',
+    text = text.replace('#define RECORD_SIZE (STATE_SIZE + MEMORY_SIZE + 512 + 16)',
                         '#define RECORD_SIZE (STATE_SIZE + MEMORY_SIZE + 512 + 24)')
-    text = replace_once(text, 'uint64_t input_vl, input_vtype, input_vcsr, input_fcsr, actual_fcsr, actual_vcsr;',
+    text = text.replace('uint64_t input_vl, input_vtype, input_vcsr, input_fcsr, actual_fcsr, actual_vcsr;',
                         'uint64_t input_vl, input_vtype, input_vcsr, input_fcsr, actual_fcsr, actual_vcsr;\n'
                         'uint64_t input_vstart, observed_input_vstart, actual_vstart, input_scalar;')
-    text = replace_once(text, 'frm=%u\\n", message, index, vl, vcsr, frm);',
+    text = text.replace('frm=%u\\n", message, index, vl, vcsr, frm);',
                         'frm=%u vstart=%llu\\n", message, index, vl, vcsr, frm, (unsigned long long)input_vstart);')
     before = '''        unsigned block = TARGET_VLENB * 8 * 8 / test->sew;
         const unsigned requested[] = {0, 1, block / 2 - 1, block / 2, block / 2 + 1,
             block - 1, block, block + 1,
             2 * block - 1, 2 * block, 2 * block + 1, test->vlmax - 1, test->vlmax};'''
-    if not (text.count(before) == 1):
-        raise ValueError('statecheck invariant failed: text.count(before) == 1')
-    text = replace_once(text, before, '''        const unsigned requested[] = {0, 1, 7, 8, 9, 15, 16, 17,
+    assert text.count(before) == 1
+    text = text.replace(before, '''        const unsigned requested[] = {0, 1, 7, 8, 9, 15, 16, 17,
             31, 32, 33, 63, 64, 65, test->vlmax - 1, test->vlmax};
         const unsigned starts[] = {0, 1, 15, 16, 17, 63, 64, 65};''')
-    text = replace_once(text, '                    for (unsigned ci = 0; ci < 3; ++ci) {',
+    text = text.replace('                    for (unsigned ci = 0; ci < 3; ++ci) {',
                         '                    for (unsigned ci = 0; ci < 3; ++ci)\n'
                         '                        for (unsigned si = 0; si < (test->restart ? 8u : 1u); ++si) {')
-    text = replace_once(text, '                        input_vl = vl;',
+    text = text.replace('                        input_vl = vl;',
                         '                        input_vstart = starts[si]; observed_input_vstart = UINT64_MAX;\n'
                         '                        input_scalar = seed == 1 ? UINT64_C(0xfffffffffffffffd) : UINT64_C(7);\n'
                         '                        input_vl = vl;')
-    text = replace_once(text, '                        put(0x1000, 0);', '                        put(0x1000, input_vstart);')
-    text = replace_once(text, '                        test->run();', '''                        test->run();
+    text = text.replace('                        put(0x1000, 0);', '                        put(0x1000, input_vstart);')
+    text = text.replace('                        test->run();', '''                        test->run();
 #ifdef NATIVE
                         if (observed_input_vstart != input_vstart) die("native vstart input was not accepted", index, vl, vcsr, frm);
 #endif
                         if (actual_vstart != 0) die("hardware vstart was not cleared", index, vl, vcsr, frm);''')
-    text = replace_once(text, 'memcpy(record + RECORD_SIZE - 16, &actual_fcsr, 8); memcpy(record + RECORD_SIZE - 8, &actual_vcsr, 8);',
+    text = text.replace('memcpy(record + RECORD_SIZE - 16, &actual_fcsr, 8); memcpy(record + RECORD_SIZE - 8, &actual_vcsr, 8);',
                         'memcpy(record + RECORD_SIZE - 24, &actual_fcsr, 8); memcpy(record + RECORD_SIZE - 16, &actual_vcsr, 8);\n'
                         '                        memcpy(record + RECORD_SIZE - 8, &actual_vstart, 8);')
     if direction == 'forward':
@@ -154,8 +139,8 @@ static void scalar_vmacc_restart(uint8_t *result, const uint8_t *initial,
 }
 #endif
 '''
-        text = replace_once(text, 'int main(int argc, char **argv) {', helper + '\nint main(int argc, char **argv) {')
-        text = replace_once(text, '                        test->run();\n#ifdef NATIVE\n'
+        text = text.replace('int main(int argc, char **argv) {', helper + '\nint main(int argc, char **argv) {')
+        text = text.replace('                        test->run();\n#ifdef NATIVE\n'
                             '                        if (observed_input_vstart != input_vstart) die("native vstart input was not accepted", index, vl, vcsr, frm);\n#endif',
                             '''                        unsigned desired_start = (unsigned)input_vstart;
 #ifdef NATIVE

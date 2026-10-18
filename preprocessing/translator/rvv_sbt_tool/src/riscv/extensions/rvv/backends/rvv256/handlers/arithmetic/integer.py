@@ -1501,6 +1501,7 @@ def _build_vsll_vi_lines(context) -> list[str]:
     sew = state.sew
     chunk_n = _chunk_size(sew)
     c_bytes = _chunk_bytes()
+    elem_bytes = sew // 8
     shift_amt = {8: 5, 16: 4, 32: 3, 64: 2}[sew]
     mask = chunk_n - 1
 
@@ -1517,6 +1518,7 @@ def _build_vsll_vi_lines(context) -> list[str]:
     tail_count = temps.alloc_gpr()
     vs2_ptr = temps.alloc_gpr()
     vd_ptr = temps.alloc_gpr()
+    data_reg = temps.alloc_gpr()
 
     temp = temps.alloc_gpr()
     if is_masked:
@@ -1524,6 +1526,8 @@ def _build_vsll_vi_lines(context) -> list[str]:
         v0_base = temps.alloc_gpr()
     vle_instr = _get_vle_instr(sew)
     vse_instr = _get_vse_instr(sew)
+    int_load = {8: 'lbu', 16: 'lhu', 32: 'lwu', 64: 'ld'}[sew]
+    int_store = {8: 'sb', 16: 'sh', 32: 'sw', 64: 'sd'}[sew]
 
     lines.append(f"# vsll.vi {vd}, {vs2}, {uimm} (256-bit mode, SEW={sew})")
     lines.append(f"# Semantic: {vd}[i] = {vs2}[i] << {uimm}")
@@ -1806,6 +1810,7 @@ def _build_vmv_x_s_lines(context) -> AssemblyBuilderOutput:
     state = context.state
     allocator = context.layout
     lines = []
+    mask_suffix = ""
     operands = insn.operands
     if len(operands) < 2:
         raise InstructionValidationError(insn, f"Invalid operands for {insn.opcode}: {insn.op_str}")
@@ -1814,6 +1819,7 @@ def _build_vmv_x_s_lines(context) -> AssemblyBuilderOutput:
     vs2 = operands[1]
 
     sew = state.sew
+    elem_bytes = sew // 8
     vs2_off = allocator.get_offset(vs2)
 
     temps = context.temp_register_allocator
@@ -1849,6 +1855,7 @@ def _emit_vmv_whole_register(
 ) -> List[str]:
     """复制 nf 个连续 simulated vector register, 不依赖 vl/vtype。"""
     lines = []
+    mask_suffix = ""
     operands = insn.operands
     if len(operands) < 2:
         raise InstructionValidationError(insn, f"Invalid operands for {insn.opcode}: {insn.op_str}")

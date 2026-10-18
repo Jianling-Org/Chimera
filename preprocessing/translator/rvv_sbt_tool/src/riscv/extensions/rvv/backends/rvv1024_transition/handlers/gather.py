@@ -30,12 +30,10 @@ from __future__ import annotations
 
 from typing import List
 
+from riscv.extensions.rvv.backends.rvv1024_transition import state_view
 from riscv.extensions.rvv.analysis.model import LEGAL_LMULS
 from riscv.extensions.rvv.analysis.config import StateTracker
-from riscv.extensions.rvv.translation.temps import (
-    TempRegisterAllocationError, TempRegisterAllocator,
-)
-from riscv.extensions.rvv.backends.rvv1024_transition.temp_regs import RegisterAllocationError
+from riscv.extensions.rvv.translation.temps import TempRegisterAllocator
 from riscv.extensions.rvv.backends.rvv1024_transition.execution import (
     _allocate_vector_groups,
     _emit_execution_vsetvl,
@@ -116,25 +114,29 @@ def _emit_gather(
 
     try:
         sew, data_lmul, lmul_token, data_group_width = _source_shape(state)
-    except ValueError as exc:
-        return _error(insn, str(exc))
-    if state.vlenb != SOURCE_VLENB:
-        return _error(
-            insn,
-            f"{native_opcode} 只支持 source vlenb={SOURCE_VLENB}，当前为 {state.vlenb}",
-        )
-    source_vlmax = state.get_vlmax()
-    if source_vlmax <= 0:
-        return _error(insn, f"{native_opcode} 需要正的 source VLMAX，当前为 {source_vlmax}")
-    if index_lmul is None:
-        index_lmul = data_lmul
-        index_group_width = data_group_width
-    else:
-        if index_lmul not in _LEGAL_LMULS:
-            raise RuntimeError(f"内部错误：非法 index LMUL={index_lmul:g}")
-        index_group_width = int(index_lmul) if index_lmul >= 1 else 1
+        # state_view 的 raw 地址定义固定为 N*32B。即使日后有人直接调用
+        # handler，也不能让一个非 32B 的 StateTracker 静默复用这套布局。
+        if state.vlenb != SOURCE_VLENB:
+            raise ValueError(
+                f"{native_opcode} 只支持 source vlenb={SOURCE_VLENB}，"
+                f"当前为 {state.vlenb}"
+            )
+        # ``StateTracker`` 用 source_vlenb=32 构造。该数字只用于翻译期
+        # 合法性诊断和注释；生成代码仍通过 state CSR.vl 取得动态活动长度。
+        source_vlmax = state.get_vlmax()
+        if source_vlmax <= 0:
+            raise ValueError(
+                f"{native_opcode} 需要正的 source VLMAX，当前为 {source_vlmax}"
+            )
+        if index_lmul is None:
+            index_lmul = data_lmul
+            index_group_width = data_group_width
+        else:
+            if index_lmul not in _LEGAL_LMULS:
+                raise ValueError(f"内部错误：非法 index LMUL={index_lmul:g}")
+            index_group_width = int(index_lmul) if index_lmul >= 1 else 1
 
-    try:
+        state_view
         # 独立临时组保证所有 raw state 读取均早于任意目的 Unpack，即使
         # 客体寄存器编号相同或 LMUL 组部分重叠也不受影响。
         temp_vd, temp_vs2, temp_vs1 = _allocate_vector_groups(
@@ -145,7 +147,7 @@ def _emit_gather(
         address_reg = temps.alloc_gpr()
         transfer_avl_reg = temps.alloc_gpr()
         target_vlmax_avl_reg = temps.alloc_gpr()
-    except (RegisterAllocationError, TempRegisterAllocationError) as exc:
+    except (ValueError, TypeError) as exc:
         return _error(insn, str(exc))
 
     index_description = (

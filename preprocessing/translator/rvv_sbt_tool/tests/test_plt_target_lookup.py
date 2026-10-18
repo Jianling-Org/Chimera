@@ -197,6 +197,46 @@ def test_unmatched_pair_has_no_candidate(auipc, jalr, stub):
     assert not analyze_structure(_pair_program(auipc, jalr, stub)).plt_candidates
 
 
+def test_glibc_irelative_without_got_does_not_guess_public_symbol():
+    program = AsmParser().parse_string_program("""
+Disassembly of section .plt:
+00000000000277a0 <*ABS*+0x7ab82@plt>:
+    277a0: 00000013 nop
+Disassembly of section .text:
+0000000000047a56 <caller>:
+    47a56: fffe0097 auipc ra,0xfffe0
+    47a5a: d4a080e7 jalr -694(ra) # 277a0 <*ABS*+0x7ab82@plt>
+000000000007ab82 <__libc_memcpy_ifunc>:
+    7ab82: 00008067 ret
+""")
+    structure = analyze_structure(program)
+    target = structure.plt_candidates[0x47a5a]
+    assert (target.address, target.symbol) == (0x277a0, "*ABS*+0x7ab82@plt")
+    context = ControlFlowContext(structure, EmissionOptions())
+    caller = next(function for function in program.functions if function.name == "caller")
+    with pytest.raises(ValueError, match="cannot resolve PLT target"):
+        ControlFlowEmitter(lookup_profile=1).emit_program_scalar(
+            caller.instructions[1], caller.instructions[1].operands, "original_base",
+            context=context, active_long_jump_veneers={},
+        )
+
+
+def test_unknown_irelative_pair_keeps_synthetic_symbol():
+    program = AsmParser().parse_string_program("""
+Disassembly of section .plt:
+0000000000003020 <*ABS*+0x5000@plt>:
+    3020: 00000013 nop
+Disassembly of section .text:
+0000000000001000 <caller>:
+    1000: 00002e17 auipc t3,0x2
+    1004: 020e00e7 jalr ra,32(t3)
+0000000000005000 <unknown_resolver>:
+    5000: 00008067 ret
+""")
+    target = analyze_structure(program).plt_candidates[0x1004]
+    assert target.symbol == "*ABS*+0x5000@plt"
+
+
 def test_pair_without_contiguous_auipc_has_no_candidate():
     program = _pair_program(jalr="ra, 32(t3)")
     program.functions[0].instructions[0].address = 0xffc
@@ -225,6 +265,9 @@ def test_plt_calls_select_variant(opcode, operands, rd, profile):
     assert "%got_pcrel_hi(invoke)" in output
     assert f"li      a0, {profile}" in output
     assert output.count("call    query_original_translated_map@plt") == 1
+    assert "bnez    a0, 1f" in output
+    _assert_only_expected_traps(output, profile)
+    assert output.index("bnez    a0, 1f") < output.index(f"jalr    {rd}, 0(t1)")
     assert output.endswith(f"jalr    {rd}, 0(t1)")
     assert "call    invoke@plt" not in output
 

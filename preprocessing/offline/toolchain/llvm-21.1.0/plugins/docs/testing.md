@@ -1,6 +1,6 @@
 # 测试指南
 
-命令使用环境变量表示路径，不依赖特定机器的绝对路径；测试结果以对应命令的实际输出为准：
+本文档是可复现的测试指南。命令使用环境变量表示路径，不依赖任何特定机器的绝对路径；测试结果应以本次命令输出为准：
 
 | 变量 | 含义 |
 |---|---|
@@ -105,7 +105,7 @@ ctest --test-dir "$STACK_BUILD" --output-on-failure
 已中止（核心已转储）
 ```
 
-这是预期失败用例，不属于测试异常。
+这是 **expected negative test**，不是测试失败。
 
 ---
 
@@ -167,10 +167,10 @@ cmake --build "$GATE_BUILD" --target ChimeraVectorGate
 ctest --test-dir "$GATE_BUILD" --output-on-failure
 ```
 
-`ChimeraVectorGate` CTest 跑 `tests/vector_gate/run.sh`。构造函数和析构函数
-的回归覆盖 Itanium ABI 别名：ELF 符号表中的 `C1`/`D1` 名称与 IR 定义中的
-`C2`/`D2` 名称不同。测试从 `nm` 结果生成 gate 名单，再检查 IR 中实际定义
-是否带有 gate attribute：
+`ChimeraVectorGate` CTest 跑 `tests/vector_gate/run.sh`，核心回归是
+2026-08-28 的 **C1/C2 构造函数重整名错配**事故：ELF 符号表暴露 `C1` 拼写、
+IR 模块定义 `C2` 拼写，gate 名单只拿符号表拼写时永远匹配不上 IR 定义，
+复检会持续报告 local-root。测试用 nm 取 `C1` 拼写驱动插件，断言：
 
 - 构造函数（C1 名单条目）被打上 `chimera-no-vectorize`；
 - 析构函数 `D1` 拼写同样生效（D1/D2 互为别名）；

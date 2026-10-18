@@ -113,9 +113,7 @@ def wrapper(symbol, body, source_vlenb, native, command):
             lines += [f"    vl1re8.v v{reg}, (t0)", f"    addi t0, t0, {source_vlenb}"]
         lines += ["    la t0, input_vl", "    ld t0, 0(t0)",
                   "    la t1, input_vtype", "    ld t1, 0(t1)", "    vsetvl zero, t0, t1"]
-    # The reverse candidate restores guest vcsr, so seed a distinct host value
-    # (xor 7) to detect accidental preservation of host state. Native and forward
-    # start with guest vcsr; forward preserves the caller's hardware value.
+    # The reverse path restores hardware vcsr; the forward path keeps caller state.
     lines += ["    la t0, input_vcsr", "    ld t0, 0(t0)"] if native or source_vlenb == 128 else ["    li t0, 7", "    la t1, input_vcsr", "    ld t1, 0(t1)", "    xor t0, t0, t1"]
     lines += ["    csrw vcsr, t0", "    csrw vstart, zero", "    la t0, input_fcsr", "    ld t0, 0(t0)", "    csrw fcsr, t0", "    la t0, fp_seed"]
     lines += [f"    fld f{reg}, {reg * 8}(t0)" for reg in range(32)]

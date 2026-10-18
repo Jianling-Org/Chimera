@@ -20,15 +20,15 @@
   "normalized_assembly": {
     "scalar-e32m1": {
       "line_count": 54,
-      "sha256": "fd3e31d655acb9d358c0fefe9e5a655ccc348c2b03e8d42300229293f0b5703e"
+      "sha256": "686178e7248008b2773f22775bc46b1b7669d57793ea30ae86283d278a61ab97"
     },
     "rvv256-wide-e32m1": {
       "line_count": 42,
-      "sha256": "e1f36f184df139301c3a0ff974cf9bb892658f7a4c9e229d700193e4b0ca4027"
+      "sha256": "07004e302dfb4118947c73f131ee05a179fe82d21e6861a00fae73a04a41144d"
     },
     "rvv256-conservative-e32m1": {
       "line_count": 73,
-      "sha256": "4758690bfc0858b2f89e893322b1c25cce102264ba468aa5bea4a72874bea008"
+      "sha256": "52dc616536256012d07569d0a4a574c6ba6ed29284a4ec0e330aac9d910817b4"
     },
     "rvv1024-transition-e32m1": {
       "line_count": 62,

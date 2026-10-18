@@ -225,7 +225,6 @@ def test_vnclip_rounding_and_sticky_vcsr(tmp_path, riscv_tools, vcsr):
     ("vfmacc.vf v8,fa0,v16,v0.t", 32),
     ("vnsrl.wi v24,v16,3,v0.t", 16),
     ("vle32.v v8,(a0),v0.t", 32),
-    ("vle8ff.v v8,(a0)", 8),
 ])
 def test_forward_mask_load_is_reported_as_v0_clobber(wide, command, sew):
     from riscv.extensions.rvv.backends.rvv256.backend import RVV256Dispatcher

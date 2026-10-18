@@ -79,9 +79,7 @@ constexpr size_t q8k_blk_size(size_t n) {
     (args.out / "ime_kernel.cpp").write_text(preamble + text[struct_start:struct_end] + "\n" + function + "\n")
     symbol = "ggml_gemm_q3_K_64x1_q8_K"
     dump = subprocess.check_output([args.objdump, "-d", "--disassemble-symbols=" + symbol, str(args.rvv_elf)], text=True)
-    fn = next((f for f in AsmParser().parse_string_functions(dump) if f.name == symbol), None)
-    if fn is None:
-        raise ValueError(f"{args.rvv_elf}: {args.objdump} did not produce {symbol}")
+    fn = next(f for f in AsmParser().parse_string_functions(dump) if f.name == symbol)
     instructions = [i for i in fn.instructions if i.opcode]
     if any(i.opcode in {"auipc", "jal", "jalr", "call", "tail", "jr"} for i in instructions):
         raise ValueError("RVV baseline now has relocations/calls requiring review")
@@ -90,8 +88,6 @@ constexpr size_t q8k_blk_size(size_t n) {
     for insn in instructions:
         operands = list(insn.operands)
         if insn.target_address is not None:
-            if insn.target_address not in labels:
-                raise ValueError(f"{args.rvv_elf}: instruction 0x{insn.address:x} targets external 0x{insn.target_address:x}")
             operands[-1] = labels[insn.target_address]
         output += [labels[insn.address] + ":", "    " + insn.opcode + " " + ", ".join(operands)]
     output.append(".size gemm_rvv_baseline, .-gemm_rvv_baseline")

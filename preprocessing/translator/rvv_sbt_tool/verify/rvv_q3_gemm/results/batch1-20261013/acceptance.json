@@ -1,0 +1,29 @@
+{
+  "main_operator": "ggml_gemm_q3_K_64x1_q8_K",
+  "final_pairs": 400,
+  "retained_variant_measurements": 800,
+  "all_four_shapes_both_directions_improved": true,
+  "forward_time_reduction_percent": [
+    2.6577308363482266,
+    3.81428221225506
+  ],
+  "reverse_time_reduction_percent": [
+    2.0194264233777126,
+    2.2585133311527503
+  ],
+  "state_records_forward": 68454,
+  "state_records_reverse": 8766,
+  "generic_reverse_records": 51624,
+  "guard_probe_cases": 9,
+  "tests_passed": 1811,
+  "tests_skipped": 41,
+  "formal_payload_byte_identical": true,
+  "formal_gate_byte_identical": true,
+  "source_pc_labels_each_direction": 1140,
+  "source_ebreak_counts": {
+    "forward": 43,
+    "reverse": 399
+  },
+  "worktree_preserved": true,
+  "board_root": "/home/yzgx/guoxuan/rvv-bench/rvv-q3-batch1-20261013-01a12f6b"
+}

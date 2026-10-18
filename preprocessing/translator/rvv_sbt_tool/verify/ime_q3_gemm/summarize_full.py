@@ -20,14 +20,12 @@ def kde_mode(values, bandwidth):
     low, high = min(values), max(values)
     points = [low+(high-low)*i/4096 for i in range(4097)]
     densities = [density(x) for x in points]
-    peaks = [(densities[0], low), (densities[-1], high)]
+    peaks = []
     ratio = (math.sqrt(5)-1)/2
-    # Include endpoint brackets when a mode lies closer than one grid step.
-    for i in range(len(points)):
-        if ((i > 0 and densities[i] < densities[i-1]) or
-                (i+1 < len(points) and densities[i] < densities[i+1])):
+    for i in range(1,4096):
+        if densities[i] < densities[i-1] or densities[i] < densities[i+1]:
             continue
-        a,b=points[max(0,i-1)],points[min(len(points)-1,i+1)]
+        a,b=points[i-1],points[i+1]
         c,d=b-ratio*(b-a),a+ratio*(b-a)
         fc,fd=density(c),density(d)
         for _ in range(80):
@@ -37,21 +35,22 @@ def kde_mode(values, bandwidth):
                 a,c,fc=c,d,fd; d=a+ratio*(b-a); fd=density(d)
         x=(a+b)/2
         peaks.append((density(x),x))
-    return max(peaks, key=lambda peak: peak[0])[1]
+    if not peaks:
+        raise ValueError("KDE peak was not bracketed")
+    return max(peaks)[1]
 
 
 def summarize_measurement(data, shape):
-    expected = dict(zip(("M", "N", "K"), shape))
-    expected.update(validation="PASS", max_abs_error=0, canaries_and_inputs_intact=True,
-                    vlenb=128, affinity_masks=[1 << cpu for cpu in range(8, 16)])
-    for field, value in expected.items():
-        if data.get(field) != value:
-            raise ValueError(f"shape={shape}: {field}: expected {value!r}, got {data.get(field)!r}")
+    if (tuple(data[key] for key in ("M", "N", "K")) != shape
+            or data["validation"] != "PASS" or data["max_abs_error"] != 0
+            or not data["canaries_and_inputs_intact"] or data["vlenb"] != 128
+            or data["affinity_masks"] != [1 << cpu for cpu in range(8, 16)]):
+        raise ValueError("invalid measurement")
     values = [v * 1000 for v in data["seconds_per_call"]]
     if len(values) != 50 or any(not math.isfinite(v) or v <= 0 for v in values):
         raise ValueError("invalid samples")
     bandwidth = statistics.stdev(values) * len(values) ** -0.2
-    return {"kde_search": "endpoint-brackets-v2", "kde_mode_ms": kde_mode(values, bandwidth),
+    return {"kde_mode_ms": kde_mode(values, bandwidth),
             "median_ms": statistics.median(values), "mean_ms": statistics.mean(values),
             "min_ms": min(values), "max_ms": max(values), "bandwidth_ms": bandwidth,
             "half_bandwidth_mode_ms": kde_mode(values, bandwidth / 2),

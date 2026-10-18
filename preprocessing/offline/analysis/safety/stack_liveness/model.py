@@ -82,6 +82,7 @@ class CallTargetResolution:
 UNRESOLVED_ACTIVE_CALL = "unresolved-active-indirect-call"
 ACTIVE_EXTERNAL_CALL = "active-external-call"
 VLEN_SCALAR_ESCAPE = "escaping-vlen-scalar-value"
+VLEN_CONTROL_FALLBACK = "unclosed-vlen-control-region"
 # Cache observations (selection, store/return scope, effect diagnostics) are
 # informational. Only an active transfer outside the complete Program graph
 # constitutes a finding; local cache state still contributes to liveness.
@@ -110,6 +111,7 @@ ORIGIN_IRREDUCIBLE = "irreducible"
 #: Resolved vector stack object activity of this function.
 ORIGIN_VECTOR_DATA = "local-vector-data"
 ORIGIN_LOCAL_SCALAR = "local-vlen-scalar"
+ORIGIN_LOCAL_CONTROL = "local-vlen-control"
 
 
 @dataclass(frozen=True, slots=True)
@@ -250,6 +252,8 @@ class ActiveOrigin:
     proof: str | None = None
     gaps: tuple[str, ...] = ()
     width_evidence: ScalarWidthEvidence | None = None
+    control_guard_address: int | None = None
+    width_source_candidates: tuple[int, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -775,6 +779,8 @@ class StackLivenessResult:
     closed_external_calls: dict[int, tuple[int, ...]] = field(default_factory=dict)
     external_leaf_proofs: tuple[dict, ...] = ()
     external_leaf_rejections: tuple[dict, ...] = ()
+    external_no_callback_interfaces: tuple[dict, ...] = ()
+    external_interface_rejections: tuple[dict, ...] = ()
 
     def proof(self, proof_id: str | None) -> OriginProof | None:
         if proof_id is None:

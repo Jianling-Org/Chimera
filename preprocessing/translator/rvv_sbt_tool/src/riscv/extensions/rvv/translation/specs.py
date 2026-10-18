@@ -106,7 +106,7 @@ def make_scalar_result_resolvers(
             register = normalize_fpr_name(str(insn.operands[0]))
         else:
             return frozenset()
-        return frozenset({register}) if register and register != "zero" else frozenset()
+        return frozenset({register}) if register else frozenset()
 
     def semantic_inputs(context: HandlerContext, plan: LoweringPlan) -> frozenset[str]:
         return resolve_scalar_semantic_inputs(

@@ -112,8 +112,8 @@ class PatchSafepointsStep:
         original_base = context.platform.load_base(main.selected_path)
         safe_rvas = frozenset(
             address - original_base
-            for address, record in result.safety.records.items()
-            if record.safe and address >= original_base
+            for address in result.iter_safe_addresses()
+            if address >= original_base
         )
         session = context.require_global("workspace_session")
         trap_services = getattr(

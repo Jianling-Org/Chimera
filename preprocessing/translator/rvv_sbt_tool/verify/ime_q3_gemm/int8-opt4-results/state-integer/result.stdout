@@ -1,0 +1,2 @@
+cpu=8 vlenb=128 native_ime_comparison=enabled
+PASS cases=58080 vectors=32x128B gprs=32 fprs=32 csr=vl,vtype,vstart,vcsr,fcsr completed=58080 rejected=0

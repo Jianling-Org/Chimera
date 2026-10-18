@@ -1,0 +1,8 @@
+{
+  "source_pc_count": 1140,
+  "changed_source_blocks": 84,
+  "changed_blocks_exactly_three_opcode_sites": true,
+  "other_source_blocks_byte_identical": true,
+  "forward_byte_identical": true,
+  "ebreaks": 399
+}

@@ -184,7 +184,9 @@ class TranslationStep:
             )
             context.platform.runner.run(
                 context.toolchain.compiler.compile(
-                    [request.assembly_output, provenance_output], request.library_output
+                    [request.assembly_output, provenance_output],
+                    request.library_output,
+                    flags=("-fPIC", "-shared", "-Wl,-Bsymbolic-functions"),
                 )
             )
             if not request.library_output.is_file():

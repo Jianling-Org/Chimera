@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 from riscv.extensions.rvv.translation.contracts import InstructionValidationError
-from riscv.extensions.rvv.translation.temps import record_fpr
 from riscv.extensions.rvv.backends.rvv256.temp_regs import VRegTempAllocator
+from riscv.extensions.rvv.translation.temps import TempRegisterAllocator
 from riscv.extensions.rvv.backends.rvv256.support import (
     _chunk_size,
     _chunk_bytes,
@@ -55,7 +55,8 @@ def _build_vfmacc_vf_lines(context) -> list[str]:
     sew = state.sew
     chunk_n = _chunk_size(sew)       # 每块元素数
     c_bytes = _chunk_bytes()         # 每块字节数 (32)
-    shift_amt = chunk_n.bit_length() - 1  # log2(chunk_n)
+    elem_bytes = sew // 8
+    shift_amt = {8: 5, 16: 4, 32: 3, 64: 2}[sew]  # log2(chunk_n)
     mask = chunk_n - 1               # chunk_n-1 掩码
 
     vd_off = allocator.get_offset(vd)
@@ -81,6 +82,8 @@ def _build_vfmacc_vf_lines(context) -> list[str]:
         mask_bit_idx = temps.alloc_gpr()
         v0_base = temps.alloc_gpr()
 
+    vle_instr = _get_vle_instr(sew)
+    vse_instr = _get_vse_instr(sew)
 
     # ========== 注释头部 ==========
     lines.append(f"# vfmacc.vf {vd}, {rs1}, {vs2} (256-bit mode)")
@@ -182,7 +185,8 @@ def _build_vfmacc_vv_lines(context) -> list[str]:
     sew = state.sew
     chunk_n = _chunk_size(sew)
     c_bytes = _chunk_bytes()
-    shift_amt = chunk_n.bit_length() - 1
+    elem_bytes = sew // 8
+    shift_amt = {8: 5, 16: 4, 32: 3, 64: 2}[sew]
     mask = chunk_n - 1
 
     vd_off = allocator.get_offset(vd)
@@ -200,7 +204,7 @@ def _build_vfmacc_vv_lines(context) -> list[str]:
     # register-form AVL 时，_emit_vsetvl_for_chunk 会再次写 vl_reg，从而把
     # 状态指针覆盖成 32。即使当前浮点白名单通常只到 e32/e64，也在这里
     # 保持统一的 live-range（活跃区间）约束，避免后续扩展重新引入该问题。
-    temps = context.temp_register_allocator
+    temps = TempRegisterAllocator(insn, reserved_gprs=("t6",), extra_avoid_fprs=("ft0", "ft1", "ft2"))
     vl_reg = temps.alloc_gpr()
     chunk_count = temps.alloc_gpr()
     tail_count = temps.alloc_gpr()
@@ -255,8 +259,6 @@ def _build_vfmacc_vv_lines(context) -> list[str]:
     lines.append(f"    # --- 尾部标量回退: 剩余 {tail_count} 个元素 ---")
     tail_loop = new_label("vfmacc_vv_tail")
     end_label = new_label("vfmacc_vv_end")
-    for register in ("ft0", "ft1", "ft2"):
-        record_fpr(register)
     _emit_scalar_tail_vv(
         lines=lines,
         sew=sew,
@@ -302,7 +304,8 @@ def _build_vfmul_vf_lines(context) -> list[str]:
     sew = state.sew
     chunk_n = _chunk_size(sew)
     c_bytes = _chunk_bytes()
-    shift_amt = chunk_n.bit_length() - 1
+    elem_bytes = sew // 8
+    shift_amt = {8: 5, 16: 4, 32: 3, 64: 2}[sew]
     mask = chunk_n - 1
 
     vd_off = allocator.get_offset(vd)

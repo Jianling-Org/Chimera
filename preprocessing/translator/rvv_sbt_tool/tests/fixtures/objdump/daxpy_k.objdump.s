@@ -1,5 +1,5 @@
 
-daxpy_k.o:	file format elf64-littleriscv
+/Users/choreaw/temp_experiment/daxpy_k.o:	file format elf64-littleriscv
 
 Disassembly of section .text:
 

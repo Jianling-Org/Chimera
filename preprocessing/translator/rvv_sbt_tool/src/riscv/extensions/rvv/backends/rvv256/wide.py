@@ -13,16 +13,14 @@ from __future__ import annotations
 from fractions import Fraction
 import math
 import re
-from typing import Callable, Iterable, NoReturn
+from typing import Callable, Iterable
 
 from riscv.extensions.rvv.runtime.layout import CSR_OFFSETS, SimulatedStateLayout
 from riscv.extensions.rvv.runtime.geometry import RVV1024_TO_RVV256_GEOMETRY
 from riscv.extensions.rvv.analysis.config import StateTracker
 from riscv.extensions.rvv.translation.lowering import AssemblyFragments
-from riscv.extensions.rvv.translation.contracts import InstructionSpec, InstructionValidationError
-from riscv.extensions.rvv.translation.temps import (
-    TempRegisterAllocator, TempRegisterAllocationError, record_vreg_group,
-)
+from riscv.extensions.rvv.translation.contracts import InstructionSpec
+from riscv.extensions.rvv.translation.temps import TempRegisterAllocator, record_vreg_group
 from riscv.extensions.rvv.backends.rvv256.temp_regs import VRegTempAllocator
 from riscv.extensions.rvv.backends.rvv256.support import _emit_state_ptr, _load_vl_from_csr
 from riscv.extensions.rvv.backends.rvv256.lowering_metadata import (
@@ -72,9 +70,14 @@ def _split_mask_operand(insn: RVInstruction) -> tuple[bool, list[object]] | None
     return True, operands[:-1]
 
 
-def _reject_shape(insn: RVInstruction, message: str) -> NoReturn:
-    """拒绝非法形态；单纯不适用的宽路径候选仍直接返回 None。"""
-    raise InstructionValidationError(insn, message)
+def _reject_shape(message: str) -> None:
+    """通知宽路径放弃当前 shape，并交由规格 builder 或 fallback 收口。
+
+    shape 的静态错误应由 registry validator 在 plan 阶段报告；宽路径这里遇到
+    资源或布局不适用时只返回 ``None``，不得把错误注释伪装成汇编正文。
+    """
+
+    raise ValueError(message)
 
 
 def _emit_vtype(
@@ -225,7 +228,7 @@ def _emit_wide_same_width_arithmetic(
         return None
 
     if not spec.vector_operand_positions:
-        return _reject_shape(insn,
+        return _reject_shape(
             f"同宽宽路径缺少向量操作数位置: {insn.op_str}"
         )
     positions = (0, *spec.vector_operand_positions)
@@ -233,7 +236,7 @@ def _emit_wide_same_width_arithmetic(
         positions = (*positions, spec.scalar_operand_position)
     expected_operands = max(positions) + 1
     if len(operands) != expected_operands:
-        return _reject_shape(insn, f"Invalid operands for {insn.opcode}: {insn.op_str}")
+        return _reject_shape(f"Invalid operands for {insn.opcode}: {insn.op_str}")
 
     vd = str(operands[0])
     vector_operands = tuple(
@@ -253,7 +256,7 @@ def _emit_wide_same_width_arithmetic(
             target_group_count=len(unique_vector_operands),
         )
     except ValueError as exc:
-        return _reject_shape(insn, str(exc))
+        return _reject_shape(str(exc))
     if plan is None:
         return None
 
@@ -306,7 +309,7 @@ def _emit_wide_same_width_arithmetic(
             # vx/vi/vf 的标量寄存器或立即数位置由描述表提供，不属于模拟
             # 向量状态槽，也不能交给 source group planner 当作 vreg 校验。
             if spec.scalar_operand_position is None:
-                return _reject_shape(insn,
+                return _reject_shape(
                     f"同宽宽路径缺少标量操作数位置: {insn.op_str}"
                 )
             scalar_or_immediate = str(operands[spec.scalar_operand_position])
@@ -365,7 +368,7 @@ def emit_wide_arithmetic(
         return None
     is_masked, operands = split
     if len(operands) < 3:
-        return _reject_shape(insn, f"Invalid operands for {insn.opcode}: {insn.op_str}")
+        return _reject_shape(f"Invalid operands for {insn.opcode}: {insn.op_str}")
     if insn.opcode.startswith("vf") and state.sew not in (32, 64):
         return None
     if state.sew not in (8, 16, 32, 64):
@@ -402,7 +405,7 @@ def emit_wide_arithmetic(
             ),
         )
     except ValueError as exc:
-        return _reject_shape(insn, str(exc))
+        return _reject_shape(str(exc))
     if plan is None:
         return None
 
@@ -1015,7 +1018,7 @@ def _allocate_native_mask_groups(
         for emul in emuls:
             width = int(emul) if emul >= 1 else 1
             groups.append(allocator.alloc_vreg_group(width))
-    except TempRegisterAllocationError:
+    except ValueError:
         return None
     return tuple(groups)
 
@@ -1087,9 +1090,9 @@ def emit_wide_mask(
         try:
             imm_value = int(immediate, 0)
         except ValueError:
-            return _reject_shape(insn, f"vmseq.vi 非法立即数: {immediate}")
+            return _reject_shape(f"vmseq.vi 非法立即数: {immediate}")
         if imm_value < -16 or imm_value > 15:
-            return _reject_shape(insn, f"vmseq.vi 立即数超出 signed 5-bit: {immediate}")
+            return _reject_shape(f"vmseq.vi 立即数超出 signed 5-bit: {immediate}")
         sew = int(state.sew)
         if _vmseq_output_overlaps_unread_source(
             vd=vd,
@@ -1255,7 +1258,7 @@ def emit_wide_mask(
     # 自身栈帧恢复和保留该源语义输出。比起静默丢失结果，明确 fail-fast，等待
     # 专门的无栈 wrapper/控制流改造后再扩展这一个罕见形态。
     if rd.strip().lower() in {"sp", "x2"}:
-        return _reject_shape(insn, f"{opcode} 暂不支持把标量结果写入 sp/x2: {insn.op_str}")
+        return _reject_shape(f"{opcode} 暂不支持把标量结果写入 sp/x2: {insn.op_str}")
 
     # t6/x31 在翻译块内固定充当 simulated_cpu_state 基址。结果必须先在普通
     # 临时 GPR 中累计，清零 vstart 后才写回 t6；否则 new_label 的统一
@@ -1356,7 +1359,7 @@ def emit_wide_memory(
     eew = int(eew_text)
     expected = 3 if kind in ("vlse", "vsse") else 2
     if len(operands) < expected:
-        return _reject_shape(insn, f"Invalid operands for {insn.opcode}: {insn.op_str}")
+        return _reject_shape(f"Invalid operands for {insn.opcode}: {insn.op_str}")
     vector_reg = str(operands[0])
     base_reg = str(operands[1]).strip("()")
     stride_reg = str(operands[2]) if expected == 3 else None
@@ -1374,7 +1377,7 @@ def emit_wide_memory(
             ),
         )
     except ValueError as exc:
-        return _reject_shape(insn, str(exc))
+        return _reject_shape(str(exc))
     if plan is None:
         return None
 
@@ -1465,7 +1468,7 @@ def emit_wide_whole_register_move(
     match = re.match(r"^vmv([1248])r\.v$", insn.opcode)
     if not match or len(insn.operands) != 2:
         if match:
-            return _reject_shape(insn, f"{insn.opcode} 不接受 execution mask 或额外操作数: {insn.op_str}")
+            return _reject_shape(f"{insn.opcode} 不接受 execution mask 或额外操作数: {insn.op_str}")
         return None
     nf = int(match.group(1))
     vd, vs2 = map(str, insn.operands[:2])
@@ -1473,7 +1476,7 @@ def emit_wide_whole_register_move(
         _validate_source_group(vd, Fraction(nf))
         _validate_source_group(vs2, Fraction(nf))
     except ValueError as exc:
-        return _reject_shape(insn, str(exc))
+        return _reject_shape(str(exc))
 
     total_bytes = nf * allocator.vreg_size
 
@@ -1538,7 +1541,7 @@ def emit_wide_whole_register_memory(
     if not load_match and not store_match:
         return None
     if len(insn.operands) != 2:
-        return _reject_shape(insn, f"Invalid operands for {insn.opcode}: {insn.op_str}")
+        return _reject_shape(f"Invalid operands for {insn.opcode}: {insn.op_str}")
 
     nf = int((load_match or store_match).group(1))
     vector_reg = str(insn.operands[0])
@@ -1546,7 +1549,7 @@ def emit_wide_whole_register_memory(
     try:
         _validate_source_group(vector_reg, Fraction(nf))
     except ValueError as exc:
-        return _reject_shape(insn, str(exc))
+        return _reject_shape(str(exc))
 
     total_bytes = nf * allocator.vreg_size
 

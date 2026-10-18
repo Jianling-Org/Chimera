@@ -11,7 +11,6 @@ from __future__ import annotations
 
 import argparse
 import shutil
-import shlex
 import subprocess
 import sys
 from dataclasses import dataclass
@@ -180,8 +179,8 @@ def check_local_env(python_bin: str) -> int:
     return 0
 
 
-def check_server_env(cc: str | None = None, qemu: str | None = None) -> int:
-    missing = [tool for tool in (cc, qemu) if tool is not None and not tool_exists(tool)]
+def check_server_env(cc: str, qemu: str) -> int:
+    missing = [tool for tool in (cc, qemu) if not tool_exists(tool)]
     if missing:
         print("Missing build/run tools:")
         for item in missing:
@@ -195,8 +194,6 @@ def check_server_env(cc: str | None = None, qemu: str | None = None) -> int:
 def run_cmd(cmd: list[str], cwd: Path) -> None:
     try:
         subprocess.run(cmd, cwd=cwd, check=True)
-    except OSError as exc:
-        raise SystemExit(f"Cannot execute {cmd[0]!r} in {cwd}: {exc}") from exc
     except subprocess.CalledProcessError as exc:
         raise SystemExit(
             f"Command failed with exit code {exc.returncode}: {' '.join(cmd)}"
@@ -217,11 +214,7 @@ def translate_case(case: VerifyCase, python_bin: str) -> None:
 
 
 def build_case(case: VerifyCase, cc: str, cflags: str) -> None:
-    try:
-        flags = shlex.split(cflags)
-    except ValueError as error:
-        raise SystemExit(f"invalid --cflags: {error}") from error
-    cmd = [cc, *flags, "-o", case.elf, "main.c", case.translated]
+    cmd = [cc, *cflags.split(), "-o", case.elf, "main.c", case.translated]
     print(f"[build] {case.name}")
     run_cmd(cmd, case.case_dir)
 
@@ -264,10 +257,8 @@ def main() -> int:
 
     if args.action == "check-env":
         local_rc = check_local_env(args.python)
-        build_ok, run_ok = tool_exists(args.cc), tool_exists(args.qemu)
-        print(f"Capabilities: translate={local_rc == 0}, build={build_ok}, run={run_ok}")
-        print("check-env succeeds only when all three capabilities are available; individual actions check their own tools.")
-        return 0 if local_rc == 0 and build_ok and run_ok else 1
+        server_rc = check_server_env(args.cc, args.qemu)
+        return 0 if (local_rc == 0 and server_rc == 0) else 1
 
     if args.action == "translate":
         if check_local_env(args.python) != 0:
@@ -277,14 +268,14 @@ def main() -> int:
         return 0
 
     if args.action == "build":
-        if check_server_env(cc=args.cc) != 0:
+        if check_server_env(args.cc, args.qemu) != 0:
             return 1
         for case in cases:
             build_case(case, args.cc, args.cflags)
         return 0
 
     if args.action == "run":
-        if check_server_env(qemu=args.qemu) != 0:
+        if check_server_env(args.cc, args.qemu) != 0:
             return 1
         for case in cases:
             run_case(case, args.qemu)

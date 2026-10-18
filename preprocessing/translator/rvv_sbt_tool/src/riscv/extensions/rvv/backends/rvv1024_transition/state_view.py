@@ -90,10 +90,16 @@ def emit_source_vreg_address(
     lines: list[str],
     address_reg: str,
     source_vreg: str,
+    byte_offset: int = 0,
 ) -> None:
     """发射 ``address_reg = t6 + raw_offset``，其中 ``vN`` 位于 ``N*32``。"""
     number = _source_vreg_number(source_vreg)
-    offset = number * SOURCE_VLENB
+    offset = number * SOURCE_VLENB + int(byte_offset)
+    # payload 上界从 CSR 页起点推导，而不是内联 0x1000；布局 ABI 变更时
+    # 该边界自动跟随。
+    payload_end = CSR_OFFSETS["vstart"]
+    if offset < 0 or offset >= payload_end:
+        raise ValueError(f"源 RVV256 raw payload 偏移非法: {offset:#x}")
     if offset == 0:
         lines.append(f"    mv      {address_reg}, t6  # {_STATE_BASE_MARKER}")
     else:
@@ -146,7 +152,7 @@ def emit_csr_address(lines: list[str], address_reg: str, csr: str) -> None:
 
 
 def emit_load_csr(lines: list[str], value_reg: str, address_reg: str, csr: str) -> None:
-    """读取 CSR；不同于 value_reg 的 address_reg 保留 vstart 槽的地址。"""
+    """从既有状态 ABI 读取一个 64-bit 向量 CSR。"""
     if csr not in CSR_OFFSETS:
         raise ValueError(f"未知模拟 RVV CSR: {csr}")
     emit_csr_address(lines, address_reg, "vstart")
@@ -179,11 +185,7 @@ def emit_profile_guard(
     *,
     require_zero_vstart: bool,
 ) -> None:
-    """检查迁移前提，失败时跳到调用方的拒绝标签。
-
-    三个值寄存器的生存期不重叠，可以互为别名；scratch_reg 必须与它们
-    不同，成功后保留 t6 + CSR_OFFSETS["vstart"] 供调用方继续读取 CSR。
-    """
+    """检查迁移状态与目标核心 profile，失败时跳到调用方提供的拒绝标签。"""
     emit_load_csr(lines, state_vlenb_reg, scratch_reg, "vlenb")
     lines.append(f"    addi    {state_vlenb_reg}, {state_vlenb_reg}, {-SOURCE_VLENB}")
     lines.append(f"    bnez    {state_vlenb_reg}, {failure_label}")

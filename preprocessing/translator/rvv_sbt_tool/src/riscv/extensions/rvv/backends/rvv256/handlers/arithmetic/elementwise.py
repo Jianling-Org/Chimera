@@ -68,6 +68,7 @@ def _build_vadd_vv_lines(context) -> list[str]:
     sew = state.sew
     chunk_n = _chunk_size(sew)
     c_bytes = _chunk_bytes()
+    elem_bytes = sew // 8
     shift_amt = {8: 5, 16: 4, 32: 3, 64: 2}[sew]
     mask = chunk_n - 1
 
@@ -242,8 +243,8 @@ def _build_vsub_vv_lines(context) -> list[str]:
 
     lines.append(f"    # --- 主循环: 每块处理 {chunk_n} 个元素 ({c_bytes} 字节) ---")
     lines.append(f"    beqz    {chunk_count}, {after_main}")
-    _emit_vsetvl_for_chunk(lines, chunk_n, sew, "m1", vl_reg, scratch_reg=vl_reg)
     lines.append(f"{main_loop}:")
+    _emit_vsetvl_for_chunk(lines, chunk_n, sew, "m1", vl_reg, scratch_reg=vl_reg)
     lines.append("")
     lines.append(f"    {vle_instr} {vs2_vreg}, ({vs2_ptr})         # 加载 {vs2} 块")
     lines.append(f"    {vle_instr} {vs1_vreg}, ({vs1_ptr})         # 加载 {vs1} 块")
@@ -385,8 +386,6 @@ def _build_vadd_vi_lines(context) -> list[str]:
 
     lines.append(f"    # --- 主循环: 每块处理 {chunk_n} 个元素 ({c_bytes} 字节) ---")
     lines.append(f"    beqz    {chunk_count}, {after_main}")
-    if not is_masked:
-        _emit_vsetvl_for_chunk(lines, chunk_n, sew, "m1", vl_reg, scratch_reg=temp)
     lines.append(f"{main_loop}:")
     mask_suffix = ", v0.t" if is_masked else ""
     if is_masked:
@@ -396,6 +395,8 @@ def _build_vadd_vi_lines(context) -> list[str]:
         else:
             _emit_mask_extraction_chunk(lines, sew, mask_bit_idx, v0_base, vl_reg, temp)
             _emit_vsetvl_for_chunk(lines, chunk_n, sew, "m1", vl_reg, scratch_reg=temp)
+    else:
+        _emit_vsetvl_for_chunk(lines, chunk_n, sew, "m1", vl_reg, scratch_reg=temp)
     lines.append("")
     lines.append(f"    {vle_instr} {vs2_vreg}, ({vs2_ptr})         # 加载 {vs2} 块")
     lines.append(f"    vadd.vi {vd_vreg}, {vs2_vreg}, {imm_val}{mask_suffix}      # {vd_vreg}{mask_suffix} = {vs2_vreg}{mask_suffix} + {imm_val}")
@@ -529,8 +530,6 @@ def _build_vadd_vx_lines(context) -> list[str]:
 
     lines.append(f"    # --- 主循环: 每块处理 {chunk_n} 个元素 ({c_bytes} 字节) ---")
     lines.append(f"    beqz    {chunk_count}, {after_main}")
-    if not is_masked:
-        _emit_vsetvl_for_chunk(lines, chunk_n, sew, "m1", vl_reg, scratch_reg=temp)
     lines.append(f"{main_loop}:")
     mask_suffix = ", v0.t" if is_masked else ""
     if is_masked:
@@ -540,6 +539,8 @@ def _build_vadd_vx_lines(context) -> list[str]:
         else:
             _emit_mask_extraction_chunk(lines, sew, mask_bit_idx, v0_base, vl_reg, temp)
             _emit_vsetvl_for_chunk(lines, chunk_n, sew, "m1", vl_reg, scratch_reg=temp)
+    else:
+        _emit_vsetvl_for_chunk(lines, chunk_n, sew, "m1", vl_reg, scratch_reg=temp)
     lines.append("")
     lines.append(f"    {vle_instr} {vs2_vreg}, ({vs2_ptr})         # 加载 {vs2} 块")
     lines.append(f"    vadd.vx {vd_vreg}, {vs2_vreg}, {scalar_reg}{mask_suffix}      # {vd_vreg}{mask_suffix} = {vs2_vreg}{mask_suffix} + {rs1}")
@@ -663,13 +664,12 @@ def _build_vsub_vx_lines(context) -> list[str]:
 
     lines.append(f"    # --- 主循环: 每块处理 {chunk_n} 个元素 ({c_bytes} 字节) ---")
     lines.append(f"    beqz    {chunk_count}, {after_main}")
-    if not is_masked:
-        _emit_vsetvl_for_chunk(lines, chunk_n, sew, "m1", vl_reg, scratch_reg=temp)
     lines.append(f"{main_loop}:")
     mask_suffix = ", v0.t" if is_masked else ""
     if is_masked:
         _emit_mask_extraction_chunk(lines, sew, mask_bit_idx, v0_base, vl_reg, temp)
-        _emit_vsetvl_for_chunk(lines, chunk_n, sew, "m1", vl_reg, scratch_reg=temp)
+
+    _emit_vsetvl_for_chunk(lines, chunk_n, sew, "m1", vl_reg, scratch_reg=temp)
     lines.append("")
     lines.append(f"    {vle_instr} {vs2_vreg}, ({vs2_ptr})         # 加载 {vs2} 块")
     lines.append(f"    vsub.vx {vd_vreg}, {vs2_vreg}, {scalar_reg}{mask_suffix}      # {vd_vreg}{mask_suffix} = {vs2_vreg}{mask_suffix} - {rs1}")

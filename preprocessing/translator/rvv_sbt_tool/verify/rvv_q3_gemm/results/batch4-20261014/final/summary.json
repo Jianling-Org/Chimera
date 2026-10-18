@@ -1,0 +1,95 @@
+{
+  "operator": "ggml_gemm_q3_K_64x1_q8_K",
+  "method": "Paired median time reduction; 10000 iid paired bootstrap replicates, seed 20261013. KDE: Gaussian global mode with Scott bandwidth.",
+  "interval_boundary": "Bootstrap intervals describe these paired samples; they do not account for serial autocorrelation or predict other shapes.",
+  "rows": [
+    {
+      "experiment": "combined",
+      "case": "attn_kv_m32",
+      "use": "Attention K/V",
+      "direction": "reverse",
+      "samples": 50,
+      "baseline_kde_ms": 21.68099100122215,
+      "candidate_kde_ms": 20.53903858069232,
+      "baseline_median_ms": 21.68217501603067,
+      "candidate_median_ms": 20.53647928405553,
+      "paired_median_time_reduction_percent": 5.286299160163338,
+      "paired_bootstrap_95_interval_percent": [
+        5.27137742576651,
+        5.299588827597857
+      ],
+      "positive_pairs": 50,
+      "input_hashes": {
+        "weights_fnv1a64": "0e79a95e26b0d841",
+        "inputs_fnv1a64": "a0340129cb9876c0"
+      },
+      "raw_file": "combined/attn_kv_m32-reverse-50pairs-36262c140a9e-1791946234634699986.json"
+    },
+    {
+      "experiment": "combined",
+      "case": "attn_q_m32",
+      "use": "Attention Q/output",
+      "direction": "reverse",
+      "samples": 50,
+      "baseline_kde_ms": 173.67491782009043,
+      "candidate_kde_ms": 164.5141620615969,
+      "baseline_median_ms": 173.67704154457897,
+      "candidate_median_ms": 164.50554155744612,
+      "paired_median_time_reduction_percent": 5.28012006971561,
+      "paired_bootstrap_95_interval_percent": [
+        5.266878851478662,
+        5.290568020263886
+      ],
+      "positive_pairs": 50,
+      "input_hashes": {
+        "weights_fnv1a64": "cc4d71f3f825d745",
+        "inputs_fnv1a64": "853b87560d03f5ec"
+      },
+      "raw_file": "combined/attn_q_m32-reverse-50pairs-36262c140a9e-1791946214582832551.json"
+    },
+    {
+      "experiment": "combined",
+      "case": "ffn_down_m32",
+      "use": "FFN down",
+      "direction": "reverse",
+      "samples": 50,
+      "baseline_kde_ms": 480.40925126669185,
+      "candidate_kde_ms": 454.63283962006386,
+      "baseline_median_ms": 480.44668801594526,
+      "candidate_median_ms": 454.6556875575334,
+      "paired_median_time_reduction_percent": 5.373653911701004,
+      "paired_bootstrap_95_interval_percent": [
+        5.359757507744822,
+        5.383534988224592
+      ],
+      "positive_pairs": 50,
+      "input_hashes": {
+        "weights_fnv1a64": "b5d744cb7e6d5a85",
+        "inputs_fnv1a64": "9617ebe9d0c8308a"
+      },
+      "raw_file": "combined/ffn_down_m32-reverse-50pairs-36262c140a9e-1791946159677489455.json"
+    },
+    {
+      "experiment": "combined",
+      "case": "ffn_up_m32",
+      "use": "FFN gate/up",
+      "direction": "reverse",
+      "samples": 50,
+      "baseline_kde_ms": 478.5223652665265,
+      "candidate_kde_ms": 453.4605916314247,
+      "baseline_median_ms": 478.5127294017002,
+      "candidate_median_ms": 453.44629138708115,
+      "paired_median_time_reduction_percent": 5.242050834606376,
+      "paired_bootstrap_95_interval_percent": [
+        5.22978722722629,
+        5.252781067044676
+      ],
+      "positive_pairs": 50,
+      "input_hashes": {
+        "weights_fnv1a64": "f89b6be3f158a4bd",
+        "inputs_fnv1a64": "853b87560d03f5ec"
+      },
+      "raw_file": "combined/ffn_up_m32-reverse-50pairs-36262c140a9e-1791946104774342997.json"
+    }
+  ]
+}

@@ -386,6 +386,7 @@ def preflight_program(
             state.apply_init_vtype(init_vtype)
             state.config_str = f"init:{init_vtype}"
         allocator = SimulatedStateLayout()
+        dynamic_vtype_after_vsetvl = False
         for insn in function.instructions:
             if not _is_vector_or_vector_csr(insn, dispatcher):
                 continue
@@ -415,6 +416,18 @@ def preflight_program(
                         "过渡路径不能安全解释 RVV256 物理寄存器组"
                     )
                 record_issue(insn.address, insn.opcode, detail)
+                continue
+            if (
+                dynamic_vtype_after_vsetvl
+                and not is_config
+                and not known_specs
+                and not vtype_independent
+            ):
+                record_issue(
+                    insn.address,
+                    insn.opcode,
+                    "前序 vsetvl 的 vtype 来自运行时寄存器，后续指令缺少静态 vtype 分析",
+                )
                 continue
             if (
                 source_unknown
@@ -449,6 +462,13 @@ def preflight_program(
                     elif plan is not None:
                         plans.append(plan)
                 continue
+            if not is_config and not state.config_str and not vtype_independent:
+                record_issue(
+                    insn.address,
+                    insn.opcode,
+                    "缺少前置 vset* 或静态 vtype 分析",
+                )
+                continue
             plan, detail, recoverable = _plan_one(
                 insn,
                 state,
@@ -467,6 +487,10 @@ def preflight_program(
             if is_config:
                 if detail is None:
                     state.update(insn)
+                if insn.opcode == "vsetvl":
+                    dynamic_vtype_after_vsetvl = True
+                elif insn.opcode in {"vsetvli", "vsetivli"} and detail is None:
+                    dynamic_vtype_after_vsetvl = False
     if issues:
         raise TransitionPreflightError(issues)
     if fallback_required:

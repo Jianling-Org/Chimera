@@ -14,7 +14,6 @@ from __future__ import annotations
 
 import argparse
 import shutil
-import shlex
 import subprocess
 import sys
 from dataclasses import dataclass
@@ -191,8 +190,6 @@ def _vadd_source(*, masked: bool) -> str:
         if ((i % 3u) != 1u) mask[i / 8u] |= (uint8_t)(1u << (i % 8u));
     }
 '''
-    # Full-state checks deliberately enforce this translator's deterministic
-    # preservation choice for agnostic lanes; they are not a generic ISA oracle.
     expected_update = (
         "if ((i % 3u) != 1u) expected_vd[i] = lhs[i] + rhs[i];"
         if masked else "expected_vd[i] = lhs[i] + rhs[i];"
@@ -235,8 +232,6 @@ int main(void) {
     uint8_t *source = state_bytes() + RAW_VREG_OFFSET(4);
     for (size_t i = 0; i < VL; ++i) source[i] = (uint8_t)((int)(i % 5u) - 2);
     snapshot_expected_state();
-    /* Mask tail preservation is the translator contract tested here, even
-       though the ISA allows agnostic mask destination tail bits. */
     uint8_t *expected_mask = expected_state + RAW_VREG_OFFSET(1);
     long expected_first = -1;
     for (size_t i = 0; i < VL; ++i) {
@@ -487,11 +482,9 @@ def assemble_case(
     artifact_root: Path,
     llvm_mc: str,
     llvm_objdump: str,
-    *,
-    prepared: bool = False,
 ) -> None:
     """用 LLVM RISC-V backend 做静态汇编门禁，不宣称任何目标机语义。"""
-    directory = case_directory(case, artifact_root) if prepared else translate_case(case, artifact_root)
+    directory = translate_case(case, artifact_root)
     mc = require_tool(llvm_mc, "assemble")
     run_command(
         [
@@ -512,16 +505,12 @@ def assemble_case(
     print(f"[assemble] {case.name}: 静态汇编通过（非目标机语义证据）")
 
 
-def build_case(case: TransitionCase, artifact_root: Path, cc: str, cflags: str, *, prepared: bool = False) -> None:
+def build_case(case: TransitionCase, artifact_root: Path, cc: str, cflags: str) -> None:
     """在 RISC-V 目标工具链上链接 C reference 与候选汇编。"""
-    try:
-        flags = shlex.split(cflags)
-    except ValueError as error:
-        raise SystemExit(f"invalid --cflags: {error}") from error
-    directory = case_directory(case, artifact_root) if prepared else translate_case(case, artifact_root)
+    directory = translate_case(case, artifact_root)
     compiler = require_tool(cc, "build")
     run_command(
-        [compiler, *flags, "main.c", "translated.s", "-o", "verify.elf"],
+        [compiler, *cflags.split(), "main.c", "translated.s", "-o", "verify.elf"],
         directory,
     )
     print(f"[build] {case.name}: 目标可执行文件已生成")
@@ -558,8 +547,7 @@ def print_target_steps(case: TransitionCase, artifact_root: Path, args: argparse
     directory = case_directory(case, artifact_root)
     print(f"[target-steps] {case.name}: {case.description}")
     print("  1. 在目标环境确认 RVV 1.0 且硬件 VLEN=1024 bit（vlenb=128）。")
-    print("  2. 生成: " + shlex.join(["python3", str(HERE / "run_verify.py"), "translate",
-                                  "--case", case.name, "--artifact-root", str(artifact_root)]))
+    print(f"  2. 生成: python3 {HERE / 'run_verify.py'} translate --case {case.name}")
     print(f"  3. 构建: {args.cc} {args.cflags} main.c translated.s -o verify.elf")
     print(f"     工作目录: {directory}")
     print(f"  4. QEMU: {args.qemu} -cpu '{args.qemu_cpu}' ./verify.elf")
@@ -584,8 +572,6 @@ def main() -> int:
         return 0
 
     for case in cases:
-        if args.action == "full":
-            translate_case(case, artifact_root)
         if args.action == "translate":
             translate_case(case, artifact_root)
         elif args.action == "assemble":
@@ -598,10 +584,10 @@ def main() -> int:
             # `full` 优先补静态汇编门禁；若本机没有 LLVM，仍可在目标环境完成
             # C reference/candidate 差分，但输出会明确少了该层静态证据。
             if executable_path(args.llvm_mc) is not None:
-                assemble_case(case, artifact_root, args.llvm_mc, args.llvm_objdump, prepared=True)
+                assemble_case(case, artifact_root, args.llvm_mc, args.llvm_objdump)
             else:
                 print("[full] 未找到 llvm-mc，跳过静态汇编门禁；继续目标构建/运行。")
-            build_case(case, artifact_root, args.cc, args.cflags, prepared=True)
+            build_case(case, artifact_root, args.cc, args.cflags)
             run_case(case, artifact_root, args.qemu, args.qemu_cpu)
         else:  # argparse choices 已覆盖；保留防御性诊断。
             raise SystemExit(f"未处理的 action: {args.action}")

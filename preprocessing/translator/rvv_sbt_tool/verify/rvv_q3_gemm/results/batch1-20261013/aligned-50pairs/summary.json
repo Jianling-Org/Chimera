@@ -1,0 +1,183 @@
+{
+  "operator": "ggml_gemm_q3_K_64x1_q8_K",
+  "method": "Paired median time reduction; 10000 iid paired bootstrap replicates, seed 20261013. KDE: Gaussian global mode with Scott bandwidth.",
+  "interval_boundary": "Bootstrap intervals describe these paired samples; they do not account for serial autocorrelation or predict other shapes.",
+  "rows": [
+    {
+      "experiment": "forward",
+      "case": "attn_kv_m32",
+      "use": "Attention K/V",
+      "direction": "forward",
+      "samples": 50,
+      "baseline_kde_ms": 1.75757082202257,
+      "candidate_kde_ms": 1.691129561178744,
+      "baseline_median_ms": 1.7582722980398358,
+      "candidate_median_ms": 1.6910168864154094,
+      "paired_median_time_reduction_percent": 3.81428221225506,
+      "paired_bootstrap_95_interval_percent": [
+        3.7782351653211474,
+        3.9028541126655214
+      ],
+      "positive_pairs": 48,
+      "input_hashes": {
+        "weights_fnv1a64": "0e79a95e26b0d841",
+        "inputs_fnv1a64": "a0340129cb9876c0"
+      },
+      "raw_file": "forward/attn_kv_m32-forward-50pairs-5f202a275351-1791875011737458544.json"
+    },
+    {
+      "experiment": "forward",
+      "case": "attn_q_m32",
+      "use": "Attention Q/output",
+      "direction": "forward",
+      "samples": 50,
+      "baseline_kde_ms": 13.877597120194906,
+      "candidate_kde_ms": 13.514872492850783,
+      "baseline_median_ms": 13.877835983294062,
+      "candidate_median_ms": 13.50854430347681,
+      "paired_median_time_reduction_percent": 2.6577308363482266,
+      "paired_bootstrap_95_interval_percent": [
+        2.5565482855963606,
+        2.6922900174848996
+      ],
+      "positive_pairs": 47,
+      "input_hashes": {
+        "weights_fnv1a64": "cc4d71f3f825d745",
+        "inputs_fnv1a64": "853b87560d03f5ec"
+      },
+      "raw_file": "forward/attn_q_m32-forward-50pairs-5f202a275351-1791875000105410670.json"
+    },
+    {
+      "experiment": "forward",
+      "case": "ffn_down_m32",
+      "use": "FFN down",
+      "direction": "forward",
+      "samples": 50,
+      "baseline_kde_ms": 38.22966292705717,
+      "candidate_kde_ms": 36.869934392411295,
+      "baseline_median_ms": 38.23347917447488,
+      "candidate_median_ms": 36.87347917972754,
+      "paired_median_time_reduction_percent": 3.5476080824999534,
+      "paired_bootstrap_95_interval_percent": [
+        3.509862539185815,
+        3.580895154951147
+      ],
+      "positive_pairs": 50,
+      "input_hashes": {
+        "weights_fnv1a64": "b5d744cb7e6d5a85",
+        "inputs_fnv1a64": "9617ebe9d0c8308a"
+      },
+      "raw_file": "forward/ffn_down_m32-forward-50pairs-5f202a275351-1791874987271214726.json"
+    },
+    {
+      "experiment": "forward",
+      "case": "ffn_up_m32",
+      "use": "FFN gate/up",
+      "direction": "forward",
+      "samples": 50,
+      "baseline_kde_ms": 38.32913008366272,
+      "candidate_kde_ms": 37.264931417934385,
+      "baseline_median_ms": 38.3246528217569,
+      "candidate_median_ms": 37.25665986227493,
+      "paired_median_time_reduction_percent": 2.7634612842214135,
+      "paired_bootstrap_95_interval_percent": [
+        2.6865028385635483,
+        2.8547700460515024
+      ],
+      "positive_pairs": 49,
+      "input_hashes": {
+        "weights_fnv1a64": "f89b6be3f158a4bd",
+        "inputs_fnv1a64": "853b87560d03f5ec"
+      },
+      "raw_file": "forward/ffn_up_m32-forward-50pairs-5f202a275351-1791874974334617903.json"
+    },
+    {
+      "experiment": "reverse",
+      "case": "attn_kv_m32",
+      "use": "Attention K/V",
+      "direction": "reverse",
+      "samples": 50,
+      "baseline_kde_ms": 28.95567257675265,
+      "candidate_kde_ms": 28.370275063096997,
+      "baseline_median_ms": 28.957687638467178,
+      "candidate_median_ms": 28.37180212372914,
+      "paired_median_time_reduction_percent": 2.0216400994787778,
+      "paired_bootstrap_95_interval_percent": [
+        2.015609019804543,
+        2.02491471931443
+      ],
+      "positive_pairs": 50,
+      "input_hashes": {
+        "weights_fnv1a64": "0e79a95e26b0d841",
+        "inputs_fnv1a64": "a0340129cb9876c0"
+      },
+      "raw_file": "reverse/attn_kv_m32-reverse-50pairs-a304d75c650a-1791875196321283949.json"
+    },
+    {
+      "experiment": "reverse",
+      "case": "attn_q_m32",
+      "use": "Attention Q/output",
+      "direction": "reverse",
+      "samples": 50,
+      "baseline_kde_ms": 231.75386540928474,
+      "candidate_kde_ms": 226.72967348125175,
+      "baseline_median_ms": 231.75143799744546,
+      "candidate_median_ms": 226.7358540557325,
+      "paired_median_time_reduction_percent": 2.165922978933188,
+      "paired_bootstrap_95_interval_percent": [
+        2.159712084880372,
+        2.1719781039998276
+      ],
+      "positive_pairs": 50,
+      "input_hashes": {
+        "weights_fnv1a64": "cc4d71f3f825d745",
+        "inputs_fnv1a64": "853b87560d03f5ec"
+      },
+      "raw_file": "reverse/attn_q_m32-reverse-50pairs-a304d75c650a-1791875169660078762.json"
+    },
+    {
+      "experiment": "reverse",
+      "case": "ffn_down_m32",
+      "use": "FFN down",
+      "direction": "reverse",
+      "samples": 50,
+      "baseline_kde_ms": 643.8426711780793,
+      "candidate_kde_ms": 630.8213991070119,
+      "baseline_median_ms": 643.8499169889838,
+      "candidate_median_ms": 630.8299584779888,
+      "paired_median_time_reduction_percent": 2.0194264233777126,
+      "paired_bootstrap_95_interval_percent": [
+        2.015571891347012,
+        2.028148632204818
+      ],
+      "positive_pairs": 50,
+      "input_hashes": {
+        "weights_fnv1a64": "b5d744cb7e6d5a85",
+        "inputs_fnv1a64": "9617ebe9d0c8308a"
+      },
+      "raw_file": "reverse/ffn_down_m32-reverse-50pairs-a304d75c650a-1791875096032435622.json"
+    },
+    {
+      "experiment": "reverse",
+      "case": "ffn_up_m32",
+      "use": "FFN gate/up",
+      "direction": "reverse",
+      "samples": 50,
+      "baseline_kde_ms": 638.4650404728409,
+      "candidate_kde_ms": 624.0442966352557,
+      "baseline_median_ms": 638.4665210498497,
+      "candidate_median_ms": 624.0447504678741,
+      "paired_median_time_reduction_percent": 2.2585133311527503,
+      "paired_bootstrap_95_interval_percent": [
+        2.255956074446819,
+        2.260229135149311
+      ],
+      "positive_pairs": 50,
+      "input_hashes": {
+        "weights_fnv1a64": "f89b6be3f158a4bd",
+        "inputs_fnv1a64": "853b87560d03f5ec"
+      },
+      "raw_file": "reverse/ffn_up_m32-reverse-50pairs-a304d75c650a-1791875023008728412.json"
+    }
+  ]
+}

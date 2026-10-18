@@ -14,30 +14,13 @@ case "$direction" in
     *) exit 2 ;;
 esac
 case "$samples" in 20|50) ;; *) echo 'samples must be 20 or 50' >&2; exit 2 ;; esac
-for object in "$baseline_object" "$candidate_object"; do
-    case "$object" in /*) ;; *) echo "object path must be absolute: $object" >&2; exit 2 ;; esac
-    test -f "$object" || { echo "object not found: $object" >&2; exit 2; }
-done
 cd "$(dirname "$0")"
 objcopy --redefine-sym bench_kernel=bench_kernel_baseline --redefine-sym "$state_symbol=${state_symbol}_baseline" "$baseline_object" "baseline-$direction.o"
 objcopy --redefine-sym bench_kernel=bench_kernel_candidate --redefine-sym "$state_symbol=${state_symbol}_candidate" "$candidate_object" "candidate-$direction.o"
-for variant in baseline candidate; do
-    object="$variant-$direction.o"
-    nm "$object" | awk -v kernel="bench_kernel_$variant" -v state="${state_symbol}_$variant" -v old="$state_symbol" '
-        $NF == kernel && $(NF-1) ~ /^[Tt]$/ { defined = 1 }
-        $NF == state && $(NF-1) == "U" { referenced = 1 }
-        $NF == "bench_kernel" || $NF == old { stale = 1 }
-        END { exit !(defined && referenced && !stale) }
-    ' || { echo "invalid kernel/TLS symbols: $object" >&2; exit 1; }
-    readelf -rW "$object" | awk -v state="${state_symbol}_$variant" '
-        /R_RISCV_TLS_GOT_HI20/ && index($0, state) { found = 1 }
-        END { exit !found }
-    ' || { echo "missing initial-exec TLS relocation: $object" >&2; exit 1; }
-done
 objcopy --set-section-alignment .text=64 "baseline-$direction.o"
 objcopy --set-section-alignment .text=64 "candidate-$direction.o"
 clang -O3 -march=rv64gc -mabi=lp64d -fopenmp -fno-vectorize -fno-slp-vectorize -Wall -Wextra -DBENCH_SAMPLES="$samples" -DSOURCE_VLENB="$source_vlenb" -DTARGET_VLENB="$target_vlenb" -DCPU_FIRST="$cpu_first" -c paired.c -o "paired-driver-$direction.o"
-clang -march=rv64gc -mabi=lp64d -fopenmp "paired-driver-$direction.o" "baseline-$direction.o" "candidate-$direction.o" -lm -o "bench-paired-$direction"
+clang -fopenmp "paired-driver-$direction.o" "baseline-$direction.o" "candidate-$direction.o" -lm -o "bench-paired-$direction"
 sha256sum paired.c "$baseline_object" "$candidate_object" "baseline-$direction.o" "candidate-$direction.o" "paired-driver-$direction.o" "bench-paired-$direction" > "build-$direction.sha256"
 python3 - "$direction" "$samples" "$baseline_object" "$candidate_object" <<'PY'
 import hashlib,json,sys

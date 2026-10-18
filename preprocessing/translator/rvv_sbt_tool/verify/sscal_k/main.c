@@ -4,11 +4,7 @@
 #define N 100
 #define STRIDE 2
 
-/* OpenBLAS v0.3.28 kernel/riscv64/scal_rvv.c internal ABI:
- * x/stride occupy a3/a4; dummy2 is the first stack argument. */
-extern int sscal_k(long n, long dummy0, long dummy1, float alpha,
-                   float *x, long inc_x, float *y, long inc_y,
-                   float *dummy, long dummy2);
+extern int sscal_k(long n, float alpha, float *x, long inc_x);
 
 int main() {
     float x[N * STRIDE];
@@ -18,7 +14,7 @@ int main() {
         x[i] = (float)(i + 1);
     }
 
-    int rc = sscal_k(N, 0, 0, alpha, x, STRIDE, NULL, 0, NULL, 0);
+    int rc = sscal_k(N, alpha, x, STRIDE);
     if (rc != 0) {
         printf("SSCAL verification FAILED: return code = %d\n", rc);
         return 1;

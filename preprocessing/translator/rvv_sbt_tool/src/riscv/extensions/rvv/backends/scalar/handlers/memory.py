@@ -49,11 +49,35 @@ def _validate_sew(sew: int) -> None:
 
 
 def _get_float_load_instr(sew: int) -> str:
-    return {32: "flw", 64: "fld"}[sew]
+    """
+    根据 SEW 返回浮点加载指令
+
+    注意: 8/16-bit 元素暂不支持浮点，返回整数加载指令
+    """
+    _validate_sew(sew)
+    if sew == 32:
+        return 'flw'
+    elif sew == 64:
+        return 'fld'
+    else:
+        # 8/16-bit: 使用整数加载 (暂不支持浮点)
+        return 'lw' if sew == 16 else 'lb'
 
 
 def _get_float_store_instr(sew: int) -> str:
-    return {32: "fsw", 64: "fsd"}[sew]
+    """
+    根据 SEW 返回浮点存储指令
+
+    注意: 8/16-bit 元素暂不支持浮点，返回整数存储指令
+    """
+    _validate_sew(sew)
+    if sew == 32:
+        return 'fsw'
+    elif sew == 64:
+        return 'fsd'
+    else:
+        # 8/16-bit: 使用整数存储 (暂不支持浮点)
+        return 'sh' if sew == 16 else 'sb'
 
 
 def _get_int_load_instr(sew: int) -> str:
@@ -576,7 +600,7 @@ def _emit_vlse_v(
     lines.append(f"    addi    {index_reg}, {vl_reg}, -1")
     _emit_element_shift(lines, element_size=element_size, shift_reg=index_reg)
     lines.append(f"    add     {addr_reg}, {addr_reg}, {index_reg}")
-    lines.append(f"    {_get_int_store_instr(sew):<7} {data_reg}, 0({addr_reg})")
+    lines.append(f"    {load_instr.replace('l', 's'):<7} {data_reg}, 0({addr_reg})")
 
     # 更新循环计数器
     if skip_label is not None:
@@ -789,8 +813,11 @@ def _emit_vlseg2_v(
 
     vd = operands[0]
 
-    rs1, rs2 = _parse_memory_operands(insn, expect_stride=is_strided)
-    segment_offsets = _get_segment_group_offsets(vd, state, allocator, segment_count=2, eew=sew)
+    try:
+        rs1, rs2 = _parse_memory_operands(insn, expect_stride=is_strided)
+        segment_offsets = _get_segment_group_offsets(vd, state, allocator, segment_count=2, eew=sew)
+    except ValueError as exc:
+        raise ValueError(str(exc)) from exc
 
     element_size = sew // 8
     tuple_size = element_size * 2
@@ -896,8 +923,11 @@ def _emit_vsseg2_v(
 
     vs3 = operands[0]
 
-    rs1, rs2 = _parse_memory_operands(insn, expect_stride=is_strided)
-    segment_offsets = _get_segment_group_offsets(vs3, state, allocator, segment_count=2, eew=sew)
+    try:
+        rs1, rs2 = _parse_memory_operands(insn, expect_stride=is_strided)
+        segment_offsets = _get_segment_group_offsets(vs3, state, allocator, segment_count=2, eew=sew)
+    except ValueError as exc:
+        raise ValueError(str(exc)) from exc
 
     element_size = sew // 8
     tuple_size = element_size * 2

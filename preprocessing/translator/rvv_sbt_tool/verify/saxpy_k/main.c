@@ -5,7 +5,6 @@
 #define N 100
 #define STRIDE 2
 
-/* Internal kernel ABI: a1/a2 are padding; x/stride/y/stride use a3..a6. */
 extern void saxpy_k(long n, long dummy1, long dummy2, float alpha, float *x, long inc_x, float *y, long inc_y);
 
 int main() {
