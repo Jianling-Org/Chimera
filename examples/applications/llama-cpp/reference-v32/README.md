@@ -5,7 +5,7 @@
 ## 前提条件
 
 - 已准备包含项目 LLVM 补丁、stack-object 插桩和 VectorGate 插件的工具链。
-- 已按 [gate 决策](gate.decision.json)构建最终 ELF；按函数禁用自动向量化的范围及 LTO 要求见 [Gate 构建](../../../../docs/deployment/gate-build.md)。
+- 已应用 [RVV1024 与 RVV256 兼容补丁](../patch/README.md)，并按 [gate 决策](gate.decision.json)构建最终 ELF；按函数禁用自动向量化的范围及 LTO 要求见 [Gate 构建](../../../../docs/deployment/gate-build.md)。
 - 已准备 TinyLlama Q3_K_S 模型、[仓库语料](../prompt/file.txt)、scalar 底座和应用依赖，来源见[外部依赖说明](../../../../docs/external-dependencies.md)。
 - K3 已部署配套内核并初始化 BPF 环境。
 

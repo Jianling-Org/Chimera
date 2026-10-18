@@ -4,7 +4,7 @@
 
 ## 翻译器
 
-双向实现位于 `preprocessing/translator/rvv_sbt_tool/`。`rvv_sbt_rvv.py` 提供 1024→256，`rvv_sbt_rvv1024.py` 提供 256→1024；Python 包定义包含 `chimera.preprocess.translator`。必须使用与当前 Runtime ABI、状态布局及路线匹配的译器，不能把另一份独立快照悄悄替换进测试。
+双向实现位于 `preprocessing/translator/rvv_sbt_tool/`。`rvv_sbt_rvv.py` 提供 1024→256，`rvv_sbt_rvv1024.py` 提供 256→1024；Python 包定义包含 `chimera.preprocess.translator`。必须使用与当前 Runtime ABI、状态布局及路线匹配的翻译器；替换入口文件前核对这些条件。
 
 在应用 Profile 中填写真实绝对路径，例如：
 
@@ -19,7 +19,7 @@ translator_path = "/absolute/path/to/Chimera/preprocessing/translator/rvv_sbt_to
 
 ## LLVM 与 SVF
 
-保留的 Chimera 插件和补丁位于 `preprocessing/offline/toolchain/llvm-21.1.0/`；上游源码单独取得。版本依据原源码仓库记录：
+保留的 Chimera 插件和补丁位于 `preprocessing/offline/toolchain/llvm-21.1.0/`；上游源码单独取得。固定版本来自本仓库的 gitlink：
 
 | 依赖 | 上游仓库 | 固定版本 |
 |---|---|---|
@@ -48,7 +48,7 @@ chimera-dev toolchain build llvm-plugin --plugins stackobject function-pointer v
 
 ## llama.cpp 与模型
 
-llama.cpp 使用 [ggml-org/llama.cpp](https://github.com/ggml-org/llama.cpp) 的 `4fc4ec5541b243957ae5099edb67372f8f3b550e`。保留的样例补丁针对该版本：
+llama.cpp 使用 [ggml-org/llama.cpp](https://github.com/ggml-org/llama.cpp) 的 `4fc4ec5541b243957ae5099edb67372f8f3b550e`。项目的 RVV1024 算子与 RVV256 兼容回退由[补丁集](../examples/applications/llama-cpp/patch/README.md)提供。示例脚本按固定顺序临时应用补丁，退出时逆序恢复；自有构建按补丁说明手动集成。初始化官方源码：
 
 ```bash
 git submodule update --init examples/applications/llama-cpp/llama.cpp

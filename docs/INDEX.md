@@ -62,13 +62,14 @@
 | [docs/user/cli.md](user/cli.md) | 应用使用者 CLI |
 | [docs/validation/automigration.md](validation/automigration.md) | 自动迁移验证 |
 
-## 应用示例（5）
+## 应用示例（6）
 
 | 文档 | 内容 |
 |---|---|
 | [examples/applications/gcc/README.md](../examples/applications/gcc/README.md) | GCC 应用适配样例 |
 | [examples/applications/hello-world/README.md](../examples/applications/hello-world/README.md) | Hello World 迁移样例 |
 | [examples/applications/llama-cpp/README.md](../examples/applications/llama-cpp/README.md) | llama.cpp 应用集成样例 |
+| [examples/applications/llama-cpp/patch/README.md](../examples/applications/llama-cpp/patch/README.md) | llama.cpp 的 RVV1024 与 RVV256 兼容补丁 |
 | [examples/applications/llama-cpp/reference-v32/README.md](../examples/applications/llama-cpp/reference-v32/README.md) | llama.cpp 双向自动迁移 |
 | [examples/applications/omp-kernel-probe/README.md](../examples/applications/omp-kernel-probe/README.md) | OpenMP 算子探针 |
 

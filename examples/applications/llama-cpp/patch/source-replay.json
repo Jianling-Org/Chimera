@@ -1,0 +1,37 @@
+{
+  "passed": true,
+  "upstream": "https://github.com/ggml-org/llama.cpp.git",
+  "base_commit": "4fc4ec5541b243957ae5099edb67372f8f3b550e",
+  "official_base_tree": "590ed9341c0cabed1e41f669e139ceb04d176c07",
+  "patched_tree": "c6596c637500594872df1b84ac4a5a11cc393c90",
+  "patches": [
+    {
+      "path": "llama-cpp-rvv-vlen1024-q5-fix-4fc4ec554.patch",
+      "sha256": "f236329088346cf662ca78e8bd370e1fe53298446860f283b7e17b5bbf66be8f"
+    },
+    {
+      "path": "0001-llama.cpp-rvv-vlen1024-compatible-with-vlen256.patch",
+      "sha256": "b069bcf750adc550741d6f4287c4e6a5879904587b10149dea5a4e4cacfee5ba"
+    }
+  ],
+  "modified_files": [
+    "ggml/src/ggml-cpu/arch/riscv/repack.cpp",
+    "ggml/src/ggml-cpu/repack.cpp",
+    "ggml/src/ggml-cpu/repack.h",
+    "tests/test-backend-ops.cpp"
+  ],
+  "checks": {
+    "all_touched_upstream_blobs_verified": true,
+    "full_base_tree_metadata_matches": true,
+    "ordered_application": true,
+    "reverse_restores_original_files": true,
+    "wide_q3_gemm_and_q4_gemv_present": true,
+    "vl64_fastpath_with_narrow_fallback_branches": 9,
+    "repack_eligible_at_vlen256": true,
+    "build_script_patch_order_matches": [
+      "examples/scripts/build/build_llamacpp.sh",
+      "examples/scripts/build/build_llamacpp_stats.sh"
+    ]
+  },
+  "compiled_or_board_executed": false
+}

@@ -6,10 +6,9 @@
 
 llama.cpp 由仓库 gitlink 固定到 `4fc4ec5541b243957ae5099edb67372f8f3b550e`。按[依赖说明](../../../docs/external-dependencies.md#llamacpp-与模型)初始化子模块，或用 `CHIMERA_EXAMPLE_PACKAGED=1` 和 `CHIMERA_EXAMPLE_SOURCE_DIR` 显式选择同版本独立源码。先准备匹配的 patched LLVM、插件和 scalar 输入。
 
-脚本依次临时应用以下补丁，退出时逆序还原；不要预先手工重复应用，也不要在有 tracked/staged 修改的源码树运行：
+本示例使用项目定制的 RVV1024 算子与 RVV256 兼容回退。定制部分由[补丁集](patch/README.md)交付：先加入宽向量算子及重排支持（含 Q5 修复），再加入按实际 VL 选择的 RVV256 兼容回退。
 
-1. [Q5 修复](patch/llama-cpp-rvv-vlen1024-q5-fix-4fc4ec554.patch)
-2. [VLEN 兼容调整](patch/0001-llama.cpp-rvv-vlen1024-compatible-with-vlen256.patch)
+自动构建脚本按 [series](patch/series) 所列顺序临时应用补丁，退出时逆序恢复；从干净的官方检出开始。自有构建流程按[手动集成说明](patch/README.md#手动集成)应用同一补丁集。
 
 模型不会随发布包提供。请自行准备兼容 GGUF 与提示文本，核对来源、分发许可和内容摘要；文件名不能证明内容完整。有关模型和 scalar 输入见[外部依赖说明](../../../docs/external-dependencies.md#llamacpp-与模型)。
 
@@ -17,7 +16,7 @@ llama.cpp 由仓库 gitlink 固定到 `4fc4ec5541b243957ae5099edb67372f8f3b550e`
 
 需要 Python、CMake、构建工具、Git、目标工具、系统 clang/clang++ 与 lld、匹配的 patched LLVM 和 Chimera 插件、scalar 底座。`CHIMERA_EXAMPLE_PACKAGED=1` 假定 patched LLVM、插件和 scalar 文件已准备好，不会替你构建这些依赖。OpenMP 由脚本探测，应核对最终 libomp 及目标依赖。wheel 提供 clang/lld 和两个插件，不代表 `opt/llc/llvm-objdump` 或完整 SVF 已安装。
 
-先从目标工具链准备真实的 scalar 文件，并放入 `examples/applications/llama-cpp/scalar/`。脚本需要 `ld-linux-riscv64-lp64d.so.1`、`libc.so.6`、`libgcc_s.so.1`、`libgomp.so.1`、`libm.so.6`、`libstdc++.so.6`；不要用目标机的向量库或不匹配的系统库替代。完整构建会从此目录安装文件到 `~/.chimera/scalar`，因此仅手工设置 `config.scalar_root` 不会满足此脚本的输入要求。目录和文件不随发布包提供，准备边界见[scalar 底座说明](../../../docs/external-dependencies.md#scalar-底座)。
+先从目标工具链准备真实的 scalar 文件，并放入 `examples/applications/llama-cpp/scalar/`。脚本需要 `ld-linux-riscv64-lp64d.so.1`、`libc.so.6`、`libgcc_s.so.1`、`libgomp.so.1`、`libm.so.6`、`libstdc++.so.6`；不要用目标机的向量库或不匹配的系统库替代。清单中的 `libgomp.so.1` 属于通用标量底座；应用选择 LLVM OpenMP 时，其 `libomp.so.5` 按目标依赖解析提供，两者不能通过改名互换。完整构建会从此目录安装文件到 `~/.chimera/scalar`，因此仅手工设置 `config.scalar_root` 不会满足此脚本的输入要求。目录和文件不随发布包提供，准备边界见[scalar 底座说明](../../../docs/external-dependencies.md#scalar-底座)。
 
 在仓库根目录使用外部源码模式时运行：
 
@@ -33,9 +32,9 @@ CHIMERA_LLAMA_JOBS=2 bash examples/scripts/build/build_llamacpp.sh
 
 ## 检查与必要重编
 
-主构建对发现面执行当前 Profile 的 `check-elf`。通过则交付该 ELF；发现问题时，必要的 StackObject 元数据阶段后最多执行一轮 gate 重编和复检。脚本根据报告选择路线，遇到其不支持的 FunctionPointer/SVF 路线会明确退出。
+主构建对构建产物执行当前 Profile 的 `check-elf`。通过则交付该 ELF；发现问题时，必要的 StackObject 元数据阶段后最多执行一轮 gate 重编和复检。脚本根据报告选择路线，遇到其不支持的 FunctionPointer/SVF 路线会明确退出。
 
-修复复检仍有需处理的发现时脚本返回 3，保留报告；不能以“执行到 prepare 前”为成功标准。独立统计入口 [build_llamacpp_stats.sh](../../scripts/build/build_llamacpp_stats.sh) 用于 census/统计，与主交付用途不同，统计值不构成迁移验收。
+修复复检仍有需处理的发现时脚本返回 3，并保留报告。交付要求最终 ELF 通过对应 Profile 的检查，并成功生成场景 Workspace。独立统计入口 [build_llamacpp_stats.sh](../../scripts/build/build_llamacpp_stats.sh) 用于统计，与主交付用途不同，统计结果用于了解编译器向量生成行为，迁移验证按应用实际运行结果单独执行。
 
 手动适配构建时，使用 [固定重编计划](../../../docs/deployment/cli.md#固定重编计划)，把 CMake 编译器显式设为计划的 `cc/cxx`，用独立构建目录生成所需对象；对最终 ELF 执行 `check-elf --strict`。不要编辑 JSON 名单来改变报告结论。安全语义及范围选择见 [安全点文档](../../../docs/developer/architecture/safepoints/README.md)。
 
@@ -76,7 +75,7 @@ chimera-user --debug run --workspace "$WORKSPACE" --input "$ELF" -- \
 PID=$!
 ```
 
-等 Runtime ready 且所需计算 worker 已创建，按实际 TID 提交：
+等 Runtime ready 且所需计算 worker 已创建，按实际 TID 提交；线程选择方法见[迁移线程](../../../docs/user/cli.md#迁移线程)：
 
 ```bash
 chimera-user migrate --workspace "$WORKSPACE" \
