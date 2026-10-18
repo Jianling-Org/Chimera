@@ -4,11 +4,11 @@ workspace_root = "~/.chimera/workspaces"
 scalar_root = "~/.chimera/scalar"
 workspace_name = "auto"
 
-# Translator 单独提供；将下方绝对路径替换为真实入口，见 doc/external-dependencies.md。
+# Translator 使用仓库内置的 rvv_sbt_tool（相对 profile 文件解析）。
 [[config.translators]]
 source = "riscv64;rvv;vlen=1024"
 target = "riscv64;rvv;vlen=256"
-translator_path = "/path/to/chimera-translator/rvv_sbt_rvv.py"
+translator_path = "../../../preprocessing/translator/rvv_sbt_tool/rvv_sbt_rvv.py"
 
 [config.tools]
 python = "python3"

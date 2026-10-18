@@ -1,0 +1,26 @@
+#!/usr/bin/python3 -S
+"""Enable C runtime diagnostics without Python instruction-level tracing."""
+
+import json
+import os
+import sys
+from pathlib import Path
+
+CMAKE = "/usr/bin/cmake"
+
+
+def main() -> None:
+    arguments = sys.argv[1:]
+    if "-S" in arguments:
+        arguments.append("-DCHIMERA_DEBUG=ON")
+
+    command_log = os.environ.get("CHIMERA_CMAKE_COMMAND_LOG")
+    if command_log:
+        with Path(command_log).open("a", encoding="utf-8") as stream:
+            stream.write(json.dumps(arguments) + "\n")
+
+    os.execv(CMAKE, [CMAKE, *arguments])
+
+
+if __name__ == "__main__":
+    main()

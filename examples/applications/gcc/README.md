@@ -21,7 +21,7 @@ CC1="$APP_BUILD/gcc/cc1"
 
 ## 检查两个 ELF
 
-从 [双向 Profile](../../platforms/k3/linux-riscv64-rvv-1024-256-bidirectional.toml) 等现有配置复制到自己的集成目录，调整翻译器路径、scalar_root、工具与依赖根。所有 safety 范围选择须记录，细节见 [安全点文档](../../../doc/developer/architecture/safepoints/README.md)。
+从 [双向 Profile](../../platforms/k3/linux-riscv64-rvv-1024-256-bidirectional.toml) 等现有配置复制到自己的集成目录，调整翻译器路径、scalar_root、工具与依赖根。所有 safety 范围选择须记录，细节见 [安全点文档](../../../docs/developer/architecture/safepoints/README.md)。
 
 ```bash
 chimera-pkg check-elf --profile "$PROFILE" \
@@ -55,7 +55,7 @@ CC1="$GATE_BUILD/gcc/cc1"
 chimera-pkg check-elf --profile "$PROFILE" --input "$XGCC" --input "$CC1" --strict
 ```
 
-路径变量均应为绝对路径，计划目录和构建目录须为新的。此例要求所选 GCC 能由计划的 patched Clang 构建，且报告给出兼容 gate 决策。版本所需配置、兼容补丁和禁用 bootstrap 等由集成者显式决定。metadata 已通过时可直接交付；SVF/function-pointer 决策不能交给 gate 计划。完整语义见 [集成 CLI](../../../doc/integration/cli.md#固定重编计划)。
+路径变量均应为绝对路径，计划目录和构建目录须为新的。此例要求所选 GCC 能由计划的 patched Clang 构建，且报告给出兼容 gate 决策。版本所需配置、兼容补丁和禁用 bootstrap 等由集成者显式决定。metadata 已通过时可直接交付；SVF/function-pointer 决策不能交给 gate 计划。完整语义见 [集成 CLI](../../../docs/deployment/cli.md#固定重编计划)。
 
 ## 准备与打包
 
@@ -95,4 +95,6 @@ chimera-user run --workspace gcc-cc1 --input CC1 -- CC1_ARGUMENTS...
 
 保存两份 ELF 摘要、独立检查报告、两个包、输入源码、原生/Chimera 输出和退出码。同参数确定性输入可比较汇编；含路径等差异时记录规范化规则。静态检查、prepare、驱动完成编译和前端迁移应分别验证。
 
-[应用集成者指南](../../../doc/integration/README.md) · [应用使用者指南](../../../doc/user/README.md)
+[应用集成者指南](../../../docs/deployment/README.md) · [应用使用者指南](../../../docs/user/README.md)
+
+当前配对发布的动态验收针对 llama。此处的构建流程不构成 GCC 运行时、exec 子进程重注册或迁移已验收；应单独验证这些能力。

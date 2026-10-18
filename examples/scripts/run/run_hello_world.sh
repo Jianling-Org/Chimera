@@ -3,6 +3,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/../build/_common.sh"
 WORKSPACE="${CHIMERA_EXAMPLE_WORKSPACE:-hello_world}"
+BINARY="${CHIMERA_EXAMPLE_ELF:-${CHIMERA_EXAMPLE_ARTIFACT_ROOT:-$HOME/.chimera/examples/hello_world}/hello-world}"
 RUN_LOG="$(mktemp)"
 RUN_PID=""
 WATCHDOG_PID=""
@@ -19,9 +20,9 @@ cleanup() {
 }
 trap cleanup EXIT
 
-"$CHIMERA_USER" verify --workspace "$WORKSPACE"
-"$CHIMERA_USER" register --workspace "$WORKSPACE" --verify
-"$CHIMERA_USER" --debug run --workspace "$WORKSPACE" > >(tee "$RUN_LOG") 2>&1 &
+"$CHIMERA_USER" verify --workspace "$WORKSPACE" --input "$BINARY"
+"$CHIMERA_USER" register --workspace "$WORKSPACE" --input "$BINARY"
+"$CHIMERA_USER" --debug run --workspace "$WORKSPACE" --input "$BINARY" > >(tee "$RUN_LOG") 2>&1 &
 RUN_PID=$!
 # Bound the demo even when a target runtime loses its migration control path.
 ( sleep 30; if kill -0 "$RUN_PID" 2>/dev/null; then kill "$RUN_PID" 2>/dev/null || true; fi ) &

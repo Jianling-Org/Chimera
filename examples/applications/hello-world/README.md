@@ -30,7 +30,7 @@ CHIMERA_HELLO_CC=clang bash examples/scripts/build/build_hello_world.sh
 
 脚本支持 `CHIMERA_HELLO_PROFILE`、`CHIMERA_EXAMPLE_ARTIFACT_ROOT` 和 `CHIMERA_HELLO_CFLAGS`；默认输出 `~/.chimera/examples/hello_world/hello-world`，Workspace 为 `hello_world`。覆盖参数时保留 RVV 与 ABI 选项，并用脚本输出的实际 ELF 路径继续操作。
 
-若检查未通过，保留报告，按 [固定重编计划](../../../doc/integration/cli.md#固定重编计划) 做必要的 metadata/gate 重编。单文件例子可直接使用计划中的 `cc`：
+若检查未通过，保留报告，按 [固定重编计划](../../../docs/deployment/cli.md#固定重编计划) 做必要的 metadata/gate 重编。单文件例子可直接使用计划中的 `cc`：
 
 ```bash
 chimera-pkg check-elf --profile "$PROFILE" --input "$ELF" \
@@ -47,7 +47,7 @@ ELF="$OUTPUT/hello-world-gate"
 chimera-pkg check-elf --profile "$PROFILE" --input "$ELF" --strict
 ```
 
-metadata 结果已通过时可直接使用该产物，不必继续 gate。计划目录必须尚不存在，发现 SVF 决策时不能强制消费为 gate。安全分析细节见 [安全点文档](../../../doc/developer/architecture/safepoints/README.md)。
+metadata 结果已通过时可直接使用该产物，不必继续 gate。计划目录必须尚不存在，发现 SVF 决策时不能强制消费为 gate。安全分析细节见 [安全点文档](../../../docs/developer/architecture/safepoints/README.md)。
 
 ## 准备与交付
 
@@ -82,4 +82,4 @@ wait "$PID"
 
 保留检查 JSON、最终 ELF 摘要、Workspace、运行日志和退出码。`CHIMERA_HELLO_CHECKSUM` 必须等于 `CHIMERA_HELLO_REFERENCE`，正常退出为 0。debug Runtime 的 `action=rewrite` 事件可用于确认发生地址重写；结合迁移前后线程核位置与 Runtime 事件判断实际迁移。`migrate` 返回 0 仅表示提交，应用 ready 标记和静态检查也不单独证明迁移完成。
 
-[应用集成者指南](../../../doc/integration/README.md) · [应用使用者指南](../../../doc/user/README.md)
+[应用集成者指南](../../../docs/deployment/README.md) · [应用使用者指南](../../../docs/user/README.md)

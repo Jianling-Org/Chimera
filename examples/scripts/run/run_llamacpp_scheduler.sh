@@ -43,9 +43,10 @@ command -v chimera-user >/dev/null 2>&1 || { echo "ERROR: chimera-user 不在 PA
 
 # ---- 1. register ----
 echo "========== [1/2] $CHIMERA_USER register =========="
-$CHIMERA_USER register --verify --workspace "$WORKSPACE"
+$CHIMERA_USER verify --workspace "$WORKSPACE" --input "$BINARY"
+$CHIMERA_USER register --workspace "$WORKSPACE" --input "$BINARY"
 
 # ---- 2. run（前台；不迁移，进程默认 affinity 即 256 组）----
 echo "========== [2/2] $CHIMERA_USER run (foreground, no migrate) =========="
-$CHIMERA_USER --debug run --workspace "$WORKSPACE" -- \
+$CHIMERA_USER --debug run --workspace "$WORKSPACE" --input "$BINARY" -- \
     -m "$MODEL" -f "$PROMPT_FILE"

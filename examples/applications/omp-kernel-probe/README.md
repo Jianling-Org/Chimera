@@ -48,7 +48,7 @@ CC="$GATE_PLAN/cc" bash build-k3.sh
 chimera-pkg check-elf --profile "$PROFILE" --input "$ELF" --strict
 ```
 
-metadata 已通过时可结束修复；SVF/function-pointer 决策需对应工具链，不能强行改为 gate。计划说明见 [集成 CLI](../../../doc/integration/cli.md#固定重编计划)，安全细节见 [安全点文档](../../../doc/developer/architecture/safepoints/README.md)。
+metadata 已通过时可结束修复；SVF/function-pointer 决策需对应工具链，不能强行改为 gate。计划说明见 [集成 CLI](../../../docs/deployment/cli.md#固定重编计划)，安全细节见 [安全点文档](../../../docs/developer/architecture/safepoints/README.md)。
 
 严格检查通过后准备、打包：
 
@@ -112,4 +112,4 @@ grep '^{' dynamic.chimera.stdout.log > dynamic.chimera.jsonl
 
 本探针重复使用同一浮点矩阵，省略完整计算图、量化打包和其他应用行为，结果仅适用于所测算子与条件。替换算子时同时调整初始化、参数及参考结果验证，保留统计口径。
 
-[应用集成者指南](../../../doc/integration/README.md) · [应用使用者指南](../../../doc/user/README.md)
+[应用集成者指南](../../../docs/deployment/README.md) · [应用使用者指南](../../../docs/user/README.md)

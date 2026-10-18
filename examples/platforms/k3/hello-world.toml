@@ -7,7 +7,7 @@ workspace_name = "auto"
 [[config.translators]]
 source = "riscv64;rvv;vlen=1024"
 target = "riscv64;rvv;vlen=256"
-translator_path = "/path/to/chimera-translator/rvv_sbt_rvv.py"
+translator_path = "../../../preprocessing/translator/rvv_sbt_tool/rvv_sbt_rvv.py"
 
 [config.tools]
 python = "python3"

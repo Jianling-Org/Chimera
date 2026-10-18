@@ -59,13 +59,14 @@ command -v chimera-user >/dev/null 2>&1 || { echo "ERROR: chimera-user 不在 PA
 
 # ---- 1. register ----
 echo "========== [1/5] $CHIMERA_USER register =========="
-$CHIMERA_USER register --verify --workspace "$WORKSPACE"
+$CHIMERA_USER verify --workspace "$WORKSPACE" --input "$BINARY"
+$CHIMERA_USER register --workspace "$WORKSPACE" --input "$BINARY"
 
 # ---- 2. run（后台，抓取 parent_thread_id）----
 echo "========== [2/5] $CHIMERA_USER run (background) =========="
 RUN_LOG="$(mktemp)"
 run_install_cleanup_traps
-$CHIMERA_USER --debug run --workspace "$WORKSPACE" -- \
+$CHIMERA_USER --debug run --workspace "$WORKSPACE" --input "$BINARY" -- \
     -m "$MODEL" -f "$PROMPT_FILE" \
     > >(tee "$RUN_LOG") 2>&1 &
 RUN_PID=$!
