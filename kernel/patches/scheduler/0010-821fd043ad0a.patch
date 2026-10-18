@@ -1,0 +1,36 @@
+From 821fd043ad0a066b22114580a96fae14a52a1490 Mon Sep 17 00:00:00 2001
+From: Liang Kaiwen <liangkaiwen24@mails.ucas.ac.cn>
+Date: Fri, 16 Oct 2026 12:57:15 +0800
+Subject: [PATCH] sched/chimera: reject exiting tasks during ledger registration
+
+Check PF_EXITING before and within the account lock to prevent ledger registration after task exit begins.
+
+Source-Commit: 821fd043ad0a066b22114580a96fae14a52a1490
+
+---
+ drivers/soc/spacemit/hmp.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/soc/spacemit/hmp.c b/drivers/soc/spacemit/hmp.c
+index 85cc292487f2dafd726bddda2e5da9d8d1cc8037..ba1a962310091b643abf6015bc0ade9be75a9888 100644
+--- a/drivers/soc/spacemit/hmp.c
++++ b/drivers/soc/spacemit/hmp.c
+@@ -602,13 +602,13 @@ void hmp_prefer_register(struct task_struct *p)
+ 
+ 	hmp_prefer_task_allowed_groups(p, &ai_allowed, &regular_allowed);
+ 	raw_spin_lock_irqsave(&p->pi_lock, pi_flags);
+-	if (!READ_ONCE(p->prefer_a100) || (p->flags & PF_KTHREAD) ||
++	if (!READ_ONCE(p->prefer_a100) || (p->flags & (PF_KTHREAD | PF_EXITING)) ||
+ 	    READ_ONCE(p->prefer_assigned_group) != HMP_PREFER_GROUP_NONE) {
+ 		raw_spin_unlock_irqrestore(&p->pi_lock, pi_flags);
+ 		return;
+ 	}
+ 	raw_spin_lock_irqsave(&prefer_account_lock, flags);
+-	if (READ_ONCE(p->prefer_a100) &&
++	if (READ_ONCE(p->prefer_a100) && !(READ_ONCE(p->flags) & PF_EXITING) &&
+ 	    p->prefer_assigned_group == HMP_PREFER_GROUP_NONE) {
+ 		unsigned int ai_level = prefer_ai_tasks /
+ 			hmp_prefer_active_cpus(true);
+-- 
+2.43.0
+

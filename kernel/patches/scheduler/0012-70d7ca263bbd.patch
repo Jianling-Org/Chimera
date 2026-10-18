@@ -1,0 +1,31 @@
+From 70d7ca263bbd8303dda521c5ace4c4006d7b7a9b Mon Sep 17 00:00:00 2001
+From: Liang Kaiwen <liangkaiwen24@mails.ucas.ac.cn>
+Date: Fri, 16 Oct 2026 12:57:17 +0800
+Subject: [PATCH] sched/chimera: count reservations until ownership is released
+
+Include expired reservation owners in diagnostics while their task references are held.
+
+Source-Commit: 70d7ca263bbd8303dda521c5ace4c4006d7b7a9b
+
+---
+ drivers/soc/spacemit/hmp.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/soc/spacemit/hmp.c b/drivers/soc/spacemit/hmp.c
+index 4996b1ade03bdaeaf595469506c2ef1e0bd361ba..67b0f5eddbb70ab4781cc97d55c70991349a7774 100644
+--- a/drivers/soc/spacemit/hmp.c
++++ b/drivers/soc/spacemit/hmp.c
+@@ -871,8 +871,8 @@ static unsigned int hmp_prefer_reserved_cpu_count(void)
+ 
+ 	raw_spin_lock_irqsave(&prefer_cpu_reservation_lock, flags);
+ 	for_each_possible_cpu(cpu) {
+-		if (prefer_cpu_reservations[cpu].owner &&
+-		    !time_after(jiffies, prefer_cpu_reservations[cpu].deadline))
++		/* Expired owners still hold task references until released. */
++		if (prefer_cpu_reservations[cpu].owner)
+ 			count++;
+ 	}
+ 	raw_spin_unlock_irqrestore(&prefer_cpu_reservation_lock, flags);
+-- 
+2.43.0
+

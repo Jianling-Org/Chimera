@@ -1,0 +1,796 @@
+From 1b44733d41fafe3664c0ccebaa6076898ba64000 Mon Sep 17 00:00:00 2001
+From: Liang Kaiwen <liangkaiwen24@mails.ucas.ac.cn>
+Date: Fri, 16 Oct 2026 12:57:14 +0800
+Subject: [PATCH] sched/chimera: bound NACK retries and clean proposal resources
+
+Classify NACK reasons and apply a 100 ms retry delay. Invalidate suppression on assignment, capability and balance changes. Scan all task threads for timeout and release reservations when sighand is gone.
+
+Source-Commit: 1b44733d41fafe3664c0ccebaa6076898ba64000
+
+---
+ drivers/soc/spacemit/hmp.c                | 446 +++++++++++++++++++---
+ include/linux/sched.h                     |   9 +
+ include/linux/soc/spacemit/spacemit-hmp.h |   6 +
+ kernel/sched/core.c                       |   8 +
+ 4 files changed, 408 insertions(+), 61 deletions(-)
+
+diff --git a/drivers/soc/spacemit/hmp.c b/drivers/soc/spacemit/hmp.c
+index 50eb846fafaef5e11b0adda048660589f9c51dcd..85cc292487f2dafd726bddda2e5da9d8d1cc8037 100644
+--- a/drivers/soc/spacemit/hmp.c
++++ b/drivers/soc/spacemit/hmp.c
+@@ -2,6 +2,7 @@
+ /* Copyright (C) 2025 Spacemit */
+ 
+ #include <linux/kernel.h>
++#include <linux/hash.h>
+ #include <linux/init.h>
+ #include <linux/capability.h>
+ #include <asm/vector.h>
+@@ -330,6 +331,21 @@ static atomic64_t prefer_proposals = ATOMIC64_INIT(0);
+ static atomic64_t prefer_migrations = ATOMIC64_INIT(0);
+ static atomic64_t prefer_overflow_migrations = ATOMIC64_INIT(0);
+ static atomic64_t prefer_failures = ATOMIC64_INIT(0);
++static atomic64_t prefer_fail_runtime = ATOMIC64_INIT(0);
++static atomic64_t prefer_fail_task_state = ATOMIC64_INIT(0);
++static atomic64_t prefer_fail_target = ATOMIC64_INIT(0);
++static atomic64_t prefer_fail_ledger = ATOMIC64_INIT(0);
++static atomic64_t prefer_fail_cpu_reservation = ATOMIC64_INIT(0);
++static atomic64_t prefer_fail_signal = ATOMIC64_INIT(0);
++static atomic64_t prefer_fail_nack = ATOMIC64_INIT(0);
++static atomic64_t prefer_same_group_skipped = ATOMIC64_INIT(0);
++static atomic64_t prefer_nack_translated = ATOMIC64_INIT(0);
++static atomic64_t prefer_nack_missing_route = ATOMIC64_INIT(0);
++static atomic64_t prefer_nack_prepare = ATOMIC64_INIT(0);
++static atomic64_t prefer_cooldown_suppressed = ATOMIC64_INIT(0);
++static atomic64_t prefer_fail_timeout = ATOMIC64_INIT(0);
++static atomic64_t prefer_fail_cpuset = ATOMIC64_INIT(0);
++static atomic64_t prefer_fail_stopper = ATOMIC64_INIT(0);
+ 
+ /* Account logical allocation, so a sleeping task keeps its assigned slot. */
+ static DEFINE_RAW_SPINLOCK(prefer_account_lock);
+@@ -360,13 +376,15 @@ static unsigned long prefer_scan_after[2];
+ static atomic64_t prefer_candidate_generation[2] = {
+ 	ATOMIC64_INIT(0), ATOMIC64_INIT(0),
+ };
++static atomic64_t prefer_balance_generation = ATOMIC64_INIT(1);
++static atomic_t prefer_retry_groups = ATOMIC_INIT(0);
+ static struct workqueue_struct *prefer_wq;
+ static struct task_struct *prefer_task;
+ static int prefer_cpu;
+ static enum hmp_migration_reason prefer_reason;
+ static unsigned int prefer_cursor;
+ void hmp_prefer_task_hint(struct task_struct *p);
+-static void hmp_prefer_queue(struct task_struct *p, int cpu,
++static bool hmp_prefer_queue(struct task_struct *p, int cpu,
+ 			     enum hmp_migration_reason reason, bool reset_cursor);
+ static void hmp_prefer_kick_rebalance(void);
+ static int hmp_idle_group_cpu_for_task(struct task_struct *p, hmp_type_e type);
+@@ -377,10 +395,71 @@ static void hmp_prefer_irqfn(struct irq_work *work);
+ static DEFINE_IRQ_WORK(prefer_irq_work, hmp_prefer_irqfn);
+ static void hmp_prefer_timeout_workfn(struct work_struct *work);
+ static DECLARE_DELAYED_WORK(prefer_timeout_work, hmp_prefer_timeout_workfn);
++static void hmp_prefer_retry_workfn(struct work_struct *work);
++static DECLARE_DELAYED_WORK(prefer_retry_work, hmp_prefer_retry_workfn);
+ 
+ static void hmp_prefer_release_reassign(struct task_struct *p, bool commit,
+ 					hmp_type_e type);
+ 
++static u64 hmp_prefer_cpu_cookie(struct task_struct *p)
++{
++	cpumask_t allowed;
++	u64 cookie = 0;
++	int cpu;
++
++	cpuset_cpus_allowed(p, &allowed);
++	for_each_cpu(cpu, &allowed)
++		cookie ^= rol64((u64)(cpu + 1) * GOLDEN_RATIO_64, cpu & 63);
++	for_each_cpu(cpu, cpu_active_mask)
++		cookie ^= rol64((u64)(cpu + 1) * GOLDEN_RATIO_64, (cpu + 29) & 63);
++	return cookie;
++}
++
++static bool hmp_prefer_nack_suppressed(struct task_struct *p,
++				       int source_group, int target_group)
++{
++	if (!time_before(jiffies, READ_ONCE(p->prefer_nack_retry_after)))
++		return false;
++	if (READ_ONCE(p->prefer_nack_assignment_seq) !=
++	    READ_ONCE(p->prefer_assignment_seq) ||
++	    READ_ONCE(p->prefer_nack_balance_generation) !=
++	    atomic64_read(&prefer_balance_generation) ||
++	    READ_ONCE(p->prefer_nack_capability_generation) !=
++	    READ_ONCE(p->prefer_capability_generation) ||
++	    READ_ONCE(p->prefer_nack_source_group) != source_group ||
++	    READ_ONCE(p->prefer_nack_target_group) != target_group ||
++	    READ_ONCE(p->prefer_nack_cpu_cookie) != hmp_prefer_cpu_cookie(p))
++		return false;
++	atomic64_inc(&prefer_cooldown_suppressed);
++	return true;
++}
++
++static void hmp_prefer_record_nack(struct task_struct *p, int source_group,
++				   int target_group, u64 cpu_cookie)
++{
++	unsigned long retry = jiffies + msecs_to_jiffies(100);
++
++	WRITE_ONCE(p->prefer_nack_assignment_seq,
++		   READ_ONCE(p->prefer_assignment_seq));
++	WRITE_ONCE(p->prefer_nack_balance_generation,
++		   atomic64_read(&prefer_balance_generation));
++	WRITE_ONCE(p->prefer_nack_capability_generation,
++		   READ_ONCE(p->prefer_capability_generation));
++	WRITE_ONCE(p->prefer_nack_cpu_cookie, cpu_cookie);
++	WRITE_ONCE(p->prefer_nack_source_group, source_group);
++	WRITE_ONCE(p->prefer_nack_target_group, target_group);
++	WRITE_ONCE(p->prefer_nack_retry_after, retry);
++	atomic_or(BIT(target_group == HMP_PREFER_GROUP_AI ? HMP_AI :
++		      HMP_REGULAR), &prefer_retry_groups);
++	mod_delayed_work(prefer_wq, &prefer_retry_work,
++			 msecs_to_jiffies(100));
++}
++
++static void hmp_prefer_clear_nack(struct task_struct *p)
++{
++	WRITE_ONCE(p->prefer_nack_retry_after, 0);
++}
++
+ static unsigned int hmp_prefer_active_cpus(bool ai)
+ {
+ 	cpumask_t active;
+@@ -466,8 +545,29 @@ static void __hmp_prefer_cancel_proposal(struct task_struct *p)
+ 	unsigned long flags;
+ 
+ 	sighand = lock_task_sighand(p, &flags);
+-	if (!sighand)
++	if (!sighand) {
++		/*
++		 * No signal handler can ACK after the sighand has gone away.  The
++		 * migration mutex still excludes the manual/ACK paths, so release
++		 * reservations here instead of leaving a task reference behind.
++		 */
++		if (p->prefer_proposal_reassign)
++			hmp_prefer_release_reassign(p, false,
++				p->prefer_pending_group == HMP_PREFER_GROUP_AI ?
++				HMP_AI : HMP_REGULAR);
++		hmp_prefer_release_cpu(p);
++		p->prefer_proposal_generation++;
++		if (!p->prefer_proposal_generation)
++			p->prefer_proposal_generation++;
++		p->prefer_proposal_state = HMP_PREFER_PROPOSAL_NONE;
++		p->prefer_proposal_reason = 0;
++		p->prefer_proposal_reassign = 0;
++		p->prefer_pending_group = HMP_PREFER_GROUP_NONE;
++		p->prefer_proposal_assignment_seq = 0;
++		p->prefer_target_cpu = -1;
++		p->prefer_proposal_deadline = 0;
+ 		return;
++	}
+ 	if (p->prefer_proposal_reassign)
+ 		hmp_prefer_release_reassign(p, false,
+ 			p->prefer_pending_group == HMP_PREFER_GROUP_AI ?
+@@ -498,7 +598,7 @@ void hmp_prefer_register(struct task_struct *p)
+ {
+ 	unsigned long flags, pi_flags;
+ 	int group;
+-	bool ai_allowed, regular_allowed;
++	bool ai_allowed, regular_allowed, registered = false;
+ 
+ 	hmp_prefer_task_allowed_groups(p, &ai_allowed, &regular_allowed);
+ 	raw_spin_lock_irqsave(&p->pi_lock, pi_flags);
+@@ -528,9 +628,12 @@ void hmp_prefer_register(struct task_struct *p)
+ 			prefer_ai_tasks++;
+ 		else
+ 			prefer_regular_tasks++;
++		registered = true;
+ 	}
+ 	raw_spin_unlock_irqrestore(&prefer_account_lock, flags);
+ 	raw_spin_unlock_irqrestore(&p->pi_lock, pi_flags);
++	if (registered)
++		atomic64_inc(&prefer_balance_generation);
+ }
+ EXPORT_SYMBOL_GPL(hmp_prefer_register);
+ 
+@@ -542,7 +645,7 @@ void hmp_prefer_inherit_fork(struct task_struct *p)
+ 	unsigned long flags, pi_flags;
+ 	unsigned int ai_level, regular_level;
+ 	int group;
+-	bool ai_allowed, regular_allowed;
++	bool ai_allowed, regular_allowed, registered = false;
+ 
+ 	hmp_prefer_task_allowed_groups(p, &ai_allowed, &regular_allowed);
+ 	raw_spin_lock_irqsave(&p->pi_lock, pi_flags);
+@@ -569,9 +672,12 @@ void hmp_prefer_inherit_fork(struct task_struct *p)
+ 			prefer_ai_tasks++;
+ 		else
+ 			prefer_regular_tasks++;
++		registered = true;
+ 	}
+ 	raw_spin_unlock_irqrestore(&prefer_account_lock, flags);
+ 	raw_spin_unlock_irqrestore(&p->pi_lock, pi_flags);
++	if (registered)
++		atomic64_inc(&prefer_balance_generation);
+ }
+ EXPORT_SYMBOL_GPL(hmp_prefer_inherit_fork);
+ 
+@@ -593,6 +699,7 @@ void hmp_prefer_unregister(struct task_struct *p)
+ 	}
+ 	raw_spin_unlock_irqrestore(&prefer_account_lock, flags);
+ 	if (group != HMP_PREFER_GROUP_NONE) {
++		atomic64_inc(&prefer_balance_generation);
+ 		atomic64_inc(&prefer_candidate_generation[HMP_REGULAR]);
+ 		atomic64_inc(&prefer_candidate_generation[HMP_AI]);
+ 	}
+@@ -756,6 +863,22 @@ static void hmp_prefer_release_cpu(struct task_struct *p)
+ 	raw_spin_unlock_irqrestore(&prefer_cpu_reservation_lock, flags);
+ }
+ 
++static unsigned int hmp_prefer_reserved_cpu_count(void)
++{
++	unsigned long flags;
++	unsigned int count = 0;
++	int cpu;
++
++	raw_spin_lock_irqsave(&prefer_cpu_reservation_lock, flags);
++	for_each_possible_cpu(cpu) {
++		if (prefer_cpu_reservations[cpu].owner &&
++		    !time_after(jiffies, prefer_cpu_reservations[cpu].deadline))
++			count++;
++	}
++	raw_spin_unlock_irqrestore(&prefer_cpu_reservation_lock, flags);
++	return count;
++}
++
+ static int hmp_idle_group_cpu(const struct cpumask *allowed, hmp_type_e type)
+ {
+ 	int cpu, pass, cursor = READ_ONCE(prefer_cpu_cursor[type]);
+@@ -1009,15 +1132,34 @@ static int hmp_prefer_propose(struct task_struct *p, hmp_type_e type,
+ 	unsigned long flags;
+ 	u32 generation, packed;
+ 	u64 payload;
++	int source_group = READ_ONCE(p->prefer_assigned_group);
++	int target_group = type == HMP_AI ? HMP_PREFER_GROUP_AI :
++		HMP_PREFER_GROUP_REGULAR;
++	int retry_type = -1;
+ 	int ret = -EAGAIN;
+ 
+-	if (cpu < 0 || !hmp_runtime_ready(p))
++	if (cpu < 0) {
++		atomic64_inc(&prefer_fail_target);
++		return -EAGAIN;
++	}
++	if (!hmp_runtime_ready(p)) {
++		atomic64_inc(&prefer_fail_runtime);
++		return -EAGAIN;
++	}
++	/*
++	 * Enforce the per-task, per-direction NACK cooldown at the common
++	 * proposal boundary so wakeup and manual requests cannot bypass it.
++	 */
++	if (hmp_prefer_nack_suppressed(p, source_group, target_group))
+ 		return -EAGAIN;
+ 	sighand = lock_task_sighand(p, &flags);
+ 	if (!sighand)
+ 		return -ESRCH;
+ 	if (p->prefer_proposal_state == HMP_PREFER_PROPOSAL_PENDING &&
+ 	    time_after(jiffies, p->prefer_proposal_deadline)) {
++		retry_type = p->prefer_pending_group == HMP_PREFER_GROUP_AI ?
++			HMP_AI : HMP_REGULAR;
++		atomic64_inc(&prefer_fail_timeout);
+ 		if (p->prefer_proposal_reassign)
+ 			hmp_prefer_release_reassign(p, false,
+ 				p->prefer_pending_group == HMP_PREFER_GROUP_AI ?
+@@ -1031,24 +1173,33 @@ static int hmp_prefer_propose(struct task_struct *p, hmp_type_e type,
+ 		p->prefer_target_cpu = -1;
+ 		p->prefer_proposal_deadline = 0;
+ 		flush_chimera_signal_locked(p, CHIMERA_HMP_SIGNAL);
++		atomic_or(BIT(retry_type), &prefer_retry_groups);
+ 	}
+ 	if (!p->prefer_a100 ||
+ 	    p->prefer_proposal_state != HMP_PREFER_PROPOSAL_NONE ||
+ 	    (p->flags & (PF_EXITING | PF_KTHREAD)) || p->in_execve ||
+ 	    sighand->action[CHIMERA_HMP_SIGNAL - 1].sa.sa_handler == SIG_DFL ||
+ 	    sighand->action[CHIMERA_HMP_SIGNAL - 1].sa.sa_handler == SIG_IGN ||
+-	    sigismember(&p->blocked, CHIMERA_HMP_SIGNAL) ||
+-	    !cpu_active(cpu) || !idle_cpu(cpu) ||
+-	    (type == HMP_AI ? !hmp_cpu_is_ai(cpu) : !hmp_cpu_is_regular(cpu)))
++	    sigismember(&p->blocked, CHIMERA_HMP_SIGNAL)) {
++		atomic64_inc(&prefer_fail_task_state);
++		goto out;
++	}
++	if (!cpu_active(cpu) || !idle_cpu(cpu) ||
++	    (type == HMP_AI ? !hmp_cpu_is_ai(cpu) : !hmp_cpu_is_regular(cpu))) {
++		atomic64_inc(&prefer_fail_target);
+ 		goto out;
+-	if (reassign && !hmp_prefer_reserve_reassign(p, type))
++	}
++	if (reassign && !hmp_prefer_reserve_reassign(p, type)) {
++		atomic64_inc(&prefer_fail_ledger);
+ 		goto out;
++	}
+ 
+ 	generation = hmp_prefer_next_generation(p);
+ 	p->prefer_proposal_deadline = jiffies +
+ 		msecs_to_jiffies(CHIMERA_HMP_PROPOSAL_TIMEOUT_MS);
+ 	if (!hmp_prefer_reserve_cpu(p, cpu, generation,
+ 				    p->prefer_proposal_deadline, type)) {
++		atomic64_inc(&prefer_fail_cpu_reservation);
+ 		if (reassign)
+ 			hmp_prefer_release_reassign(p, false, type);
+ 		p->prefer_proposal_deadline = 0;
+@@ -1073,6 +1224,7 @@ static int hmp_prefer_propose(struct task_struct *p, hmp_type_e type,
+ 	ret = send_chimera_signal_locked(CHIMERA_HMP_SIGNAL, &info, p,
+ 					 PIDTYPE_PID);
+ 	if (ret) {
++		atomic64_inc(&prefer_fail_signal);
+ 		hmp_prefer_release_cpu(p);
+ 		if (reassign)
+ 			hmp_prefer_release_reassign(p, false, type);
+@@ -1085,41 +1237,77 @@ static int hmp_prefer_propose(struct task_struct *p, hmp_type_e type,
+ 	}
+ out:
+ 	unlock_task_sighand(p, &flags);
+-	if (!ret && reassign)
+-		mod_delayed_work(prefer_wq, &prefer_timeout_work,
+-			msecs_to_jiffies(CHIMERA_HMP_PROPOSAL_TIMEOUT_MS + 1));
++	if (retry_type >= 0)
++		mod_delayed_work(prefer_wq, &prefer_retry_work,
++				 msecs_to_jiffies(100));
++	/*
++	 * Every proposal needs a timeout.  Initial placement does not reserve a
++	 * ledger transfer, but an unhandled signal must still release its CPU and
++	 * leave PENDING so a later idle event can retry it.  Queue an immediate scan
++	 * unconditionally: it cannot postpone an earlier deadline and also closes
++	 * the race where the timeout worker has finished its last scan but has not
++	 * returned yet.  That scan will arm the exact earliest deadline.
++	 */
++	if (!ret)
++		mod_delayed_work(prefer_wq, &prefer_timeout_work, 0);
+ 	return ret;
+ }
+ 
++static struct task_struct *hmp_prefer_find_expired_proposal(
++						unsigned long *next_delay)
++{
++	struct task_struct *g, *p, *found = NULL;
++	unsigned long deadline, earliest = 0;
++
++	*next_delay = 0;
++	rcu_read_lock();
++	for_each_process_thread(g, p) {
++		if (READ_ONCE(p->prefer_proposal_state) !=
++		    HMP_PREFER_PROPOSAL_PENDING)
++			continue;
++		deadline = READ_ONCE(p->prefer_proposal_deadline);
++		if (!deadline)
++			continue;
++		if (time_after_eq(jiffies, deadline)) {
++			get_task_struct(p);
++			found = p;
++			break;
++		}
++		if (!earliest || time_before(deadline, earliest))
++			earliest = deadline;
++	}
++	rcu_read_unlock();
++	if (!found && earliest)
++		*next_delay = time_after_eq(jiffies, earliest) ? 1 :
++			earliest - jiffies + 1;
++	return found;
++}
++
+ static void hmp_prefer_timeout_workfn(struct work_struct *work)
+ {
+-	struct task_struct *p = NULL;
++	struct task_struct *p;
+ 	struct sighand_struct *sighand;
+ 	unsigned long flags;
+ 	unsigned long delay = 0;
+ 	bool expired = false;
+ 
+-	raw_spin_lock_irqsave(&prefer_account_lock, flags);
+-	if (prefer_reassign_task) {
+-		p = prefer_reassign_task;
+-		get_task_struct(p);
+-	}
+-	raw_spin_unlock_irqrestore(&prefer_account_lock, flags);
+-	if (!p)
+-		return;
+-
+-	mutex_lock(&hmp_migration_mutex);
+-	sighand = lock_task_sighand(p, &flags);
+-	if (sighand) {
+-		if (p->prefer_proposal_reassign &&
+-		    p->prefer_proposal_state == HMP_PREFER_PROPOSAL_PENDING) {
+-			if (time_after(jiffies, p->prefer_proposal_deadline)) {
+-				hmp_prefer_release_reassign(p, false,
+-					p->prefer_pending_group == HMP_PREFER_GROUP_AI ?
+-					HMP_AI : HMP_REGULAR);
++	while ((p = hmp_prefer_find_expired_proposal(&delay))) {
++		mutex_lock(&hmp_migration_mutex);
++		sighand = lock_task_sighand(p, &flags);
++		if (sighand) {
++			if (p->prefer_proposal_state == HMP_PREFER_PROPOSAL_PENDING &&
++			    p->prefer_proposal_deadline &&
++			    time_after_eq(jiffies, p->prefer_proposal_deadline)) {
++				atomic64_inc(&prefer_fail_timeout);
++				if (p->prefer_proposal_reassign)
++					hmp_prefer_release_reassign(p, false,
++						p->prefer_pending_group ==
++						HMP_PREFER_GROUP_AI ? HMP_AI : HMP_REGULAR);
++				atomic_or(BIT(p->prefer_pending_group ==
++					      HMP_PREFER_GROUP_AI ? HMP_AI : HMP_REGULAR),
++					  &prefer_retry_groups);
+ 				hmp_prefer_release_cpu(p);
+-				p->prefer_proposal_generation =
+-					hmp_prefer_next_generation(p);
++				p->prefer_proposal_generation = hmp_prefer_next_generation(p);
+ 				p->prefer_proposal_state = HMP_PREFER_PROPOSAL_NONE;
+ 				p->prefer_proposal_reason = 0;
+ 				p->prefer_proposal_reassign = 0;
+@@ -1129,18 +1317,61 @@ static void hmp_prefer_timeout_workfn(struct work_struct *work)
+ 				p->prefer_proposal_deadline = 0;
+ 				flush_chimera_signal_locked(p, CHIMERA_HMP_SIGNAL);
+ 				expired = true;
+-			} else {
+-				delay = p->prefer_proposal_deadline - jiffies + 1;
+ 			}
++			unlock_task_sighand(p, &flags);
++		} else if (p->prefer_proposal_state == HMP_PREFER_PROPOSAL_PENDING &&
++			   p->prefer_proposal_deadline &&
++			   time_after_eq(jiffies, p->prefer_proposal_deadline)) {
++			/* The exiting task has no sighand, hence cannot concurrently ACK. */
++			if (p->prefer_proposal_reassign)
++				hmp_prefer_release_reassign(p, false,
++					p->prefer_pending_group == HMP_PREFER_GROUP_AI ?
++					HMP_AI : HMP_REGULAR);
++			hmp_prefer_release_cpu(p);
++			p->prefer_proposal_generation = hmp_prefer_next_generation(p);
++			p->prefer_proposal_state = HMP_PREFER_PROPOSAL_NONE;
++			p->prefer_proposal_reassign = 0;
++			p->prefer_pending_group = HMP_PREFER_GROUP_NONE;
++			p->prefer_proposal_assignment_seq = 0;
++			p->prefer_target_cpu = -1;
++			p->prefer_proposal_deadline = 0;
++			expired = true;
+ 		}
+-		unlock_task_sighand(p, &flags);
++		mutex_unlock(&hmp_migration_mutex);
++		put_task_struct(p);
+ 	}
+-	mutex_unlock(&hmp_migration_mutex);
+-	put_task_struct(p);
+ 	if (delay)
+ 		mod_delayed_work(prefer_wq, &prefer_timeout_work, delay);
+-	else if (expired)
++	if (expired) {
++		mod_delayed_work(prefer_wq, &prefer_retry_work,
++				 msecs_to_jiffies(100));
+ 		hmp_prefer_kick_rebalance();
++	}
++}
++
++static void hmp_prefer_retry_workfn(struct work_struct *work)
++{
++	int groups = atomic_xchg(&prefer_retry_groups, 0);
++	int type;
++
++	for (type = HMP_REGULAR; type <= HMP_AI; type++) {
++		int cpu;
++
++		if (!(groups & BIT(type)))
++			continue;
++		atomic64_inc(&prefer_candidate_generation[type]);
++		cpu = hmp_idle_group_cpu(NULL, type);
++		if (cpu >= 0 && atomic_read(&prefer_pending)) {
++			atomic_or(BIT(type), &prefer_retry_groups);
++			mod_delayed_work(prefer_wq, &prefer_retry_work, 1);
++		} else if (cpu >= 0 &&
++			   !hmp_prefer_queue(NULL, cpu, HMP_IDLE_PULL, true)) {
++			atomic_or(BIT(type), &prefer_retry_groups);
++			mod_delayed_work(prefer_wq, &prefer_retry_work,
++					 msecs_to_jiffies(10));
++		}
++	}
++	hmp_prefer_kick_rebalance();
+ }
+ 
+ static ssize_t hmp_prefer_ack_write(struct file *file, const char __user *buf,
+@@ -1152,16 +1383,22 @@ static ssize_t hmp_prefer_ack_write(struct file *file, const char __user *buf,
+ 	unsigned long flags;
+ 	enum hmp_migration_reason reason;
+ 	hmp_type_e type;
+-	bool reassign = false;
++	bool reassign = false, nack, record_nack = false;
++	int source_group = HMP_PREFER_GROUP_NONE;
++	int target_group = HMP_PREFER_GROUP_NONE;
++	u64 cpu_cookie = 0;
+ 	int cpu, ret;
+ 
+ 	if (count != sizeof(ack))
+ 		return -EINVAL;
+ 	if (copy_from_user(&ack, buf, sizeof(ack)))
+ 		return -EFAULT;
+-	if (ack.action != HMP_PREFER_ACK_NACK &&
+-	    ack.action != HMP_PREFER_ACK_COMMIT)
++	if (ack.action > HMP_PREFER_ACK_CAPABILITY_CHANGED)
+ 		return -EINVAL;
++	nack = ack.action != HMP_PREFER_ACK_COMMIT &&
++		ack.action <= HMP_PREFER_ACK_NACK_SAFEPOINT;
++	if (nack)
++		cpu_cookie = hmp_prefer_cpu_cookie(current);
+ 
+ 	/* Serialize ACK commit with the existing arbitrary-PID manual path. */
+ 	mutex_lock(&hmp_migration_mutex);
+@@ -1170,13 +1407,44 @@ static ssize_t hmp_prefer_ack_write(struct file *file, const char __user *buf,
+ 		ret = -ESRCH;
+ 		goto out_mutex;
+ 	}
++	if (ack.action == HMP_PREFER_ACK_STATE_ORIGINAL ||
++	    ack.action == HMP_PREFER_ACK_CAPABILITY_CHANGED) {
++		if (!READ_ONCE(current->prefer_a100) &&
++		    !READ_ONCE(current->hmp_prefer_ready)) {
++			ret = -EPERM;
++			goto out_unlock;
++		}
++		hmp_prefer_clear_nack(current);
++		if (ack.action == HMP_PREFER_ACK_CAPABILITY_CHANGED)
++			current->prefer_capability_generation++;
++		unlock_task_sighand(current, &flags);
++		atomic64_inc(&prefer_candidate_generation[HMP_REGULAR]);
++		atomic64_inc(&prefer_candidate_generation[HMP_AI]);
++		hmp_prefer_kick_rebalance();
++		ret = count;
++		goto out_mutex;
++	}
+ 	if (current->prefer_proposal_state != HMP_PREFER_PROPOSAL_PENDING ||
+ 	    current->prefer_proposal_generation != ack.generation) {
+ 		ret = -ESTALE;
+ 		goto out_unlock;
+ 	}
+-	if (ack.action == HMP_PREFER_ACK_NACK ||
++	if (nack ||
+ 	    time_after(jiffies, current->prefer_proposal_deadline)) {
++		if (nack) {
++			atomic64_inc(&prefer_fail_nack);
++			if (ack.action == HMP_PREFER_ACK_NACK_TRANSLATED)
++				atomic64_inc(&prefer_nack_translated);
++			else if (ack.action == HMP_PREFER_ACK_NACK_MISSING_ROUTE)
++				atomic64_inc(&prefer_nack_missing_route);
++			else
++				atomic64_inc(&prefer_nack_prepare);
++			source_group = current->prefer_assigned_group;
++			target_group = current->prefer_pending_group;
++			record_nack = true;
++		} else {
++			atomic64_inc(&prefer_fail_timeout);
++		}
+ 		if (current->prefer_proposal_reassign)
+ 			hmp_prefer_release_reassign(current, false,
+ 				current->prefer_pending_group == HMP_PREFER_GROUP_AI ?
+@@ -1188,7 +1456,7 @@ static ssize_t hmp_prefer_ack_write(struct file *file, const char __user *buf,
+ 		current->prefer_proposal_assignment_seq = 0;
+ 		current->prefer_target_cpu = -1;
+ 		current->prefer_proposal_deadline = 0;
+-		ret = ack.action == HMP_PREFER_ACK_NACK ? 0 : -ETIMEDOUT;
++		ret = nack ? 0 : -ETIMEDOUT;
+ 		goto out_unlock;
+ 	}
+ 	type = current->prefer_pending_group == HMP_PREFER_GROUP_AI ?
+@@ -1207,8 +1475,15 @@ static ssize_t hmp_prefer_ack_write(struct file *file, const char __user *buf,
+ 	cpuset_lock();
+ 	cpuset_cpus_allowed(current, mask);
+ 	cpumask_and(mask, mask, type == HMP_AI ? &ai_cpu_mask : &regular_cpu_mask);
+-	ret = cpumask_test_cpu(cpu, mask) ?
+-		sched_hmp_ack_current(mask, type, cpu, reason, ack.generation) : -EPERM;
++	if (!cpumask_test_cpu(cpu, mask)) {
++		atomic64_inc(&prefer_fail_cpuset);
++		ret = -EPERM;
++	} else {
++		ret = sched_hmp_ack_current(mask, type, cpu, reason,
++					    ack.generation);
++		if (ret)
++			atomic64_inc(&prefer_fail_stopper);
++	}
+ 	cpuset_unlock();
+ 	cpus_read_unlock();
+ 	free_cpumask_var(mask);
+@@ -1233,11 +1508,14 @@ out_finish:
+ 	}
+ out_unlock:
+ 	unlock_task_sighand(current, &flags);
+-	if (reassign)
++	if (record_nack)
++		hmp_prefer_record_nack(current, source_group, target_group,
++				       cpu_cookie);
++	if (reassign && !nack)
+ 		hmp_prefer_kick_rebalance();
+ 	if (ret)
+ 		goto out_mutex;
+-	if (ack.action == HMP_PREFER_ACK_NACK)
++	if (nack)
+ 		goto out_success;
+ 	if (!reassign)
+ 		hmp_prefer_manual_assign(current, type);
+@@ -1278,11 +1556,15 @@ static void hmp_prefer_workfn(struct work_struct *work)
+ 		hmp_type_e type = reason == HMP_IDLE_PULL ? idle_type :
+ 			(READ_ONCE(tasks[0]->prefer_assigned_group) ==
+ 			 HMP_PREFER_GROUP_AI ? HMP_AI : HMP_REGULAR);
+-		bool reassign = READ_ONCE(tasks[0]->prefer_assigned_group) !=
+-			(type == HMP_AI ? HMP_PREFER_GROUP_AI :
+-			 HMP_PREFER_GROUP_REGULAR);
++		int target_group = type == HMP_AI ? HMP_PREFER_GROUP_AI :
++			HMP_PREFER_GROUP_REGULAR;
++		int assigned_group = READ_ONCE(tasks[0]->prefer_assigned_group);
++		bool reassign = assigned_group != target_group;
+ 		cpu = hmp_idle_group_cpu_for_task(tasks[0], type);
+-		if (cpu >= 0 &&
++		if (assigned_group == target_group &&
++		    READ_ONCE(tasks[0]->thread_type) == type) {
++			atomic64_inc(&prefer_same_group_skipped);
++		} else if (cpu >= 0 &&
+ 		    !hmp_prefer_propose(tasks[0], type, reason, cpu, reassign)) {
+ 			proposed++;
+ 		}
+@@ -1296,18 +1578,26 @@ static void hmp_prefer_workfn(struct work_struct *work)
+ 			count = sched_hmp_candidates(tasks, ARRAY_SIZE(tasks), cpu,
+ 							     &cursor);
+ 			for (i = 0; i < count; i++) {
++				int target_group = type == HMP_AI ?
++					HMP_PREFER_GROUP_AI : HMP_PREFER_GROUP_REGULAR;
++				int assigned_group =
++					READ_ONCE(tasks[i]->prefer_assigned_group);
+ 				int candidate_cpu = hmp_idle_group_cpu_for_task(tasks[i], type);
++
++				if (assigned_group == target_group &&
++				    READ_ONCE(tasks[i]->thread_type) == type) {
++					atomic64_inc(&prefer_same_group_skipped);
++					put_task_struct(tasks[i]);
++					continue;
++				}
+ 				if (!moved && candidate_cpu >= 0 &&
+ 				    hmp_prefer_task_allowed_cpu(tasks[i], candidate_cpu) &&
+ 				    hmp_runtime_ready(tasks[i])) {
+-					eligible = READ_ONCE(tasks[i]->prefer_assigned_group) !=
+-						HMP_PREFER_GROUP_NONE;
++					eligible = assigned_group != HMP_PREFER_GROUP_NONE;
+ 					if (!moved && eligible &&
+ 					    !hmp_prefer_propose(tasks[i], type,
+ 							     reason, candidate_cpu,
+-							     READ_ONCE(tasks[i]->prefer_assigned_group) !=
+-							     (type == HMP_AI ? HMP_PREFER_GROUP_AI :
+-							      HMP_PREFER_GROUP_REGULAR))) {
++							     assigned_group != target_group)) {
+ 						moved = true;
+ 						proposed++;
+ 					}
+@@ -1372,18 +1662,18 @@ static void hmp_prefer_irqfn(struct irq_work *work)
+ 	}
+ }
+ 
+-static void hmp_prefer_queue(struct task_struct *p, int cpu,
++static bool hmp_prefer_queue(struct task_struct *p, int cpu,
+ 			     enum hmp_migration_reason reason, bool reset_cursor)
+ {
+ 	if (!READ_ONCE(prefer_service_ready))
+-		return;
++		return false;
+ 	if (reason == HMP_IDLE_PULL &&
+ 	    time_before(jiffies,
+ 		READ_ONCE(prefer_scan_after[hmp_cpu_is_ai(cpu) ? HMP_AI :
+ 							HMP_REGULAR])))
+-		return;
++		return false;
+ 	if (atomic_cmpxchg_acquire(&prefer_pending, 0, 1))
+-		return;
++		return false;
+ 	if (reset_cursor)
+ 		WRITE_ONCE(prefer_cursor, 0);
+ 	if (p)
+@@ -1398,7 +1688,9 @@ static void hmp_prefer_queue(struct task_struct *p, int cpu,
+ 		if (p)
+ 			put_task_struct(p);
+ 		atomic_set_release(&prefer_pending, 0);
++		return false;
+ 	}
++	return true;
+ }
+ 
+ void hmp_prefer_idle(int cpu)
+@@ -1496,6 +1788,38 @@ static int hmp_prefer_stats_show(struct seq_file *m, void *v)
+ 		   atomic64_read(&prefer_overflow_migrations));
+ 	seq_printf(m, "prefer_a100_pull_failures %lld\n",
+ 		   atomic64_read(&prefer_failures));
++	seq_printf(m, "prefer_a100_fail_runtime %lld\n",
++		   atomic64_read(&prefer_fail_runtime));
++	seq_printf(m, "prefer_a100_fail_task_state %lld\n",
++		   atomic64_read(&prefer_fail_task_state));
++	seq_printf(m, "prefer_a100_fail_target %lld\n",
++		   atomic64_read(&prefer_fail_target));
++	seq_printf(m, "prefer_a100_fail_ledger %lld\n",
++		   atomic64_read(&prefer_fail_ledger));
++	seq_printf(m, "prefer_a100_fail_cpu_reservation %lld\n",
++		   atomic64_read(&prefer_fail_cpu_reservation));
++	seq_printf(m, "prefer_a100_fail_signal %lld\n",
++		   atomic64_read(&prefer_fail_signal));
++	seq_printf(m, "prefer_a100_fail_nack %lld\n",
++		   atomic64_read(&prefer_fail_nack));
++	seq_printf(m, "prefer_a100_same_group_skipped %lld\n",
++		   atomic64_read(&prefer_same_group_skipped));
++	seq_printf(m, "prefer_a100_nack_translated %lld\n",
++		   atomic64_read(&prefer_nack_translated));
++	seq_printf(m, "prefer_a100_nack_missing_route %lld\n",
++		   atomic64_read(&prefer_nack_missing_route));
++	seq_printf(m, "prefer_a100_nack_prepare_or_safepoint %lld\n",
++		   atomic64_read(&prefer_nack_prepare));
++	seq_printf(m, "prefer_a100_cooldown_suppressed %lld\n",
++		   atomic64_read(&prefer_cooldown_suppressed));
++	seq_printf(m, "prefer_a100_cpu_reservations %u\n",
++		   hmp_prefer_reserved_cpu_count());
++	seq_printf(m, "prefer_a100_fail_timeout %lld\n",
++		   atomic64_read(&prefer_fail_timeout));
++	seq_printf(m, "prefer_a100_fail_cpuset %lld\n",
++		   atomic64_read(&prefer_fail_cpuset));
++	seq_printf(m, "prefer_a100_fail_stopper %lld\n",
++		   atomic64_read(&prefer_fail_stopper));
+ 	return 0;
+ }
+ 
+diff --git a/include/linux/sched.h b/include/linux/sched.h
+index b03303782862ab6a08cde803cbede672d9f90d41..99ea093dd0637c35af2880312dd15a2700358d4f 100644
+--- a/include/linux/sched.h
++++ b/include/linux/sched.h
+@@ -1682,6 +1682,15 @@ struct task_struct {
+ 	u32				prefer_proposal_assignment_seq;
+ 	s16				prefer_target_cpu;
+ 	unsigned long			prefer_proposal_deadline;
++	/* Last rejected cross-group route. A matching route is suppressed briefly. */
++	u64				prefer_nack_assignment_seq;
++	u64				prefer_nack_balance_generation;
++	u64				prefer_nack_cpu_cookie;
++	u64				prefer_nack_capability_generation;
++	u64				prefer_capability_generation;
++	u8				prefer_nack_source_group;
++	u8				prefer_nack_target_group;
++	unsigned long			prefer_nack_retry_after;
+ #endif
+ 
+ 	/*
+diff --git a/include/linux/soc/spacemit/spacemit-hmp.h b/include/linux/soc/spacemit/spacemit-hmp.h
+index 4324c36a95e80c4c4bae6c9b1863548c98de41fb..ddb30443c74a567b43ed6b82d02f89cc892dada2 100644
+--- a/include/linux/soc/spacemit/spacemit-hmp.h
++++ b/include/linux/soc/spacemit/spacemit-hmp.h
+@@ -26,6 +26,12 @@ int hmp_map_ai_to_regular(struct cpumask *mask);
+ enum hmp_prefer_ack_action {
+ 	HMP_PREFER_ACK_NACK = 0,
+ 	HMP_PREFER_ACK_COMMIT = 1,
++	HMP_PREFER_ACK_NACK_TRANSLATED = 2,
++	HMP_PREFER_ACK_NACK_MISSING_ROUTE = 3,
++	HMP_PREFER_ACK_NACK_PREPARE = 4,
++	HMP_PREFER_ACK_NACK_SAFEPOINT = 5,
++	HMP_PREFER_ACK_STATE_ORIGINAL = 6,
++	HMP_PREFER_ACK_CAPABILITY_CHANGED = 7,
+ };
+ 
+ struct hmp_prefer_ack {
+diff --git a/kernel/sched/core.c b/kernel/sched/core.c
+index 39674381b0ea88e8e64ccf7a095f6c38e8a89ebe..09eeff196ead0bd46775c6969916840d4d08019d 100644
+--- a/kernel/sched/core.c
++++ b/kernel/sched/core.c
+@@ -4947,6 +4947,14 @@ int sched_fork(u64 clone_flags, struct task_struct *p)
+ 	p->prefer_proposal_assignment_seq = 0;
+ 	p->prefer_target_cpu = -1;
+ 	p->prefer_proposal_deadline = 0;
++	p->prefer_nack_assignment_seq = 0;
++	p->prefer_nack_balance_generation = 0;
++	p->prefer_nack_cpu_cookie = 0;
++	p->prefer_nack_capability_generation = 0;
++	p->prefer_capability_generation = 0;
++	p->prefer_nack_source_group = HMP_PREFER_GROUP_NONE;
++	p->prefer_nack_target_group = HMP_PREFER_GROUP_NONE;
++	p->prefer_nack_retry_after = 0;
+ #endif
+ 
+ 	/*
+-- 
+2.43.0
+

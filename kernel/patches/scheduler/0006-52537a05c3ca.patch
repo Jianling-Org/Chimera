@@ -1,0 +1,2828 @@
+From 52537a05c3ca7648a538fcd1de8e4e5634b3f5c5 Mon Sep 17 00:00:00 2001
+From: Liang Kaiwen <liangkaiwen24@mails.ucas.ac.cn>
+Date: Fri, 16 Oct 2026 12:57:12 +0800
+Subject: [PATCH] sched/chimera: add layered automatic migration with proposal/ACK
+
+Implement layered assignment, source-side proposals and generation-bound ACK commits. Track pending allocations and CPU reservations across fork, exec, exit and scheduler transitions.
+
+Source-Commit: 52537a05c3ca7648a538fcd1de8e4e5634b3f5c5
+
+---
+ arch/riscv/include/asm/vector.h           |    6 +
+ arch/riscv/kernel/vector.c                |   26 +
+ drivers/soc/spacemit/Kconfig              |    1 +
+ drivers/soc/spacemit/hmp.c                | 1422 +++++++++++++++++++--
+ fs/exec.c                                 |   10 +
+ fs/proc/array.c                           |    4 +
+ include/linux/sched.h                     |   19 +
+ include/linux/signal.h                    |    5 +
+ include/linux/signal_types.h              |    1 +
+ include/linux/soc/spacemit/spacemit-hmp.h |   62 +
+ include/trace/events/sched.h              |   21 +
+ kernel/bpf/helpers_chimera.c              |  316 ++---
+ kernel/exit.c                             |    7 +
+ kernel/fork.c                             |    7 +
+ kernel/sched/core.c                       |  263 +++-
+ kernel/sched/fair.c                       |   18 +-
+ kernel/signal.c                           |   51 +-
+ 17 files changed, 1990 insertions(+), 249 deletions(-)
+
+diff --git a/arch/riscv/include/asm/vector.h b/arch/riscv/include/asm/vector.h
+index e570238c2a3639a213bff4097cbe9d93d492ecbc..6b7607b48f05cb90438e45ec78c6ca36db5b7fd5 100644
+--- a/arch/riscv/include/asm/vector.h
++++ b/arch/riscv/include/asm/vector.h
+@@ -51,6 +51,9 @@ void put_cpu_vector_context(void);
+ void riscv_v_thread_free(struct task_struct *tsk);
+ void __init riscv_v_setup_ctx_cache(void);
+ void riscv_v_thread_alloc(struct task_struct *tsk);
++#ifdef CONFIG_SPACEMIT_HMP
++void riscv_v_chimera_reset_current(void);
++#endif
+ 
+ static inline u32 riscv_v_flags(void)
+ {
+@@ -457,6 +460,9 @@ static inline bool riscv_v_vstate_ctrl_user_allowed(void) { return false; }
+ #define riscv_v_thread_free(tsk)		do {} while (0)
+ #define  riscv_v_setup_ctx_cache()		do {} while (0)
+ #define riscv_v_thread_alloc(tsk)		do {} while (0)
++#ifdef CONFIG_SPACEMIT_HMP
++#define riscv_v_chimera_reset_current()	do {} while (0)
++#endif
+ 
+ #endif /* CONFIG_RISCV_ISA_V */
+ 
+diff --git a/arch/riscv/kernel/vector.c b/arch/riscv/kernel/vector.c
+index c82b3382a31a184e6a7ede5fcdcb812ef29d102b..3026687844a82e8315ccd6314f42c3b31cf6c138 100644
+--- a/arch/riscv/kernel/vector.c
++++ b/arch/riscv/kernel/vector.c
+@@ -150,6 +150,32 @@ void riscv_v_thread_free(struct task_struct *tsk)
+ #endif
+ }
+ 
++#ifdef CONFIG_SPACEMIT_HMP
++/*
++ * A successful cross-VLEN Chimera commit makes the userspace simulator the
++ * sole owner of the saved source vector state.  Drop both the live register
++ * state and its deferred restore before returning to the signal handler; the
++ * target body will allocate a vector context on its first vector instruction.
++ */
++void riscv_v_chimera_reset_current(void)
++{
++	struct pt_regs *regs = task_pt_regs(current);
++
++	if (riscv_v_vstate_query(regs)) {
++		get_cpu_vector_context();
++		riscv_v_vstate_discard(regs);
++		put_cpu_vector_context();
++	}
++	riscv_v_vstate_off(regs);
++	clear_thread_flag(TIF_RISCV_V_DEFER_RESTORE);
++	if (current->thread.vstate.datap)
++		kmem_cache_free(riscv_v_user_cachep,
++				 current->thread.vstate.datap);
++	memset(&current->thread.vstate, 0,
++	       sizeof(current->thread.vstate));
++}
++#endif
++
+ #define VSTATE_CTRL_GET_CUR(x) ((x) & PR_RISCV_V_VSTATE_CTRL_CUR_MASK)
+ #define VSTATE_CTRL_GET_NEXT(x) (((x) & PR_RISCV_V_VSTATE_CTRL_NEXT_MASK) >> 2)
+ #define VSTATE_CTRL_MAKE_NEXT(x) (((x) << 2) & PR_RISCV_V_VSTATE_CTRL_NEXT_MASK)
+diff --git a/drivers/soc/spacemit/Kconfig b/drivers/soc/spacemit/Kconfig
+index 5a877fc841bfb38ffbecc27909cecace611632a8..e14e548b1f81049b259665e28c797ad752a6a60b 100644
+--- a/drivers/soc/spacemit/Kconfig
++++ b/drivers/soc/spacemit/Kconfig
+@@ -3,6 +3,7 @@
+ config SPACEMIT_HMP
+ 	bool "Spacemit HMP support"
+ 	depends on SMP && SOC_SPACEMIT
++	select IRQ_WORK
+ 	help
+ 	  Say y here to enable the HMP feature support.
+ 	  This feature categorizes the CPU cores within the
+diff --git a/drivers/soc/spacemit/hmp.c b/drivers/soc/spacemit/hmp.c
+index bb2ca9725665012416d3d4d700daa08444e0fcdb..50eb846fafaef5e11b0adda048660589f9c51dcd 100644
+--- a/drivers/soc/spacemit/hmp.c
++++ b/drivers/soc/spacemit/hmp.c
+@@ -3,6 +3,8 @@
+ 
+ #include <linux/kernel.h>
+ #include <linux/init.h>
++#include <linux/capability.h>
++#include <asm/vector.h>
+ #include <linux/sched.h>
+ #include <linux/cpumask.h>
+ #include <linux/cpu.h>
+@@ -12,6 +14,13 @@
+ #include <linux/proc_fs.h>
+ #include <linux/uaccess.h>
+ #include <linux/of.h>
++#include <linux/cpuset.h>
++#include <linux/mutex.h>
++#include <linux/seq_file.h>
++#include <linux/workqueue.h>
++#include <linux/irq_work.h>
++#include <linux/sched/signal.h>
++#include <trace/events/sched.h>
+ #include <linux/soc/spacemit/spacemit-hmp.h>
+ 
+ 
+@@ -39,6 +48,25 @@ static atomic_t system_suspending = ATOMIC_INIT(0);
+ 
+ static struct cpumask	regular_cpu_mask __read_mostly;
+ static struct cpumask	ai_cpu_mask __read_mostly;
++static bool prefer_service_ready;
++
++bool hmp_cpu_is_ai(int cpu)
++{
++	return cpu >= 0 && cpu < nr_cpu_ids &&
++		cpumask_test_cpu(cpu, &ai_cpu_mask);
++}
++
++bool hmp_cpu_is_regular(int cpu)
++{
++	return cpu >= 0 && cpu < nr_cpu_ids &&
++		cpumask_test_cpu(cpu, &regular_cpu_mask);
++}
++
++bool hmp_prefer_can_migrate(void)
++{
++	return READ_ONCE(prefer_service_ready) &&
++		!atomic_read(&system_suspending);
++}
+ 
+ int hmp_get_cpumask(struct cpumask *mask, hmp_type_e type)
+ {
+@@ -94,6 +122,13 @@ int hmp_cpu_affinity_restrict(struct task_struct *p, const struct cpumask *new_m
+ 	if (cpumask_empty(new_mask))
+ 		return -EINVAL;
+ 
++	/* prefer_A100 keeps the user's requested mask in user_cpus_ptr, while
++	 * __set_cpus_allowed_ptr() clamps the effective mask to the task's current
++	 * HMP group.  This lets runtimes such as OpenMP request a cross-group mask
++	 * without changing groups outside the validated HMP migration path. */
++	if (READ_ONCE(p->prefer_a100))
++		return 0;
++
+ 	allowed_mask = (p->thread_type == HMP_REGULAR) ?
+ 					&regular_cpu_mask : &ai_cpu_mask;
+ 
+@@ -216,21 +251,23 @@ static bool is_per_cpu_kthread(struct task_struct *p)
+  * Returns: true if set cpumask set to ai_cpumask
+  */
+ 
+- static inline void _set_cpumask(struct task_struct *p, const struct cpumask *allowed_mask)
+-{
+-    struct cpumask mask;
+-
+-    cpumask_and(&mask, allowed_mask, &p->cpus_mask);
+-    if (WARN_ON(cpumask_empty(&mask)))
+-        return;
+-
+-    cpumask_copy(&p->cpus_mask, &mask);
+-    p->nr_cpus_allowed = cpumask_weight(&p->cpus_mask);
+-    p->cpus_ptr = &p->cpus_mask;
+-}
+-
+ bool hmp_set_default_cpumask(struct task_struct *p)
+ {
++	/* Preserve the validated affinity of managed tasks, including cpusets. */
++	if (READ_ONCE(p->prefer_a100)) {
++		const struct cpumask *group = p->thread_type == HMP_AI ?
++			&ai_cpu_mask : &regular_cpu_mask;
++
++		if (cpumask_intersects(&p->cpus_mask, group)) {
++			cpumask_and(&p->cpus_mask, &p->cpus_mask, group);
++			p->nr_cpus_allowed = cpumask_weight(&p->cpus_mask);
++			return true;
++		}
++		/* A cpuset update may leave no CPU in the current HMP group.  Keep
++		 * the caller's effective mask; falling through would expand it to
++		 * the whole group and let the task escape its cpuset. */
++		return !cpumask_empty(&p->cpus_mask);
++	}
+ 
+     /* check if called from set ai task */
+     if (p->thread_type == HMP_AI) {
+@@ -245,23 +282,11 @@ bool hmp_set_default_cpumask(struct task_struct *p)
+     if ((p->flags & PF_KTHREAD) && is_per_cpu_kthread(p))
+         return true;
+ 
+-    struct cpumask mask;
+-    cpumask_and(&mask, &ai_cpu_mask, &p->cpus_mask);
+-
+-	if(cpumask_empty(&mask))
+-	{
+-		p->thread_type = HMP_REGULAR;
+-		cpumask_copy(&p->cpus_mask, &regular_cpu_mask);
+-		p->nr_cpus_allowed = cpumask_weight(&p->cpus_mask);
+-		p->cpus_ptr = &p->cpus_mask;
+-	}
+-
+     /* All new threads default to regular cores unless it's a per-CPU kthread
+ 	 * AI thread property will be set explicitly via /proc/ai_threads
+ 	 */
+ 
+ 	/* enable one ai cpu core if none ai core enabled */
+-	cpumask_t online_ai_cpus;
+ 	cpumask_t online_regular_cpus;
+ 
+ 	p->thread_type = HMP_REGULAR;
+@@ -298,97 +323,1247 @@ static struct notifier_block pm_notifier = {
+ 	.priority = INT_MAX,
+ };
+ 
+-int hmp_set_ai_thread(pid_t raw_pid)
++static DEFINE_MUTEX(hmp_migration_mutex);
++static atomic64_t prefer_initial = ATOMIC64_INIT(0);
++static atomic64_t prefer_attempts = ATOMIC64_INIT(0);
++static atomic64_t prefer_proposals = ATOMIC64_INIT(0);
++static atomic64_t prefer_migrations = ATOMIC64_INIT(0);
++static atomic64_t prefer_overflow_migrations = ATOMIC64_INIT(0);
++static atomic64_t prefer_failures = ATOMIC64_INIT(0);
++
++/* Account logical allocation, so a sleeping task keeps its assigned slot. */
++static DEFINE_RAW_SPINLOCK(prefer_account_lock);
++static unsigned int prefer_ai_tasks;
++static unsigned int prefer_regular_tasks;
++static unsigned int prefer_pending_to_ai;
++static unsigned int prefer_pending_to_regular;
++static struct task_struct *prefer_reassign_task;
++
++/* A proposal leaves its target idle until ACK, so idle_cpu() alone cannot
++ * keep another proposal from choosing the same CPU.  The owner is only
++ * compared, never dereferenced; exit/exec cancel its proposal. */
++struct hmp_prefer_cpu_reservation {
++	struct task_struct *owner;
++	u32 generation;
++	unsigned long deadline;
++};
++static DEFINE_RAW_SPINLOCK(prefer_cpu_reservation_lock);
++static struct hmp_prefer_cpu_reservation prefer_cpu_reservations[NR_CPUS];
++static int prefer_cpu_cursor[2] = { -1, -1 };
++
++/* One event in flight globally; no timer and no polling thread. */
++static atomic_t prefer_pending = ATOMIC_INIT(0);
++/* Failed idle scans must not spin while userspace declines a proposal. */
++static unsigned long prefer_scan_after[2];
++/* A nonzero generation means that at least one preferred candidate may exist.
++ * Workers clear it only after a complete no-candidate scan. */
++static atomic64_t prefer_candidate_generation[2] = {
++	ATOMIC64_INIT(0), ATOMIC64_INIT(0),
++};
++static struct workqueue_struct *prefer_wq;
++static struct task_struct *prefer_task;
++static int prefer_cpu;
++static enum hmp_migration_reason prefer_reason;
++static unsigned int prefer_cursor;
++void hmp_prefer_task_hint(struct task_struct *p);
++static void hmp_prefer_queue(struct task_struct *p, int cpu,
++			     enum hmp_migration_reason reason, bool reset_cursor);
++static void hmp_prefer_kick_rebalance(void);
++static int hmp_idle_group_cpu_for_task(struct task_struct *p, hmp_type_e type);
++static void hmp_prefer_release_cpu(struct task_struct *p);
++static void hmp_prefer_workfn(struct work_struct *work);
++static DECLARE_WORK(prefer_work, hmp_prefer_workfn);
++static void hmp_prefer_irqfn(struct irq_work *work);
++static DEFINE_IRQ_WORK(prefer_irq_work, hmp_prefer_irqfn);
++static void hmp_prefer_timeout_workfn(struct work_struct *work);
++static DECLARE_DELAYED_WORK(prefer_timeout_work, hmp_prefer_timeout_workfn);
++
++static void hmp_prefer_release_reassign(struct task_struct *p, bool commit,
++					hmp_type_e type);
++
++static unsigned int hmp_prefer_active_cpus(bool ai)
+ {
+-	pid_t pid;
+-	unsigned int cpu;
+-	int ret = 0;
+-	cpumask_t online_ai_cpus;
+-	struct task_struct *t = NULL;
++	cpumask_t active;
+ 
+-	if (raw_pid < 0)
+-	{
+-		pid = -raw_pid;
++	cpumask_and(&active, ai ? &ai_cpu_mask : &regular_cpu_mask,
++		    cpu_active_mask);
++	return max_t(unsigned int, cpumask_weight(&active), 1);
++}
++
++/* Return the group that is below its layered share after pending transfers.
++ * Each layer fills all AI slots first, then all regular slots. */
++static bool hmp_prefer_reassign_target(hmp_type_e *target)
++{
++	unsigned int ai_cap = hmp_prefer_active_cpus(true);
++	unsigned int regular_cap = hmp_prefer_active_cpus(false);
++	unsigned int ai = prefer_ai_tasks + prefer_pending_to_ai -
++		prefer_pending_to_regular;
++	unsigned int regular = prefer_regular_tasks + prefer_pending_to_regular -
++		prefer_pending_to_ai;
++	unsigned int total = ai + regular;
++	unsigned int width = ai_cap + regular_cap;
++	unsigned int desired_ai = total / width * ai_cap +
++		min(total % width, ai_cap);
++
++	lockdep_assert_held(&prefer_account_lock);
++	if (ai < desired_ai) {
++		*target = HMP_AI;
++		return true;
++	}
++	if (regular < total - desired_ai) {
++		*target = HMP_REGULAR;
++		return true;
++	}
++	return false;
++}
++
++static bool hmp_prefer_task_reassign_target(struct task_struct *p,
++					    hmp_type_e *target)
++{
++	unsigned long flags;
++	int assigned;
++	bool needed;
++
++	raw_spin_lock_irqsave(&prefer_account_lock, flags);
++	needed = hmp_prefer_reassign_target(target);
++	assigned = p->prefer_assigned_group;
++	if (needed && assigned == (*target == HMP_AI ? HMP_PREFER_GROUP_AI :
++						HMP_PREFER_GROUP_REGULAR))
++		needed = false;
++	raw_spin_unlock_irqrestore(&prefer_account_lock, flags);
++	return needed;
++}
++
++static bool hmp_prefer_user_mask(struct task_struct *p, cpumask_t *mask)
++{
++	unsigned long flags;
++	bool present;
++
++	raw_spin_lock_irqsave(&p->pi_lock, flags);
++	present = p->user_cpus_ptr != NULL;
++	if (present)
++		cpumask_copy(mask, p->user_cpus_ptr);
++	raw_spin_unlock_irqrestore(&p->pi_lock, flags);
++	return present;
++}
++
++static void hmp_prefer_task_allowed_groups(struct task_struct *p,
++					   bool *ai_allowed,
++					   bool *regular_allowed)
++{
++	cpumask_t allowed, ai_mask, regular_mask;
++
++	cpuset_cpus_allowed(p, &allowed);
++	cpumask_and(&ai_mask, &allowed, &ai_cpu_mask);
++	cpumask_and(&regular_mask, &allowed, &regular_cpu_mask);
++	*ai_allowed = !cpumask_empty(&ai_mask);
++	*regular_allowed = !cpumask_empty(&regular_mask);
++}
++
++static void __hmp_prefer_cancel_proposal(struct task_struct *p)
++{
++	struct sighand_struct *sighand;
++	unsigned long flags;
++
++	sighand = lock_task_sighand(p, &flags);
++	if (!sighand)
++		return;
++	if (p->prefer_proposal_reassign)
++		hmp_prefer_release_reassign(p, false,
++			p->prefer_pending_group == HMP_PREFER_GROUP_AI ?
++			HMP_AI : HMP_REGULAR);
++	hmp_prefer_release_cpu(p);
++	p->prefer_proposal_generation++;
++	if (!p->prefer_proposal_generation)
++		p->prefer_proposal_generation++;
++	p->prefer_proposal_state = HMP_PREFER_PROPOSAL_NONE;
++	p->prefer_proposal_reason = 0;
++	p->prefer_proposal_reassign = 0;
++	p->prefer_pending_group = HMP_PREFER_GROUP_NONE;
++	p->prefer_proposal_assignment_seq = 0;
++	p->prefer_target_cpu = -1;
++	p->prefer_proposal_deadline = 0;
++	flush_chimera_signal_locked(p, CHIMERA_HMP_SIGNAL);
++	unlock_task_sighand(p, &flags);
++}
++
++static void hmp_prefer_cancel_proposal(struct task_struct *p)
++{
++	mutex_lock(&hmp_migration_mutex);
++	__hmp_prefer_cancel_proposal(p);
++	mutex_unlock(&hmp_migration_mutex);
++}
++
++void hmp_prefer_register(struct task_struct *p)
++{
++	unsigned long flags, pi_flags;
++	int group;
++	bool ai_allowed, regular_allowed;
++
++	hmp_prefer_task_allowed_groups(p, &ai_allowed, &regular_allowed);
++	raw_spin_lock_irqsave(&p->pi_lock, pi_flags);
++	if (!READ_ONCE(p->prefer_a100) || (p->flags & PF_KTHREAD) ||
++	    READ_ONCE(p->prefer_assigned_group) != HMP_PREFER_GROUP_NONE) {
++		raw_spin_unlock_irqrestore(&p->pi_lock, pi_flags);
++		return;
++	}
++	raw_spin_lock_irqsave(&prefer_account_lock, flags);
++	if (READ_ONCE(p->prefer_a100) &&
++	    p->prefer_assigned_group == HMP_PREFER_GROUP_NONE) {
++		unsigned int ai_level = prefer_ai_tasks /
++			hmp_prefer_active_cpus(true);
++		unsigned int regular_level = prefer_regular_tasks /
++			hmp_prefer_active_cpus(false);
++
++		if (!regular_allowed)
++			group = HMP_PREFER_GROUP_AI;
++		else if (!ai_allowed)
++			group = HMP_PREFER_GROUP_REGULAR;
++		else
++			group = ai_level <= regular_level ? HMP_PREFER_GROUP_AI :
++				HMP_PREFER_GROUP_REGULAR;
++		WRITE_ONCE(p->prefer_assigned_group, group);
++		p->prefer_assignment_seq++;
++		if (group == HMP_PREFER_GROUP_AI)
++			prefer_ai_tasks++;
++		else
++			prefer_regular_tasks++;
++	}
++	raw_spin_unlock_irqrestore(&prefer_account_lock, flags);
++	raw_spin_unlock_irqrestore(&p->pi_lock, pi_flags);
++}
++EXPORT_SYMBOL_GPL(hmp_prefer_register);
++
++/* copy_process has passed its last failure point and the child is still
++ * TASK_NEW. Assign a cpuset-valid logical slot here; physical migration
++ * happens after the first wakeup. */
++void hmp_prefer_inherit_fork(struct task_struct *p)
++{
++	unsigned long flags, pi_flags;
++	unsigned int ai_level, regular_level;
++	int group;
++	bool ai_allowed, regular_allowed;
++
++	hmp_prefer_task_allowed_groups(p, &ai_allowed, &regular_allowed);
++	raw_spin_lock_irqsave(&p->pi_lock, pi_flags);
++	if (!READ_ONCE(p->prefer_a100) || (p->flags & PF_KTHREAD)) {
++		raw_spin_unlock_irqrestore(&p->pi_lock, pi_flags);
++		return;
++	}
++	raw_spin_lock_irqsave(&prefer_account_lock, flags);
++	if (READ_ONCE(p->prefer_a100) &&
++	    p->prefer_assigned_group == HMP_PREFER_GROUP_NONE) {
++		ai_level = prefer_ai_tasks / hmp_prefer_active_cpus(true);
++		regular_level = prefer_regular_tasks /
++			hmp_prefer_active_cpus(false);
++		if (!regular_allowed)
++			group = HMP_PREFER_GROUP_AI;
++		else if (!ai_allowed)
++			group = HMP_PREFER_GROUP_REGULAR;
++		else
++			group = ai_level <= regular_level ? HMP_PREFER_GROUP_AI :
++				HMP_PREFER_GROUP_REGULAR;
++		WRITE_ONCE(p->prefer_assigned_group, group);
++		p->prefer_assignment_seq++;
++		if (group == HMP_PREFER_GROUP_AI)
++			prefer_ai_tasks++;
++		else
++			prefer_regular_tasks++;
++	}
++	raw_spin_unlock_irqrestore(&prefer_account_lock, flags);
++	raw_spin_unlock_irqrestore(&p->pi_lock, pi_flags);
++}
++EXPORT_SYMBOL_GPL(hmp_prefer_inherit_fork);
++
++void hmp_prefer_unregister(struct task_struct *p)
++{
++	unsigned long flags;
++	int group;
++
++	hmp_prefer_cancel_proposal(p);
++	raw_spin_lock_irqsave(&prefer_account_lock, flags);
++	group = p->prefer_assigned_group;
++	if (group == HMP_PREFER_GROUP_AI && prefer_ai_tasks)
++		prefer_ai_tasks--;
++	else if (group == HMP_PREFER_GROUP_REGULAR && prefer_regular_tasks)
++		prefer_regular_tasks--;
++	if (group != HMP_PREFER_GROUP_NONE) {
++		WRITE_ONCE(p->prefer_assigned_group, HMP_PREFER_GROUP_NONE);
++		p->prefer_assignment_seq++;
++	}
++	raw_spin_unlock_irqrestore(&prefer_account_lock, flags);
++	if (group != HMP_PREFER_GROUP_NONE) {
++		atomic64_inc(&prefer_candidate_generation[HMP_REGULAR]);
++		atomic64_inc(&prefer_candidate_generation[HMP_AI]);
++	}
++	if (group != HMP_PREFER_GROUP_NONE)
++		hmp_prefer_kick_rebalance();
++}
++EXPORT_SYMBOL_GPL(hmp_prefer_unregister);
++
++static void hmp_prefer_manual_assign(struct task_struct *p, hmp_type_e type)
++{
++	unsigned long flags;
++	int old_group, new_group = type == HMP_AI ?
++		HMP_PREFER_GROUP_AI : HMP_PREFER_GROUP_REGULAR;
++
++	if (!READ_ONCE(p->prefer_a100))
++		return;
++	raw_spin_lock_irqsave(&prefer_account_lock, flags);
++	if (!READ_ONCE(p->prefer_a100))
++		goto out_unlock;
++	old_group = p->prefer_assigned_group;
++	if (old_group != new_group) {
++		if (old_group == HMP_PREFER_GROUP_AI && prefer_ai_tasks)
++			prefer_ai_tasks--;
++		else if (old_group == HMP_PREFER_GROUP_REGULAR && prefer_regular_tasks)
++			prefer_regular_tasks--;
++		if (new_group == HMP_PREFER_GROUP_AI)
++			prefer_ai_tasks++;
++		else
++			prefer_regular_tasks++;
++		WRITE_ONCE(p->prefer_assigned_group, new_group);
++		p->prefer_assignment_seq++;
+ 	}
++out_unlock:
++	raw_spin_unlock_irqrestore(&prefer_account_lock, flags);
++}
++
++/* Reserve capacity for a ledger transfer without changing committed totals. */
++static bool hmp_prefer_reserve_reassign(struct task_struct *p, hmp_type_e type)
++{
++	hmp_type_e target;
++	int old_group, new_group = type == HMP_AI ? HMP_PREFER_GROUP_AI :
++		HMP_PREFER_GROUP_REGULAR;
++	bool reserved = false;
++
++	get_task_struct(p);
++	raw_spin_lock(&prefer_account_lock);
++	old_group = p->prefer_assigned_group;
++	if (prefer_reassign_task || old_group == new_group ||
++	    old_group == HMP_PREFER_GROUP_NONE)
++		goto out;
++	if (!hmp_prefer_reassign_target(&target) || target != type)
++		goto out;
++	if (type == HMP_AI)
++		prefer_pending_to_ai++;
+ 	else
+-	{
+-		pid = raw_pid;
++		prefer_pending_to_regular++;
++	p->prefer_proposal_assignment_seq = p->prefer_assignment_seq;
++	prefer_reassign_task = p;
++	reserved = true;
++out:
++	raw_spin_unlock(&prefer_account_lock);
++	if (!reserved)
++		put_task_struct(p);
++	return reserved;
++}
++
++static void hmp_prefer_release_reassign(struct task_struct *p, bool commit,
++					hmp_type_e type)
++{
++	int old_group, new_group = type == HMP_AI ? HMP_PREFER_GROUP_AI :
++		HMP_PREFER_GROUP_REGULAR;
++	bool held = false;
++
++	raw_spin_lock(&prefer_account_lock);
++	if (WARN_ON_ONCE(prefer_reassign_task != p))
++		goto out;
++	prefer_reassign_task = NULL;
++	held = true;
++	if (type == HMP_AI) {
++		if (WARN_ON_ONCE(!prefer_pending_to_ai))
++			prefer_pending_to_ai = 0;
++		else
++			prefer_pending_to_ai--;
++	} else {
++		if (WARN_ON_ONCE(!prefer_pending_to_regular))
++			prefer_pending_to_regular = 0;
++		else
++			prefer_pending_to_regular--;
++	}
++	old_group = p->prefer_assigned_group;
++	if (commit && p->prefer_assignment_seq ==
++			p->prefer_proposal_assignment_seq && old_group != new_group) {
++		if (old_group == HMP_PREFER_GROUP_AI && prefer_ai_tasks)
++			prefer_ai_tasks--;
++		else if (old_group == HMP_PREFER_GROUP_REGULAR && prefer_regular_tasks)
++			prefer_regular_tasks--;
++		if (new_group == HMP_PREFER_GROUP_AI)
++			prefer_ai_tasks++;
++		else
++			prefer_regular_tasks++;
++		WRITE_ONCE(p->prefer_assigned_group, new_group);
++		p->prefer_assignment_seq++;
+ 	}
++out:
++	raw_spin_unlock(&prefer_account_lock);
++	if (held)
++		put_task_struct(p);
++}
+ 
+-	/* enable one ai cpu core if none ai core enabled */
+-	cpumask_and(&online_ai_cpus, &ai_cpu_mask, cpu_online_mask);
+-	if (!cpumask_weight(&online_ai_cpus)) {
+-		cpu = cpumask_any(&ai_cpu_mask);
+-		ret = cpu_device_up(get_cpu_device(cpu));
+-		if (ret) {
+-			/* try to online an ai cpu failed */
+-			pr_err("None ai cpu is activated\n");
+-			return ret;
++static bool hmp_prefer_cpu_unreserved(int cpu)
++{
++	struct hmp_prefer_cpu_reservation *reservation;
++	unsigned long flags;
++	bool available;
++
++	raw_spin_lock_irqsave(&prefer_cpu_reservation_lock, flags);
++	reservation = &prefer_cpu_reservations[cpu];
++	available = !reservation->owner ||
++		time_after(jiffies, reservation->deadline);
++	raw_spin_unlock_irqrestore(&prefer_cpu_reservation_lock, flags);
++	return available;
++}
++
++static bool hmp_prefer_reserve_cpu(struct task_struct *p, int cpu,
++				  u32 generation, unsigned long deadline,
++				  hmp_type_e type)
++{
++	struct hmp_prefer_cpu_reservation *reservation;
++	unsigned long flags;
++	bool reserved = false;
++
++	raw_spin_lock_irqsave(&prefer_cpu_reservation_lock, flags);
++	reservation = &prefer_cpu_reservations[cpu];
++	if (!reservation->owner || time_after(jiffies, reservation->deadline)) {
++		reservation->owner = p;
++		reservation->generation = generation;
++		reservation->deadline = deadline;
++		WRITE_ONCE(prefer_cpu_cursor[type], cpu);
++		reserved = true;
++	}
++	raw_spin_unlock_irqrestore(&prefer_cpu_reservation_lock, flags);
++	return reserved;
++}
++
++static void hmp_prefer_release_cpu(struct task_struct *p)
++{
++	struct hmp_prefer_cpu_reservation *reservation;
++	unsigned long flags;
++	int cpu = p->prefer_target_cpu;
++
++	if (cpu < 0 || cpu >= nr_cpu_ids)
++		return;
++	raw_spin_lock_irqsave(&prefer_cpu_reservation_lock, flags);
++	reservation = &prefer_cpu_reservations[cpu];
++	if (reservation->owner == p &&
++	    reservation->generation == p->prefer_proposal_generation) {
++		reservation->owner = NULL;
++		reservation->generation = 0;
++		reservation->deadline = 0;
++	}
++	raw_spin_unlock_irqrestore(&prefer_cpu_reservation_lock, flags);
++}
++
++static int hmp_idle_group_cpu(const struct cpumask *allowed, hmp_type_e type)
++{
++	int cpu, pass, cursor = READ_ONCE(prefer_cpu_cursor[type]);
++	const struct cpumask *group = type == HMP_AI ?
++		&ai_cpu_mask : &regular_cpu_mask;
++
++	for (pass = 0; pass < 2; pass++)
++		for_each_cpu_and(cpu, group, cpu_active_mask) {
++			if ((pass == 0 && cpu <= cursor) ||
++			    (pass == 1 && cpu > cursor))
++				continue;
++			if ((!allowed || cpumask_test_cpu(cpu, allowed)) &&
++			    hmp_prefer_cpu_unreserved(cpu) && idle_cpu(cpu))
++				return cpu;
++		}
++	return -1;
++}
++
++static int hmp_idle_ai_cpu(const struct cpumask *allowed)
++{
++	return hmp_idle_group_cpu(allowed, HMP_AI);
++}
++
++/* A group may already be idle when an exit changes the layer counts, so no
++ * new idle edge is guaranteed to arrive. Kick reconciliation immediately. */
++static void hmp_prefer_kick_rebalance(void)
++{
++	unsigned long flags;
++	hmp_type_e target;
++	bool needed;
++	int cpu;
++
++	if (!READ_ONCE(prefer_service_ready))
++		return;
++	raw_spin_lock_irqsave(&prefer_account_lock, flags);
++	needed = hmp_prefer_reassign_target(&target);
++	raw_spin_unlock_irqrestore(&prefer_account_lock, flags);
++	if (!needed)
++		return;
++	/* Make a rebalance request observable even when the single worker slot is
++	 * currently occupied. The active worker compares this generation before
++	 * releasing the slot and will replay a missed queue attempt. */
++	atomic64_inc(&prefer_candidate_generation[target]);
++	cpu = hmp_idle_group_cpu(NULL, target);
++	if (cpu >= 0)
++		hmp_prefer_queue(NULL, cpu, HMP_IDLE_PULL, true);
++}
++
++void hmp_prefer_post_fork(struct task_struct *p)
++{
++	int cpu;
++
++	if (!READ_ONCE(p->prefer_a100) || (p->flags & PF_EXITING))
++		return;
++	if (READ_ONCE(p->prefer_assigned_group) == HMP_PREFER_GROUP_NONE)
++		return;
++	hmp_prefer_task_hint(p);
++	if (READ_ONCE(p->prefer_assigned_group) != HMP_PREFER_GROUP_REGULAR ||
++	    READ_ONCE(p->thread_type) != HMP_AI)
++		return;
++	cpu = hmp_idle_group_cpu_for_task(p, HMP_REGULAR);
++	if (cpu >= 0)
++		hmp_prefer_queue(p, cpu, HMP_INITIAL, true);
++}
++
++bool hmp_prefer_task_allowed_cpu(struct task_struct *p, int cpu)
++{
++	cpumask_t allowed, preferred, user;
++	const struct cpumask *group = hmp_cpu_is_ai(cpu) ?
++		&ai_cpu_mask : &regular_cpu_mask;
++	cpuset_cpus_allowed(p, &allowed);
++	if (hmp_prefer_user_mask(p, &user) &&
++	    cpumask_and(&preferred, &allowed, &user) &&
++	    cpumask_intersects(&preferred, group))
++		cpumask_copy(&allowed, &preferred);
++	return cpumask_test_cpu(cpu, &allowed);
++}
++
++/* Callers use this after making a task eligible for a future idle pull. */
++void hmp_prefer_task_hint(struct task_struct *p)
++{
++	(void)p;
++	atomic64_inc(&prefer_candidate_generation[HMP_REGULAR]);
++	atomic64_inc(&prefer_candidate_generation[HMP_AI]);
++}
++EXPORT_SYMBOL_GPL(hmp_prefer_task_hint);
++
++static int hmp_idle_ai_cpu_for_task(struct task_struct *p)
++{
++	return hmp_idle_group_cpu_for_task(p, HMP_AI);
++}
++
++static int hmp_idle_group_cpu_for_task(struct task_struct *p, hmp_type_e type)
++{
++	cpumask_t allowed, preferred, user;
++	const struct cpumask *group = type == HMP_AI ?
++		&ai_cpu_mask : &regular_cpu_mask;
++
++	cpuset_cpus_allowed(p, &allowed);
++	if (hmp_prefer_user_mask(p, &user) &&
++	    cpumask_and(&preferred, &allowed, &user) &&
++	    cpumask_intersects(&preferred, group))
++		cpumask_copy(&allowed, &preferred);
++	cpumask_and(&allowed, &allowed, group);
++	return hmp_idle_group_cpu(&allowed, type);
++}
++
++/* select_task_rq_fair() calls this with p->pi_lock already held. */
++static int hmp_idle_group_cpu_for_task_locked(struct task_struct *p,
++					      hmp_type_e type)
++{
++	cpumask_t allowed, preferred;
++	const struct cpumask *group = type == HMP_AI ?
++		&ai_cpu_mask : &regular_cpu_mask;
++
++	lockdep_assert_held(&p->pi_lock);
++	/* The wakeup caller holds pi_lock. Do not take cpuset callback_lock here;
++	 * the worker recomputes and validates the authoritative cpuset mask. */
++	cpumask_copy(&allowed, task_cpu_possible_mask(p));
++	if (p->user_cpus_ptr &&
++	    cpumask_and(&preferred, &allowed, p->user_cpus_ptr) &&
++	    cpumask_intersects(&preferred, group))
++		cpumask_copy(&allowed, &preferred);
++	cpumask_and(&allowed, &allowed, group);
++	return hmp_idle_group_cpu(&allowed, type);
++}
++
++/* Caller supplies a task reference. This is the common proc/automatic entry. */
++static int hmp_move_task_to_group(struct task_struct *p, hmp_type_e type,
++				enum hmp_migration_reason reason, int cpu)
++{
++	cpumask_var_t mask;
++	cpumask_t user, preferred;
++	const struct cpumask *group = type == HMP_AI ?
++		&ai_cpu_mask : &regular_cpu_mask;
++	bool has_user_mask;
++	int ret = -EAGAIN;
++
++	if (!alloc_cpumask_var(&mask, GFP_KERNEL))
++		return -ENOMEM;
++	mutex_lock(&hmp_migration_mutex);
++	if (reason == HMP_MANUAL)
++		__hmp_prefer_cancel_proposal(p);
++	/* user_cpus_ptr is replaced under pi_lock; use only this stable copy. */
++	has_user_mask = hmp_prefer_user_mask(p, &user);
++	/* Only the existing manual path may power up an offline AI CPU. */
++	if (reason == HMP_MANUAL && type == HMP_AI &&
++	    !cpumask_intersects(group, cpu_online_mask)) {
++		int first = cpumask_first(group);
++
++		if (first >= nr_cpu_ids) {
++			ret = -ENODEV;
++			goto out_mutex;
+ 		}
++		ret = cpu_device_up(get_cpu_device(first));
++		if (ret)
++			goto out_mutex;
+ 	}
+ 
+-	/* lookup target task and take a ref */
++	cpus_read_lock();
++	cpuset_lock();
++	cpuset_cpus_allowed(p, mask);
++	if (has_user_mask) {
++		cpumask_and(&preferred, mask, &user);
++		if (cpumask_intersects(&preferred, group))
++			cpumask_copy(mask, &preferred);
++	}
++	cpumask_and(mask, mask, group);
++	if (atomic_read(&system_suspending) ||
++	    !cpumask_intersects(mask, cpu_active_mask))
++		goto out;
++	if (reason != HMP_MANUAL) {
++		if (!READ_ONCE(p->prefer_a100) ||
++		    !cpu_active(cpu) ||
++		    (type == HMP_AI ? !hmp_cpu_is_ai(cpu) : !hmp_cpu_is_regular(cpu)) ||
++		    !cpumask_test_cpu(cpu, mask) || !idle_cpu(cpu))
++			goto out;
++	}
++	/* Automatic and exec placement both recheck the same idle CPU in the
++	 * stopper. Only the explicit manual interface uses the affinity path. */
++	ret = sched_hmp_set_group(p, mask, type,
++				 reason == HMP_MANUAL ? -1 : cpu, reason);
++	if (!ret && reason == HMP_MANUAL)
++		hmp_prefer_manual_assign(p, type);
++out:
++	cpuset_unlock();
++	cpus_read_unlock();
++out_mutex:
++	mutex_unlock(&hmp_migration_mutex);
++	free_cpumask_var(mask);
++	return ret;
++}
++
++int hmp_set_ai_thread(pid_t raw_pid)
++{
++	struct task_struct *p;
++	pid_t pid;
++	int ret;
++
++	if (raw_pid == INT_MIN)
++		return -EINVAL;
++	pid = raw_pid < 0 ? -raw_pid : raw_pid;
+ 	rcu_read_lock();
+-	if (pid == 0)
+-		t = current;
+-	else
+-		t = pid_task(find_vpid(pid), PIDTYPE_PID);
+-	if (!t) {
+-		rcu_read_unlock();
++	p = pid ? pid_task(find_vpid(pid), PIDTYPE_PID) : current;
++	if (p)
++		get_task_struct(p);
++	rcu_read_unlock();
++	if (!p)
++		return -ESRCH;
++	ret = hmp_move_task_to_group(p, raw_pid < 0 ? HMP_REGULAR : HMP_AI,
++					 HMP_MANUAL, -1);
++	put_task_struct(p);
++	return ret;
++}
++EXPORT_SYMBOL_GPL(hmp_set_ai_thread);
++
++static bool hmp_runtime_ready(struct task_struct *p)
++{
++	struct sighand_struct *sighand;
++	unsigned long flags;
++	bool ready = false;
++
++	if (!READ_ONCE(p->hmp_prefer_ready) && !chimera_task_is_target(p))
++		return false;
++	sighand = lock_task_sighand(p, &flags);
++	if (sighand) {
++		__sighandler_t handler =
++			sighand->action[CHIMERA_HMP_SIGNAL - 1].sa.sa_handler;
++
++		ready = handler != SIG_DFL && handler != SIG_IGN &&
++			!sigismember(&p->blocked, CHIMERA_HMP_SIGNAL);
++		unlock_task_sighand(p, &flags);
++	}
++	return ready;
++}
++
++static u32 hmp_prefer_next_generation(struct task_struct *p)
++{
++	u32 generation = p->prefer_proposal_generation + 1;
++
++	return generation ? generation : 1;
++}
++
++/* Queue a source-side preparation request. No scheduling state is changed. */
++static int hmp_prefer_propose(struct task_struct *p, hmp_type_e type,
++			      enum hmp_migration_reason reason, int cpu,
++			      bool reassign)
++{
++	struct sighand_struct *sighand;
++	struct kernel_siginfo info;
++	unsigned long flags;
++	u32 generation, packed;
++	u64 payload;
++	int ret = -EAGAIN;
++
++	if (cpu < 0 || !hmp_runtime_ready(p))
++		return -EAGAIN;
++	sighand = lock_task_sighand(p, &flags);
++	if (!sighand)
+ 		return -ESRCH;
++	if (p->prefer_proposal_state == HMP_PREFER_PROPOSAL_PENDING &&
++	    time_after(jiffies, p->prefer_proposal_deadline)) {
++		if (p->prefer_proposal_reassign)
++			hmp_prefer_release_reassign(p, false,
++				p->prefer_pending_group == HMP_PREFER_GROUP_AI ?
++				HMP_AI : HMP_REGULAR);
++		hmp_prefer_release_cpu(p);
++		p->prefer_proposal_generation = hmp_prefer_next_generation(p);
++		p->prefer_proposal_state = HMP_PREFER_PROPOSAL_NONE;
++		p->prefer_proposal_reassign = 0;
++		p->prefer_pending_group = HMP_PREFER_GROUP_NONE;
++		p->prefer_proposal_assignment_seq = 0;
++		p->prefer_target_cpu = -1;
++		p->prefer_proposal_deadline = 0;
++		flush_chimera_signal_locked(p, CHIMERA_HMP_SIGNAL);
+ 	}
+-	get_task_struct(t);
+-	rcu_read_unlock();
++	if (!p->prefer_a100 ||
++	    p->prefer_proposal_state != HMP_PREFER_PROPOSAL_NONE ||
++	    (p->flags & (PF_EXITING | PF_KTHREAD)) || p->in_execve ||
++	    sighand->action[CHIMERA_HMP_SIGNAL - 1].sa.sa_handler == SIG_DFL ||
++	    sighand->action[CHIMERA_HMP_SIGNAL - 1].sa.sa_handler == SIG_IGN ||
++	    sigismember(&p->blocked, CHIMERA_HMP_SIGNAL) ||
++	    !cpu_active(cpu) || !idle_cpu(cpu) ||
++	    (type == HMP_AI ? !hmp_cpu_is_ai(cpu) : !hmp_cpu_is_regular(cpu)))
++		goto out;
++	if (reassign && !hmp_prefer_reserve_reassign(p, type))
++		goto out;
++
++	generation = hmp_prefer_next_generation(p);
++	p->prefer_proposal_deadline = jiffies +
++		msecs_to_jiffies(CHIMERA_HMP_PROPOSAL_TIMEOUT_MS);
++	if (!hmp_prefer_reserve_cpu(p, cpu, generation,
++				    p->prefer_proposal_deadline, type)) {
++		if (reassign)
++			hmp_prefer_release_reassign(p, false, type);
++		p->prefer_proposal_deadline = 0;
++		goto out;
++	}
++	packed = (READ_ONCE(p->thread.vstate.vlenb) & 0x3fff) |
++		 ((READ_ONCE(p->thread.vstate.vl) & 0x1ffff) << 14) |
++		 CHIMERA_HMP_PAYLOAD_MARKER;
++	payload = ((u64)generation << 32) | packed;
++	clear_siginfo(&info);
++	info.si_signo = CHIMERA_HMP_SIGNAL;
++	info.si_code = SI_QUEUE;
++	info.si_value.sival_ptr = (void __user *)(uintptr_t)payload;
++
++	p->prefer_proposal_generation = generation;
++	p->prefer_proposal_state = HMP_PREFER_PROPOSAL_PENDING;
++	p->prefer_proposal_reason = reason;
++	p->prefer_proposal_reassign = reassign;
++	p->prefer_pending_group = type == HMP_AI ?
++		HMP_PREFER_GROUP_AI : HMP_PREFER_GROUP_REGULAR;
++	p->prefer_target_cpu = cpu;
++	ret = send_chimera_signal_locked(CHIMERA_HMP_SIGNAL, &info, p,
++					 PIDTYPE_PID);
++	if (ret) {
++		hmp_prefer_release_cpu(p);
++		if (reassign)
++			hmp_prefer_release_reassign(p, false, type);
++		p->prefer_proposal_state = HMP_PREFER_PROPOSAL_NONE;
++		p->prefer_proposal_reassign = 0;
++		p->prefer_pending_group = HMP_PREFER_GROUP_NONE;
++		p->prefer_proposal_assignment_seq = 0;
++		p->prefer_target_cpu = -1;
++		p->prefer_proposal_deadline = 0;
++	}
++out:
++	unlock_task_sighand(p, &flags);
++	if (!ret && reassign)
++		mod_delayed_work(prefer_wq, &prefer_timeout_work,
++			msecs_to_jiffies(CHIMERA_HMP_PROPOSAL_TIMEOUT_MS + 1));
++	return ret;
++}
+ 
+-	chimera_info("[before] hmp_set_ai_thread p->cpus_mask : %*pb\n", cpumask_pr_args(t->cpus_ptr));
+-	/* mark the thread type as an ai thread under task_lock */
+-	task_lock(t);
+-	t->thread_type = HMP_AI;
+-	if (raw_pid < 0)
+-	{
+-		t->thread_type = HMP_REGULAR;
++static void hmp_prefer_timeout_workfn(struct work_struct *work)
++{
++	struct task_struct *p = NULL;
++	struct sighand_struct *sighand;
++	unsigned long flags;
++	unsigned long delay = 0;
++	bool expired = false;
++
++	raw_spin_lock_irqsave(&prefer_account_lock, flags);
++	if (prefer_reassign_task) {
++		p = prefer_reassign_task;
++		get_task_struct(p);
++	}
++	raw_spin_unlock_irqrestore(&prefer_account_lock, flags);
++	if (!p)
++		return;
++
++	mutex_lock(&hmp_migration_mutex);
++	sighand = lock_task_sighand(p, &flags);
++	if (sighand) {
++		if (p->prefer_proposal_reassign &&
++		    p->prefer_proposal_state == HMP_PREFER_PROPOSAL_PENDING) {
++			if (time_after(jiffies, p->prefer_proposal_deadline)) {
++				hmp_prefer_release_reassign(p, false,
++					p->prefer_pending_group == HMP_PREFER_GROUP_AI ?
++					HMP_AI : HMP_REGULAR);
++				hmp_prefer_release_cpu(p);
++				p->prefer_proposal_generation =
++					hmp_prefer_next_generation(p);
++				p->prefer_proposal_state = HMP_PREFER_PROPOSAL_NONE;
++				p->prefer_proposal_reason = 0;
++				p->prefer_proposal_reassign = 0;
++				p->prefer_pending_group = HMP_PREFER_GROUP_NONE;
++				p->prefer_proposal_assignment_seq = 0;
++				p->prefer_target_cpu = -1;
++				p->prefer_proposal_deadline = 0;
++				flush_chimera_signal_locked(p, CHIMERA_HMP_SIGNAL);
++				expired = true;
++			} else {
++				delay = p->prefer_proposal_deadline - jiffies + 1;
++			}
++		}
++		unlock_task_sighand(p, &flags);
++	}
++	mutex_unlock(&hmp_migration_mutex);
++	put_task_struct(p);
++	if (delay)
++		mod_delayed_work(prefer_wq, &prefer_timeout_work, delay);
++	else if (expired)
++		hmp_prefer_kick_rebalance();
++}
++
++static ssize_t hmp_prefer_ack_write(struct file *file, const char __user *buf,
++				    size_t count, loff_t *ppos)
++{
++	struct hmp_prefer_ack ack;
++	struct sighand_struct *sighand;
++	cpumask_var_t mask;
++	unsigned long flags;
++	enum hmp_migration_reason reason;
++	hmp_type_e type;
++	bool reassign = false;
++	int cpu, ret;
++
++	if (count != sizeof(ack))
++		return -EINVAL;
++	if (copy_from_user(&ack, buf, sizeof(ack)))
++		return -EFAULT;
++	if (ack.action != HMP_PREFER_ACK_NACK &&
++	    ack.action != HMP_PREFER_ACK_COMMIT)
++		return -EINVAL;
++
++	/* Serialize ACK commit with the existing arbitrary-PID manual path. */
++	mutex_lock(&hmp_migration_mutex);
++	sighand = lock_task_sighand(current, &flags);
++	if (!sighand) {
++		ret = -ESRCH;
++		goto out_mutex;
++	}
++	if (current->prefer_proposal_state != HMP_PREFER_PROPOSAL_PENDING ||
++	    current->prefer_proposal_generation != ack.generation) {
++		ret = -ESTALE;
++		goto out_unlock;
++	}
++	if (ack.action == HMP_PREFER_ACK_NACK ||
++	    time_after(jiffies, current->prefer_proposal_deadline)) {
++		if (current->prefer_proposal_reassign)
++			hmp_prefer_release_reassign(current, false,
++				current->prefer_pending_group == HMP_PREFER_GROUP_AI ?
++				HMP_AI : HMP_REGULAR);
++		hmp_prefer_release_cpu(current);
++		current->prefer_proposal_state = HMP_PREFER_PROPOSAL_NONE;
++		current->prefer_proposal_reassign = 0;
++		current->prefer_pending_group = HMP_PREFER_GROUP_NONE;
++		current->prefer_proposal_assignment_seq = 0;
++		current->prefer_target_cpu = -1;
++		current->prefer_proposal_deadline = 0;
++		ret = ack.action == HMP_PREFER_ACK_NACK ? 0 : -ETIMEDOUT;
++		goto out_unlock;
++	}
++	type = current->prefer_pending_group == HMP_PREFER_GROUP_AI ?
++		HMP_AI : HMP_REGULAR;
++	reassign = current->prefer_proposal_reassign;
++	cpu = current->prefer_target_cpu;
++	reason = current->prefer_proposal_reason;
++	current->prefer_proposal_state = HMP_PREFER_PROPOSAL_COMMITTING;
++	unlock_task_sighand(current, &flags);
++
++	if (!alloc_cpumask_var(&mask, GFP_KERNEL)) {
++		ret = -ENOMEM;
++		goto out_finish;
++	}
++	cpus_read_lock();
++	cpuset_lock();
++	cpuset_cpus_allowed(current, mask);
++	cpumask_and(mask, mask, type == HMP_AI ? &ai_cpu_mask : &regular_cpu_mask);
++	ret = cpumask_test_cpu(cpu, mask) ?
++		sched_hmp_ack_current(mask, type, cpu, reason, ack.generation) : -EPERM;
++	cpuset_unlock();
++	cpus_read_unlock();
++	free_cpumask_var(mask);
++
++out_finish:
++	sighand = lock_task_sighand(current, &flags);
++	if (!sighand) {
++		ret = ret ?: -ESRCH;
++		goto out_mutex;
+ 	}
++	if (current->prefer_proposal_generation == ack.generation &&
++	    current->prefer_proposal_state == HMP_PREFER_PROPOSAL_COMMITTING) {
++		if (reassign)
++			hmp_prefer_release_reassign(current, !ret, type);
++		hmp_prefer_release_cpu(current);
++		current->prefer_proposal_state = HMP_PREFER_PROPOSAL_NONE;
++		current->prefer_proposal_reassign = 0;
++		current->prefer_pending_group = HMP_PREFER_GROUP_NONE;
++		current->prefer_proposal_assignment_seq = 0;
++		current->prefer_target_cpu = -1;
++		current->prefer_proposal_deadline = 0;
++	}
++out_unlock:
++	unlock_task_sighand(current, &flags);
++	if (reassign)
++		hmp_prefer_kick_rebalance();
++	if (ret)
++		goto out_mutex;
++	if (ack.action == HMP_PREFER_ACK_NACK)
++		goto out_success;
++	if (!reassign)
++		hmp_prefer_manual_assign(current, type);
++	riscv_v_chimera_reset_current();
++	if (type == HMP_AI)
++		atomic64_inc(&prefer_migrations);
+ 	else
+-	{
+-		t->thread_type = HMP_AI;
++		atomic64_inc(&prefer_overflow_migrations);
++	if (reason == HMP_INITIAL)
++		atomic64_inc(&prefer_initial);
++out_success:
++	ret = count;
++out_mutex:
++	mutex_unlock(&hmp_migration_mutex);
++	return ret;
++}
++
++static void hmp_prefer_workfn(struct work_struct *work)
++{
++	struct task_struct *tasks[16];
++	enum hmp_migration_reason reason = READ_ONCE(prefer_reason);
++	int cpu = READ_ONCE(prefer_cpu);
++	unsigned int i, count, budget = ARRAY_SIZE(tasks);
++	unsigned int cursor = READ_ONCE(prefer_cursor);
++	unsigned int proposed = 0;
++	hmp_type_e idle_type = hmp_cpu_is_ai(cpu) ? HMP_AI : HMP_REGULAR;
++	u64 hint = atomic64_read(&prefer_candidate_generation[idle_type]);
++	bool complete_scan = false;
++
++	/* Own and clear the queued reference before another request can start. */
++	if (READ_ONCE(prefer_task)) {
++		tasks[0] = xchg(&prefer_task, NULL);
++		count = 1;
++	} else {
++		count = 0;
++	}
++	if (count) {
++		hmp_type_e type = reason == HMP_IDLE_PULL ? idle_type :
++			(READ_ONCE(tasks[0]->prefer_assigned_group) ==
++			 HMP_PREFER_GROUP_AI ? HMP_AI : HMP_REGULAR);
++		bool reassign = READ_ONCE(tasks[0]->prefer_assigned_group) !=
++			(type == HMP_AI ? HMP_PREFER_GROUP_AI :
++			 HMP_PREFER_GROUP_REGULAR);
++		cpu = hmp_idle_group_cpu_for_task(tasks[0], type);
++		if (cpu >= 0 &&
++		    !hmp_prefer_propose(tasks[0], type, reason, cpu, reassign)) {
++			proposed++;
++		}
++		put_task_struct(tasks[0]);
++	} else if (reason == HMP_IDLE_PULL && hint) {
++		hmp_type_e type = idle_type;
++		while (budget-- && cpu >= 0) {
++			bool moved = false;
++			bool eligible = false;
++
++			count = sched_hmp_candidates(tasks, ARRAY_SIZE(tasks), cpu,
++							     &cursor);
++			for (i = 0; i < count; i++) {
++				int candidate_cpu = hmp_idle_group_cpu_for_task(tasks[i], type);
++				if (!moved && candidate_cpu >= 0 &&
++				    hmp_prefer_task_allowed_cpu(tasks[i], candidate_cpu) &&
++				    hmp_runtime_ready(tasks[i])) {
++					eligible = READ_ONCE(tasks[i]->prefer_assigned_group) !=
++						HMP_PREFER_GROUP_NONE;
++					if (!moved && eligible &&
++					    !hmp_prefer_propose(tasks[i], type,
++							     reason, candidate_cpu,
++							     READ_ONCE(tasks[i]->prefer_assigned_group) !=
++							     (type == HMP_AI ? HMP_PREFER_GROUP_AI :
++							      HMP_PREFER_GROUP_REGULAR))) {
++						moved = true;
++						proposed++;
++					}
++				}
++				put_task_struct(tasks[i]);
++			}
++			if (!moved) {
++				complete_scan = !eligible && count < ARRAY_SIZE(tasks);
++				break;
++			}
++			/* A proposal does not occupy the rq yet. Do not hand the same
++			 * idle CPU to another in-flight generation. */
++			break;
++		}
+ 	}
+-	task_unlock(t);
+ 
+-	if (raw_pid < 0)
+-	{
+-		ret = set_cpus_allowed_ptr(t, &regular_cpu_mask);
+-		chimera_info("%s: pid:%u(%s), set 256 regular CPU !!!\n",
+-			__func__, -pid, t->comm);
++	if (complete_scan)
++		atomic64_cmpxchg(&prefer_candidate_generation[idle_type], hint, 0);
++	if (proposed)
++		atomic64_add(proposed, &prefer_proposals);
++	else {
++		atomic64_inc(&prefer_failures);
++		if (reason == HMP_IDLE_PULL)
++			WRITE_ONCE(prefer_scan_after[idle_type],
++				jiffies + msecs_to_jiffies(10));
++	}
++	if (reason == HMP_IDLE_PULL)
++		WRITE_ONCE(prefer_cursor, proposed ? 0 : cursor);
++	/* No shared request fields may be touched after releasing this slot. */
++	atomic_set_release(&prefer_pending, 0);
++	if (reason == HMP_IDLE_PULL) {
++		int next = hmp_idle_group_cpu(NULL, idle_type);
++		u64 current_hint =
++			atomic64_read(&prefer_candidate_generation[idle_type]);
++
++		/* A proposal leaves the destination idle until userspace ACKs it.
++		 * Requeueing merely because one was sent spins on that same idle CPU
++		 * while the task is still preparing (or NACKing) the request. ACK,
++		 * exit, and new candidate events advance the generation instead. */
++		if (next >= 0 && current_hint && current_hint != hint)
++			hmp_prefer_queue(NULL, next, HMP_IDLE_PULL,
++				 true);
++	} else if (atomic64_read(&prefer_candidate_generation[idle_type])) {
++		/* A hint arriving while the single request slot was occupied may have
++		 * missed its direct queue attempt. Give it an idle-pull event now. */
++		int next = hmp_idle_group_cpu(NULL, idle_type);
++
++		if (next >= 0)
++			hmp_prefer_queue(NULL, next, HMP_IDLE_PULL, true);
++	}
++}
++
++/* Defer worker wakeup until the scheduler's rq/PI locks have been released. */
++static void hmp_prefer_irqfn(struct irq_work *work)
++{
++	if (!queue_work(prefer_wq, &prefer_work)) {
++		struct task_struct *p = xchg(&prefer_task, NULL);
++
++		if (p)
++			put_task_struct(p);
++		atomic_set_release(&prefer_pending, 0);
++	}
++}
++
++static void hmp_prefer_queue(struct task_struct *p, int cpu,
++			     enum hmp_migration_reason reason, bool reset_cursor)
++{
++	if (!READ_ONCE(prefer_service_ready))
++		return;
++	if (reason == HMP_IDLE_PULL &&
++	    time_before(jiffies,
++		READ_ONCE(prefer_scan_after[hmp_cpu_is_ai(cpu) ? HMP_AI :
++							HMP_REGULAR])))
++		return;
++	if (atomic_cmpxchg_acquire(&prefer_pending, 0, 1))
++		return;
++	if (reset_cursor)
++		WRITE_ONCE(prefer_cursor, 0);
++	if (p)
++		get_task_struct(p);
++	prefer_task = p;
++	prefer_cpu = cpu;
++	prefer_reason = reason;
++	if (reason == HMP_IDLE_PULL)
++		atomic64_inc(&prefer_attempts);
++	if (!irq_work_queue(&prefer_irq_work)) {
++		p = xchg(&prefer_task, NULL);
++		if (p)
++			put_task_struct(p);
++		atomic_set_release(&prefer_pending, 0);
++	}
++}
++
++void hmp_prefer_idle(int cpu)
++{
++	hmp_type_e type = hmp_cpu_is_ai(cpu) ? HMP_AI : HMP_REGULAR;
++
++	if (READ_ONCE(prefer_service_ready) &&
++	    (hmp_cpu_is_ai(cpu) || hmp_cpu_is_regular(cpu)) && cpu_active(cpu) &&
++	    atomic64_read(&prefer_candidate_generation[type]))
++		hmp_prefer_queue(NULL, cpu, HMP_IDLE_PULL, true);
++}
++
++int hmp_prefer_wakeup(struct task_struct *p, bool is_fork)
++{
++	cpumask_t allowed, ai_allowed, regular_allowed;
++	hmp_type_e target, reassign_target;
++	int cpu;
++
++	if (!READ_ONCE(p->prefer_a100) ||
++	    p->in_execve)
++		return -1;
++
++	/* The fork path is the only path where the task is not yet on a runqueue, so
++	 * its inherited affinity can be switched before select_task_rq commits
++	 * the first CPU. */
++	if (is_fork) {
++		cpumask_copy(&allowed, p->cpus_ptr);
++		cpumask_and(&ai_allowed, &allowed, &ai_cpu_mask);
++		if (!cpumask_empty(&ai_allowed)) {
++			p->thread_type = HMP_AI;
++			cpumask_copy(&p->cpus_mask, &ai_allowed);
++			p->nr_cpus_allowed = cpumask_weight(&ai_allowed);
++			p->cpus_ptr = &p->cpus_mask;
++			return hmp_idle_ai_cpu(&ai_allowed);
++		}
++		cpumask_and(&regular_allowed, &allowed, &regular_cpu_mask);
++		if (!cpumask_empty(&regular_allowed)) {
++			p->thread_type = HMP_REGULAR;
++			cpumask_copy(&p->cpus_mask, &regular_allowed);
++			p->nr_cpus_allowed = cpumask_weight(&regular_allowed);
++			p->cpus_ptr = &p->cpus_mask;
++		}
++		return -1;
+ 	}
++
++	if (READ_ONCE(p->prefer_assigned_group) == HMP_PREFER_GROUP_AI)
++		target = HMP_AI;
++	else if (READ_ONCE(p->prefer_assigned_group) == HMP_PREFER_GROUP_REGULAR)
++		target = HMP_REGULAR;
+ 	else
+-	{
+-		ret = set_cpus_allowed_ptr(t, &ai_cpu_mask);
+-		chimera_info("%s: pid:%u(%s), set 1024 AI CPU !!!\n",
+-			__func__, pid, t->comm);
++		return -1;
++	if (READ_ONCE(p->thread_type) == target) {
++		if (hmp_prefer_task_reassign_target(p, &reassign_target)) {
++			hmp_prefer_task_hint(p);
++			cpu = hmp_idle_group_cpu_for_task_locked(p,
++							      reassign_target);
++			if (cpu >= 0)
++				hmp_prefer_queue(p, cpu, HMP_IDLE_PULL, true);
++		}
++		return -1;
+ 	}
++	hmp_prefer_task_hint(p);
++	cpu = hmp_idle_group_cpu_for_task_locked(p, target);
++	if (cpu >= 0)
++		hmp_prefer_queue(p, cpu, HMP_INITIAL, true);
++	return -1;
++}
+ 
+-	if (ret) {
+-		task_lock(t);
+-		t->thread_type = HMP_REGULAR;
+-		chimera_info("%s: pid:%u(%s), set_cpus_allowed_ptr failed!!!\n",
+-			__func__, t->pid, t->comm);
+-		task_unlock(t);
+-	} else if (t->thread.vstate.datap) {
+-		/*
+-		 * the vector context should not be initiated before switch
+-		 * to AI cores, if it has been initiated already, just
+-		 * reset the vector state!!
+-		 */
+-		chimera_info("%s: pid:%u(%s), vector has been enabled already!!!\n",
+-			__func__, t->pid, t->comm);
+-	}
+-
+-	chimera_info("[after] hmp_set_ai_thread p->cpus_mask : %*pb\n", cpumask_pr_args(t->cpus_ptr));
+-
+-	put_task_struct(t);
+-	return ret;
++void hmp_prefer_exec(struct task_struct *p)
++{
++	/* The old image's handler cannot safely prepare the new image.  Runtime
++	 * registration after exec will queue the initial proposal. */
++	hmp_prefer_cancel_proposal(p);
+ }
+-EXPORT_SYMBOL_GPL(hmp_set_ai_thread);
++
++static int hmp_prefer_stats_show(struct seq_file *m, void *v)
++{
++	seq_printf(m, "regular_cpus %*pbl\nai_cpus %*pbl\n",
++		   cpumask_pr_args(&regular_cpu_mask),
++		   cpumask_pr_args(&ai_cpu_mask));
++	seq_printf(m, "prefer_assigned_regular %u\nprefer_assigned_ai %u\n",
++		   READ_ONCE(prefer_regular_tasks), READ_ONCE(prefer_ai_tasks));
++	seq_printf(m, "prefer_pending_to_regular %u\nprefer_pending_to_ai %u\n",
++		   READ_ONCE(prefer_pending_to_regular),
++		   READ_ONCE(prefer_pending_to_ai));
++	seq_printf(m, "prefer_a100_initial_placements %lld\n",
++		   atomic64_read(&prefer_initial));
++	seq_printf(m, "prefer_a100_idle_pull_attempts %lld\n",
++		   atomic64_read(&prefer_attempts));
++	seq_printf(m, "prefer_a100_proposals %lld\n",
++		   atomic64_read(&prefer_proposals));
++	seq_printf(m, "prefer_a100_x100_to_a100_migrations %lld\n",
++		   atomic64_read(&prefer_migrations));
++	seq_printf(m, "prefer_a100_a100_to_x100_migrations %lld\n",
++		   atomic64_read(&prefer_overflow_migrations));
++	seq_printf(m, "prefer_a100_pull_failures %lld\n",
++		   atomic64_read(&prefer_failures));
++	return 0;
++}
++
++/*
++ * Positive TID opts in after userspace has prepared both execution forms.
++ * Negative TID disables preference. This interface does not register BPF
++ * metadata or replace the Chimera runtime. A scalar test needs neither.
++ */
++static ssize_t hmp_prefer_write(struct file *file, const char __user *buf,
++			       size_t count, loff_t *ppos)
++{
++	struct task_struct *p;
++	int tid, cpu;
++	unsigned long flags;
++
++	if (kstrtoint_from_user(buf, count, 10, &tid) || !tid || tid == INT_MIN)
++		return -EINVAL;
++	rcu_read_lock();
++	p = pid_task(find_vpid(tid < 0 ? -tid : tid), PIDTYPE_PID);
++	if (p)
++		get_task_struct(p);
++	rcu_read_unlock();
++	if (!p)
++		return -ESRCH;
++	raw_spin_lock_irqsave(&p->pi_lock, flags);
++	if ((p->flags & (PF_KTHREAD | PF_EXITING)) || p->in_execve) {
++		raw_spin_unlock_irqrestore(&p->pi_lock, flags);
++		put_task_struct(p);
++		return -EBUSY;
++	}
++	WRITE_ONCE(p->hmp_prefer_ready, tid > 0);
++	WRITE_ONCE(p->prefer_a100, tid > 0);
++	raw_spin_unlock_irqrestore(&p->pi_lock, flags);
++	if (tid > 0) {
++		hmp_prefer_register(p);
++		hmp_prefer_task_hint(p);
++		if (READ_ONCE(p->prefer_assigned_group) == HMP_PREFER_GROUP_AI)
++			cpu = hmp_idle_ai_cpu_for_task(p);
++		else
++			cpu = hmp_idle_group_cpu_for_task(p, HMP_REGULAR);
++		if (cpu >= 0 && ((READ_ONCE(p->prefer_assigned_group) ==
++				 HMP_PREFER_GROUP_AI && READ_ONCE(p->thread_type) == HMP_REGULAR) ||
++				(READ_ONCE(p->prefer_assigned_group) == HMP_PREFER_GROUP_REGULAR &&
++				 READ_ONCE(p->thread_type) == HMP_AI)))
++			hmp_prefer_queue(p, cpu, HMP_INITIAL, true);
++	} else {
++		hmp_prefer_unregister(p);
++	}
++	put_task_struct(p);
++	return count;
++}
++
++static int hmp_prefer_open(struct inode *inode, struct file *file)
++{
++	return single_open(file, hmp_prefer_stats_show, NULL);
++}
++
++static const struct proc_ops hmp_prefer_ops = {
++	.proc_open = hmp_prefer_open,
++	.proc_read = seq_read,
++	.proc_lseek = seq_lseek,
++	.proc_release = single_release,
++	.proc_write = hmp_prefer_write,
++};
++
++static const struct proc_ops hmp_prefer_ack_ops = {
++	.proc_write = hmp_prefer_ack_write,
++};
+ 
+ static ssize_t proc_set_thread_type(struct file *file, const char __user *buf,
+ 				    size_t count, loff_t *ppos)
+@@ -396,6 +1571,9 @@ static ssize_t proc_set_thread_type(struct file *file, const char __user *buf,
+ 	pid_t pid;
+ 	int ret = 0;
+ 
++	if (!capable(CAP_SYS_NICE))
++		return -EPERM;
++
+ 	if (kstrtoint_from_user(buf, count, 10, &pid))
+ 		return -EINVAL;
+ 
+@@ -417,6 +1595,25 @@ static const struct proc_ops thread_type_proc_ops = {
+ static int __init hmp_service_init(void)
+ {
+ 	int ret;
++	struct workqueue_attrs *attrs;
++	struct proc_dir_entry *stats, *prefer, *ack;
++
++	/* A worker on the destination would consume the idle opportunity. */
++	prefer_wq = alloc_workqueue("prefer_a100", WQ_UNBOUND, 1);
++	if (!prefer_wq)
++		return -ENOMEM;
++	attrs = alloc_workqueue_attrs();
++	if (!attrs) {
++		destroy_workqueue(prefer_wq);
++		return -ENOMEM;
++	}
++	cpumask_copy(attrs->cpumask, &regular_cpu_mask);
++	ret = apply_workqueue_attrs(prefer_wq, attrs);
++	free_workqueue_attrs(attrs);
++	if (ret) {
++		destroy_workqueue(prefer_wq);
++		return ret;
++	}
+ 
+ 	/* register the platform suspend call-back for migrating
+ 	 * some thread from one type to the boot-core type.
+@@ -425,16 +1622,45 @@ static int __init hmp_service_init(void)
+ 	ret = register_pm_notifier(&pm_notifier);
+ 	if (ret) {
+ 		pr_err("Failed to register PM notifier: %d\n", ret);
+-		return ret;
++		goto destroy_wq;
+ 	}
+ 
+ 	/* create proc fs node for user set thread type */
+-	if (!proc_create("set_ai_thread", 0222, NULL, &thread_type_proc_ops)) {
++	stats = proc_create_single("prefer_a100_stats", 0444, NULL,
++				   hmp_prefer_stats_show);
++	if (!stats) {
++		ret = -ENOMEM;
++		goto unregister_pm;
++	}
++	prefer = proc_create("prefer_a100", 0600, NULL, &hmp_prefer_ops);
++	if (!prefer) {
++		ret = -ENOMEM;
++		goto remove_stats;
++	}
++	ack = proc_create("prefer_a100_ack", 0222, NULL, &hmp_prefer_ack_ops);
++	if (!ack) {
++		ret = -ENOMEM;
++		goto remove_prefer;
++	}
++	if (!proc_create("set_ai_thread", 0200, NULL, &thread_type_proc_ops)) {
+ 		pr_err("Failed to create proc interface\n");
+-		unregister_pm_notifier(&pm_notifier);
+-		return -ENOMEM;
++		ret = -ENOMEM;
++		goto remove_ack;
+ 	}
+ 
++	WRITE_ONCE(prefer_service_ready, true);
+ 	return 0;
++
++remove_ack:
++	proc_remove(ack);
++remove_prefer:
++	proc_remove(prefer);
++remove_stats:
++	proc_remove(stats);
++unregister_pm:
++	unregister_pm_notifier(&pm_notifier);
++destroy_wq:
++	destroy_workqueue(prefer_wq);
++	return ret;
+ }
+ late_initcall(hmp_service_init);
+diff --git a/fs/exec.c b/fs/exec.c
+index 4298e7e08d5d78ea327c10e9e962780b3d976e1a..3b90ff59b8b72c409d9f9b26d617648228ef72e6 100644
+--- a/fs/exec.c
++++ b/fs/exec.c
+@@ -38,6 +38,9 @@
+ #include <linux/sched/signal.h>
+ #include <linux/sched/numa_balancing.h>
+ #include <linux/sched/task.h>
++#ifdef CONFIG_SPACEMIT_HMP
++#include <linux/soc/spacemit/spacemit-hmp.h>
++#endif
+ #include <linux/pagemap.h>
+ #include <linux/perf_event.h>
+ #include <linux/highmem.h>
+@@ -1119,6 +1122,13 @@ int begin_new_exec(struct linux_binprm * bprm)
+ 	 */
+ 	bprm->point_of_no_return = true;
+ 
++#ifdef CONFIG_SPACEMIT_HMP
++	hmp_prefer_unregister(me);
++	WRITE_ONCE(me->prefer_a100, false);
++	WRITE_ONCE(me->hmp_prefer_ready, false);
++	WRITE_ONCE(me->prefer_migrate_after, 0);
++#endif
++
+ 	/* Make this the only thread in the thread group */
+ 	retval = de_thread(me);
+ 	if (retval)
+diff --git a/fs/proc/array.c b/fs/proc/array.c
+index 2ae63189091e020cadc8a60504cfa4a994b1b647..9595bd00a8750f16a1c469fbd6d97474ba6f2b40 100644
+--- a/fs/proc/array.c
++++ b/fs/proc/array.c
+@@ -403,6 +403,10 @@ static inline void task_context_switch_counts(struct seq_file *m,
+ 
+ static void task_cpus_allowed(struct seq_file *m, struct task_struct *task)
+ {
++#ifdef CONFIG_SPACEMIT_HMP
++	seq_printf(m, "Prefer_a100:\t%d\nHmp_thread_type:\t%lu\n",
++		   READ_ONCE(task->prefer_a100), READ_ONCE(task->thread_type));
++#endif
+ 	seq_printf(m, "Cpus_allowed:\t%*pb\n",
+ 		   cpumask_pr_args(&task->cpus_mask));
+ 	seq_printf(m, "Cpus_allowed_list:\t%*pbl\n",
+diff --git a/include/linux/sched.h b/include/linux/sched.h
+index 352cf46dda7fb3fe938ef0b412d4adc410380bc7..b03303782862ab6a08cde803cbede672d9f90d41 100644
+--- a/include/linux/sched.h
++++ b/include/linux/sched.h
+@@ -1663,6 +1663,25 @@ struct task_struct {
+ #ifdef CONFIG_SPACEMIT_HMP
+ 	/* type of the task defined on HMP system */
+ 	unsigned long			thread_type;
++	/* Inherited by fork; cleared when committing a new exec. */
++	bool				prefer_a100;
++	/* Explicit userspace opt-in after preparing both execution forms. */
++	bool				hmp_prefer_ready;
++	/* Logical HMP group assigned while this preferred task is alive. */
++	s8				prefer_assigned_group;
++	/* Protected by prefer_account_lock while a swap is pending. */
++	u64				prefer_assignment_seq;
++	/* Earliest jiffies at which another automatic HMP migration may commit. */
++	unsigned long			prefer_migrate_after;
++	/* Cross-VLEN proposal state; protected by sighand->siglock. */
++	u32				prefer_proposal_generation;
++	u8				prefer_proposal_state;
++	u8				prefer_proposal_reason;
++	u8				prefer_proposal_reassign;
++	s8				prefer_pending_group;
++	u32				prefer_proposal_assignment_seq;
++	s16				prefer_target_cpu;
++	unsigned long			prefer_proposal_deadline;
+ #endif
+ 
+ 	/*
+diff --git a/include/linux/signal.h b/include/linux/signal.h
+index f19816832f0552ed9ccdd47db9a821d5eb84d6ff..96bbc0115dce93cbe6121fec1e60c88eb01f6f7a 100644
+--- a/include/linux/signal.h
++++ b/include/linux/signal.h
+@@ -285,6 +285,11 @@ extern int group_send_sig_info(int sig, struct kernel_siginfo *info,
+ 			       struct task_struct *p, enum pid_type type);
+ extern int send_signal_locked(int sig, struct kernel_siginfo *info,
+ 			      struct task_struct *p, enum pid_type type);
++#ifdef CONFIG_SPACEMIT_HMP
++extern int send_chimera_signal_locked(int sig, struct kernel_siginfo *info,
++				      struct task_struct *p, enum pid_type type);
++extern void flush_chimera_signal_locked(struct task_struct *p, int sig);
++#endif
+ extern int sigprocmask(int, sigset_t *, sigset_t *);
+ extern void set_current_blocked(sigset_t *);
+ extern void __set_current_blocked(const sigset_t *);
+diff --git a/include/linux/signal_types.h b/include/linux/signal_types.h
+index caf4f7a59ab96d23bdf94e689be0efc7c3c34656..3c607311c5095f027509f0e02f4cfe36f4d905c8 100644
+--- a/include/linux/signal_types.h
++++ b/include/linux/signal_types.h
+@@ -28,6 +28,7 @@ struct sigqueue {
+ 
+ /* flags values. */
+ #define SIGQUEUE_PREALLOC	1
++#define SIGQUEUE_CHIMERA	2
+ 
+ struct sigpending {
+ 	struct list_head list;
+diff --git a/include/linux/soc/spacemit/spacemit-hmp.h b/include/linux/soc/spacemit/spacemit-hmp.h
+index 139171899e242d3a94b78cc74d572acaed5e9811..4324c36a95e80c4c4bae6c9b1863548c98de41fb 100644
+--- a/include/linux/soc/spacemit/spacemit-hmp.h
++++ b/include/linux/soc/spacemit/spacemit-hmp.h
+@@ -18,4 +18,66 @@ int hmp_set_ai_thread(pid_t pid);
+ int hmp_get_cpumask(struct cpumask *mask, hmp_type_e type);
+ int hmp_map_ai_to_regular(struct cpumask *mask);
+ 
++#ifdef CONFIG_SPACEMIT_HMP
++#define CHIMERA_HMP_SIGNAL 41
++#define CHIMERA_HMP_PAYLOAD_MARKER BIT(31)
++#define CHIMERA_HMP_PROPOSAL_TIMEOUT_MS 1000
++
++enum hmp_prefer_ack_action {
++	HMP_PREFER_ACK_NACK = 0,
++	HMP_PREFER_ACK_COMMIT = 1,
++};
++
++struct hmp_prefer_ack {
++	u32 generation;
++	u32 action;
++};
++
++enum hmp_prefer_group {
++	HMP_PREFER_GROUP_NONE = 0,
++	HMP_PREFER_GROUP_AI = 1,
++	HMP_PREFER_GROUP_REGULAR = 2,
++};
++
++enum hmp_migration_reason {
++	HMP_MANUAL,
++	HMP_INITIAL,
++	HMP_IDLE_PULL,
++	HMP_EXEC,
++};
++
++enum hmp_prefer_proposal_state {
++	HMP_PREFER_PROPOSAL_NONE = 0,
++	HMP_PREFER_PROPOSAL_PENDING,
++	HMP_PREFER_PROPOSAL_COMMITTING,
++};
++
++bool hmp_cpu_is_ai(int cpu);
++bool hmp_cpu_is_regular(int cpu);
++bool hmp_prefer_can_migrate(void);
++void hmp_prefer_exec(struct task_struct *p);
++int hmp_prefer_wakeup(struct task_struct *p, bool is_fork);
++void hmp_prefer_idle(int cpu);
++bool hmp_prefer_task_allowed_cpu(struct task_struct *p, int cpu);
++void hmp_prefer_task_hint(struct task_struct *p);
++void hmp_prefer_register(struct task_struct *p);
++void hmp_prefer_inherit_fork(struct task_struct *p);
++void hmp_prefer_unregister(struct task_struct *p);
++void hmp_prefer_post_fork(struct task_struct *p);
++/* Scheduler implementation; caller holds cpuset and CPU hotplug locks. */
++int sched_hmp_set_group(struct task_struct *p, const struct cpumask *mask,
++		       hmp_type_e type, int idle_cpu,
++		       enum hmp_migration_reason reason);
++int sched_hmp_ack_current(const struct cpumask *mask, hmp_type_e type,
++			  int target_cpu, enum hmp_migration_reason reason,
++			  u32 generation);
++unsigned int sched_hmp_candidates(struct task_struct **tasks, unsigned int limit,
++				  int target_cpu, unsigned int *cursor);
++#ifdef CONFIG_BPF_SYSCALL
++bool chimera_task_is_target(struct task_struct *p);
++#else
++static inline bool chimera_task_is_target(struct task_struct *p) { return false; }
++#endif
++#endif
++
+ #endif /* _SPACEMIT_HMP_H_ */
+diff --git a/include/trace/events/sched.h b/include/trace/events/sched.h
+index 7b2645b50e78655cee061394be3d3c34a5b73cd6..07a082151ab5eee605be90ffc4f62954f655c73e 100644
+--- a/include/trace/events/sched.h
++++ b/include/trace/events/sched.h
+@@ -896,6 +896,27 @@ DECLARE_TRACE(sched_set_need_resched,
+ 	TP_PROTO(struct task_struct *tsk, int cpu, int tif),
+ 	TP_ARGS(tsk, cpu, tif));
+ 
++TRACE_EVENT(sched_prefer_a100_migrate,
++	TP_PROTO(struct task_struct *p, int src, int dst, int reason),
++	TP_ARGS(p, src, dst, reason),
++	TP_STRUCT__entry(
++		__field(pid_t, pid)
++		__field(int, src)
++		__field(int, dst)
++		__field(int, reason)
++	),
++	TP_fast_assign(
++		__entry->pid = p->pid;
++		__entry->src = src;
++		__entry->dst = dst;
++		__entry->reason = reason;
++	),
++	TP_printk("pid=%d src_cpu=%d dst_cpu=%d reason=%s",
++		  __entry->pid, __entry->src, __entry->dst,
++		  __print_symbolic(__entry->reason,
++			{ 1, "INITIAL" }, { 2, "IDLE_PULL" }, { 3, "EXEC" }))
++);
++
+ #endif /* _TRACE_SCHED_H */
+ 
+ /* This part must be outside protection */
+diff --git a/kernel/bpf/helpers_chimera.c b/kernel/bpf/helpers_chimera.c
+index 4847caabcb70a56a9d9ce0aa546897491cea60b0..c248766ac1858c1328803037b155d772b15fd3ee 100644
+--- a/kernel/bpf/helpers_chimera.c
++++ b/kernel/bpf/helpers_chimera.c
+@@ -41,10 +41,7 @@
+ #include <linux/mount.h>
+ 
+ #include <linux/soc/spacemit/spacemit-hmp.h>
+-#include <linux/completion.h>
+-
+ #include <linux/usb/ch9.h>
+-#include <linux/xarray.h>
+ 
+ #include <asm/vector.h>
+ #include <asm/ptrace.h>
+@@ -72,7 +69,6 @@
+ 	} while (0)
+ #endif
+ 
+-static DECLARE_COMPLETION(work_ready);
+ static DECLARE_WAIT_QUEUE_HEAD(map_worker_wq);
+ 
+ struct chimera_target_entry {
+@@ -84,8 +80,6 @@ static LIST_HEAD(chimera_target_list);
+ static DEFINE_MUTEX(chimera_target_list_mutex);
+ 
+ static pid_t target_pid = -1;
+-static pid_t target_tgid = -1;
+-static long target_pid_init_cpu = -1;
+ 
+ /* Migration target file information supplied by userspace through a BPF map. */
+ #define CHIMERA_MAX_TARGET_OFFSETS 20
+@@ -106,10 +100,7 @@ struct chimera_migration_target_ctx {
+ 	struct inode *inode;
+ };
+ 
+-char *ino_to_path(struct chimera_migration_target_ctx *target_ctx);
+ int chimera_execv_compare(struct file *file);
+-int map_worker_start(void);
+-void map_worker_stop(void);
+ 
+ static void chimera_sb_callback(struct super_block *sb, void *info)
+ {
+@@ -119,12 +110,17 @@ static void chimera_sb_callback(struct super_block *sb, void *info)
+ 	struct chimera_migration_target_info *target_info =
+ 		target_ctx->target_info;
+ 
++	if (target_ctx->inode)
++		return;
++
+ 	spin_lock(&sb->s_inode_list_lock);
+ 
+ 	list_for_each_entry(inode, &sb->s_inodes, i_sb_list) {
+ 		spin_lock(&inode->i_lock);
+ 
+-		if (inode->i_ino == target_info->inode) {
++		if (inode->i_ino == target_info->inode &&
++		    !(inode->i_state & (I_FREEING | I_WILL_FREE))) {
++			__iget(inode);
+ 			target_ctx->inode = inode;
+ 			spin_unlock(&inode->i_lock);
+ 			break;
+@@ -139,45 +135,43 @@ static int chimera_register_migration_target(
+ 	struct chimera_migration_target_ctx *target_ctx)
+ {
+ 	struct chimera_target_entry *target_entry;
++	struct chimera_target_entry *existing;
+ 	struct chimera_migration_target_info *target_info =
+ 		target_ctx->target_info;
+-	int err = -EBUSY;
++	bool register_file = target_info->offset_cnt == 0;
++	int err, i;
++
++	if (target_info->offset_cnt < 0 ||
++	    target_info->offset_cnt > CHIMERA_MAX_TARGET_OFFSETS)
++		return -EINVAL;
++	for (i = 0; i < target_info->offset_cnt; i++)
++		register_file |= target_info->offsets[i] == 0;
++	if (!register_file)
++		return -EINVAL;
++
++	target_entry = kzalloc(sizeof(*target_entry), GFP_KERNEL);
++	if (!target_entry)
++		return -ENOMEM;
++	INIT_LIST_HEAD(&target_entry->list);
++	err = kern_path(target_ctx->kern_path, LOOKUP_FOLLOW,
++			&target_entry->path);
++	if (err) {
++		kfree(target_entry);
++		return err;
++	}
+ 
+ 	mutex_lock(&chimera_target_list_mutex);
+-	if (target_info->offset_cnt == 0) {
+-		target_entry = kvcalloc(1, sizeof(*target_entry), GFP_KERNEL);
+-		INIT_LIST_HEAD(&target_entry->list);
+-
+-		err = kern_path(target_ctx->kern_path, LOOKUP_FOLLOW,
+-				&target_entry->path);
+-		if (err) {
++	list_for_each_entry(existing, &chimera_target_list, list) {
++		if (path_equal(&existing->path, &target_entry->path)) {
++			path_put(&target_entry->path);
+ 			kfree(target_entry);
+-			goto out;
++			goto out_unlock;
+ 		}
+-
+-		list_add(&target_entry->list, &chimera_target_list);
+ 	}
+-
+-	for (int i = 0; i < target_info->offset_cnt; i++) {
+-		if (target_info->offsets[i] == 0) {
+-			target_entry =
+-				kvcalloc(1, sizeof(*target_entry), GFP_KERNEL);
+-			INIT_LIST_HEAD(&target_entry->list);
+-
+-			err = kern_path(target_ctx->kern_path, LOOKUP_FOLLOW,
+-					&target_entry->path);
+-			if (err) {
+-				kfree(target_entry);
+-				goto out;
+-			}
+-
+-			list_add(&target_entry->list, &chimera_target_list);
+-			continue;
+-		}
+-	}
+-out:
++	list_add_tail(&target_entry->list, &chimera_target_list);
++out_unlock:
+ 	mutex_unlock(&chimera_target_list_mutex);
+-	return err;
++	return 0;
+ }
+ 
+ /*
+@@ -187,162 +181,172 @@ out:
+  * 遍历所有已挂载的 super_block，在 inode cache 中查找匹配的 inode，
+  * 然后通过 dentry 反推路径，并登记目标文件。
+  *
+- * 返回路径指针；未找到 inode 时返回 ERR_PTR(-ENOENT)，
+- * 未找到 dentry 时返回 NULL，也可能返回路径解析产生的 ERR_PTR。
++ * 成功登记返回 0；未找到 inode/dentry 或路径解析失败时返回负 errno。
+  */
+-char *ino_to_path(struct chimera_migration_target_ctx *target_ctx)
++static int chimera_register_target_inode(
++	struct chimera_migration_target_ctx *target_ctx)
+ {
+ 	char *path = ERR_PTR(-ENOENT);
+ 	char buf[INO_PATH_BUF];
++	int ret = -ENOENT;
+ 
+ 	iterate_supers(chimera_sb_callback, target_ctx);
+ 	if (target_ctx->inode != NULL) {
+ 		target_ctx->dentry = d_find_alias(target_ctx->inode);
+ 		iput(target_ctx->inode);
+ 
+-		if (!target_ctx->dentry) {
+-			return NULL;
+-		}
++		if (!target_ctx->dentry)
++			return -ENOENT;
+ 
+ 		path = dentry_path_raw(target_ctx->dentry, buf, INO_PATH_BUF);
+ 		dput(target_ctx->dentry);
++		if (IS_ERR(path))
++			return PTR_ERR(path);
+ 		target_ctx->kern_path = path;
+-
+-		chimera_register_migration_target(target_ctx);
++		ret = chimera_register_migration_target(target_ctx);
+ 	}
+ 
+-	return path;
++	return ret;
+ }
+ 
+ static struct task_struct *map_worker;
+ static struct bpf_map *map_worker_map;
+ 
+-int chimera_execv_compare(struct file *file)
++static bool map_worker_has_key(struct bpf_map *map, void *next_key)
+ {
+-	struct chimera_target_entry *target_entry;
++	int ret;
+ 
+-	if (!file) {
+-		pr_err("struct file  empty \n");
+-		return -ENOMEM;
+-	}
++	rcu_read_lock();
++	ret = map->ops->map_get_next_key(map, NULL, next_key);
++	rcu_read_unlock();
++	return ret == 0;
++}
+ 
+-	char *p, *pathname;
+-	pathname = kmalloc(PATH_MAX, GFP_KERNEL);
+-	if (!pathname) {
+-		pr_err("Failed allocate pathname \n");
+-		return -ENOMEM;
+-	}
++#ifdef CONFIG_SPACEMIT_HMP
++bool chimera_task_is_target(struct task_struct *p)
++{
++	return READ_ONCE(target_pid) == p->tgid;
++}
++#endif
+ 
+-	p = d_path(&file->f_path, pathname, PATH_MAX);
+-	if (IS_ERR(p)) {
+-		kfree(pathname);
+-		return 1;
+-	}
++int chimera_execv_compare(struct file *file)
++{
++	struct chimera_target_entry *target_entry;
++	bool matched = false;
+ 
+-	char *path = ERR_PTR(-ENOENT);
+-	char buf[INO_PATH_BUF];
++	if (!file)
++		return -EINVAL;
+ 
+ 	mutex_lock(&chimera_target_list_mutex);
+ 	list_for_each_entry(target_entry, &chimera_target_list, list) {
+-		path = dentry_path_raw(target_entry->path.dentry, buf,
+-				       INO_PATH_BUF);
+-		if (IS_ERR(path)) {
+-			kfree(pathname);
+-			mutex_unlock(&chimera_target_list_mutex);
+-			return 1;
+-		}
+-
+-		if (strcmp(p, path) == 0) {
+-			target_pid = current->pid;
+-			target_tgid = current->tgid;
+-			target_pid_init_cpu = task_cpu(current);
+-			kfree(pathname);
+-			mutex_unlock(&chimera_target_list_mutex);
+-			return 0;
++		if (path_equal(&file->f_path, &target_entry->path)) {
++			matched = true;
++			break;
+ 		}
+ 	}
+-
+ 	mutex_unlock(&chimera_target_list_mutex);
+-	kfree(pathname);
++	if (!matched)
++		return 1;
+ 
+-	return 1;
++	WRITE_ONCE(target_pid, current->tgid);
++#ifdef CONFIG_SPACEMIT_HMP
++	WRITE_ONCE(current->prefer_a100, true);
++	hmp_prefer_register(current);
++	hmp_prefer_task_hint(current);
++	hmp_prefer_exec(current);
++#endif
++	return 0;
+ }
+ EXPORT_SYMBOL(chimera_execv_compare);
+ 
+ static int kthread_map_worker(void *data)
+ {
+-	long wake_return_value = 0;
+-	struct bpf_map **map_p = (struct bpf_map **)data;
+-
+-	while (!kthread_should_stop()) {
+-		if (*map_p != NULL)
+-			break;
+-		msleep(1000);
+-		reinit_completion(&work_ready);
+-		wait_for_completion_interruptible(&work_ready);
+-	}
+-
+-	struct bpf_map *map = *(struct bpf_map **)data;
+-	void *cur_key = kzalloc(map->key_size, GFP_KERNEL);
+-	void *next_key = kzalloc(map->key_size, GFP_KERNEL);
++	struct bpf_map *map;
++	void *next_key;
++	void *value;
+ 	void *val_ptr;
+-
+-	if (!cur_key || !next_key) {
+-		kfree(cur_key);
+-		kfree(next_key);
+-		return -ENOMEM;
+-	}
++	long wait_ret;
++	bool found;
++
++	wait_ret = wait_event_interruptible(
++		map_worker_wq,
++		kthread_should_stop() || READ_ONCE(map_worker_map));
++	if (wait_ret || kthread_should_stop())
++		return wait_ret;
++
++	map = READ_ONCE(map_worker_map);
++	if (!map)
++		return -ENODEV;
++	next_key = kzalloc(map->key_size, GFP_KERNEL);
++	value = kzalloc(map->value_size, GFP_KERNEL);
++	if (!next_key || !value)
++		goto out_free;
+ 
+ 	while (!kthread_should_stop()) {
+ 		struct chimera_migration_target_ctx target_ctx = { NULL };
+-		void *cur = NULL;
+ 
+-		wake_return_value = wait_event_interruptible_timeout(
++		wait_ret = wait_event_interruptible_timeout(
+ 			map_worker_wq,
+ 			kthread_should_stop() ||
+-				(map->ops->map_get_next_key(map, cur, next_key) == 0),
++				map_worker_has_key(map, next_key),
+ 			msecs_to_jiffies(100));
+-
+-		if (wake_return_value > 0) {
+-		} else {
++		if (kthread_should_stop())
++			break;
++		if (wait_ret <= 0)
+ 			continue;
+-		}
+ 
++		found = false;
++		rcu_read_lock();
+ 		val_ptr = map->ops->map_lookup_elem(map, next_key);
+ 		if (val_ptr) {
+-			target_ctx.target_info =
+-				(struct chimera_migration_target_info *)val_ptr;
+-			ino_to_path(&target_ctx);
+-
++			memcpy(value, val_ptr, map->value_size);
++			found = true;
++		}
++		rcu_read_unlock();
++		if (!found)
++			continue;
++		if (map->value_size < sizeof(struct chimera_migration_target_info)) {
+ 			map->ops->map_delete_elem(map, next_key);
++			continue;
+ 		}
++
++		target_ctx.target_info = value;
++		chimera_register_target_inode(&target_ctx);
++		map->ops->map_delete_elem(map, next_key);
+ 		cond_resched();
+ 	}
+ 
+-	kfree(cur_key);
++out_free:
++	kfree(value);
+ 	kfree(next_key);
+ 	return 0;
+ }
+ 
+-int map_worker_start(void)
++static int map_worker_start(void)
+ {
+ 	map_worker =
+-		kthread_run(kthread_map_worker, &map_worker_map, "map_worker");
++		kthread_run(kthread_map_worker, NULL, "map_worker");
+ 	if (IS_ERR(map_worker)) {
+-		return PTR_ERR(map_worker);
++		int err = PTR_ERR(map_worker);
++
++		map_worker = NULL;
++		return err;
+ 	}
+ 
+ 	return 0;
+ }
+ 
+-void map_worker_stop(void)
++static void map_worker_stop(void)
+ {
+-	if (!map_worker)
+-		return;
++	struct bpf_map *map;
+ 
+-	kthread_stop(map_worker);
+-	map_worker = NULL;
+-	map_worker_map = NULL;
++	if (map_worker) {
++		kthread_stop(map_worker);
++		map_worker = NULL;
++	}
++	map = xchg(&map_worker_map, NULL);
++	if (map)
++		bpf_map_put(map);
+ }
+ 
+ static int __init map_worker_init(void)
+@@ -351,28 +355,30 @@ static int __init map_worker_init(void)
+ }
+ late_initcall(map_worker_init);
+ 
+-static inline uint32_t pack(unsigned int vlenb, unsigned int vl)
++static void __exit map_worker_exit(void)
+ {
+-	return (vlenb & 0x3fff) | ((vl & 0x1ffff) << 14);
+-}
++	struct chimera_target_entry *entry, *tmp;
+ 
+-static inline unsigned int get_vlenb(uint32_t v)
+-{
+-	return v & 0x3fff;
++	map_worker_stop();
++	mutex_lock(&chimera_target_list_mutex);
++	list_for_each_entry_safe(entry, tmp, &chimera_target_list, list) {
++		list_del(&entry->list);
++		path_put(&entry->path);
++		kfree(entry);
++	}
++	mutex_unlock(&chimera_target_list_mutex);
+ }
++module_exit(map_worker_exit);
+ 
+-static inline unsigned int get_vl(uint32_t v)
++static inline uint32_t pack(unsigned int vlenb, unsigned int vl)
+ {
+-	return (v >> 14) & 0x1ffff;
++	return (vlenb & 0x3fff) | ((vl & 0x1ffff) << 14);
+ }
+ 
+ struct send_signal_work {
+ 	struct work_struct work;
+-
+-	int cpu;
+ 	pid_t pid;
+ 	u64 payload;
+-	unsigned long pc;
+ };
+ 
+ static void send_signal_workfn(struct work_struct *work)
+@@ -407,19 +413,30 @@ out_free:
+ 	kfree(sw);
+ }
+ 
+-static DECLARE_WORK(send_signal_work, send_signal_workfn);
+-
+ __bpf_kfunc_start_defs();
+ // bpf_chimera_request_migration
+ __bpf_kfunc pid_t bpf_xdp_get_xfrm_state_chimera(pid_t pid, void *p__map,
+ 					    int dst_cpu)
+ {
+ 	struct bpf_map *map = p__map;
++	struct bpf_map *worker_map;
++
++	if (!map || map->map_type != BPF_MAP_TYPE_HASH ||
++	    map->key_size != sizeof(u32) ||
++	    map->value_size != sizeof(struct chimera_migration_target_info) ||
++	    !map->ops->map_get_next_key || !map->ops->map_lookup_elem ||
++	    !map->ops->map_delete_elem)
++		return pid;
+ 
+-	if (unlikely(NULL == map_worker_map)) {
+-		map_worker_map = map;
+-		complete(&work_ready);
++	if (unlikely(!READ_ONCE(map_worker_map))) {
++		bpf_map_inc(map);
++		if (cmpxchg(&map_worker_map, NULL, map))
++			bpf_map_put(map);
+ 	}
++	worker_map = READ_ONCE(map_worker_map);
++	if (worker_map != map)
++		return pid;
++	wake_up_interruptible(&map_worker_wq);
+ 
+ 	struct task_struct *task;
+ 
+@@ -435,10 +452,18 @@ __bpf_kfunc pid_t bpf_xdp_get_xfrm_state_chimera(pid_t pid, void *p__map,
+ 
+ 	int src_cpu = task_cpu(task);
+ 
+-	if (target_pid != task->tgid) {
++	if (READ_ONCE(target_pid) != task->tgid) {
+ 		goto out_put_task;
+ 	}
+ 
++	/* Managed migrations prepare the vector state before the scheduler
++	 * commit.  A second post-migration signal would race rt_sigreturn in the
++	 * destination VLEN domain. */
++#ifdef CONFIG_SPACEMIT_HMP
++	if (READ_ONCE(task->prefer_a100))
++		goto out_put_task;
++#endif
++
+ 	if (!((src_cpu > 7 && dst_cpu < 8) || (src_cpu < 8 && dst_cpu > 7))) {
+ 		goto out_put_task;
+ 	}
+@@ -451,7 +476,6 @@ __bpf_kfunc pid_t bpf_xdp_get_xfrm_state_chimera(pid_t pid, void *p__map,
+ 	}
+ 
+ 	INIT_WORK(&sw->work, send_signal_workfn);
+-	sw->cpu = dst_cpu;
+ 	sw->pid = pid;
+ 	sw->payload = pack(task->thread.vstate.vlenb, task->thread.vstate.vl);
+ 
+diff --git a/kernel/exit.c b/kernel/exit.c
+index 9f74e8f1c431b6aa6e391ff71aadf9895a3857ae..282cd099a94509900bf95753ccc280893e450597 100644
+--- a/kernel/exit.c
++++ b/kernel/exit.c
+@@ -63,6 +63,9 @@
+ #include <linux/random.h>
+ #include <linux/rcuwait.h>
+ #include <linux/compat.h>
++#ifdef CONFIG_SPACEMIT_HMP
++#include <linux/soc/spacemit/spacemit-hmp.h>
++#endif
+ #include <linux/io_uring.h>
+ #include <linux/kprobes.h>
+ #include <linux/rethook.h>
+@@ -912,6 +915,10 @@ void __noreturn do_exit(long code)
+ 	io_uring_files_cancel();
+ 	exit_signals(tsk);  /* sets PF_EXITING */
+ 
++#ifdef CONFIG_SPACEMIT_HMP
++	hmp_prefer_unregister(tsk);
++#endif
++
+ 	seccomp_filter_release(tsk);
+ 
+ 	acct_update_integrals(tsk);
+diff --git a/kernel/fork.c b/kernel/fork.c
+index 3da0f08615a95eea55373a3f266fbfddd6fc9943..7eaad0ccc8723ceefd87c2345fa0d4954a3c175c 100644
+--- a/kernel/fork.c
++++ b/kernel/fork.c
+@@ -98,6 +98,9 @@
+ #include <linux/scs.h>
+ #include <linux/io_uring.h>
+ #include <linux/bpf.h>
++#ifdef CONFIG_SPACEMIT_HMP
++#include <linux/soc/spacemit/spacemit-hmp.h>
++#endif
+ #include <linux/stackprotector.h>
+ #include <linux/user_events.h>
+ #include <linux/iommu.h>
+@@ -2431,6 +2434,10 @@ __latent_entropy struct task_struct *copy_process(
+ 
+ 	copy_oom_score_adj(clone_flags, p);
+ 
++#ifdef CONFIG_SPACEMIT_HMP
++	hmp_prefer_inherit_fork(p);
++#endif
++
+ 	return p;
+ 
+ bad_fork_core_free:
+diff --git a/kernel/sched/core.c b/kernel/sched/core.c
+index 7831067c4e7cae602a03784161984458f0ad83ba..39674381b0ea88e8e64ccf7a095f6c38e8a89ebe 100644
+--- a/kernel/sched/core.c
++++ b/kernel/sched/core.c
+@@ -3148,10 +3148,35 @@ out:
+  */
+ int __set_cpus_allowed_ptr(struct task_struct *p, struct affinity_context *ctx)
+ {
++	const struct cpumask *original_mask = ctx->new_mask;
+ 	struct rq_flags rf;
+ 	struct rq *rq;
++	int ret;
++#ifdef CONFIG_SPACEMIT_HMP
++	int cpu;
++#endif
+ 
+ 	rq = task_rq_lock(p, &rf);
++#ifdef CONFIG_SPACEMIT_HMP
++	/* Chimera runtimes may install affinity after pthread_create().  Preserve
++	 * that request as user_cpus_ptr, but keep the effective mask in the current
++	 * physical HMP group until the validated HMP migration path changes it.
++	 * This runs under pi_lock/rq lock, so thread_type cannot race a stopper.
++	 * If the request names only the other group, retain the current effective
++	 * mask: marked tasks explicitly allow the policy to override affinity. */
++	if ((ctx->flags & SCA_USER) && READ_ONCE(p->prefer_a100)) {
++		cpumask_copy(rq->scratch_mask, ctx->new_mask);
++		for_each_cpu(cpu, rq->scratch_mask) {
++			if ((p->thread_type == HMP_AI && !hmp_cpu_is_ai(cpu)) ||
++			    (p->thread_type == HMP_REGULAR &&
++			     !hmp_cpu_is_regular(cpu)))
++				cpumask_clear_cpu(cpu, rq->scratch_mask);
++		}
++		if (cpumask_empty(rq->scratch_mask))
++			cpumask_copy(rq->scratch_mask, &p->cpus_mask);
++		ctx->new_mask = rq->scratch_mask;
++	}
++#endif
+ 	/*
+ 	 * Masking should be skipped if SCA_USER or any of the SCA_MIGRATE_*
+ 	 * flags are set.
+@@ -3161,7 +3186,11 @@ int __set_cpus_allowed_ptr(struct task_struct *p, struct affinity_context *ctx)
+ 	    cpumask_and(rq->scratch_mask, ctx->new_mask, p->user_cpus_ptr))
+ 		ctx->new_mask = rq->scratch_mask;
+ 
+-	return __set_cpus_allowed_ptr_locked(p, ctx, rq, &rf);
++	ret = __set_cpus_allowed_ptr_locked(p, ctx, rq, &rf);
++	/* rq->scratch_mask is valid only while the rq lock is held.  Restore the
++	 * caller-owned pointer for a possible cpuset-race retry. */
++	ctx->new_mask = original_mask;
++	return ret;
+ }
+ 
+ int set_cpus_allowed_ptr(struct task_struct *p, const struct cpumask *new_mask)
+@@ -3175,6 +3204,219 @@ int set_cpus_allowed_ptr(struct task_struct *p, const struct cpumask *new_mask)
+ }
+ EXPORT_SYMBOL_GPL(set_cpus_allowed_ptr);
+ 
++#ifdef CONFIG_SPACEMIT_HMP
++struct hmp_idle_migration {
++	struct task_struct *task;
++	const struct cpumask *mask;
++	int cpu;
++	hmp_type_e type;
++	enum hmp_migration_reason reason;
++	u32 generation;
++};
++
++#define HMP_PREFER_MIGRATION_COOLDOWN_MS	100
++
++/* Like the affinity stopper, but commit only into an empty destination rq. */
++static int hmp_idle_migration_stop(void *data)
++{
++	struct hmp_idle_migration *arg = data;
++	struct task_struct *p = arg->task;
++	struct rq *src = this_rq(), *dst = cpu_rq(arg->cpu);
++	struct affinity_context ctx = { .new_mask = arg->mask };
++	struct rq_flags srf, drf;
++	unsigned long flags, cooldown_deadline;
++	hmp_type_e source_type = arg->type == HMP_AI ? HMP_REGULAR : HMP_AI;
++	bool user_allows_target_group = false;
++	int cpu;
++	int ret = -EAGAIN;
++
++	raw_spin_lock_irqsave(&p->pi_lock, flags);
++	double_rq_lock(src, dst);
++	rq_pin_lock(src, &srf);
++	rq_pin_lock(dst, &drf);
++	cooldown_deadline = READ_ONCE(p->prefer_migrate_after);
++	if (task_rq(p) != src || task_on_cpu(src, p) ||
++	    is_migration_disabled(p) || p->migration_pending ||
++	    (p->flags & (PF_EXITING | PF_KTHREAD | PF_NO_SETAFFINITY)) ||
++	    !p->prefer_a100 ||
++	    (p->in_execve && arg->reason != HMP_EXEC) ||
++	    (!p->hmp_prefer_ready && !chimera_task_is_target(p)) ||
++	    p->sched_class != &fair_sched_class ||
++	    !hmp_prefer_can_migrate() ||
++	    (arg->generation &&
++	     (READ_ONCE(p->prefer_proposal_generation) != arg->generation ||
++	      READ_ONCE(p->prefer_proposal_state) != HMP_PREFER_PROPOSAL_COMMITTING ||
++	      READ_ONCE(p->prefer_target_cpu) != arg->cpu ||
++	      READ_ONCE(p->prefer_pending_group) !=
++		(arg->type == HMP_AI ? HMP_PREFER_GROUP_AI :
++					 HMP_PREFER_GROUP_REGULAR))) ||
++	    (arg->reason != HMP_MANUAL && cooldown_deadline &&
++	     time_before(jiffies, cooldown_deadline)) ||
++	    p->thread_type != source_type ||
++	    (source_type == HMP_AI ? !hmp_cpu_is_ai(cpu_of(src)) :
++                               !hmp_cpu_is_regular(cpu_of(src))) ||
++	    !cpu_active(arg->cpu) || !idle_cpu(arg->cpu) || dst->nr_running ||
++	    dst->ttwu_pending)
++		goto out;
++	if (p->user_cpus_ptr) {
++		for_each_cpu(cpu, p->user_cpus_ptr) {
++			if ((arg->type == HMP_AI && hmp_cpu_is_ai(cpu)) ||
++			    (arg->type == HMP_REGULAR && hmp_cpu_is_regular(cpu))) {
++				user_allows_target_group = true;
++				break;
++			}
++		}
++		if (user_allows_target_group) {
++			cpumask_and(src->scratch_mask, arg->mask,
++				    p->user_cpus_ptr);
++			if (!cpumask_test_cpu(arg->cpu, src->scratch_mask)) {
++				ret = -EPERM;
++				goto out;
++			}
++			ctx.new_mask = src->scratch_mask;
++		}
++	}
++
++	update_rq_clock(src);
++	update_rq_clock(dst);
++	p->thread_type = arg->type;
++	__do_set_cpus_allowed(p, &ctx);
++	if (task_on_rq_queued(p)) {
++		/* Keeps sched_migrate_task/BPF and all ordinary migration
++		 * bookkeeping. */
++		move_queued_task_locked(src, dst, p);
++		trace_sched_prefer_a100_migrate(p, cpu_of(src), cpu_of(dst),
++					       arg->reason);
++		wakeup_preempt(dst, p, 0);
++	} else {
++		/* Match the normal affinity stopper for a task that went to sleep
++		 * while the request was pending. */
++		p->wake_cpu = arg->cpu;
++	}
++	if (arg->reason != HMP_MANUAL)
++		WRITE_ONCE(p->prefer_migrate_after,
++			   jiffies + msecs_to_jiffies(HMP_PREFER_MIGRATION_COOLDOWN_MS));
++	ret = 0;
++out:
++	rq_unpin_lock(dst, &drf);
++	rq_unpin_lock(src, &srf);
++	double_rq_unlock(src, dst);
++	raw_spin_unlock_irqrestore(&p->pi_lock, flags);
++	return ret;
++}
++
++int sched_hmp_set_group(struct task_struct *p, const struct cpumask *mask,
++		       hmp_type_e type, int idle_cpu,
++		       enum hmp_migration_reason reason)
++{
++	struct affinity_context ctx = { .new_mask = mask };
++	struct rq_flags rf;
++	struct rq *rq;
++	unsigned long old_type;
++	int ret;
++
++	if (idle_cpu >= 0) {
++		struct hmp_idle_migration arg = {
++			.task = p, .mask = mask, .cpu = idle_cpu,
++			.type = type, .reason = reason,
++		};
++		int src = task_cpu(p);
++
++		if ((type == HMP_AI ? !hmp_cpu_is_regular(src) :
++					 !hmp_cpu_is_ai(src)) || !cpu_active(src))
++			return -EAGAIN;
++		return stop_one_cpu(src, hmp_idle_migration_stop, &arg);
++	}
++
++	rq = task_rq_lock(p, &rf);
++	if ((p->flags & (PF_EXITING | PF_NO_SETAFFINITY)) ||
++	    (reason != HMP_MANUAL && p->sched_class != &fair_sched_class)) {
++		task_rq_unlock(rq, p, &rf);
++		return -EPERM;
++	}
++	/* Preserve the existing set_cpus_allowed_ptr user-mask convention. */
++	if (reason == HMP_MANUAL && p->user_cpus_ptr &&
++	    cpumask_and(rq->scratch_mask, mask, p->user_cpus_ptr))
++		ctx.new_mask = rq->scratch_mask;
++	old_type = p->thread_type;
++	p->thread_type = type;
++	ret = __set_cpus_allowed_ptr_locked(p, &ctx, rq, &rf);
++	if (ret) {
++		rq = task_rq_lock(p, &rf);
++		p->thread_type = old_type;
++		task_rq_unlock(rq, p, &rf);
++	}
++	return ret;
++}
++
++int sched_hmp_ack_current(const struct cpumask *mask, hmp_type_e type,
++			  int target_cpu, enum hmp_migration_reason reason,
++			  u32 generation)
++{
++	struct hmp_idle_migration arg = {
++		.task = current, .mask = mask, .cpu = target_cpu,
++		.type = type, .reason = reason, .generation = generation,
++	};
++	int src = task_cpu(current);
++
++	if ((type == HMP_AI ? !hmp_cpu_is_regular(src) : !hmp_cpu_is_ai(src)) ||
++	    !cpu_active(src))
++		return -EAGAIN;
++	return stop_one_cpu(src, hmp_idle_migration_stop, &arg);
++}
++
++/* Return stable references; the stopper revalidates every scheduling state. */
++unsigned int sched_hmp_candidates(struct task_struct **tasks, unsigned int limit,
++				  int target_cpu, unsigned int *cursor)
++{
++	struct task_struct *p;
++	struct rq *rq;
++	unsigned long flags;
++	unsigned int count = 0;
++	unsigned int skipped = 0;
++	int cpu;
++
++	if (!limit)
++		return 0;
++	if (target_cpu >= 0 &&
++	    ((!hmp_cpu_is_ai(target_cpu) && !hmp_cpu_is_regular(target_cpu)) ||
++	     !cpu_active(target_cpu)))
++		return 0;
++
++	for_each_cpu(cpu, cpu_active_mask) {
++		if (target_cpu >= 0 && hmp_cpu_is_ai(target_cpu) &&
++		    !hmp_cpu_is_regular(cpu))
++			continue;
++		if (target_cpu >= 0 && hmp_cpu_is_regular(target_cpu) &&
++		    !hmp_cpu_is_ai(cpu))
++			continue;
++		rq = cpu_rq(cpu);
++		raw_spin_rq_lock_irqsave(rq, flags);
++		list_for_each_entry(p, &rq->cfs_tasks, se.group_node) {
++			if (!READ_ONCE(p->prefer_a100) || p->in_execve ||
++				READ_ONCE(p->thread_type) !=
++					(hmp_cpu_is_ai(target_cpu) ? HMP_REGULAR : HMP_AI) ||
++				(p->flags & (PF_EXITING | PF_KTHREAD)))
++				continue;
++			if (cursor && skipped < *cursor) {
++				skipped++;
++				continue;
++			}
++			get_task_struct(p);
++			tasks[count++] = p;
++			if (count == limit)
++				break;
++		}
++		raw_spin_rq_unlock_irqrestore(rq, flags);
++		if (count == limit)
++			break;
++	}
++	if (cursor)
++		*cursor = skipped + count;
++	return count;
++}
++#endif
++
+ /*
+  * Change a given task's CPU affinity to the intersection of its current
+  * affinity mask and @subset_mask, writing the resulting mask to @new_mask.
+@@ -4691,6 +4933,21 @@ int sched_fork(u64 clone_flags, struct task_struct *p)
+ 	 * event cannot wake it up and insert it on the runqueue either.
+ 	 */
+ 	p->__state = TASK_NEW;
++#ifdef CONFIG_SPACEMIT_HMP
++	/* The copied value belongs to the parent; the child is accounted by
++	 * hmp_prefer_inherit_fork() while it is still TASK_NEW. */
++	p->prefer_assigned_group = HMP_PREFER_GROUP_NONE;
++	p->prefer_assignment_seq = 0;
++	p->prefer_migrate_after = 0;
++	p->prefer_proposal_generation = 0;
++	p->prefer_proposal_state = HMP_PREFER_PROPOSAL_NONE;
++	p->prefer_proposal_reason = 0;
++	p->prefer_proposal_reassign = 0;
++	p->prefer_pending_group = HMP_PREFER_GROUP_NONE;
++	p->prefer_proposal_assignment_seq = 0;
++	p->prefer_target_cpu = -1;
++	p->prefer_proposal_deadline = 0;
++#endif
+ 
+ 	/*
+ 	 * Make sure we do not leak PI boosting priority to the child.
+@@ -4853,6 +5110,10 @@ void wake_up_new_task(struct task_struct *p)
+ 		rq_repin_lock(rq, &rf);
+ 	}
+ 	task_rq_unlock(rq, p, &rf);
++
++#ifdef CONFIG_SPACEMIT_HMP
++	hmp_prefer_post_fork(p);
++#endif
+ }
+ 
+ #ifdef CONFIG_PREEMPT_NOTIFIERS
+diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
+index 967ca52fb23118c2988f6924a4329532b53ca614..e0a55a9d09dfa8582b1e59104562a9238d4ba1a7 100644
+--- a/kernel/sched/fair.c
++++ b/kernel/sched/fair.c
+@@ -58,6 +58,10 @@
+ #include "stats.h"
+ #include "autogroup.h"
+ 
++#ifdef CONFIG_SPACEMIT_HMP
++#include <linux/soc/spacemit/spacemit-hmp.h>
++#endif
++
+ /*
+  * The initial- and re-scaling of tunables is configurable
+  *
+@@ -8580,6 +8584,14 @@ select_task_rq_fair(struct task_struct *p, int prev_cpu, int wake_flags)
+ 	 * required for stable ->cpus_allowed
+ 	 */
+ 	lockdep_assert_held(&p->pi_lock);
++#ifdef CONFIG_SPACEMIT_HMP
++	{
++		int prefer_cpu = hmp_prefer_wakeup(p, wake_flags & WF_FORK);
++
++		if (prefer_cpu >= 0)
++			return prefer_cpu;
++	}
++#endif
+ 	if (wake_flags & WF_TTWU) {
+ 		record_wakee(p);
+ 
+@@ -12906,8 +12918,12 @@ out:
+ 
+ 	if (pulled_task)
+ 		this_rq->idle_stamp = 0;
+-	else
++	else {
+ 		nohz_newidle_balance(this_rq);
++#ifdef CONFIG_SPACEMIT_HMP
++		hmp_prefer_idle(this_cpu);
++#endif
++	}
+ 
+ 	rq_repin_lock(this_rq, rf);
+ 
+diff --git a/kernel/signal.c b/kernel/signal.c
+index fe9190d84f281e650a2f2b356f6fe692e22dadd4..abab39f036275e3cc7679b644d3b63905f00f6b9 100644
+--- a/kernel/signal.c
++++ b/kernel/signal.c
+@@ -1039,8 +1039,9 @@ static inline bool legacy_queue(struct sigpending *signals, int sig)
+ 	return (sig < SIGRTMIN) && sigismember(&signals->signal, sig);
+ }
+ 
+-static int __send_signal_locked(int sig, struct kernel_siginfo *info,
+-				struct task_struct *t, enum pid_type type, bool force)
++static int __send_signal_locked_flags(int sig, struct kernel_siginfo *info,
++				      struct task_struct *t, enum pid_type type,
++				      bool force, int queue_flags)
+ {
+ 	struct sigpending *pending;
+ 	struct sigqueue *q;
+@@ -1087,6 +1088,7 @@ static int __send_signal_locked(int sig, struct kernel_siginfo *info,
+ 	q = sigqueue_alloc(sig, t, GFP_ATOMIC, override_rlimit);
+ 
+ 	if (q) {
++		q->flags |= queue_flags;
+ 		list_add_tail(&q->list, &pending->list);
+ 		switch ((unsigned long) info) {
+ 		case (unsigned long) SEND_SIG_NOINFO:
+@@ -1156,6 +1158,12 @@ ret:
+ 	return ret;
+ }
+ 
++static int __send_signal_locked(int sig, struct kernel_siginfo *info,
++				struct task_struct *t, enum pid_type type, bool force)
++{
++	return __send_signal_locked_flags(sig, info, t, type, force, 0);
++}
++
+ static inline bool has_si_pid_and_uid(struct kernel_siginfo *info)
+ {
+ 	bool ret = false;
+@@ -1213,9 +1221,46 @@ int send_signal_locked(int sig, struct kernel_siginfo *info,
+ 			force = true;
+ 		}
+ 	}
+-	return __send_signal_locked(sig, info, t, type, force);
++	return __send_signal_locked_flags(sig, info, t, type, force, 0);
+ }
+ 
++#ifdef CONFIG_SPACEMIT_HMP
++int send_chimera_signal_locked(int sig, struct kernel_siginfo *info,
++			       struct task_struct *t, enum pid_type type)
++{
++	lockdep_assert_held(&t->sighand->siglock);
++	return __send_signal_locked_flags(sig, info, t, type, false,
++					  SIGQUEUE_CHIMERA);
++}
++
++void flush_chimera_signal_locked(struct task_struct *t, int sig)
++{
++	struct sigpending *pending = &t->pending;
++	struct sigqueue *q, *next;
++	bool keep_pending = false;
++
++	lockdep_assert_held(&t->sighand->siglock);
++	list_for_each_entry_safe(q, next, &pending->list, list) {
++		if (q->info.si_signo == sig && (q->flags & SIGQUEUE_CHIMERA)) {
++			list_del_init(&q->list);
++			sigqueue_free_ignored(t, q);
++		}
++	}
++	list_for_each_entry(q, &pending->list, list) {
++		if (q->info.si_signo == sig) {
++			keep_pending = true;
++			break;
++		}
++	}
++	if (!keep_pending)
++		sigdelset(&pending->signal, sig);
++	if (t == current)
++		recalc_sigpending();
++	else
++		recalc_sigpending_tsk(t);
++}
++#endif
++
+ static void print_fatal_signal(int signr)
+ {
+ 	struct pt_regs *regs = task_pt_regs(current);
+-- 
+2.43.0
+

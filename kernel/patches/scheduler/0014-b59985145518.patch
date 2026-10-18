@@ -1,0 +1,73 @@
+From b59985145518c994b3953d55717a15ca93459928 Mon Sep 17 00:00:00 2001
+From: Liang Kaiwen <liangkaiwen24@mails.ucas.ac.cn>
+Date: Fri, 16 Oct 2026 15:38:12 +0800
+Subject: [PATCH] sched/chimera: revalidate target reservation at stopper commit
+
+Check target owner, generation and deadline under the reservation lock while the task PI and runqueue locks serialize commit. Reject expired or reassigned targets before changing CPU group and affinity.
+
+Source-Commit: b59985145518c994b3953d55717a15ca93459928
+
+---
+ drivers/soc/spacemit/hmp.c                | 19 +++++++++++++++++++
+ include/linux/soc/spacemit/spacemit-hmp.h |  1 +
+ kernel/sched/core.c                       |  2 ++
+ 3 files changed, 22 insertions(+)
+
+diff --git a/drivers/soc/spacemit/hmp.c b/drivers/soc/spacemit/hmp.c
+index 67b0f5eddbb70ab4781cc97d55c70991349a7774..897847c40079f93d96991fb13cc2c6fe9b004119 100644
+--- a/drivers/soc/spacemit/hmp.c
++++ b/drivers/soc/spacemit/hmp.c
+@@ -844,6 +844,25 @@ static bool hmp_prefer_reserve_cpu(struct task_struct *p, int cpu,
+ 	return reserved;
+ }
+ 
++/* Called with the task PI and source/destination rq locks held. No path
++ * holding prefer_cpu_reservation_lock acquires any of those locks. */
++bool hmp_prefer_reservation_valid(struct task_struct *p, int cpu, u32 generation)
++{
++	struct hmp_prefer_cpu_reservation *reservation;
++	unsigned long flags;
++	bool valid;
++
++	if (cpu < 0 || cpu >= nr_cpu_ids || !generation)
++		return false;
++	raw_spin_lock_irqsave(&prefer_cpu_reservation_lock, flags);
++	reservation = &prefer_cpu_reservations[cpu];
++	valid = reservation->owner == p &&
++		reservation->generation == generation &&
++		time_before_eq(jiffies, reservation->deadline);
++	raw_spin_unlock_irqrestore(&prefer_cpu_reservation_lock, flags);
++	return valid;
++}
++
+ static void hmp_prefer_release_cpu(struct task_struct *p)
+ {
+ 	struct hmp_prefer_cpu_reservation *reservation;
+diff --git a/include/linux/soc/spacemit/spacemit-hmp.h b/include/linux/soc/spacemit/spacemit-hmp.h
+index ddb30443c74a567b43ed6b82d02f89cc892dada2..0336a8b7419f938784a18d88a1a076898ff087c6 100644
+--- a/include/linux/soc/spacemit/spacemit-hmp.h
++++ b/include/linux/soc/spacemit/spacemit-hmp.h
+@@ -65,6 +65,7 @@ void hmp_prefer_exec(struct task_struct *p);
+ int hmp_prefer_wakeup(struct task_struct *p, bool is_fork);
+ void hmp_prefer_idle(int cpu);
+ bool hmp_prefer_task_allowed_cpu(struct task_struct *p, int cpu);
++bool hmp_prefer_reservation_valid(struct task_struct *p, int cpu, u32 generation);
+ void hmp_prefer_task_hint(struct task_struct *p);
+ void hmp_prefer_register(struct task_struct *p);
+ void hmp_prefer_inherit_fork(struct task_struct *p);
+diff --git a/kernel/sched/core.c b/kernel/sched/core.c
+index 09eeff196ead0bd46775c6969916840d4d08019d..9b5c44d88868ddd44f00b712b38a024108a5b81a 100644
+--- a/kernel/sched/core.c
++++ b/kernel/sched/core.c
+@@ -3250,6 +3250,8 @@ static int hmp_idle_migration_stop(void *data)
+ 	      READ_ONCE(p->prefer_pending_group) !=
+ 		(arg->type == HMP_AI ? HMP_PREFER_GROUP_AI :
+ 					 HMP_PREFER_GROUP_REGULAR))) ||
++	    (arg->generation &&
++	     !hmp_prefer_reservation_valid(p, arg->cpu, arg->generation)) ||
+ 	    (arg->reason != HMP_MANUAL && cooldown_deadline &&
+ 	     time_before(jiffies, cooldown_deadline)) ||
+ 	    p->thread_type != source_type ||
+-- 
+2.43.0
+

@@ -1,0 +1,1063 @@
+From 4aac04713ecf63c3043e26c6d371e1477e8fdbbb Mon Sep 17 00:00:00 2001
+From: Liang Kaiwen <liangkaiwen24@mails.ucas.ac.cn>
+Date: Fri, 16 Oct 2026 12:57:14 +0800
+Subject: [PATCH] selftests/chimera: exercise layered automatic migration
+
+Add scalar scheduling, sleep/wakeup, distribution and trace-analysis test drivers. Document control interfaces and provide the K3 build entry.
+
+Source-Commit: 4aac04713ecf63c3043e26c6d371e1477e8fdbbb
+
+---
+ Documentation/scheduler/prefer-a100.rst       | 135 +++++++++++
+ scripts/chimera/build-prefer-a100.sh          |  25 ++
+ .../prefer_a100/analyze_migration_trace.py    |  53 ++++
+ .../riscv/prefer_a100/auto_migration_demo.py  | 155 ++++++++++++
+ .../riscv/prefer_a100/layered_demo.py         | 105 ++++++++
+ .../llama_auto_distribution_demo.py           | 228 ++++++++++++++++++
+ .../selftests/riscv/prefer_a100/run.py        | 215 +++++++++++++++++
+ .../selftests/riscv/prefer_a100/scalar.c      |  16 ++
+ .../riscv/prefer_a100/sleep_wakeup_smoke.py   |  44 ++++
+ 9 files changed, 976 insertions(+)
+ create mode 100644 Documentation/scheduler/prefer-a100.rst
+ create mode 100644 scripts/chimera/build-prefer-a100.sh
+ create mode 100644 tools/testing/selftests/riscv/prefer_a100/analyze_migration_trace.py
+ create mode 100644 tools/testing/selftests/riscv/prefer_a100/auto_migration_demo.py
+ create mode 100644 tools/testing/selftests/riscv/prefer_a100/layered_demo.py
+ create mode 100644 tools/testing/selftests/riscv/prefer_a100/llama_auto_distribution_demo.py
+ create mode 100644 tools/testing/selftests/riscv/prefer_a100/run.py
+ create mode 100644 tools/testing/selftests/riscv/prefer_a100/scalar.c
+ create mode 100644 tools/testing/selftests/riscv/prefer_a100/sleep_wakeup_smoke.py
+
+diff --git a/Documentation/scheduler/prefer-a100.rst b/Documentation/scheduler/prefer-a100.rst
+new file mode 100644
+index 0000000000000000000000000000000000000000..4d3a25ba38dc38fecdbc1ea7711fdf6b85349500
+--- /dev/null
++++ b/Documentation/scheduler/prefer-a100.rst
+@@ -0,0 +1,135 @@
++Prefer A100 idle capacity
++========================
++
++This Spacemit HMP policy prefers idle AI CPUs for opted-in fair-class tasks.
++It uses the existing device-tree-derived HMP regular/AI masks. It does not
++score performance, swap tasks, evict an AI task, or initiate AI-to-regular
++migration. Existing explicit group changes remain available.
++
++Userspace interface
++-------------------
++
++Root can opt a thread into the policy after preparing it to execute on both
++groups::
++
++    echo TID > /proc/prefer_a100
++
++Writing a negative TID disables the policy::
++
++    echo -TID > /proc/prefer_a100
++
++The write acknowledges a preference, not completion of a migration. A task
++already on AI stays there when preference is disabled. Kernel threads and
++tasks committing exec cannot be opted in through this interface.
++
++For a scalar scheduling experiment, a program compiled without RVV can use
++this interface directly. Production Chimera programs must first prepare the
++appropriate code, vector state handling, registration and signal handler.
++This interface does not create a BPF registration, install a handler, or
++perform userspace code conversion.
++
++The existing Chimera executable registration/exec match also sets
++``task_struct.prefer_a100``. Preference and explicit readiness are inherited
++by fork/clone and cleared at the point of no return of every exec, including
++non-ELF exec. A subsequent registered ELF match sets preference again.
++
++Inspection::
++
++    cat /proc/prefer_a100_stats
++    grep -E 'Prefer_a100|Hmp_thread_type|Cpus_allowed' /proc/TID/status
++
++``Hmp_thread_type`` is 0 for regular and 1 for AI. The statistics file also
++reports the actual HMP CPU masks. The trace event
++``sched:sched_prefer_a100_migrate`` reports TID, source CPU, destination CPU
++and reason (``INITIAL`` or ``IDLE_PULL``). The ordinary
++``sched:sched_migrate_task`` tracepoint remains in the physical migration
++path, including the existing BPF/kfunc notification hook.
++
++Placement and idle pull
++-----------------------
++
++At a registered ELF exec, an idle allowed AI CPU is selected before the new
++image executes userspace instructions. With no such CPU the regular path
++continues. A new image has no old-image PC/vector state to convert: the
++``hmp_exec_placement`` flag suppresses signal 41 only during this initial
++placement. Sending it before the new handler exists could kill the image.
++
++``select_task_rq_fair()`` requests a deferred attempt for a waking opted-in
++regular task. It does not sleep or alter affinity in the wakeup selection
++path. An irq-work callback waits until scheduler locks have been released
++before waking the regular-CPU workqueue. Consequently a wakeup may execute
++on regular before this attempt
++commits. Initial placement, like ordinary scheduler CPU selection, is
++opportunistic; another workload may wake after the idle observation.
++
++``sched_balance_newidle()`` requests an idle pull when an AI runqueue is
++about to become idle and ordinary balancing did not find a task. A single
++event-driven work item runs on regular CPUs, so it does not consume the
++destination idle CPU. There is no timer or polling kthread. It collects at
++most 16 referenced candidates from regular CFS runqueues and tries legal
++candidates until one succeeds. There is at most one request in flight.
++
++Unregistered tasks require explicit readiness through the proc interface.
++Automatically recognized Chimera tasks require the existing target identity
++and a signal 41 handler before a post-exec pull. This preserves the existing
++single-global-target limitation rather than migrating older targets whose
++notifications would be filtered out.
++
++Migration and concurrency
++-------------------------
++
++Both ``/proc/set_ai_thread`` and automatic policy requests use
++``hmp_move_task_to_group()``. It serializes group changes and holds CPU
++hotplug and cpuset locks while deriving the target mask. Only the manual
++AI request can online an AI CPU. It retains the existing signed-TID API.
++
++The scheduler implementation changes thread type with affinity. The manual
++and exec paths use the existing locked affinity setter. The idle path uses
++its affinity update primitive and the existing locked queued-task migration
++helper from a CPU stopper. It retains the normal migration bookkeeping and
++BPF tracepoint; it does not write task CPU or runqueue linkage directly.
++
++The stopper holds the task PI lock and both runqueue locks. It rechecks
++task identity/state, fair class, preference, regular source, runnable state,
++exit/exec, migration-disable/pending state, explicit user affinity, active
++destination, and destination idle/runnable/pending-wakeup state. The
++destination remains locked through enqueue. A previously running source
++task can be migrated after the stopper has descheduled it. Tasks that sleep,
++exit or change CPU during preparation cause a failed attempt.
++
++The managed-task HMP affinity callback preserves a validated subset of its
++group instead of expanding it back to the whole group. Existing platform
++fallback handling remains in effect when the requested mask has no member
++of the current group. This patch does not repair every pre-existing HMP
++hotplug/cpuset fallback behaviour for arbitrary ordinary tasks.
++
++Verification
++------------
++
++On K3, build from a separate source tree with its board configuration::
++
++    bash scripts/chimera/build-prefer-a100.sh
++
++After booting that image and mounting tracefs, run::
++
++    python3 tools/testing/selftests/riscv/prefer_a100/run.py /absolute/new/logdir
++
++The harness reads and verifies HMP masks and online CPUs, starts only its
++own scalar workloads, exercises seven scheduling cases, and saves task
++snapshots, counters, trace and dmesg. Its opt-in initial-placement case tests
++the proc interface; it does not test BPF executable registration or ELF
++matching. It does not establish correctness of cross-VLEN conversion.
++
++Known limitations
++-----------------
++
++* The existing physical-migration-to-signal-41-to-userspace-conversion window
++  remains for actual Chimera post-exec migrations. No safepoint protocol is
++  added or claimed to have been validated by scalar tests.
++* The existing registered-target implementation still has one global target.
++* A deferred wakeup attempt can lose its opportunity or find a sleeping task.
++  The task then stays on regular until another wakeup or AI idle event.
++* Candidate collection is bounded at 16 references per event; it is neither
++  a fairness policy nor an exhaustive global assignment.
++* Explicit readiness is a trusted userspace promise. Opting unsafe RVV code
++  in through the root-only interface does not make it safe to migrate.
+diff --git a/scripts/chimera/build-prefer-a100.sh b/scripts/chimera/build-prefer-a100.sh
+new file mode 100644
+index 0000000000000000000000000000000000000000..edb561fc0c40a3148d5de3dcc0763cd5609396d5
+--- /dev/null
++++ b/scripts/chimera/build-prefer-a100.sh
+@@ -0,0 +1,25 @@
++#!/bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Run on K3 from the separately verified and patched source tree.
++set -euo pipefail
++test "$(uname -m)" = riscv64
++test -f .config
++mkdir -p prefer-a100-evidence
++uname -a > prefer-a100-evidence/build-host.txt
++gcc --version > prefer-a100-evidence/compiler.txt
++scripts/config --set-str LOCALVERSION '-prefer-a100' --disable LOCALVERSION_AUTO
++scripts/config --set-str INITRAMFS_SOURCE ''
++# Existing helpers_chimera.c uses arch_uprobe definitions unconditionally.
++scripts/config --enable UPROBE_EVENTS
++make olddefconfig > prefer-a100-evidence/config.log 2>&1
++make -j8 drivers/soc/spacemit/hmp.o kernel/sched/core.o kernel/sched/fair.o \
++    kernel/bpf/helpers_chimera.o fs/exec.o fs/proc/array.o \
++    > prefer-a100-evidence/objects.log 2>&1
++printf '0\n' > prefer-a100-evidence/objects.rc
++make -j8 Image modules > prefer-a100-evidence/build.log 2>&1
++printf '0\n' > prefer-a100-evidence/build.rc
++make -s kernelrelease > prefer-a100-evidence/kernelrelease.txt
++sha256sum arch/riscv/boot/Image > prefer-a100-evidence/Image.sha256
++gcc -O2 -march=rv64gc -mabi=lp64d -fno-tree-vectorize \
++    tools/testing/selftests/riscv/prefer_a100/scalar.c \
++    -o tools/testing/selftests/riscv/prefer_a100/scalar
+diff --git a/tools/testing/selftests/riscv/prefer_a100/analyze_migration_trace.py b/tools/testing/selftests/riscv/prefer_a100/analyze_migration_trace.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..672736598f2363f704f3cd2e8b2dc6991b3e60a7
+--- /dev/null
++++ b/tools/testing/selftests/riscv/prefer_a100/analyze_migration_trace.py
+@@ -0,0 +1,53 @@
++#!/usr/bin/env python3
++# SPDX-License-Identifier: GPL-2.0
++"""Report per-task spacing between prefer_A100 trace migrations."""
++
++import re
++import sys
++
++
++EVENT = re.compile(
++    r"\s(?P<time>\d+\.\d+): sched_prefer_a100_migrate: "
++    r"pid=(?P<pid>\d+) src_cpu=(?P<src>\d+) dst_cpu=(?P<dst>\d+)")
++
++
++def main(paths):
++    minimum = None
++    minimum_reverse = None
++    under_100ms = []
++    events = 0
++    for path in paths:
++        previous = {}
++        with open(path, encoding="utf-8") as trace:
++            for line in trace:
++                match = EVENT.search(line)
++                if not match:
++                    continue
++                events += 1
++                timestamp = float(match["time"])
++                pid = int(match["pid"])
++                src = int(match["src"])
++                dst = int(match["dst"])
++                old = previous.get(pid)
++                if old:
++                    delta = timestamp - old[0]
++                    minimum = delta if minimum is None else min(minimum, delta)
++                    reverse = (src < 8) != (old[1] < 8)
++                    if reverse:
++                        minimum_reverse = (delta if minimum_reverse is None else
++                                           min(minimum_reverse, delta))
++                    if delta < 0.1:
++                        under_100ms.append((path, pid, delta, old[1], old[2], src, dst))
++                previous[pid] = (timestamp, src, dst)
++    print(f"events={events}")
++    print(f"minimum_same_tid_seconds={minimum if minimum is not None else 'NA'}")
++    print("minimum_reverse_seconds=" +
++          str(minimum_reverse if minimum_reverse is not None else "NA"))
++    print(f"same_tid_under_100ms={len(under_100ms)}")
++    for item in under_100ms:
++        print(item)
++    return 1 if under_100ms else 0
++
++
++if __name__ == "__main__":
++    sys.exit(main(sys.argv[1:]))
+diff --git a/tools/testing/selftests/riscv/prefer_a100/auto_migration_demo.py b/tools/testing/selftests/riscv/prefer_a100/auto_migration_demo.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..04bb5e958247aa49335d557cd1d6d3b2f3b9ee0b
+--- /dev/null
++++ b/tools/testing/selftests/riscv/prefer_a100/auto_migration_demo.py
+@@ -0,0 +1,155 @@
++#!/usr/bin/env python3
++# SPDX-License-Identifier: GPL-2.0
++"""Demonstrate an automatic X100 -> idle A100 pull without chimera migrate."""
++
++import os
++from pathlib import Path
++import signal
++import subprocess
++import sys
++import time
++
++
++HERE = Path(__file__).resolve().parent
++WORKER = HERE / "scalar"
++TRACE = Path("/sys/kernel/tracing/instances") / f"prefer_a100_demo_{os.getpid()}"
++children = []
++
++
++def proc_stats():
++    return dict(line.split(maxsplit=1) for line in
++                Path("/proc/prefer_a100_stats").read_text().splitlines())
++
++
++def cpulist(text):
++    cpus = []
++    for part in text.split(","):
++        bounds = [int(value) for value in part.split("-")]
++        cpus.extend(range(bounds[0], bounds[-1] + 1))
++    return cpus
++
++
++def task_cpu(pid):
++    # Field 39 in /proc/PID/stat, after the final ')' in comm.
++    return int(Path(f"/proc/{pid}/stat").read_text().rsplit(")", 1)[1].split()[36])
++
++
++def start_worker():
++    child = subprocess.Popen([str(WORKER)], stdout=subprocess.PIPE, text=True)
++    children.append(child)
++    if "ready" not in child.stdout.readline():
++        raise RuntimeError("scalar worker did not become ready")
++    return child
++
++
++def stop(child):
++    if child.poll() is None:
++        child.send_signal(signal.SIGTERM)
++        child.wait(timeout=5)
++
++
++def wait_for(predicate, timeout):
++    deadline = time.monotonic() + timeout
++    while time.monotonic() < deadline:
++        if predicate():
++            return True
++        time.sleep(0.05)
++    return False
++
++
++def idle_ticks():
++    result = {}
++    for line in Path("/proc/stat").read_text().splitlines():
++        fields = line.split()
++        if fields and fields[0].startswith("cpu") and fields[0][3:].isdigit():
++            result[int(fields[0][3:])] = int(fields[4])
++    return result
++
++
++def group_is_busy(cpus):
++    before = idle_ticks()
++    time.sleep(0.3)
++    after = idle_ticks()
++    return all(after[cpu] - before[cpu] <= 1 for cpu in cpus)
++
++
++def main():
++    if os.geteuid() != 0:
++        raise RuntimeError("run as root")
++    if not WORKER.exists():
++        raise RuntimeError(f"missing {WORKER}; build the prefer_a100 selftest first")
++
++    topology = proc_stats()
++    regular = cpulist(topology["regular_cpus"])
++    ai = cpulist(topology["ai_cpus"])
++    print(f"X100/regular CPUs: {regular}")
++    print(f"A100/AI CPUs:      {ai}")
++    print("No 'chimera migrate' command is used by this demo.\n")
++
++    TRACE.mkdir()
++    (TRACE / "events/sched/sched_prefer_a100_migrate/enable").write_text("1")
++    (TRACE / "tracing_on").write_text("1")
++
++    blockers = [start_worker() for _ in ai]
++    for child in blockers:
++        Path("/proc/set_ai_thread").write_text(str(child.pid))
++    if not wait_for(lambda: group_is_busy(ai), 15):
++        raise RuntimeError("could not make every A100 CPU busy")
++    print(f"1. Occupied all {len(ai)} A100 CPUs with disposable blockers.")
++
++    target = start_worker()
++    if not wait_for(lambda: task_cpu(target.pid) in regular, 3):
++        raise RuntimeError("target did not start on X100")
++    before_cpu = task_cpu(target.pid)
++    print(f"2. Target TID {target.pid} started on X100 CPU {before_cpu}.")
++
++    # This registers a policy preference. It does not request a destination or
++    # perform a migration; A100 is still full, so the target must remain on X100.
++    Path("/proc/prefer_a100").write_text(str(target.pid))
++    time.sleep(0.5)
++    if task_cpu(target.pid) not in regular:
++        raise RuntimeError("target left X100 while A100 was meant to be full")
++    before = proc_stats()
++    pull_src_cpu = task_cpu(target.pid)
++    print("3. Registered prefer_A100 while A100 was full; target stayed on X100.")
++
++    released_cpu = task_cpu(blockers[0].pid)
++    stop(blockers[0])
++    print(f"4. Released blocker on A100 CPU {released_cpu}; waiting for idle callback...")
++    if not wait_for(lambda: task_cpu(target.pid) in ai, 8):
++        raise RuntimeError("automatic pull did not move target to A100")
++
++    after_cpu = task_cpu(target.pid)
++    after = proc_stats()
++    migration_key = "prefer_a100_x100_to_a100_migrations"
++    attempt_key = "prefer_a100_idle_pull_attempts"
++    print(f"5. PASS: kernel automatically moved target CPU {pull_src_cpu} -> {after_cpu}.")
++    print(f"   idle-pull attempts: {before[attempt_key]} -> {after[attempt_key]}")
++    print(f"   X100->A100 migrations: {before[migration_key]} -> {after[migration_key]}")
++
++    (TRACE / "tracing_on").write_text("0")
++    trace_lines = [line for line in (TRACE / "trace").read_text().splitlines()
++                   if "sched_prefer_a100_migrate" in line and
++                   f"pid={target.pid}" in line]
++    print("6. Trace evidence:")
++    print("\n".join(f"   {line.strip()}" for line in trace_lines) or
++          "   (counter and CPU transition observed; matching trace line unavailable)")
++    return 0
++
++
++if __name__ == "__main__":
++    try:
++        sys.exit(main())
++    finally:
++        for process in children:
++            try:
++                stop(process)
++            except (ProcessLookupError, subprocess.TimeoutExpired):
++                pass
++        if TRACE.exists():
++            try:
++                (TRACE / "tracing_on").write_text("0")
++                (TRACE / "events/sched/sched_prefer_a100_migrate/enable").write_text("0")
++                TRACE.rmdir()
++            except OSError:
++                pass
+diff --git a/tools/testing/selftests/riscv/prefer_a100/layered_demo.py b/tools/testing/selftests/riscv/prefer_a100/layered_demo.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..bb171a72e706f1d2af66c05c6898b3bd75b73ef1
+--- /dev/null
++++ b/tools/testing/selftests/riscv/prefer_a100/layered_demo.py
+@@ -0,0 +1,105 @@
++#!/usr/bin/env python3
++# SPDX-License-Identifier: GPL-2.0
++"""Validate 8-A100/8-X100 layered assignment and managed-task refill."""
++
++import os
++from pathlib import Path
++import subprocess
++import sys
++import time
++
++
++WORKER = Path(__file__).with_name("scalar")
++children = []
++
++
++def stats():
++    return dict(line.split(maxsplit=1) for line in
++                Path("/proc/prefer_a100_stats").read_text().splitlines())
++
++
++def cpulist(text):
++    result = []
++    for part in text.split(","):
++        ends = [int(value) for value in part.split("-")]
++        result.extend(range(ends[0], ends[-1] + 1))
++    return result
++
++
++def cpu(pid):
++    return int(Path(f"/proc/{pid}/stat").read_text().rsplit(")", 1)[1].split()[36])
++
++
++def start():
++    child = subprocess.Popen([str(WORKER)], stdout=subprocess.PIPE, text=True)
++    children.append(child)
++    assert "ready" in child.stdout.readline()
++    Path("/proc/prefer_a100").write_text(str(child.pid))
++    return child
++
++
++def stop(child):
++    if child.poll() is None:
++        child.terminate()
++        child.wait(timeout=5)
++
++
++def wait_for(predicate, timeout=10):
++    end = time.monotonic() + timeout
++    while time.monotonic() < end:
++        if predicate():
++            return True
++        time.sleep(0.05)
++    return False
++
++
++def distribution(ai, regular):
++    states = {child.pid: cpu(child.pid) for child in children if child.poll() is None}
++    return (sum(value in ai for value in states.values()),
++            sum(value in regular for value in states.values()), states)
++
++
++def main():
++    topology = stats()
++    ai = set(cpulist(topology["ai_cpus"]))
++    regular = set(cpulist(topology["regular_cpus"]))
++    assert len(ai) == len(regular) == 8
++    baseline_ai = int(topology["prefer_assigned_ai"])
++    baseline_regular = int(topology["prefer_assigned_regular"])
++    assert baseline_ai == baseline_regular == 0, "run with no other preferred tasks"
++
++    for _ in range(16):
++        start()
++    assert wait_for(lambda: distribution(ai, regular)[:2] == (8, 8), 15)
++    ai_count, regular_count, states = distribution(ai, regular)
++    snapshot = stats()
++    print(f"PASS initial layer: A100={ai_count}, X100={regular_count}")
++    print(f"  tasks: {states}")
++    print(f"  assigned: A100={snapshot['prefer_assigned_ai']}, "
++          f"X100={snapshot['prefer_assigned_regular']}")
++
++    victim = next(child for child in children if cpu(child.pid) in ai)
++    old_regular = {child.pid for child in children if child.poll() is None and
++                   cpu(child.pid) in regular}
++    stop(victim)
++    assert wait_for(lambda: distribution(ai, regular)[:2] == (8, 7), 15)
++    new_ai = {child.pid for child in children if child.poll() is None and
++              cpu(child.pid) in ai}
++    pulled = sorted(old_regular & new_ai)
++    assert pulled, "no X100 task refilled the released A100 assignment"
++    snapshot = stats()
++    print(f"PASS managed refill: exited A100 TID {victim.pid}, pulled {pulled}")
++    print(f"  assigned: A100={snapshot['prefer_assigned_ai']}, "
++          f"X100={snapshot['prefer_assigned_regular']}")
++    return 0
++
++
++if __name__ == "__main__":
++    try:
++        sys.exit(main())
++    finally:
++        for process in children:
++            try:
++                stop(process)
++            except (ProcessLookupError, subprocess.TimeoutExpired):
++                pass
+diff --git a/tools/testing/selftests/riscv/prefer_a100/llama_auto_distribution_demo.py b/tools/testing/selftests/riscv/prefer_a100/llama_auto_distribution_demo.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..6c67d819fa9880f8813680882f1d4bfe896ee6e8
+--- /dev/null
++++ b/tools/testing/selftests/riscv/prefer_a100/llama_auto_distribution_demo.py
+@@ -0,0 +1,228 @@
++#!/usr/bin/env python3
++# SPDX-License-Identifier: GPL-2.0
++"""Observe Chimera llama thread placement and idle pulls without manual migrate."""
++
++import os
++from pathlib import Path
++import re
++import signal
++import subprocess
++import sys
++import threading
++import time
++
++
++CHIMERA_ROOT = Path(os.environ.get("CHIMERA_ROOT", "/root/kaiwen/chimera-user-full"))
++LLAMA_ROOT = CHIMERA_ROOT / "examples/applications/llama-cpp/llama.cpp"
++BINARY = LLAMA_ROOT / "build-remediated/bin/llama-perplexity-1024-to-256"
++PROFILE = CHIMERA_ROOT / "examples/platforms/k3/linux-riscv64-rvv-1024-to-256.toml"
++MODEL = Path(os.environ.get(
++    "MODEL", str(CHIMERA_ROOT / "examples/applications/llama-cpp/model/"
++                 "tinyllama-1.1b-chat-v1.0.Q3_K_S.gguf")))
++PROMPT = Path(os.environ.get(
++    "PROMPT_FILE", str(CHIMERA_ROOT / "examples/applications/llama-cpp/prompt/file.txt")))
++CHIMERA = CHIMERA_ROOT / ".venv/bin/chimera"
++TRACE = Path("/sys/kernel/tracing/instances") / f"llama_auto_{os.getpid()}"
++LOG_PATH = Path(os.environ.get("LOG_PATH", "/tmp/llama-auto-distribution.log"))
++TRACE_LOG_PATH = Path(os.environ.get("TRACE_LOG_PATH", "/tmp/llama-auto-trace.log"))
++child = None
++
++
++def scheduler_stats():
++    return dict(line.split(maxsplit=1) for line in
++                Path("/proc/prefer_a100_stats").read_text().splitlines())
++
++
++def cpulist(text):
++    result = []
++    for part in text.split(","):
++        ends = [int(value) for value in part.split("-")]
++        result.extend(range(ends[0], ends[-1] + 1))
++    return result
++
++
++def task_cpus(tgid):
++    result = {}
++    for stat in Path(f"/proc/{tgid}/task").glob("*/stat"):
++        try:
++            text = stat.read_text()
++            result[int(stat.parent.name)] = int(text.rsplit(")", 1)[1].split()[36])
++        except (FileNotFoundError, ProcessLookupError, ValueError):
++            pass
++    return result
++
++
++def stream_output(pipe, log, lines):
++    for line in iter(pipe.readline, ""):
++        log.write(line)
++        log.flush()
++        lines.append(line)
++        # Keep the useful lifecycle and runtime messages visible.
++        if any(marker in line for marker in
++               ("parent_thread_id=", "calculating perplexity", "source_vlen_bits=",
++                "next_body=", "Final estimate", "PPL")):
++            print(f"llama: {line.rstrip()}", flush=True)
++
++
++def place_launcher_on_a100():
++    """Run in the child immediately before exec; no workload thread exists yet."""
++    Path("/proc/set_ai_thread").write_text(str(os.getpid()))
++
++
++def main():
++    global child
++    if os.geteuid() != 0:
++        raise RuntimeError("run as root")
++    for path in (BINARY, PROFILE, MODEL, PROMPT, CHIMERA):
++        if not path.exists():
++            raise RuntimeError(f"missing required path: {path}")
++
++    topology = scheduler_stats()
++    regular = set(cpulist(topology["regular_cpus"]))
++    ai = set(cpulist(topology["ai_cpus"]))
++    before_migrations = int(topology["prefer_a100_x100_to_a100_migrations"])
++    print(f"X100/256 CPUs:  {sorted(regular)}")
++    print(f"A100/1024 CPUs: {sorted(ai)}")
++    print("Migration command: NONE (this script never invokes 'chimera migrate')")
++    print("The launcher is placed on A100 before exec, matching the official example.")
++
++    env = os.environ.copy()
++    env["PATH"] = f"{CHIMERA.parent}:/root/.chimera/bin:" + env.get("PATH", "")
++    print("Registering the existing remediated binary...")
++    subprocess.run([str(CHIMERA), "--profile", str(PROFILE), "register", "--verify",
++                    "--input", str(BINARY)], cwd=CHIMERA_ROOT, env=env, check=True)
++
++    TRACE.mkdir()
++    (TRACE / "events/sched/sched_prefer_a100_migrate/enable").write_text("1")
++    (TRACE / "tracing_on").write_text("1")
++    lines = []
++    LOG_PATH.unlink(missing_ok=True)
++    log = LOG_PATH.open("w")
++    cmd = [str(CHIMERA), "--profile", str(PROFILE), "--debug", "run",
++           "--input", str(BINARY), "--", "-m", str(MODEL), "-f", str(PROMPT),
++           "-t", os.environ.get("LLAMA_THREADS", "1"),
++           "-tb", os.environ.get("LLAMA_BATCH_THREADS", "16")]
++    child = subprocess.Popen(cmd, cwd=CHIMERA_ROOT, env=env, stdout=subprocess.PIPE,
++                             stderr=subprocess.STDOUT, text=True, bufsize=1,
++                             preexec_fn=place_launcher_on_a100)
++    reader = threading.Thread(target=stream_output, args=(child.stdout, log, lines), daemon=True)
++    reader.start()
++
++    parent_tid = None
++    deadline = time.monotonic() + 30
++    pattern = re.compile(r"parent_thread_id=(\d+)")
++    while time.monotonic() < deadline and child.poll() is None:
++        match = pattern.search("".join(lines))
++        if match:
++            parent_tid = int(match.group(1))
++            break
++        time.sleep(0.05)
++    if parent_tid is None:
++        raise RuntimeError("could not read parent_thread_id from chimera --debug output")
++    print(f"Parent TID: {parent_tid}")
++
++    first_balanced = None
++    prior = {}
++    all_seen_tids = set()
++    observed_pulls = []
++    peak_threads = peak_regular = peak_ai = 0
++    peak_assigned_regular = peak_assigned_ai = 0
++    last_sigcgt = "unknown"
++    start = time.monotonic()
++    while child.poll() is None:
++        try:
++            current = task_cpus(parent_tid)
++        except FileNotFoundError:
++            break
++        regular_tids = sorted(tid for tid, cpu in current.items() if cpu in regular)
++        ai_tids = sorted(tid for tid, cpu in current.items() if cpu in ai)
++        all_seen_tids.update(current)
++        peak_threads = max(peak_threads, len(current))
++        peak_regular = max(peak_regular, len(regular_tids))
++        peak_ai = max(peak_ai, len(ai_tids))
++        try:
++            live_stats = scheduler_stats()
++            peak_assigned_regular = max(
++                peak_assigned_regular, int(live_stats["prefer_assigned_regular"]))
++            peak_assigned_ai = max(
++                peak_assigned_ai, int(live_stats["prefer_assigned_ai"]))
++            for line in Path(f"/proc/{parent_tid}/status").read_text().splitlines():
++                if line.startswith("SigCgt:"):
++                    last_sigcgt = line.split()[1]
++                    break
++        except (FileNotFoundError, ProcessLookupError, KeyError, ValueError):
++            pass
++        if first_balanced is None and len(regular_tids) >= 8 and len(ai_tids) >= 8:
++            first_balanced = (time.monotonic() - start, regular_tids, ai_tids, dict(current))
++            print(f"Balanced snapshot: X100={len(regular_tids)}, A100={len(ai_tids)}")
++            print(f"  X100 TIDs: {regular_tids}")
++            print(f"  A100 TIDs: {ai_tids}")
++        for tid, cpu in current.items():
++            old_cpu = prior.get(tid)
++            if old_cpu in regular and cpu in ai:
++                event = (time.monotonic() - start, tid, old_cpu, cpu)
++                observed_pulls.append(event)
++                print(f"Observed X100->A100 transition: tid={tid} CPU {old_cpu}->{cpu}")
++        prior = current
++        time.sleep(0.02)
++
++    returncode = child.wait()
++    reader.join(timeout=5)
++    log.close()
++    (TRACE / "tracing_on").write_text("0")
++    trace_text = (TRACE / "trace").read_text()
++    TRACE_LOG_PATH.write_text(trace_text)
++    tids = all_seen_tids | ({parent_tid} if parent_tid else set())
++    idle_pull_lines = [line.strip() for line in trace_text.splitlines()
++                       if "reason=IDLE_PULL" in line and
++                       any(f"pid={tid} " in line for tid in tids)]
++    after = scheduler_stats()
++    after_migrations = int(after["prefer_a100_x100_to_a100_migrations"])
++
++    print("\nResults")
++    print(f"  llama exit code: {returncode}")
++    print(f"  peak thread count: {peak_threads}")
++    print(f"  peak X100 threads: {peak_regular}")
++    print(f"  peak A100 threads: {peak_ai}")
++    print(f"  peak logical assignments: X100={peak_assigned_regular}, "
++          f"A100={peak_assigned_ai}")
++    print(f"  parent SigCgt: {last_sigcgt}")
++    print(f"  scheduler migration counter: {before_migrations} -> {after_migrations}")
++    print(f"  sampled X100->A100 transitions: {len(observed_pulls)}")
++    print(f"  matching IDLE_PULL trace events: {len(idle_pull_lines)}")
++    for line in idle_pull_lines[:20]:
++        print(f"    {line}")
++    print(f"  full llama log: {LOG_PATH}")
++    print(f"  full migration trace: {TRACE_LOG_PATH}")
++
++    failures = []
++    if returncode != 0:
++        failures.append("llama-perplexity failed")
++    if first_balanced is None:
++        failures.append("never observed at least 8 threads in each CPU group")
++    if not idle_pull_lines:
++        failures.append("no automatic IDLE_PULL event was observed for llama")
++    if failures:
++        print("FAIL: " + "; ".join(failures))
++        return 1
++    print("PASS: initial two-group placement and later automatic idle pull were both observed.")
++    return 0
++
++
++if __name__ == "__main__":
++    try:
++        sys.exit(main())
++    finally:
++        if child is not None and child.poll() is None:
++            child.send_signal(signal.SIGTERM)
++            try:
++                child.wait(timeout=5)
++            except subprocess.TimeoutExpired:
++                child.kill()
++        if TRACE.exists():
++            try:
++                (TRACE / "tracing_on").write_text("0")
++                (TRACE / "events/sched/sched_prefer_a100_migrate/enable").write_text("0")
++                TRACE.rmdir()
++            except OSError:
++                pass
+diff --git a/tools/testing/selftests/riscv/prefer_a100/run.py b/tools/testing/selftests/riscv/prefer_a100/run.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..4f96b05d519a202477a998dc4dd2059d645c0ad6
+--- /dev/null
++++ b/tools/testing/selftests/riscv/prefer_a100/run.py
+@@ -0,0 +1,215 @@
++#!/usr/bin/env python3
++# SPDX-License-Identifier: GPL-2.0
++"""Native K3 scalar scheduling tests. Does not claim VLEN conversion coverage."""
++import json
++import os
++from pathlib import Path
++import subprocess
++import sys
++import time
++
++OUT = Path(sys.argv[1]).resolve()
++OUT.mkdir(parents=True, exist_ok=False)
++WORKER = Path(__file__).with_name("scalar").resolve()
++children = []
++results = []
++
++
++def stats():
++    return dict(line.split(maxsplit=1) for line in
++                Path("/proc/prefer_a100_stats").read_text().splitlines())
++
++
++def cpulist(text):
++    out = []
++    for part in text.split(","):
++        bounds = [int(x) for x in part.split("-")]
++        out.extend(range(bounds[0], bounds[-1] + 1))
++    return out
++
++
++def state(p):
++    pid = p.pid if hasattr(p, "pid") else p
++    text = Path(f"/proc/{pid}/status").read_text()
++    fields = dict(line.split(":", 1) for line in text.splitlines())
++    # stat field 39 is the last CPU; split only after the closing comm ')'.
++    cpu = int(Path(f"/proc/{pid}/stat").read_text().rsplit(")", 1)[1].split()[36])
++    return {"pid": pid, "cpu": cpu, "prefer": fields["Prefer_a100"].strip(),
++            "type": fields["Hmp_thread_type"].strip(),
++            "affinity": fields["Cpus_allowed_list"].strip(),
++            "returncode": p.poll() if hasattr(p, "poll") else None}
++
++
++def start():
++    p = subprocess.Popen([str(WORKER)], stdout=subprocess.PIPE, text=True)
++    children.append(p)
++    assert "ready" in p.stdout.readline(), "scalar startup failed"
++    return p
++
++
++def prefer(p):
++    Path("/proc/prefer_a100").write_text(str(p.pid))
++
++
++def wait_for(predicate, seconds=6):
++    end = time.monotonic() + seconds
++    while time.monotonic() < end:
++        if predicate():
++            return True
++        time.sleep(.05)
++    return False
++
++
++def stop(p):
++    if p.poll() is None:
++        p.terminate()
++        p.wait(timeout=5)
++
++
++def cleanup():
++    for p in children:
++        stop(p)
++    children.clear()
++
++
++def idle_ticks():
++    counts = {}
++    for line in Path("/proc/stat").read_text().splitlines():
++        fields = line.split()
++        if fields and fields[0].startswith("cpu") and fields[0][3:].isdigit():
++            counts[int(fields[0][3:])] = int(fields[4])
++    return counts
++
++
++def full(ai):
++    before = idle_ticks()
++    time.sleep(.3)
++    after = idle_ticks()
++    return all(after[c] - before[c] <= 1 for c in ai)
++
++
++def fill(ai):
++    hogs = [start() for _ in ai]
++    for p in hogs:
++        Path("/proc/set_ai_thread").write_text(str(p.pid))
++    assert wait_for(lambda: full(ai), 15), "could not establish full A100 load"
++    return hogs
++
++
++def record(name, ok, **evidence):
++    results.append({"test": name, "passed": bool(ok), **evidence})
++    (OUT / "results.json").write_text(json.dumps(results, indent=2))
++    print(json.dumps(results[-1]), flush=True)
++
++
++trace = Path("/sys/kernel/tracing/instances") / f"prefer_a100_{os.getpid()}"
++try:
++    topology = stats()
++    regular = cpulist(topology["regular_cpus"])
++    ai = cpulist(topology["ai_cpus"])
++    assert regular and ai and not set(regular) & set(ai)
++    online = set(cpulist(Path("/sys/devices/system/cpu/online").read_text().strip()))
++    assert set(ai + regular) <= online, "test requires all group CPUs online"
++    (OUT / "topology.json").write_text(json.dumps(topology, indent=2))
++    for command, name in [(["uname", "-a"], "uname.txt"),
++                          (["lscpu"], "lscpu.txt"),
++                          (["dmesg"], "dmesg-before.txt")]:
++        (OUT / name).write_bytes(subprocess.check_output(command))
++    (OUT / "cpuinfo.txt").write_text(Path("/proc/cpuinfo").read_text())
++    trace.mkdir()
++    (trace / "events/sched/sched_prefer_a100_migrate/enable").write_text("1")
++    (trace / "tracing_on").write_text("1")
++
++    p = start()
++    time.sleep(.5)
++    record("0 baseline", state(p)["cpu"] in regular and state(p)["prefer"] == "0",
++           task=state(p))
++    cleanup()
++
++    p = start()
++    before = state(p)
++    prefer(p)
++    ok = wait_for(lambda: state(p)["cpu"] in ai)
++    record("1 idle A100 opt-in (exec integration deferred)", ok,
++           before=before, after=state(p), stats=stats())
++    cleanup()
++
++    hogs = fill(ai)
++    p = start()
++    prefer(p)
++    time.sleep(.5)
++    record("2 A100 full", state(p)["cpu"] in regular,
++           task=state(p), hogs=[state(h) for h in hogs])
++    before = state(p)
++    stop(hogs[0])
++    ok = wait_for(lambda: state(p)["cpu"] in ai)
++    record("3 dynamic idle pull", ok, before=before, after=state(p), stats=stats())
++    cleanup()
++
++    p = start()
++    time.sleep(1)
++    record("4 ordinary task", state(p)["cpu"] in regular and state(p)["prefer"] == "0",
++           task=state(p))
++    cleanup()
++
++    hogs = fill(ai)
++    candidates = [start() for _ in range(3)]
++    for p in candidates:
++        prefer(p)
++    time.sleep(.5)
++    before = [state(p) for p in candidates]
++    stop(hogs[0])
++    wait_for(lambda: any(state(p)["cpu"] in ai for p in candidates))
++    time.sleep(1)
++    after = [state(p) for p in candidates]
++    record("5 one idle CPU multiple candidates", sum(s["cpu"] in ai for s in after) == 1,
++           before=before, after=after, stats=stats())
++    cleanup()
++
++    p = start()
++    os.sched_setaffinity(p.pid, {regular[0]})
++    prefer(p)
++    os.sched_setaffinity(p.pid, {regular[0]})
++    time.sleep(1)
++    snapshot = state(p)
++    record("6 explicit affinity restriction", snapshot["cpu"] == regular[0] and
++           os.sched_getaffinity(p.pid) == {regular[0]}, task=snapshot, stats=stats())
++    cleanup()
++
++    # A child of a preferred AI task must fall back to regular CPUs while
++    # every permitted A100 CPU is occupied. This exercises fork inheritance
++    # without requiring the full Chimera runtime.
++    hogs = fill(ai)
++    prefer_pid = os.getpid()
++    Path("/proc/prefer_a100").write_text(str(prefer_pid))
++    read_fd, write_fd = os.pipe()
++    child = os.fork()
++    if child == 0:
++        os.close(read_fd)
++        os.write(write_fd, b"ready")
++        os.close(write_fd)
++        while True:
++            pass
++    os.close(write_fd)
++    assert os.read(read_fd, 5) == b"ready", "fork child startup failed"
++    os.close(read_fd)
++    child_state = state(child)
++    record("7 fork fallback when A100 full", child_state["cpu"] in regular and
++           child_state["type"] == "0" and
++           set(os.sched_getaffinity(child)) <= set(regular),
++           child=child_state, stats=stats())
++    os.kill(child, 15)
++    os.waitpid(child, 0)
++    Path("/proc/prefer_a100").write_text(str(-prefer_pid))
++    cleanup()
++finally:
++    cleanup()
++    if trace.exists():
++        (trace / "tracing_on").write_text("0")
++        (OUT / "trace.txt").write_text((trace / "trace").read_text())
++        (trace / "events/sched/sched_prefer_a100_migrate/enable").write_text("0")
++        trace.rmdir()
++    (OUT / "dmesg-after.txt").write_bytes(subprocess.check_output(["dmesg"]))
++    (OUT / "stats-after.json").write_text(json.dumps(stats(), indent=2))
++
++sys.exit(0 if len(results) == 8 and all(r["passed"] for r in results) else 1)
+diff --git a/tools/testing/selftests/riscv/prefer_a100/scalar.c b/tools/testing/selftests/riscv/prefer_a100/scalar.c
+new file mode 100644
+index 0000000000000000000000000000000000000000..2215e1ce94b8fc647aa91008d4f5be7b8ee6d73f
+--- /dev/null
++++ b/tools/testing/selftests/riscv/prefer_a100/scalar.c
+@@ -0,0 +1,16 @@
++// SPDX-License-Identifier: GPL-2.0
++#define _GNU_SOURCE
++#include <stdint.h>
++#include <stdio.h>
++#include <unistd.h>
++
++/* Build with -march=rv64gc -fno-tree-vectorize: this is a scheduling test. */
++int main(void)
++{
++	volatile uint64_t value = 1;
++
++	printf("pid=%ld ready\n", (long)getpid());
++	fflush(stdout);
++	for (;;)
++		value = value * UINT64_C(6364136223846793005) + 1;
++}
+diff --git a/tools/testing/selftests/riscv/prefer_a100/sleep_wakeup_smoke.py b/tools/testing/selftests/riscv/prefer_a100/sleep_wakeup_smoke.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..08075f11e0e373d98189875e63719cfc9b950d03
+--- /dev/null
++++ b/tools/testing/selftests/riscv/prefer_a100/sleep_wakeup_smoke.py
+@@ -0,0 +1,44 @@
++#!/usr/bin/env python3
++# SPDX-License-Identifier: GPL-2.0
++"""Exercise prefer_A100 fork inheritance and repeated sleep/wakeup placement."""
++
++import os
++from pathlib import Path
++import signal
++import time
++
++
++children = []
++
++
++def main():
++    Path("/proc/prefer_a100").write_text(str(os.getpid()))
++    for _ in range(16):
++        pid = os.fork()
++        if pid == 0:
++            end = time.monotonic() + 8
++            value = 1
++            while time.monotonic() < end:
++                time.sleep(0.01)
++                busy_end = time.monotonic() + 0.002
++                while time.monotonic() < busy_end:
++                    value = (value * 6364136223846793005 + 1) & ((1 << 64) - 1)
++            os._exit(value & 0)
++        children.append(pid)
++
++    for pid in children:
++        waited, status = os.waitpid(pid, 0)
++        if waited != pid or status != 0:
++            raise RuntimeError(f"child {pid} failed: status={status}")
++    print("PASS: 16 inherited children completed repeated sleep/wakeup cycles")
++
++
++if __name__ == "__main__":
++    try:
++        main()
++    finally:
++        for pid in children:
++            try:
++                os.kill(pid, signal.SIGKILL)
++            except ProcessLookupError:
++                pass
+-- 
+2.43.0
+

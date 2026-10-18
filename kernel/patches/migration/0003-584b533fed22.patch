@@ -1,0 +1,432 @@
+From 584b533fed221025550a4382c3b8c9172b084fd8 Mon Sep 17 00:00:00 2001
+From: daichengrong <daichengrong@iscas.ac.cn>
+Date: Tue, 16 Jun 2026 17:10:08 +0800
+Subject: [PATCH] llama.cpp:llama-perplexity:1024-to-256
+
+---
+ kernel/bpf/helpers_chimera.c | 286 ++++++++++++++++++++++++++---------
+ 1 file changed, 212 insertions(+), 74 deletions(-)
+
+diff --git a/kernel/bpf/helpers_chimera.c b/kernel/bpf/helpers_chimera.c
+index a9ffaf9c187ef74265d3391c04bae3c27b782944..3da16b74dec1849ea60234c2314186e936b2e962 100644
+--- a/kernel/bpf/helpers_chimera.c
++++ b/kernel/bpf/helpers_chimera.c
+@@ -44,10 +44,18 @@
+ #include <linux/soc/spacemit/spacemit-hmp.h>
+ #include <linux/completion.h>
+ 
++#include <linux/usb/ch9.h>
+ #include <linux/xarray.h>
+ 
+-#define ENABLE_CHIMERA_WARN_LOG
+-//#define ENABLE_CHIMERA_INFO_LOG
++
++#include <asm/vector.h>
++#include <asm/ptrace.h>
++
++#include <linux/task_work.h>
++#include <linux/sched/signal.h>
++
++// #define ENABLE_CHIMERA_WARN_LOG
++// #define ENABLE_CHIMERA_INFO_LOG
+ 
+ #ifdef ENABLE_CHIMERA_WARN_LOG
+ #define chimera_warn(fmt, ...) pr_warn_ratelimited(fmt, ##__VA_ARGS__)
+@@ -108,7 +116,6 @@ static bool unblock_signal_on_task(struct task_struct *task, int sig)
+     return changed;
+ }
+ 
+-
+ static int count_pending_sig_on_task(struct task_struct *task, int sig)
+ {
+     struct sigqueue *q;
+@@ -171,8 +178,8 @@ void notify_userspace_with_insn(struct task_struct *task, struct pt_regs *regs,
+ 	struct uprobe *uprobe = testmod_uprobe->uprobe;
+ 	struct arch_uprobe *auprobe = &(uprobe->arch);
+ 	uprobe_opcode_t insn = *(uprobe_opcode_t *)&auprobe->insn;
+-	
+-    info.si_value.sival_ptr = (void __user *) insn;
++
++    info.si_value.sival_ptr = (void __user *) (insn);
+ 
+     send_sig_info(40, &info, task);
+ 
+@@ -181,7 +188,6 @@ void notify_userspace_with_insn(struct task_struct *task, struct pt_regs *regs,
+ 	{
+ 		chimera_warn("tid=%d pending rt40 after send: %d\n", task->pid, after);
+ 	}
+-
+ }
+ 
+ DEFINE_XARRAY(my_xa);
+@@ -193,39 +199,24 @@ static int enter_handler_counter = 0;
+ static int
+ uprobe_handler(struct uprobe_consumer *self, struct pt_regs *regs, __u64 *data)
+ {
++	chimera_info("uprobe_handler \n");
+ 	struct testmod_uprobe *testmod_uprobe;
+ 
+-	long cpu = task_cpu(current);
+-
+ 	if(target_pid == current->tgid)
+ 	{
+-		if(cpu <= 7 && target_pid_init_cpu >= 8)
+ 		{
+-			unblock_signal_on_task(current, 40);
+-			notify_userspace_with_insn(current, regs, self);
+-			regs->epc  += 1;
+-
+ 			struct my_data *data;
+ 			data = xa_load(&my_xa, current->pid);
+ 
+-			if (!data) 
++			if (data)
+ 			{
+-				{
+-					chimera_warn("target %d current %d:%d  in target_pid_init_cpu %d uprobe_handler [send_sig_info] in cpu %d epc: %016lx \n"
+-						, target_pid, current->tgid, current->pid, target_pid_init_cpu, cpu, regs->epc);
+-				}
+-				data = kzalloc(sizeof(*data), GFP_KERNEL);
+-				if (!data)
+-					return -ENOMEM;
++				xa_erase(&my_xa, current->pid);
++				unblock_signal_on_task(current, 40);
++				notify_userspace_with_insn(current, regs, self);
++				regs->epc  += 1;
+ 
+-				data->value = cpu;
+-				int ret = xa_insert(&my_xa, current->pid, data, GFP_KERNEL);
+-				if (ret == -EBUSY) 
+-				{
+-					kfree(data);
+-				}
+ 				struct cpumask mask;
+-				ret = hmp_get_cpumask(&mask, HMP_REGULAR);
++				int ret = hmp_get_cpumask(&mask, HMP_REGULAR);
+ 				if(ret == 0)
+ 				{
+ 					current->thread_type = HMP_REGULAR;
+@@ -235,11 +226,6 @@ uprobe_handler(struct uprobe_consumer *self, struct pt_regs *regs, __u64 *data)
+ 					chimera_warn("current->thread_type = HMP_REGULAR \n");
+ 				}
+ 			}
+-			else 
+-			{
+-				/* 已经存在，进行其他操作 */
+-			}
+-
+ 		}
+ 	}
+ 	else
+@@ -330,6 +316,22 @@ static int chimera_register_uprobe_one_by_one(struct kernel_uprobe_info *uprobe_
+ 
+ 	mutex_lock(&testmod_uprobe_mutex);
+ 	chimera_info("chimera_register_uprobe offset_cnt  %d \n", user_uprobe_info_p->offset_cnt);
++	if(user_uprobe_info_p->offset_cnt == 0)
++	{
++		chimera_uprobe = kvcalloc(1, sizeof(*chimera_uprobe), GFP_KERNEL);
++		INIT_LIST_HEAD(&chimera_uprobe->list);
++
++		err = kern_path(uprobe_info->kern_path, LOOKUP_FOLLOW, &chimera_uprobe->path);
++		if (err)
++			goto out;
++
++		chimera_uprobe->consumer.handler = uprobe_handler;
++		chimera_uprobe->consumer.ret_handler = NULL;
++		chimera_uprobe->uprobe = NULL;;
++		list_add(&chimera_uprobe->list, &chimera_uprobe_list);
++		chimera_warn("target installed success \n");
++	}
++
+ 	for(int i = 0; i < user_uprobe_info_p->offset_cnt ; i++)
+ 	{
+ 
+@@ -337,8 +339,19 @@ static int chimera_register_uprobe_one_by_one(struct kernel_uprobe_info *uprobe_
+ 		INIT_LIST_HEAD(&chimera_uprobe->list);
+ 
+ 		err = kern_path(uprobe_info->kern_path, LOOKUP_FOLLOW, &chimera_uprobe->path);
+-	if (err)
+-		goto out;
++		if (err)
++			goto out;
++
++
++		if(user_uprobe_info_p->offsets[i] == 0)
++		{
++			chimera_uprobe->consumer.handler = uprobe_handler;
++			chimera_uprobe->consumer.ret_handler = NULL;
++			chimera_uprobe->uprobe = NULL;;
++			list_add(&chimera_uprobe->list, &chimera_uprobe_list);
++			chimera_warn("target installed success \n");
++			continue;
++		}
+ 
+ 		chimera_uprobe->consumer.handler = uprobe_handler;
+ 		chimera_uprobe->consumer.ret_handler = NULL;
+@@ -350,7 +363,7 @@ static int chimera_register_uprobe_one_by_one(struct kernel_uprobe_info *uprobe_
+ 			path_put(&chimera_uprobe->path);
+ 			chimera_uprobe->uprobe = NULL;
+ 			kfree(chimera_uprobe);
+-			chimera_info("uprobe installed [%d] at %lx failed \n", i, user_uprobe_info_p->offsets[i]);
++			chimera_warn("uprobe installed [%d] at %lx failed \n", i, user_uprobe_info_p->offsets[i]);
+ 		}
+ 		else
+ 		{
+@@ -399,7 +412,6 @@ char *ino_to_path(struct kernel_uprobe_info *uprobe_info_p)
+ 
+ 		chimera_info("ino_to_path: ino=%llu -> %s\n", uprobe_info_p->user_uprobe_info->inode, path);
+ 
+-		// chimera_register_uprobe(uprobe_info_p);
+ 		chimera_register_uprobe_one_by_one(uprobe_info_p);
+ 	}
+ 
+@@ -467,20 +479,31 @@ int chimera_execv_compare(struct file *file)
+ 
+ 		if(strcmp(p, path) == 0)
+ 		{
+-			chimera_info("[found] uprobe_file %s  execv_file %s\n",  path, p);
++			chimera_warn("[found] uprobe_file %s  execv_file %s\n",  path, p);
+ 
+ 			target_pid = current->pid;
+ 			target_tgid = current->tgid;
+ 			target_pid_init_cpu = task_cpu(current);
+ 			kfree(pathname);
+-
+-			current->thread_type = HMP_REGULAR;
+-			cpumask_copy(&current->cpus_mask, cpu_online_mask);
+-			current->nr_cpus_allowed = cpumask_weight(&current->cpus_mask);
+-			current->cpus_ptr = &current->cpus_mask;
++			
++			struct task_struct *task = current;
++			int src_cpu = task_cpu(current);
++			if(src_cpu > 7)
++			{
++				chimera_info("cpus_mask equals set\n");
++				if (cpumask_equal(task->cpus_ptr, cpu_online_mask))
++				{
++					chimera_info("cpus_mask equals cpu_online_mask\n");
++				}
++				else
++				{
++					chimera_info("cpus_mask not equal cpu_online_mask, reset !!\n");
++					set_cpus_allowed_ptr(task, cpu_online_mask);
++				}
++			}
+ 
+ 			chimera_info("[chimera_execv_compare] cpu_device_up p->cpus_mask : %*pb\n", cpumask_pr_args(current->cpus_ptr));
+-			chimera_info("src_pid %d src_tgid %d u \n", current->pid, current->tgid);
++			chimera_info("src_pid %d src_tgid %d\n", current->pid, current->tgid);
+ 			return 0;
+ 		}
+ 	}
+@@ -490,17 +513,6 @@ int chimera_execv_compare(struct file *file)
+ }
+ EXPORT_SYMBOL(chimera_execv_compare);
+ 
+-int chimera_is_target_task(pid_t pid)
+-{
+-	if(pid == target_pid)
+-	{
+-		return 0;
+-	}
+-	return 1;
+-
+-}
+-EXPORT_SYMBOL(chimera_is_target_task);
+-
+ /* -------------------------------------------------------
+  * 内核线程：loop 遍历所有 key/value
+  * ------------------------------------------------------- */
+@@ -563,12 +575,6 @@ static int kthread_map_worker(void *data)
+ 			cond_resched();
+ 			msleep(1);
+         }
+-
+-		target_pid = current->pid;
+-		target_tgid = current->tgid;
+-		target_pid_init_cpu = task_cpu(current);
+-
+-		//chimera_report_status(&chimera_uprobe_list);
+     }
+ 
+     kfree(cur_key);
+@@ -612,6 +618,93 @@ static int __init map_worker_init(void)
+ 
+ late_initcall(map_worker_init);
+ 
++struct send_signal_work {
++	struct work_struct work;
++
++	int cpu;
++	pid_t pid;
++	u64 payload;
++	unsigned long pc;
++};
++
++static void send_signal_workfn(struct work_struct *work)
++{
++
++	struct send_signal_work *sw;
++	struct task_struct *task;
++	struct kernel_siginfo info;
++	int ret;
++	sw = container_of(work, struct send_signal_work, work);
++
++	chimera_info("send_signal_work: target_cpu=%d current_cpu=%d pid=%d payload=0x%llx pc=0x%lx\n",
++		sw->cpu, raw_smp_processor_id(), sw->pid,
++		sw->payload, sw->pc);
++
++	rcu_read_lock();
++	task = find_task_by_vpid(sw->pid);
++	if (task)
++		get_task_struct(task);
++	rcu_read_unlock();
++	if (!task)
++		goto out_free;
++	if (task->flags & PF_EXITING)
++		goto out_put;
++
++	struct my_data *data;
++
++	data = xa_load(&my_xa, task->pid);
++	if(data)
++	{
++		chimera_warn("[send_signal_workfn] xa_load data not empty pid %d\n",task->pid);
++		goto out_put;
++	}
++
++	unsigned long ip = task_pt_regs(task)->epc;
++	traget_migration_direction = true;
++
++	data = kzalloc(sizeof(*data), GFP_ATOMIC);
++	if (!data)
++	{
++		chimera_warn("[send_signal_workfn]  kzalloc !data\n");
++		goto out_put_task;
++	}
++
++	data->value = sw->cpu;
++	ret = xa_insert(&my_xa, task->pid, data, GFP_ATOMIC);
++	if (ret == -EBUSY)
++	{
++		chimera_warn("[send_signal_workfn]  xa_insert EBUSY\n");
++		kfree(data);
++		goto out_put_task;
++	}
++
++	clear_siginfo(&info);
++	info.si_signo = 41;
++	info.si_errno = 0;
++	info.si_code = SI_QUEUE;
++	info.si_value.sival_ptr = (void __user *)(uintptr_t)sw->payload;
++	if(task_pt_regs(task)->epc != sw->pc)
++	{
++		chimera_warn("task_pt_regs(task)->epc 0x%llx != sw->pc 0x%llx\n",
++			task_pt_regs(task)->epc, sw->pc);
++	}
++	ret = send_sig_info(41, &info, task);
++	chimera_info("send_sig_info pid=%d ret=%d cpu=%d\n",
++		sw->pid, ret, raw_smp_processor_id());
++
++out_put_task:
++out_put:
++	put_task_struct(task);
++
++out_free:
++
++kfree(sw);
++
++}
++
++static DECLARE_WORK(send_signal_work,
++		    send_signal_workfn);
++
+ __bpf_kfunc_start_defs();
+ 
+ __bpf_kfunc pid_t
+@@ -642,24 +735,69 @@ bpf_xdp_get_xfrm_state_chimera(pid_t pid, void *p__map, int dst_cpu)
+ 		}
+ 	}
+ 
+-	if(pid == target_pid)
++	struct task_struct *task;
++
++	rcu_read_lock();
++	task = find_task_by_pid_ns(pid, &init_pid_ns);
++	if (task)
++		get_task_struct(task);
++	rcu_read_unlock();
++
++	if (!task) {
++		chimera_warn("!task pid %d \n", pid);
++		return pid;
++	}
++
++	int src_cpu = task_cpu(task);
++
++	if(target_pid != task->tgid)
+ 	{
+-		if(task_cpu(current) > 7 && dst_cpu < 8)
+-		{
+-			traget_migration_direction = true;
+-		}
+-		else if(task_cpu(current) > 7 && dst_cpu > 7)
+-		{
+-			traget_migration_direction = false;
+-		}
++		goto out_put_task;
+ 	}
+ 
+-	struct riscv_cpuinfo *ci = per_cpu_ptr(&riscv_cpuinfo, dst_cpu);
++	if(!(src_cpu > 7 && dst_cpu < 8))
++	{
++		chimera_info("!(task_cpu(task) > 7 && dst_cpu < 8) pid %d: %d -> %d\n", pid, src_cpu, dst_cpu);
++		goto out_put_task;
++	}
+ 
+-	if(ci == NULL )
+-		return pid;
++	chimera_info("[bpf_xdp_get_xfrm_state_chimera] match... current pid %d cpu %d task pid %d cpu %d  dst cpu %d \n"
++		, current->pid, task_cpu(current), task->pid, src_cpu, dst_cpu);
+ 
+-	return (pid_t)ci->mimpid;
++
++	struct my_data *data;
++
++	data = xa_load(&my_xa, task->pid);
++	if(data)
++	{
++		chimera_warn("xa_load data not empty pid %d\n",task->pid);
++		goto out_put_task;
++	}
++
++	struct send_signal_work *sw;
++	sw = kzalloc(sizeof(*sw), GFP_ATOMIC);
++	if (!sw)
++	{
++		chimera_warn("kzalloc(sizeof(*sw), GFP_ATOMIC) failed \n");
++		goto out_put_task;
++	}
++
++	INIT_WORK(&sw->work, send_signal_workfn);
++	sw->cpu = dst_cpu;
++	sw->pid = pid;
++	sw->payload = 0;
++	unsigned long ip = 0;
++	sw->pc = ip;
++	if (!schedule_work_on(dst_cpu, &sw->work)) {
++		kfree(sw);
++		chimera_warn("schedule_work_on EBUSY\n");
++		goto out_put_task;
++	}
++	chimera_info("[bpf_xdp_get_xfrm_state_chimera] sucess pid %d: %d->%d ...\n", pid, src_cpu, dst_cpu);
++
++out_put_task:
++	put_task_struct(task);
++	return 0;
+ }
+ 
+ __bpf_kfunc int bpf_xdp_xfrm_state_release_chimera(int orig_cpu)
+-- 
+2.43.0
+

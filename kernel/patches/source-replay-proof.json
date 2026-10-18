@@ -1,0 +1,117 @@
+{
+  "base": "b1944b2fc1cd68ade89219eb2773fbccc74a66f0",
+  "head": "d0553fbdaf002abf4dfc2b3dae9d293602eb6bac",
+  "patches": [
+    {
+      "commit": "a4cd63af8a83424716fb528eaba4745412bfbff7",
+      "subject": "demo env",
+      "path": "migration/0001-a4cd63af8a83.patch",
+      "sha256": "fd93746c319012e6ab877b37c113a501eb1fea21c59f293805bcc2a9b96d2d2d"
+    },
+    {
+      "commit": "a1add8f91226e54f01b1a904a8a49a3752790bb2",
+      "subject": "llama.cpp:llama-perplexity",
+      "path": "migration/0002-a1add8f91226.patch",
+      "sha256": "6a9eabd45270a70d467387ed8e41887971cf912dcc06615be20ab9c53d9bd148"
+    },
+    {
+      "commit": "584b533fed221025550a4382c3b8c9172b084fd8",
+      "subject": "llama.cpp:llama-perplexity:1024-to-256",
+      "path": "migration/0003-584b533fed22.patch",
+      "sha256": "c76e5fa7f128a13eb902c0142e0bfe53d795ca323f34afcb953f20a7a9663d26"
+    },
+    {
+      "commit": "789b3a2ffe263811749d0030ad4ea482688e1174",
+      "subject": "tmp bidirection manual migration",
+      "path": "migration/0004-789b3a2ffe26.patch",
+      "sha256": "6adcc5a723171f34b6c33219bd7572ef62d877ab9e3a0d4a286d4fa97eb92a57"
+    },
+    {
+      "commit": "2838fbc3c4391bdc2f0ef7b38ecf42528b8f4f4a",
+      "subject": "fixup register",
+      "path": "migration/0005-2838fbc3c439.patch",
+      "sha256": "bb91ed2e13c27b826e178882b806ef78dfa740d70df19e2dbea0ec208a4fd811"
+    },
+    {
+      "commit": "52537a05c3ca7648a538fcd1de8e4e5634b3f5c5",
+      "subject": "sched/chimera: add layered automatic migration with proposal/ACK",
+      "path": "scheduler/0006-52537a05c3ca.patch",
+      "sha256": "af728a99af058d2a9f4708ee8772330d5ea8ee61cec975b3a833e49c18ed48d2"
+    },
+    {
+      "commit": "c3c8a12c0fa5e2a9480540230cb0df01048fd375",
+      "subject": "bpf/chimera: stabilize migration-target registration worker",
+      "path": "scheduler/0007-c3c8a12c0fa5.patch",
+      "sha256": "a33582b543aba20add86c2cae42f8385205a62e60d2910c63e4c711248cc90bf"
+    },
+    {
+      "commit": "4aac04713ecf63c3043e26c6d371e1477e8fdbbb",
+      "subject": "selftests/chimera: exercise layered automatic migration",
+      "path": "scheduler/0008-4aac04713ecf.patch",
+      "sha256": "ec7abc0c16bb48ee737150dcf58ebd97bb0a3e9334f2c66ab350963b75abe27e"
+    },
+    {
+      "commit": "1b44733d41fafe3664c0ccebaa6076898ba64000",
+      "subject": "sched/chimera: bound NACK retries and clean proposal resources",
+      "path": "scheduler/0009-1b44733d41fa.patch",
+      "sha256": "88b4a85e04b6ea5593ad41ecba9df7d1d9364026f73013e86c2c0a60e3538b41"
+    },
+    {
+      "commit": "821fd043ad0a066b22114580a96fae14a52a1490",
+      "subject": "sched/chimera: reject exiting tasks during ledger registration",
+      "path": "scheduler/0010-821fd043ad0a.patch",
+      "sha256": "e1be1b7d79975abd64c59edf543499faff96e7ff832cb5202c7cae4cc0274dea"
+    },
+    {
+      "commit": "9475376190b331cbac27975da289ab0cc9c7b395",
+      "subject": "sched/chimera: keep new child threads in their source VLEN group",
+      "path": "scheduler/0011-9475376190b3.patch",
+      "sha256": "afe0475f0f44d32feb801f952d8c642a07d5e20403c5675712b5d33099f98a7b"
+    },
+    {
+      "commit": "70d7ca263bbd8303dda521c5ace4c4006d7b7a9b",
+      "subject": "sched/chimera: count reservations until ownership is released",
+      "path": "scheduler/0012-70d7ca263bbd.patch",
+      "sha256": "314d0c932ec56df5a18208e7c77fff3c98aa6e60036dd4b64a0e8695eae6e169"
+    },
+    {
+      "commit": "176a88498c734a3d7cd22cfe1f8bdb438a3b9927",
+      "subject": "tools/libbpf: preserve const qualifiers in string searches",
+      "path": "compatibility/0013-176a88498c73.patch",
+      "sha256": "641ddd9a83b748ea476570d298f523d3cca13be599b0ad47f0bee962f9c46036"
+    },
+    {
+      "commit": "b59985145518c994b3953d55717a15ca93459928",
+      "subject": "sched/chimera: revalidate target reservation at stopper commit",
+      "path": "scheduler/0014-b59985145518.patch",
+      "sha256": "e0a08d9bd8e3af85a50b7687e22b7be9e7ffbbb9a2cc3e5004af4012d2fc9cbc"
+    },
+    {
+      "commit": "d0553fbdaf002abf4dfc2b3dae9d293602eb6bac",
+      "subject": "legal: add ISCAS copyright notices",
+      "path": "copyright/0015-d0553fbdaf00.patch",
+      "sha256": "4bd542672f2717ac801cbeadb80e5bf6b8697d2c7a6e6f3a60bcbe68b05feb59"
+    }
+  ],
+  "expected_tree": "a1817d0ca2ffe426c8a5448c5d35f5fee5ed17f5",
+  "applied_tree": "a1817d0ca2ffe426c8a5448c5d35f5fee5ed17f5",
+  "passed": true,
+  "scope": "Patch application only, not rebuild or dynamic acceptance; base is vendor snapshot, not vanilla Linux.",
+  "copyright_files": [
+    "drivers/soc/spacemit/hmp.c",
+    "kernel/sched/core.c",
+    "kernel/bpf/helpers_chimera.c",
+    "include/linux/soc/spacemit/spacemit-hmp.h",
+    "kernel/signal.c",
+    "arch/riscv/kernel/vector.c",
+    "Documentation/scheduler/prefer-a100.rst",
+    "scripts/chimera/build-prefer-a100.sh",
+    "tools/testing/selftests/riscv/prefer_a100/analyze_migration_trace.py",
+    "tools/testing/selftests/riscv/prefer_a100/auto_migration_demo.py",
+    "tools/testing/selftests/riscv/prefer_a100/layered_demo.py",
+    "tools/testing/selftests/riscv/prefer_a100/llama_auto_distribution_demo.py",
+    "tools/testing/selftests/riscv/prefer_a100/run.py",
+    "tools/testing/selftests/riscv/prefer_a100/scalar.c",
+    "tools/testing/selftests/riscv/prefer_a100/sleep_wakeup_smoke.py"
+  ]
+}

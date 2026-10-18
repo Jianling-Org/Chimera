@@ -1,0 +1,48 @@
+From 176a88498c734a3d7cd22cfe1f8bdb438a3b9927 Mon Sep 17 00:00:00 2001
+From: Liang Kaiwen <liangkaiwen24@mails.ucas.ac.cn>
+Date: Fri, 16 Oct 2026 15:34:03 +0800
+Subject: [PATCH] tools/libbpf: preserve const qualifiers in string searches
+
+Use const-qualified pointers for strstr results in host libbpf processing.
+
+Source-Commit: 176a88498c734a3d7cd22cfe1f8bdb438a3b9927
+
+---
+ tools/lib/bpf/libbpf.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/tools/lib/bpf/libbpf.c b/tools/lib/bpf/libbpf.c
+index dd3b2f57082d2def510bfa8eb49017bf4bb651a8..9c98c6adb6d05eae40836a2e13f74654a54d6313 100644
+--- a/tools/lib/bpf/libbpf.c
++++ b/tools/lib/bpf/libbpf.c
+@@ -8245,7 +8245,7 @@ static int kallsyms_cb(unsigned long long sym_addr, char sym_type,
+ 	struct bpf_object *obj = ctx;
+ 	const struct btf_type *t;
+ 	struct extern_desc *ext;
+-	char *res;
++	const char *res;
+ 
+ 	res = strstr(sym_name, ".llvm.");
+ 	if (sym_type == 'd' && res)
+@@ -11574,7 +11574,8 @@ static int avail_kallsyms_cb(unsigned long long sym_addr, char sym_type,
+ 		 *
+ 		 *   [0] fb6a421fb615 ("kallsyms: Match symbols exactly with CONFIG_LTO_CLANG")
+ 		 */
+-		char sym_trim[256], *psym_trim = sym_trim, *sym_sfx;
++		char sym_trim[256], *psym_trim = sym_trim;
++		const char *sym_sfx;
+ 
+ 		if (!(sym_sfx = strstr(sym_name, ".llvm.")))
+ 			return 0;
+@@ -12159,7 +12160,7 @@ static int resolve_full_path(const char *file, char *result, size_t result_sz)
+ 		if (!search_paths[i])
+ 			continue;
+ 		for (s = search_paths[i]; s != NULL; s = strchr(s, ':')) {
+-			char *next_path;
++			const char *next_path;
+ 			int seg_len;
+ 
+ 			if (s[0] == ':')
+-- 
+2.43.0
+
