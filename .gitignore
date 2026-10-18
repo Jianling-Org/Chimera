@@ -1,143 +1,65 @@
-# =============================================================================
-# Chimera - Git Ignore Rules
-# =============================================================================
-#
-# This file excludes generated artifacts, local development environments,
-# machine-specific configurations, and externally supplied resources.
-#
-# Source code, documentation, configuration templates, and reproducible
-# test fixtures should remain under version control.
-#
-# User-specific runtime resources are stored outside the repository
-# (e.g., ~/.chimera).
-#
-# =============================================================================
-
-
-# -----------------------------------------------------------------------------
-# 1. Build and Packaging Artifacts
-# -----------------------------------------------------------------------------
-
+# Build and release output (repository-local; user resources live in ~/.chimera)
 /build/
 /dist/
 *.egg-info/
-.eggs/
-pip-wheel-metadata/
 
-
-# -----------------------------------------------------------------------------
-# 2. Python Bytecode and Caches
-# -----------------------------------------------------------------------------
-
+# Python bytecode, test/type-check caches and coverage output
 __pycache__/
 *.py[cod]
-*$py.class
-
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
-.pytype/
-.hypothesis/
 .tox/
 .nox/
-
-.ipynb_checkpoints/
-
-
-# -----------------------------------------------------------------------------
-# 3. Test Coverage and Profiling Artifacts
-# -----------------------------------------------------------------------------
-
 .coverage
 .coverage.*
-coverage.xml
-htmlcov/
+/htmlcov/
 
-
-# -----------------------------------------------------------------------------
-# 4. Python Virtual Environments
-# -----------------------------------------------------------------------------
-
+# Local virtual environments
 /.venv/
 /venv/
-/env/
-/ENV/
 
-
-# -----------------------------------------------------------------------------
-# 5. Environment Variables and Local Secrets
-# -----------------------------------------------------------------------------
-
-.env
-.env.*
-
-# Allow version-controlled environment templates.
-!.env.example
-!.env.sample
-!.env.template
-
-
-# -----------------------------------------------------------------------------
-# 6. Native Compilation Artifacts
-# -----------------------------------------------------------------------------
-
-# Object files
-*.o
-*.obj
-
-# Static libraries
-*.a
-*.lib
-
-# Shared libraries and Python extensions
+# Native build output (subdirectory rules may opt in tracked fixtures)
 *.so
 *.so.*
-*.dylib
+*.o
+*.a
+*.obj
 *.dll
-*.pyd
-
-# Executables and debug symbols
+*.dylib
 *.exe
-*.pdb
-*.ilk
-*.dSYM/
 
+# Generated diagnostics; do not ignore arbitrary JSON, TXT or HTML files
+*.log
+*.check.json
+*.dis
 
-# -----------------------------------------------------------------------------
-# 7. External Dependencies and Local Data
-# -----------------------------------------------------------------------------
-
-# External resources are supplied separately and are not part of the
-# source distribution.
-
-/third_party/
-
-# -----------------------------------------------------------------------------
-# 8. Editors and IDEs
-# -----------------------------------------------------------------------------
-
+# Local editor/agent state and scratch checkout
 /.vscode/
 /.idea/
-
-
-# -----------------------------------------------------------------------------
-# 9. Local AI Development Tools
-# -----------------------------------------------------------------------------
-
-/.agents/
-/.codex/
 /.devshim/
 /.qoder/
 /.workbuddy/
 /.zcode/
-/.superpowers/
-
-superpowers/
-
-
-# -----------------------------------------------------------------------------
-# 10. Local Development Notes and Scratch Directories
-# -----------------------------------------------------------------------------
-
-/AGENTS.md
 /CONTEXT.md
+/llamacpp-source/
+/.superpowers/
+superpowers/
+gcc-k3-2026/
+project-context/
+
+# Machine-local filesystem metadata
+.DS_Store
+Thumbs.db
+
+# External runtime inputs and local acceptance evidence
+/examples/applications/llama-cpp/model/*.gguf
+/runtime/bpf/trigger/vmlinux.h
+/workspaces/
+/reports/
+/tmp/
+
+# Generated legacy export and local agent state
+/release/
+/.codex/
+/.agents/

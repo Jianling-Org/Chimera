@@ -33,6 +33,7 @@ CHIMERA_BUILD_TESTS = "OFF"
 
 [tool.scikit-build.wheel.packages]
 "chimera" = "cli/chimera"
+"chimera/preprocess/translator" = "preprocessing/translator"
 "chimera/preprocess/offline/analysis" = "preprocessing/offline/analysis"
 "chimera/preprocess/offline/config" = "preprocessing/offline/config"
 "chimera/preprocess/offline/analysis_profile" = "preprocessing/offline/analysis_profile"

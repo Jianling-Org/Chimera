@@ -1,0 +1,11 @@
+# Preserve byte identities of frozen inputs, config and exported patch series.
+/examples/applications/llama-cpp/prompt/file.txt -text
+/examples/applications/llama-cpp/reference-v32/gate.decision.json -text
+/kernel/configs/k3/frozen.config -text
+/kernel/patches/**/*.patch -text -whitespace
+
+# The reference diagnostic wrapper is executed directly on Linux.
+/examples/applications/llama-cpp/reference-v32/cmake-runtime-debug text eol=lf
+
+# Verbatim upstream license texts retain their original whitespace.
+/LICENSES/*.txt -whitespace

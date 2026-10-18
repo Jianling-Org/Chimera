@@ -1,0 +1,9 @@
+[submodule "examples/applications/llama-cpp/llama.cpp"]
+	path = examples/applications/llama-cpp/llama.cpp
+	url = https://github.com/ggml-org/llama.cpp.git
+[submodule "third_party/llvm"]
+	path = third_party/llvm
+	url = https://github.com/llvm/llvm-project.git
+[submodule "third_party/SVF"]
+	path = third_party/SVF
+	url = https://github.com/SVF-tools/SVF.git

@@ -1,0 +1,90 @@
+{
+  "userspace_source": "63af9761e897044bec705f4a26bc68d38389b212",
+  "kernel_source": "b59985145518c994b3953d55717a15ca93459928",
+  "kernel_base": "b1944b2fc1cd68ade89219eb2773fbccc74a66f0",
+  "kernel_tree": "a1817d0ca2ffe426c8a5448c5d35f5fee5ed17f5",
+  "publication_parent": "92bd6148d35f7a3a3807bcc4143cdba6e39effdf",
+  "source_only_tree_before_documentation_cleanup": "dda7da571f6b82b6661de238b5efee3918e3d7ab",
+  "userspace_function_commits": [
+    {
+      "original": "ac1fdda8f2eb50d3f2108cfa1ca35095f8baed58",
+      "prepared": "0fb2eb6cd34da6fca29c8d3eb0db7ae5345c7a5b",
+      "subject": "runtime/chimera: prepare automatic proposals from live signal frames",
+      "tree": "42892a4833be0a8c0e168038f35db762552163e5"
+    },
+    {
+      "original": "3f1787f61110e25b6ecb7639c4ef889383bd4b9a",
+      "prepared": "2e027677f44c8ce96d0a1332192cb950dd33d5bc",
+      "subject": "runtime/chimera: serialize proposal and safepoint signal handlers",
+      "tree": "3c75772653515e4021695d6772fb79cdcf0c3547"
+    },
+    {
+      "original": "fad5bd2a737f9d007b2c2ffa5104d0285a5e0e14",
+      "prepared": "d9c838f1cccaec7cb227b5650e83eaff862f9eb4",
+      "subject": "bpf/chimera: preserve scheduler migration trace diagnostics",
+      "tree": "3732464faff2c71390e110b9014f66b1a87801a1"
+    },
+    {
+      "original": "87cf251a864ca74f44c80265e9998d21ed5d08ab",
+      "prepared": "da6ca1f6c22755915ffedeaa01ccb4a2453fc5ad",
+      "subject": "translator/chimera: retain bidirectional binding and PLT guards",
+      "tree": "3959289e0c9b6421b14d923f5d0519bdb5c05332"
+    },
+    {
+      "original": "16928878fafca5d3063ff5fe3eec1aa48df5bfe3",
+      "prepared": "49976b77f618d52ed65ab62ca52a550a2b2fd8b8",
+      "subject": "test/runtime: build and load both translator contracts globally",
+      "tree": "534e7b880294c54386b9514e0e23edf0d2bc2eca"
+    },
+    {
+      "original": "570d7abb1ab282ca166875e69e75b31ec4a799bb",
+      "prepared": "e76ddd61c8c2b75c9b9a76768547c94a05604e73",
+      "subject": "preprocess/chimera: release safety graphs before translation",
+      "tree": "d26441039eb4b20b7c76d7140754ffe861fe41a2"
+    },
+    {
+      "original": "72fdfc2d7d6e6018466c1b51700f8ca5addf2265",
+      "prepared": "e391cb14377465e98124d6bb94b5c10b2d62d7d3",
+      "subject": "test/workspace: distinguish target and packaged dependency delivery",
+      "tree": "f17e8ae02a5cd0898d4f346547d80fc03f60e346"
+    },
+    {
+      "original": "25a82360e1191cd9857f8c5d0cf1265a94eccc54",
+      "prepared": "8e9e33da2b3ffdae539d20a79577f4f8384a5c00",
+      "subject": "examples: pin reference v32 ELF gate and paired migration baseline",
+      "tree": "98b05e5e576d1710e47b0b8c4633555e3e9a034c"
+    },
+    {
+      "original": "25206e13135e0592fc51030e62a5f4401c757466",
+      "prepared": "967e7396b1249a967a1732753663a1bc3cf6fb59",
+      "subject": "runtime: reject migration entry without module safety metadata",
+      "tree": "7d82a3bfdc7890cc2a3ed1c537b31741e73e2739"
+    },
+    {
+      "original": "f01215faeeed8063960814cc9261cb154e210c80",
+      "prepared": "b587cbe858c4689d1a62561aa7098c7570e7e1c5",
+      "subject": "runtime: preserve registers when dispatching no-link translated jumps",
+      "tree": "9b699eed623ea66d84fd9579260f7c2b90e0253a"
+    },
+    {
+      "original": "63af9761e897044bec705f4a26bc68d38389b212",
+      "prepared": "699993bbb3f743d8711e039b9174bd4f7fb14d65",
+      "subject": "runtime: reject proposal migration with a nonzero vector restart index",
+      "tree": "dda7da571f6b82b6661de238b5efee3918e3d7ab"
+    }
+  ],
+  "external_inputs_excluded": [
+    "examples/applications/llama-cpp/model/tinyllama-1.1b-chat-v1.0.Q3_K_S.gguf",
+    "examples/applications/llama-cpp/scalar/ld-linux-riscv64-lp64d.so.1",
+    "examples/applications/llama-cpp/scalar/libc.so.6",
+    "examples/applications/llama-cpp/scalar/libgcc_s.so.1",
+    "examples/applications/llama-cpp/scalar/libgomp.so.1",
+    "examples/applications/llama-cpp/scalar/libm.so.6",
+    "examples/applications/llama-cpp/scalar/libstdc++.so.6"
+  ],
+  "llvm_gitlink": "3623fe661ae35c6c80ac221f14d85be76aa870f1",
+  "svf_gitlink": "5c45081f75d16afffc5fc9121e1f2f7a614e0bef",
+  "llama_cpp_gitlink": "4fc4ec5541b243957ae5099edb67372f8f3b550e",
+  "kernel_release_commit": "d0553fbdaf002abf4dfc2b3dae9d293602eb6bac",
+  "kernel_acceptance_tree": "9ee696466a8210dea73bea7451118e43dec7c31c"
+}
