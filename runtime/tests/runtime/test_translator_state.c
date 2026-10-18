@@ -38,7 +38,7 @@ static void assert_state_layout(
     const uint8_t *vector_bytes
 ) {
     assert(!memcmp(state, vector_bytes, 32U * 128U));
-    assert(load_u64(state, 0x1000) == UINT64_C(11));
+    assert(load_u64(state, 0x1000) == UINT64_C(0));
     assert(load_u64(state, 0x1018) == UINT64_C(12));
     assert(load_u64(state, 0x1020) == UINT64_C(13));
     assert(load_u64(state, 0x1028) == UINT64_C(14));
@@ -58,7 +58,7 @@ static void test_grouped_signal_frame(
         ? get_simulated_cpu_state_addr_riscv64_rvv_256_riscv64_rvv_1024()
         : get_simulated_cpu_state_addr_riscv64_rvv_1024_riscv64_rvv_256();
     struct chimera_portable_vector_context context = {
-        UINT64_C(0x1234), vlenb, 11, 12, 13, 14, signal_frame,
+        UINT64_C(0x1234), vlenb, 0, 12, 13, 14, signal_frame,
     };
     size_t reg, byte;
 
@@ -78,10 +78,10 @@ static void test_grouped_signal_frame(
     memset(state, 0xa5, CHIMERA_SIMULATED_CPU_STATE_SIZE);
     memset(other, 0x5a, CHIMERA_SIMULATED_CPU_STATE_SIZE);
     memcpy(other_before, other, sizeof(other_before));
-    chimera_scene_save_vector_state(direction, &context);
+    assert(chimera_scene_save_vector_state(direction, &context));
     assert(!memcmp(state, expected, sizeof(expected)));
     assert(!memcmp(other, other_before, sizeof(other_before)));
-    assert(load_u64(state, 0x1000) == 11);
+    assert(load_u64(state, 0x1000) == 0);
     assert(load_u64(state, 0x1018) == 12);
     assert(load_u64(state, 0x1020) == 13);
     assert(load_u64(state, 0x1028) == 14);
@@ -91,6 +91,7 @@ static void test_grouped_signal_frame(
      * authoritative in the legacy signal, not the context's destination
      * width or vl.  Deliberately make those fields disagree. */
     context.vlenb = vlenb == 128 ? 32 : 128;
+    context.vstart = 11; /* Legacy packed ABI retains its restart index. */
     context.vl = 17;
     memset(state, 0xa5, CHIMERA_SIMULATED_CPU_STATE_SIZE);
     assert(chimera_scene_save_vector_state_packed(direction, &context,
@@ -102,6 +103,38 @@ static void test_grouped_signal_frame(
     assert(load_u64(state, 0x1020) == 99);
     assert(load_u64(state, 0x1028) == 14);
     assert(load_u64(state, 0x1030) == vlenb);
+}
+
+static void test_rejected_proposal_restart_keeps_context_and_states(void) {
+    uint8_t signal_frame[4096];
+    uint8_t frame_before[4096];
+    uint8_t before_forward[CHIMERA_SIMULATED_CPU_STATE_SIZE];
+    uint8_t before_reverse[CHIMERA_SIMULATED_CPU_STATE_SIZE];
+    uint8_t *forward = get_simulated_cpu_state_addr_riscv64_rvv_1024_riscv64_rvv_256();
+    uint8_t *reverse = get_simulated_cpu_state_addr_riscv64_rvv_256_riscv64_rvv_1024();
+    const uint64_t widths[] = {32, 64, 128};
+    const uint64_t restarts[] = {1, 11, 63};
+    size_t i, j;
+    memset(signal_frame, 0x3c, sizeof(signal_frame));
+    memcpy(frame_before, signal_frame, sizeof(frame_before));
+    memset(forward, 0x5a, sizeof(before_forward));
+    memset(reverse, 0xa5, sizeof(before_reverse));
+    memcpy(before_forward, forward, sizeof(before_forward));
+    memcpy(before_reverse, reverse, sizeof(before_reverse));
+    for (i = 0; i < sizeof(widths) / sizeof(widths[0]); ++i) {
+        for (j = 0; j < sizeof(restarts) / sizeof(restarts[0]); ++j) {
+            struct chimera_portable_vector_context context = {
+                0x1234, widths[i], restarts[j], 12, 64, 14, signal_frame,
+            };
+            struct chimera_portable_vector_context before = context;
+            assert(!chimera_scene_save_vector_state(CHIMERA_DIR_1024_TO_256, &context));
+            assert(!chimera_scene_save_vector_state(CHIMERA_DIR_256_TO_1024, &context));
+            assert(!memcmp(&context, &before, sizeof(context)));
+            assert(!memcmp(signal_frame, frame_before, sizeof(signal_frame)));
+            assert(!memcmp(forward, before_forward, sizeof(before_forward)));
+            assert(!memcmp(reverse, before_reverse, sizeof(before_reverse)));
+        }
+    }
 }
 
 static void test_rejected_packed_save_keeps_both_states(void) {
@@ -139,7 +172,7 @@ int main(void) {
     static uint8_t before_forward[CHIMERA_SIMULATED_CPU_STATE_SIZE];
     static uint8_t before_reverse[CHIMERA_SIMULATED_CPU_STATE_SIZE];
     struct chimera_portable_vector_context context = {
-        UINT64_C(0x1234), UINT64_C(128), UINT64_C(11), UINT64_C(12),
+        UINT64_C(0x1234), UINT64_C(128), UINT64_C(0), UINT64_C(12),
         UINT64_C(13), UINT64_C(14), vector_bytes,
     };
     pthread_t thread;
@@ -189,6 +222,7 @@ int main(void) {
     test_grouped_signal_frame(32, CHIMERA_DIR_256_TO_1024);
     test_grouped_signal_frame(64, CHIMERA_DIR_1024_TO_256);
     test_rejected_packed_save_keeps_both_states();
+    test_rejected_proposal_restart_keeps_context_and_states();
 
     {
         uint64_t pc = UINT64_C(0);

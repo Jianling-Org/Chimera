@@ -6,7 +6,8 @@ import os
 from pathlib import Path
 
 from chimera.preprocess.offline.analysis.safety.external_leaf import (
-    CONTRACT_CAPABILITY, CONTRACT_FORMAT, file_sha256,
+    CONTRACT_CAPABILITY, CONTRACT_FORMAT, CONTRACT_FORMAT_V2,
+    MEMCPY_NO_CALLBACK_BASIS, file_sha256,
 )
 from chimera.preprocess.offline.analysis.safety.external_leaf_binding import (
     dynamic_definitions, plt_import,
@@ -52,15 +53,22 @@ def validate_leaf_launch(root, manifest, resolved, *, environment=None,
     if not path.is_relative_to(Path(root).resolve()) or file_sha256(path) != artifact.sha256:
         raise ValueError("scalar leaf artifact identity differs from the Manifest")
     document = json.loads(path.read_text(encoding="utf-8"))
-    if (document.get("format") != CONTRACT_FORMAT or document.get("elf_sha256") != main.sha256
-            or not document.get("proofs") or document.get("rejections")):
+    format_name = document.get("format")
+    proofs = document.get("proofs", [])
+    interfaces = document.get("no_callback_interfaces", []) if format_name == CONTRACT_FORMAT_V2 else []
+    if (format_name not in {CONTRACT_FORMAT, CONTRACT_FORMAT_V2}
+            or document.get("elf_sha256") != main.sha256
+            or not isinstance(proofs, list)
+            or not isinstance(interfaces, list)
+            or not (proofs or interfaces)
+            or document.get("rejections")):
         raise ValueError("incomplete or mismatched scalar leaf evidence")
     for name, module in modules.items():
         if name not in resolved:
             raise ValueError("scalar leaf binding has an unresolved module: " + name)
         if file_sha256(resolved[name]) != module.sha256:
             raise ValueError("scalar leaf module identity changed: " + name)
-    names = {proof["symbol"] for proof in document["proofs"]}
+    names = {proof["symbol"] for proof in proofs} | {item["symbol"] for item in interfaces}
     files = {Path(path).resolve() for path in resolved.values()}
     # These DSOs are loaded by the injected Runtime too. Checking just the
     # native provider would miss symbol preemption by a translated body.
@@ -73,7 +81,7 @@ def validate_leaf_launch(root, manifest, resolved, *, environment=None,
     exports = {path: dynamic_definitions(path, names) for path in files}
     with Path(resolved[main.module_id]).open("rb") as stream:
         elf = ELFFile(stream)
-        for proof in document["proofs"]:
+        for proof in proofs:
             symbol, provider_id = proof["symbol"], proof["provider_module"]
             provider = modules.get(provider_id)
             if (provider is None or provider.runtime_name != proof["library"]
@@ -92,4 +100,46 @@ def validate_leaf_launch(root, manifest, resolved, *, environment=None,
             if (imported["symbol"] != symbol or imported["got"] != proof["got"]
                     or imported["version"] not in (None, proof["version"])):
                 raise ValueError("scalar leaf import differs from its proof")
+        if interfaces:
+            libc_modules = [module for module in modules.values()
+                            if module.runtime_name == "libc.so.6"]
+            if len(libc_modules) != 1:
+                raise ValueError("selected runtime has no unique libc.so.6 module")
+            for interface in interfaces:
+                symbol = interface.get("symbol")
+                provider_id = interface.get("provider_module")
+                provider = modules.get(provider_id)
+                if (symbol != "memcpy"
+                        or interface.get("semantic_basis") != MEMCPY_NO_CALLBACK_BASIS
+                        or interface.get("status") != "bound-standard-interface-no-application-callback"
+                        or provider is None or provider is not libc_modules[0]
+                        or provider.runtime_name != "libc.so.6"
+                        or interface.get("provider_library") != provider.runtime_name
+                        or provider.sha256 != interface.get("provider_sha256")):
+                    raise ValueError("memcpy interface provider identity is not bound to libc.so.6")
+                imported = plt_import(elf, interface["target"])
+                if (imported["symbol"] != "memcpy"
+                        or imported["got"] != interface.get("got")
+                        or imported["version"] != interface.get("imported_version")):
+                    raise ValueError("memcpy PLT relocation or version differs from its interface binding")
+                implementations = [
+                    (candidate_path, definition)
+                    for candidate_path in files
+                    for definition in exports[candidate_path]["memcpy"]
+                    if not definition["hidden_version"]
+                ]
+                if len(implementations) != 1:
+                    raise ValueError("memcpy symbol is missing or interposed")
+                candidate_path, definition = implementations[0]
+                if (candidate_path != Path(resolved[provider_id]).resolve()
+                        or definition["type"] not in {"STT_FUNC", "STT_LOOS", "STT_GNU_IFUNC"}
+                        or definition["type"] != interface.get("provider_type")
+                        or definition["binding"] not in {"STB_GLOBAL", "STB_WEAK"}
+                        or not isinstance(definition["section"], int)
+                        or definition["value"] != interface.get("provider_address")
+                        or definition["size"] != interface.get("provider_size")
+                        or definition["version"] != interface.get("provider_version")
+                        or (interface.get("imported_version") is not None
+                            and definition["version"] != interface.get("imported_version"))):
+                    raise ValueError("memcpy provider definition differs from its bound interface")
     return True

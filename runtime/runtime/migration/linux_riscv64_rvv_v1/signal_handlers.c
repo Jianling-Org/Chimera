@@ -2,6 +2,7 @@
 
 #include "signal_handlers.h"
 
+#include <fcntl.h>
 #include <signal.h>
 #include <stdint.h>
 #ifndef CHIMERA_PORTABLE_SIGNAL_TEST
@@ -27,11 +28,41 @@
 #define SIGNAL_EXIT_TRANSLATION SIGTRAP
 #endif
 #define SIGNAL_ENTER_TRANSLATION 41
+#define CHIMERA_PROPOSAL_MARKER UINT32_C(0x80000000)
+#define CHIMERA_ACK_NACK UINT32_C(0)
+#define CHIMERA_ACK_COMMIT UINT32_C(1)
+#define CHIMERA_ACK_NACK_TRANSLATED UINT32_C(2)
+#define CHIMERA_ACK_NACK_MISSING_ROUTE UINT32_C(3)
+#define CHIMERA_ACK_NACK_PREPARE UINT32_C(4)
+#define CHIMERA_ACK_NACK_SAFEPOINT UINT32_C(5)
+#define CHIMERA_ACK_STATE_ORIGINAL UINT32_C(6)
+#define CHIMERA_ACK_CAPABILITY_CHANGED UINT32_C(7)
 
 /* A partial sigaction installation must never enable scene migration.  The
  * wrappers become live only after the Linux UAPI has installed every binding.
  */
 static volatile sig_atomic_t signal_handlers_ready;
+#ifndef CHIMERA_PORTABLE_SIGNAL_TEST
+static int proposal_ack_fd = -1;
+
+struct chimera_proposal_ack {
+    uint32_t generation;
+    uint32_t action;
+};
+
+static int proposal_ack(uint32_t generation, uint32_t action) {
+    const struct chimera_proposal_ack ack = {generation, action};
+    long written;
+    if (proposal_ack_fd < 0) return 0;
+    written = syscall(SYS_write, proposal_ack_fd, &ack, sizeof(ack));
+    return written == (long)sizeof(ack);
+}
+#else
+extern int chimera_test_proposal_ack(uint32_t generation, uint32_t action);
+static int proposal_ack(uint32_t generation, uint32_t action) {
+    return chimera_test_proposal_ack(generation, action);
+}
+#endif
 
 void chimera_scene_disable_signal_handlers(void) {
     signal_handlers_ready = 0;
@@ -179,11 +210,43 @@ void chimera_linux_handle_exit_translation(void *raw_context) {
     uint64_t next_pc;
     int rewrite;
     if (!chimera_scene_context_pc(raw_context, &current_pc)) return;
+    chimera_code_body body;
+    const struct chimera_no_link_entry *site = chimera_registry_find_no_link(
+        chimera_scene_registry(), current_pc, &body);
+    if (site) {
+        uint64_t frame;
+        if (!chimera_scene_context_gpr(raw_context, 2U, &frame)
+            || (frame & 15U) || frame > UINT64_MAX - site->frame_bytes)
+            stop_unmapped_exit_trap(current_pc);
+        uint64_t target = *(const uint64_t *)(uintptr_t)(frame + site->target_slot);
+        next_pc = query_original_translated_map((int)body, target);
+        if (!next_pc || (next_pc & UINT64_C(1))
+            || next_pc != target || next_pc == current_pc)
+            stop_unmapped_exit_trap(current_pc);
+        if (!chimera_scene_set_context_sp(raw_context, frame + site->frame_bytes)
+            || !chimera_scene_set_context_pc(raw_context, next_pc))
+            stop_unmapped_exit_trap(current_pc);
+        /* This is an exact no-link branch, not a migration or an exit from
+         * translated execution. Preserve the complete signal register bank
+         * and vector record; pop only the known query frame and change PC.
+         * Never acknowledge ORIGINAL. */
+#ifdef CHIMERA_DEBUG
+        const struct chimera_debug_field fields[] = {
+            CHIMERA_DEBUG_HEX("current_pc", current_pc),
+            CHIMERA_DEBUG_HEX("next_pc", next_pc),
+            CHIMERA_DEBUG_U64("frame_bytes", site->frame_bytes),
+            CHIMERA_DEBUG_TEXT("action", "no-link-redirect"),
+        };
+        CHIMERA_DEBUG_EVENT("runtime.control-flow.redirect", fields, 4U);
+#endif
+        return;
+    }
     next_pc = query_original_translated_map(CHIMERA_CODE_ORIGINAL, current_pc);
     rewrite = next_pc != UINT64_C(0) && next_pc != current_pc;
     debug_exit_decision(SIGNAL_EXIT_TRANSLATION, current_pc, rewrite, next_pc);
     if (next_pc == UINT64_C(0)) stop_unmapped_exit_trap(current_pc);
-    if (rewrite) (void)chimera_scene_set_context_pc(raw_context, next_pc);
+    if (rewrite && chimera_scene_set_context_pc(raw_context, next_pc))
+        (void)proposal_ack(0, CHIMERA_ACK_STATE_ORIGINAL);
 }
 
 void chimera_linux_handle_enter_translation(
@@ -192,40 +255,72 @@ void chimera_linux_handle_enter_translation(
     CHIMERA_SIGNAL_LOG("chimera: enter-translation handler invoked\n");
     const struct chimera_registry *registry;
     struct chimera_migration_decision decision;
+    enum chimera_migration_decision_status decision_status;
     uint32_t packed;
+    uint32_t generation;
+    uint64_t payload;
+    int proposal;
     uint64_t current_pc;
     uint64_t source_vlen_bits;
     uint64_t next_pc;
     if (!info) return;
     if (!chimera_scene_context_pc(raw_context, &current_pc)) return;
-    packed = (uint32_t)(uintptr_t)info->si_ptr;
-    if (!chimera_scene_vlen_bits_from_packed(packed, &source_vlen_bits)) {
+    payload = (uint64_t)(uintptr_t)info->si_ptr;
+    packed = (uint32_t)payload;
+    proposal = (packed & CHIMERA_PROPOSAL_MARKER) != 0;
+    generation = (uint32_t)(payload >> 32);
+    packed &= ~CHIMERA_PROPOSAL_MARKER;
+    /* A proposal is delivered before CPU commit: its signal frame holds
+     * the actual interrupted state. The queued payload can be stale. */
+    if (!(proposal
+            ? chimera_scene_context_vlen_bits(raw_context, &source_vlen_bits)
+            : chimera_scene_vlen_bits_from_packed(packed, &source_vlen_bits))) {
+        if (proposal) (void)proposal_ack(generation, CHIMERA_ACK_NACK_PREPARE);
         debug_enter_decision(
             SIGNAL_ENTER_TRANSLATION, current_pc, 0, UINT64_C(0), 0, UINT64_C(0));
         return;
     }
     registry = chimera_scene_registry();
-    if (!chimera_decide_migration(
-            registry, current_pc, source_vlen_bits, &decision)) {
+    decision_status = chimera_decide_migration_status(
+        registry, current_pc, source_vlen_bits, &decision);
+    if (decision_status != CHIMERA_MIGRATION_READY) {
+        uint32_t action = CHIMERA_ACK_NACK_PREPARE;
+        if (decision_status == CHIMERA_MIGRATION_TRANSLATED)
+            action = CHIMERA_ACK_NACK_TRANSLATED;
+        else if (decision_status == CHIMERA_MIGRATION_MISSING_ROUTE)
+            action = CHIMERA_ACK_NACK_MISSING_ROUTE;
+        else if (decision_status == CHIMERA_MIGRATION_NOT_MIGRATABLE)
+            action = CHIMERA_ACK_NACK_SAFEPOINT;
+        if (proposal) (void)proposal_ack(generation, action);
         debug_enter_decision(
             SIGNAL_ENTER_TRANSLATION, current_pc, 1, source_vlen_bits, 0, UINT64_C(0));
         return;
     }
     next_pc = query_original_translated_map(decision.target_type, current_pc);
-    if (next_pc == current_pc) {
+    if (next_pc == UINT64_C(0) || next_pc == current_pc) {
+        if (proposal) (void)proposal_ack(generation, CHIMERA_ACK_NACK_SAFEPOINT);
         debug_enter_decision(
             SIGNAL_ENTER_TRANSLATION, current_pc, 1, source_vlen_bits, 0, next_pc);
         return;
     }
-    if (!chimera_scene_save_vector_state_packed(
-            decision.direction, raw_context, packed)) {
+    if (!(proposal
+            ? chimera_scene_save_vector_state(decision.direction, raw_context)
+            : chimera_scene_save_vector_state_packed(
+                decision.direction, raw_context, packed))) {
         debug_enter_decision(
             SIGNAL_ENTER_TRANSLATION, current_pc, 1, source_vlen_bits, 0, next_pc);
+        if (proposal)
+            (void)proposal_ack(generation, CHIMERA_ACK_NACK_PREPARE);
         return;
     }
     debug_enter_decision(
         SIGNAL_ENTER_TRANSLATION, current_pc, 1, source_vlen_bits, 1, next_pc);
-    (void)chimera_scene_set_context_pc(raw_context, next_pc);
+    if (!proposal) {
+        (void)chimera_scene_set_context_pc(raw_context, next_pc);
+        return;
+    }
+    if (proposal_ack(generation, CHIMERA_ACK_COMMIT))
+        (void)chimera_scene_commit_migration_context(raw_context, next_pc);
 }
 
 static void exit_translation(int number, siginfo_t *info, void *raw_context) {
@@ -250,10 +345,19 @@ int chimera_scene_initialize_signal_handlers(void) {
      * an earlier installation was live, a later partial failure must not
      * leave migration enabled while dispositions are being rolled back. */
     chimera_scene_disable_signal_handlers();
+#ifndef CHIMERA_PORTABLE_SIGNAL_TEST
+    if (proposal_ack_fd < 0) {
+        proposal_ack_fd = open("/proc/prefer_a100_ack", O_WRONLY | O_CLOEXEC);
+        if (proposal_ack_fd < 0) return 0;
+    }
+#endif
     if (!chimera_linux_install_signal_bindings(
             bindings, sizeof(bindings) / sizeof(bindings[0]))) {
         return 0;
     }
     signal_handlers_ready = 1;
+#ifndef CHIMERA_PORTABLE_SIGNAL_TEST
+    (void)proposal_ack(0, CHIMERA_ACK_CAPABILITY_CHANGED);
+#endif
     return 1;
 }

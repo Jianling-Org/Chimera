@@ -22,6 +22,7 @@ enum event {
     EVENT_QUERY,
     EVENT_SAVE,
     EVENT_WRITE_PC,
+    EVENT_ACK,
 };
 
 static enum event events[16];
@@ -31,11 +32,18 @@ static struct chimera_migration_decision next_decision;
 static uint64_t current_pc;
 static uint32_t current_packed;
 static uint32_t saved_packed;
+static int saved_from_frame;
 static uint64_t query_result;
 static uint64_t written_pc;
-static int decision_result;
-static int query_target;
+static enum chimera_migration_decision_status decision_status;
 static int save_result;
+static int query_target;
+static uint32_t ack_generation;
+static uint32_t ack_action;
+static int ack_result;
+static int no_link_enabled;
+static uint64_t scalar_registers[32];
+static struct chimera_no_link_entry no_link_site;
 
 #ifdef CHIMERA_PORTABLE_SIGNAL_TEST
 struct fake_signal_slot {
@@ -85,23 +93,56 @@ static void record(enum event event) {
 }
 
 static void reset(void) {
+    no_link_enabled = 0;
     event_count = 0;
     current_pc = UINT64_C(0x1010);
     /* vlenb=128（VLEN=1024）、vl=4 的打包值：低 14 位 vlenb，bit 14~30 vl */
     current_packed = UINT32_C(128) | (UINT32_C(4) << 14);
     saved_packed = 0;
+    saved_from_frame = 0;
     query_result = UINT64_C(0x5010);
     written_pc = UINT64_MAX;
-    decision_result = 1;
-    query_target = -1;
+    decision_status = CHIMERA_MIGRATION_READY;
     save_result = 1;
+    query_target = -1;
+    ack_generation = UINT32_MAX;
+    ack_action = UINT32_MAX;
+    ack_result = 1;
     next_decision.direction = CHIMERA_DIR_1024_TO_256;
     next_decision.target_type = CHIMERA_CODE_TRANSLATED_1024_TO_256;
+}
+
+int chimera_test_proposal_ack(uint32_t generation, uint32_t action) {
+    record(EVENT_ACK);
+    ack_generation = generation;
+    ack_action = action;
+    return ack_result;
 }
 
 const struct chimera_registry *chimera_scene_registry(void) {
     record(EVENT_REGISTRY);
     return &registry;
+}
+
+const struct chimera_no_link_entry *chimera_registry_find_no_link(
+    const struct chimera_registry *candidate, uint64_t pc, chimera_code_body *body) {
+    assert(candidate == &registry);
+    if (!no_link_enabled || pc != no_link_site.trap_pc) return NULL;
+    *body = next_decision.target_type;
+    return &no_link_site;
+}
+
+int chimera_scene_context_gpr(const void *context, uint64_t number, uint64_t *value) {
+    (void)context;
+    if (number > 31U) return 0;
+    *value = number ? scalar_registers[number] : 0;
+    return 1;
+}
+
+int chimera_scene_set_context_sp(void *context, uint64_t sp) {
+    (void)context;
+    scalar_registers[2] = sp;
+    return 1;
 }
 
 int chimera_scene_context_pc(const void *raw_context, uint64_t *pc) {
@@ -118,6 +159,13 @@ int chimera_scene_vlen_bits_from_packed(uint32_t packed, uint64_t *vlen_bits) {
     return 1;
 }
 
+int chimera_scene_context_vlen_bits(const void *context, uint64_t *bits) {
+    (void)context;
+    record(EVENT_READ_VLEN);
+    *bits = UINT64_C(1024);
+    return 1;
+}
+
 int chimera_scene_set_context_pc(void *raw_context, uint64_t pc) {
     (void)raw_context;
     record(EVENT_WRITE_PC);
@@ -125,7 +173,11 @@ int chimera_scene_set_context_pc(void *raw_context, uint64_t pc) {
     return 1;
 }
 
-int chimera_decide_migration(
+int chimera_scene_commit_migration_context(void *raw_context, uint64_t pc) {
+    return chimera_scene_set_context_pc(raw_context, pc);
+}
+
+enum chimera_migration_decision_status chimera_decide_migration_status(
     const struct chimera_registry *candidate,
     uint64_t pc,
     uint64_t source_vlen_bits,
@@ -134,16 +186,16 @@ int chimera_decide_migration(
     record(EVENT_DECIDE);
     assert(candidate == &registry);
     assert(pc == current_pc);
-    assert(source_vlen_bits == (uint64_t)(current_packed & UINT32_C(0x3fff)) * 8);
-    if (!decision_result) return 0;
+    assert(source_vlen_bits == UINT64_C(1024));
+    if (decision_status != CHIMERA_MIGRATION_READY) return decision_status;
     *out = next_decision;
-    return 1;
+    return CHIMERA_MIGRATION_READY;
 }
 
 uint64_t query_original_translated_map(int target_type, uint64_t addr_in) {
     record(EVENT_QUERY);
     query_target = target_type;
-    assert(addr_in == current_pc);
+    assert(addr_in == (no_link_enabled ? query_result : current_pc));
     return query_result;
 }
 
@@ -160,10 +212,26 @@ int chimera_scene_save_vector_state_packed(
     return save_result;
 }
 
+int chimera_scene_save_vector_state(enum chimera_direction direction, void *context) {
+    (void)context;
+    record(EVENT_SAVE);
+    assert(direction == next_decision.direction);
+    saved_from_frame = 1;
+    return save_result;
+}
+
 static siginfo_t signal_info(void) {
     siginfo_t info;
     memset(&info, 0, sizeof(info));
     info.si_ptr = (void *)(uintptr_t)current_packed;
+    return info;
+}
+
+static siginfo_t proposal_signal_info(uint32_t generation) {
+    siginfo_t info = signal_info();
+    const uint64_t payload = ((uint64_t)generation << 32)
+        | (uint64_t)(current_packed | UINT32_C(0x80000000));
+    info.si_ptr = (void *)(uintptr_t)payload;
     return info;
 }
 
@@ -191,11 +259,15 @@ int main(int argc, char **argv) {
     static const enum event rejected_enter[] = {
         EVENT_READ_PC, EVENT_READ_VLEN, EVENT_REGISTRY, EVENT_DECIDE,
     };
+    static const enum event save_failed_enter[] = {
+        EVENT_READ_PC, EVENT_READ_VLEN, EVENT_REGISTRY, EVENT_DECIDE,
+        EVENT_QUERY, EVENT_SAVE,
+    };
     static const enum event successful_exit[] = {
-        EVENT_READ_PC, EVENT_QUERY, EVENT_WRITE_PC,
+        EVENT_READ_PC, EVENT_REGISTRY, EVENT_QUERY, EVENT_WRITE_PC, EVENT_ACK,
     };
     static const enum event unchanged_exit[] = {
-        EVENT_READ_PC, EVENT_QUERY,
+        EVENT_READ_PC, EVENT_REGISTRY, EVENT_QUERY,
     };
 
     /* Run fatal paths in separate processes: returning from an unmapped
@@ -240,6 +312,13 @@ int main(int argc, char **argv) {
     assert(fake_calls == 2);
     assert(fake_slots[0].action.sa_sigaction == portable_callback);
     assert(fake_slots[1].action.sa_sigaction == portable_callback);
+#ifndef _WIN32
+    for (size_t index = 0; index < 2; ++index) {
+        assert(sigismember(&fake_slots[index].action.sa_mask, 41) == 1);
+        assert(sigismember(&fake_slots[index].action.sa_mask, SIGTRAP) == 1);
+        assert(sigismember(&fake_slots[index].action.sa_mask, SIGTERM) == 0);
+    }
+#endif
     assert(!chimera_linux_install_signal_bindings(duplicate, 2));
     assert(!chimera_linux_install_signal_bindings(missing_callback, 1));
     assert(!chimera_linux_install_signal_bindings(invalid_number, 1));
@@ -287,6 +366,105 @@ int main(int argc, char **argv) {
         sizeof(successful_enter) / sizeof(successful_enter[0]) - 1);
 
     reset();
+    info = proposal_signal_info(UINT32_C(17));
+    chimera_linux_handle_enter_translation(&info, (void *)(uintptr_t)1);
+    {
+        static const enum event proposal_commit[] = {
+            EVENT_READ_PC, EVENT_READ_VLEN, EVENT_REGISTRY, EVENT_DECIDE,
+            EVENT_QUERY, EVENT_SAVE, EVENT_ACK, EVENT_WRITE_PC,
+        };
+        assert_events(proposal_commit,
+            sizeof(proposal_commit) / sizeof(proposal_commit[0]));
+    }
+    assert(ack_generation == UINT32_C(17));
+    assert(ack_action == UINT32_C(1));
+
+    /* Queue-time width/VL may be stale; pre-ACK frame is authoritative. */
+    reset();
+    current_packed = UINT32_C(32) | (UINT32_C(4) << 14);
+    info = proposal_signal_info(UINT32_C(23));
+    chimera_linux_handle_enter_translation(&info, (void *)(uintptr_t)1);
+    assert(saved_from_frame && saved_packed == 0);
+    assert(written_pc == query_result);
+
+    reset();
+    current_packed = 0;
+    info = proposal_signal_info(UINT32_C(24));
+    chimera_linux_handle_enter_translation(&info, (void *)(uintptr_t)1);
+    assert(saved_from_frame && saved_packed == 0);
+    assert(written_pc == query_result);
+
+    reset();
+    info = proposal_signal_info(UINT32_C(22));
+    ack_result = 0;
+    chimera_linux_handle_enter_translation(&info, (void *)(uintptr_t)1);
+    {
+        static const enum event proposal_commit_failed[] = {
+            EVENT_READ_PC, EVENT_READ_VLEN, EVENT_REGISTRY, EVENT_DECIDE,
+            EVENT_QUERY, EVENT_SAVE, EVENT_ACK,
+        };
+        assert_events(proposal_commit_failed,
+            sizeof(proposal_commit_failed) / sizeof(proposal_commit_failed[0]));
+    }
+    assert(ack_generation == UINT32_C(22));
+    assert(ack_action == UINT32_C(1));
+    assert(saved_from_frame && saved_packed == 0);
+    assert(written_pc == UINT64_MAX);
+
+    reset();
+    info = proposal_signal_info(UINT32_C(18));
+    decision_status = CHIMERA_MIGRATION_PREPARE_FAILED;
+    chimera_linux_handle_enter_translation(&info, (void *)(uintptr_t)1);
+    {
+        static const enum event proposal_rejected[] = {
+            EVENT_READ_PC, EVENT_READ_VLEN, EVENT_REGISTRY, EVENT_DECIDE,
+            EVENT_ACK,
+        };
+        assert_events(proposal_rejected,
+            sizeof(proposal_rejected) / sizeof(proposal_rejected[0]));
+    }
+    assert(ack_generation == UINT32_C(18));
+    assert(ack_action == UINT32_C(4));
+    assert(written_pc == UINT64_MAX);
+
+    reset();
+    info = proposal_signal_info(UINT32_C(19));
+    decision_status = CHIMERA_MIGRATION_TRANSLATED;
+    chimera_linux_handle_enter_translation(&info, (void *)(uintptr_t)1);
+    assert(ack_generation == UINT32_C(19));
+    assert(ack_action == UINT32_C(2));
+    assert(query_target == -1);
+    assert(saved_packed == 0);
+    assert(written_pc == UINT64_MAX);
+
+    reset();
+    info = proposal_signal_info(UINT32_C(20));
+    decision_status = CHIMERA_MIGRATION_MISSING_ROUTE;
+    chimera_linux_handle_enter_translation(&info, (void *)(uintptr_t)1);
+    assert(ack_generation == UINT32_C(20));
+    assert(ack_action == UINT32_C(3));
+    assert(query_target == -1);
+    assert(saved_packed == 0);
+    assert(written_pc == UINT64_MAX);
+
+    reset();
+    info = proposal_signal_info(UINT32_C(21));
+    query_result = UINT64_C(0);
+    chimera_linux_handle_enter_translation(&info, (void *)(uintptr_t)1);
+    {
+        static const enum event missing_map_rejected[] = {
+            EVENT_READ_PC, EVENT_READ_VLEN, EVENT_REGISTRY, EVENT_DECIDE,
+            EVENT_QUERY, EVENT_ACK,
+        };
+        assert_events(missing_map_rejected,
+            sizeof(missing_map_rejected) / sizeof(missing_map_rejected[0]));
+    }
+    assert(ack_generation == UINT32_C(21));
+    assert(ack_action == UINT32_C(5));
+    assert(saved_packed == 0);
+    assert(written_pc == UINT64_MAX);
+
+    reset();
     info = signal_info();
     query_result = current_pc;
     chimera_linux_handle_enter_translation(&info, (void *)(uintptr_t)1);
@@ -295,10 +473,19 @@ int main(int argc, char **argv) {
 
     reset();
     info = signal_info();
-    decision_result = 0;
+    decision_status = CHIMERA_MIGRATION_PREPARE_FAILED;
     chimera_linux_handle_enter_translation(&info, (void *)(uintptr_t)1);
     assert_events(rejected_enter, sizeof(rejected_enter) / sizeof(rejected_enter[0]));
     assert(query_target == -1);
+    assert(written_pc == UINT64_MAX);
+
+    reset();
+    info = signal_info();
+    save_result = 0;
+    chimera_linux_handle_enter_translation(&info, (void *)(uintptr_t)1);
+    assert_events(
+        save_failed_enter, sizeof(save_failed_enter) / sizeof(save_failed_enter[0]));
+    assert(saved_packed == current_packed);
     assert(written_pc == UINT64_MAX);
 
     reset();
@@ -308,6 +495,8 @@ int main(int argc, char **argv) {
     assert_events(successful_exit, sizeof(successful_exit) / sizeof(successful_exit[0]));
     assert(query_target == CHIMERA_CODE_ORIGINAL);
     assert(written_pc == query_result);
+    assert(ack_generation == 0);
+    assert(ack_action == UINT32_C(6));
 
     reset();
     current_pc = UINT64_C(0x5010);
@@ -315,5 +504,29 @@ int main(int argc, char **argv) {
     chimera_linux_handle_exit_translation((void *)(uintptr_t)1);
     assert_events(unchanged_exit, sizeof(unchanged_exit) / sizeof(unchanged_exit[0]));
     assert(written_pc == UINT64_MAX);
+    /* The query frame preserves its verified target above the signal frame.
+     * Pop exactly that frame, with no vector save or ORIGINAL acknowledgement. */
+    for (unsigned route = 1; route <= 2; ++route) {
+        reset();
+        no_link_enabled = 1;
+        current_pc = UINT64_C(0x5050);
+        no_link_site = (struct chimera_no_link_entry){current_pc, 320, 296, 0x20};
+        for (unsigned reg = 0; reg < 32; ++reg) scalar_registers[reg] = 0x7001U + reg * 16U;
+        _Alignas(16) uint64_t frame[40];
+        scalar_registers[2] = (uintptr_t)frame;
+        frame[296 / 8] = UINT64_C(0x5080);
+        uint64_t before[32];
+        memcpy(before, scalar_registers, sizeof(before));
+        before[2] += 320;
+        next_decision.target_type = (chimera_code_body)route;
+        query_result = UINT64_C(0x5080);
+        chimera_linux_handle_exit_translation((void *)(uintptr_t)1);
+        assert(written_pc == query_result);
+        assert(query_target == (int)route);
+        assert(ack_generation == UINT32_MAX && ack_action == UINT32_MAX);
+        assert(memcmp(before, scalar_registers, sizeof(before)) == 0);
+        const enum event expected[] = {EVENT_READ_PC, EVENT_REGISTRY, EVENT_QUERY, EVENT_WRITE_PC};
+        assert_events(expected, sizeof(expected) / sizeof(expected[0]));
+    }
     return 0;
 }

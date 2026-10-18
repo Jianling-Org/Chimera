@@ -24,6 +24,11 @@ static volatile sig_atomic_t completed;
 static uint64_t saved_vlenb, saved_vl, saved_vtype;
 static size_t grouped_mismatches, contiguous_mismatches, runtime_mismatches;
 static int save_succeeded;
+static int proposal_restart_rejected, rejection_unchanged;
+static uint8_t rejection_forward[CHIMERA_SIMULATED_CPU_STATE_SIZE];
+static uint8_t rejection_reverse[CHIMERA_SIMULATED_CPU_STATE_SIZE];
+static uint8_t rejection_vectors[4096];
+static chimera_linux_context rejection_context;
 
 static void inspect(int number, siginfo_t *info, void *raw_context) {
     chimera_linux_context *context = raw_context;
@@ -47,6 +52,31 @@ static void inspect(int number, siginfo_t *info, void *raw_context) {
     saved_vl = state->vl;
     saved_vtype = state->vtype;
     bytes = state->datap;
+    /* Exercise production parsing against a real HMP signal record.  Inject
+     * a restart index only for the save calls, then restore it before actual
+     * sigreturn.  Neither direction may publish any TLS/context changes. */
+    {
+        uint64_t original_vstart = state->vstart;
+        struct __riscv_v_ext_state before_state;
+        uint8_t *forward = get_simulated_cpu_state_addr_riscv64_rvv_1024_riscv64_rvv_256();
+        uint8_t *reverse = get_simulated_cpu_state_addr_riscv64_rvv_256_riscv64_rvv_1024();
+        int a, b;
+        state->vstart = 1;
+        memcpy(&rejection_context, context, sizeof(rejection_context));
+        memcpy(&before_state, state, sizeof(before_state));
+        memcpy(rejection_vectors, bytes, sizeof(rejection_vectors));
+        memcpy(rejection_forward, forward, sizeof(rejection_forward));
+        memcpy(rejection_reverse, reverse, sizeof(rejection_reverse));
+        a = chimera_scene_save_vector_state(CHIMERA_DIR_1024_TO_256, raw_context);
+        b = chimera_scene_save_vector_state(CHIMERA_DIR_256_TO_1024, raw_context);
+        proposal_restart_rejected = !a && !b;
+        rejection_unchanged = !memcmp(&rejection_context, context, sizeof(rejection_context))
+            && !memcmp(&before_state, state, sizeof(before_state))
+            && !memcmp(rejection_vectors, bytes, sizeof(rejection_vectors))
+            && !memcmp(rejection_forward, forward, sizeof(rejection_forward))
+            && !memcmp(rejection_reverse, reverse, sizeof(rejection_reverse));
+        state->vstart = original_vstart;
+    }
     for (reg = 0; reg < 32; ++reg) {
         for (byte = 0; byte < saved_vlenb; ++byte) {
             size_t compact = reg * saved_vlenb + byte;
@@ -108,13 +138,15 @@ int main(int argc, char **argv) {
         ",\"context_vlenb\":%" PRIu64 ",\"vl\":%" PRIu64
         ",\"vtype\":%" PRIu64 ",\"signal_observed\":%d"
         ",\"grouped_mismatches\":%zu,\"old_contiguous_mismatches\":%zu"
-        ",\"runtime_mismatches\":%zu,\"save_succeeded\":%d}\n",
+        ",\"runtime_mismatches\":%zu,\"save_succeeded\":%d"
+        ",\"proposal_restart_rejected\":%d,\"rejection_unchanged\":%d}\n",
         sched_getcpu(), vlenb, saved_vlenb, saved_vl, saved_vtype,
         (int)completed, grouped_mismatches, contiguous_mismatches,
-        runtime_mismatches, save_succeeded);
+        runtime_mismatches, save_succeeded, proposal_restart_rejected, rejection_unchanged);
     printf("{\"live_vl\":%" PRIu64 ",\"live_vtype\":%" PRIu64
         ",\"pre_trap_mismatches\":%zu}\n", live_vl, live_vtype, live_mismatches);
     return completed != 1 || saved_vlenb != vlenb || grouped_mismatches
         || runtime_mismatches || !save_succeeded || live_mismatches
+        || !proposal_restart_rejected || !rejection_unchanged
         || saved_vl != live_vl || saved_vtype != live_vtype;
 }

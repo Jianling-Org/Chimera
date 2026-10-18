@@ -24,6 +24,9 @@ const struct chimera_translation_variant *chimera_module_find_variant_by_route(
     const struct chimera_module *module, uint64_t route_id);
 int chimera_module_address_is_safe(
     const struct chimera_module *module, uint64_t original_pc);
+const struct chimera_no_link_entry *chimera_registry_find_no_link(
+    const struct chimera_registry *registry, uint64_t pc,
+    chimera_code_body *body);
 int chimera_registry_locate_body(
     const struct chimera_registry *registry,
     uint64_t address,

@@ -243,7 +243,7 @@ static struct chimera_translation_variant make_variant(
     struct chimera_translation_variant variant = {
         route_id, body, body_label,
         translated_base, translated_end,
-        NULL, 0, NULL, 0,
+        NULL, 0, NULL, 0, NULL, 0,
     };
     return variant;
 }
@@ -280,7 +280,7 @@ int main(void) {
     static struct chimera_translation_variant variants[] = {
         {
             TEST_ROUTE_A, TEST_BODY_A, "route-a", 0x5000, 0x5100,
-            forward, 2, reverse, 2,
+            forward, 2, reverse, 2, NULL, 0,
         },
     };
     static const struct chimera_module modules[] = {
@@ -294,6 +294,32 @@ int main(void) {
     uint64_t mapped = UINT64_C(0xfeedface);
 
     assert(chimera_registry_validate(&registry));
+    {
+        struct chimera_no_link_entry sites[] = {
+            {0x5030, 320, 296, 0x10}, {0x5040, 320, 296, 0x20},
+        };
+        chimera_code_body body = 0;
+        variants[0].no_link = sites;
+        variants[0].no_link_count = 2;
+        assert(chimera_registry_validate(&registry));
+        assert(chimera_registry_find_no_link(&registry, 0x5030, &body) == &sites[0]);
+        assert(body == TEST_BODY_A);
+        assert(chimera_registry_find_no_link(&registry, 0x5040, &body) == &sites[1]);
+        assert(!chimera_registry_find_no_link(&registry, 0x5032, &body));
+        assert(!chimera_registry_find_no_link(&registry, 0x1010, &body));
+        sites[1].frame_bytes = 17;
+        assert(!chimera_registry_validate(&registry));
+        sites[1].frame_bytes = 320;
+        sites[1].target_slot = 320;
+        assert(!chimera_registry_validate(&registry));
+        sites[1].target_slot = 296;
+        sites[1].trap_pc = sites[0].trap_pc;
+        assert(!chimera_registry_validate(&registry));
+        sites[1].trap_pc = 0x5100;
+        assert(!chimera_registry_validate(&registry));
+        variants[0].no_link = NULL;
+        variants[0].no_link_count = 0;
+    }
     assert(chimera_map_to_translated(&registry, TEST_ROUTE_A, 0x1010, &mapped));
     assert(mapped == 0x5080);
     assert(chimera_map_to_original(&registry, 0x5010, &mapped));
@@ -333,7 +359,7 @@ int main(void) {
             };
             struct chimera_translation_variant bounded_variant = {
                 TEST_ROUTE_A, TEST_BODY_A, "route-a", 0x5000, 0x5100,
-                bounded_forward, 1, bounded_reverse, 1,
+                bounded_forward, 1, bounded_reverse, 1, NULL, 0,
             };
             struct chimera_module bounded_module =
                 make_module("bounds", 0x1000, 0x1100, &bounded_variant, 1);

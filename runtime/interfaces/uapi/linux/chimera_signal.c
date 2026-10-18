@@ -42,7 +42,9 @@ static int invoke_sigaction(
 static int install_one(
     int number,
     chimera_linux_signal_callback callback,
-    struct sigaction *old_action
+    struct sigaction *old_action,
+    const struct chimera_linux_signal_binding *bindings,
+    unsigned long count
 ) {
     struct sigaction action = {0};
     action.sa_sigaction = callback;
@@ -50,7 +52,17 @@ static int install_one(
     action.sa_flags = 1UL;
 #else
     action.sa_flags = SA_SIGINFO;
-    sigemptyset(&action.sa_mask);
+#endif
+#ifndef _WIN32
+    /* Both transition handlers touch direction-local staging and the saved
+     * signal frame. Never interrupt one transition with the other. */
+    if (sigemptyset(&action.sa_mask) != 0) return 0;
+    for (unsigned long index = 0; index < count; ++index) {
+        if (sigaddset(&action.sa_mask, bindings[index].number) != 0) return 0;
+    }
+#else
+    (void)bindings;
+    (void)count;
 #endif
     return invoke_sigaction(number, &action, old_action) == 0;
 }
@@ -91,7 +103,7 @@ int chimera_linux_install_signal_bindings(
     for (index = 0; index < count; ++index) {
         if (!install_one(
                 bindings[index].number, bindings[index].callback,
-                &old_actions[index]
+                &old_actions[index], bindings, count
             )) {
             CHIMERA_SIGNAL_LOG(
                 "chimera: failed to install signal disposition\n"

@@ -90,6 +90,21 @@ int chimera_scene_context_pc(const void *raw_context, uint64_t *pc) {
     return 1;
 }
 
+int chimera_scene_context_gpr(const void *raw_context, uint64_t number,
+                            uint64_t *value) {
+    const chimera_linux_context *context = raw_context;
+    if (!context || !value || number > 31U) return 0;
+    *value = number ? (uint64_t)context->uc_mcontext.__gregs[number] : 0;
+    return 1;
+}
+
+int chimera_scene_set_context_sp(void *raw_context, uint64_t sp) {
+    chimera_linux_context *context = raw_context;
+    if (!context) return 0;
+    context->uc_mcontext.__gregs[2] = sp;
+    return 1;
+}
+
 int chimera_scene_set_context_pc(void *raw_context, uint64_t pc) {
     chimera_linux_context *context = raw_context;
     if (!context) return 0;
@@ -97,9 +112,37 @@ int chimera_scene_set_context_pc(void *raw_context, uint64_t pc) {
     return 1;
 }
 
+int chimera_scene_commit_migration_context(void *raw_context, uint64_t pc) {
+    chimera_linux_context *context = raw_context;
+    struct __riscv_extra_ext_header *header;
+    if (!context) return 0;
+    header = (struct __riscv_extra_ext_header *)&context->uc_mcontext.__fpregs;
+    /* The kernel ACK has restored the live vector state.  Prevent
+     * rt_sigreturn from restoring the stale source-width vector record,
+     * then publish the translated PC. */
+    header->hdr.magic = 0;
+    header->hdr.size = 0;
+    __asm__ __volatile__("" ::: "memory");
+    context->uc_mcontext.__gregs[REG_PC] = pc;
+    return 1;
+}
+
 #else
 static const chimera_vector_context *vector_context(const void *raw_context) {
     return raw_context;
+}
+
+int chimera_scene_set_context_sp(void *raw_context, uint64_t sp) {
+    (void)raw_context; (void)sp;
+    return 0;
+}
+
+int chimera_scene_context_gpr(const void *raw_context, uint64_t number,
+                            uint64_t *value) {
+    /* The portable vector fixture has no scalar register bank. */
+    if (!raw_context || !value || number != 0U) return 0;
+    *value = 0;
+    return 1;
 }
 
 int chimera_scene_context_pc(const void *raw_context, uint64_t *pc) {
@@ -114,6 +157,10 @@ int chimera_scene_set_context_pc(void *raw_context, uint64_t pc) {
     if (!context) return 0;
     context->pc = pc;
     return 1;
+}
+
+int chimera_scene_commit_migration_context(void *raw_context, uint64_t pc) {
+    return chimera_scene_set_context_pc(raw_context, pc);
 }
 
 #endif
@@ -133,6 +180,21 @@ static int save_context(
     const chimera_vector_context *context = vector_context(raw_context);
     if (!context || !context->datap || !context->vlenb
         || context->vlenb > CHIMERA_MAX_VLENB) return 0;
+    /* Proposal entry can interrupt a partially executed vector instruction.
+     * The translated memory paths require vstart == 0.  Reject before writing
+     * TLS or committing the CPU; sigreturn must resume the source instruction
+     * with its original restart index, never silently clear that index. */
+    if (context->vstart != 0) {
+#ifdef CHIMERA_DEBUG
+        const struct chimera_debug_field fields[] = {
+            CHIMERA_DEBUG_U64("vstart", context->vstart),
+            CHIMERA_DEBUG_U64("vlenb", context->vlenb),
+            CHIMERA_DEBUG_U64("vl", context->vl),
+        };
+        CHIMERA_DEBUG_EVENT("runtime.state.vector-reject-vstart", fields, 3U);
+#endif
+        return 0;
+    }
     write_state(
         simulated_state,
         context->datap,
@@ -177,13 +239,13 @@ int chimera_scene_save_vector_state_packed(
     return 1;
 }
 
-void chimera_scene_save_vector_state(
+int chimera_scene_save_vector_state(
     enum chimera_direction direction,
     void *raw_context
 ) {
     uint8_t *state = chimera_direction_state(direction);
-    if (!state) return;
-    (void)save_context(raw_context, state);
+    if (!state) return 0;
+    return save_context(raw_context, state);
 }
 
 int chimera_vector_packed_unpack(uint32_t packed, uint64_t *vlenb, uint64_t *vl) {

@@ -9,7 +9,7 @@ static void *open_fixture(const char *path) {
     const char *error;
 
     dlerror();
-    handle = dlopen(path, RTLD_NOW | RTLD_LOCAL);
+    handle = dlopen(path, RTLD_NOW | RTLD_GLOBAL);
     if (handle) return handle;
     error = dlerror();
     fprintf(stderr, "cannot load translator contract fixture %s: %s\n",

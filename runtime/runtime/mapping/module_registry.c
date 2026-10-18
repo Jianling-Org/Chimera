@@ -53,8 +53,20 @@ static int validate_variant(const struct chimera_translation_variant *variant,
         || variant->translated_base >= variant->translated_end
         || variant->forward_count != variant->reverse_count
         || (!variant->forward && variant->forward_count)
-        || (!variant->reverse && variant->reverse_count)) return 0;
+        || (!variant->reverse && variant->reverse_count)
+        || (!variant->no_link && variant->no_link_count)) return 0;
     translated_span = variant->translated_end - variant->translated_base;
+    for (index = 0; index < variant->no_link_count; ++index) {
+        const struct chimera_no_link_entry *site = &variant->no_link[index];
+        if (site->trap_pc < variant->translated_base
+            || site->trap_pc >= variant->translated_end
+            || (site->trap_pc & UINT64_C(1))
+            || !site->frame_bytes || site->frame_bytes > 4096U
+            || (site->frame_bytes & 15U) || (site->target_slot & 7U)
+            || site->target_slot > site->frame_bytes - 8U
+            || site->original_rva >= original_span
+            || (index && variant->no_link[index - 1].trap_pc >= site->trap_pc)) return 0;
+    }
     for (index = 0; index < variant->forward_count; ++index) {
         if (variant->forward[index].original_rva >= original_span
             || variant->forward[index].translated_rva >= translated_span
@@ -152,6 +164,30 @@ int chimera_module_address_is_safe(
         || !safety_lookup(module->safety, module->safety_count,
                           original_pc - module->original_base, &entry)) return 0;
     return entry->is_safe == UINT64_C(1);
+}
+
+const struct chimera_no_link_entry *chimera_registry_find_no_link(
+    const struct chimera_registry *registry, uint64_t pc,
+    chimera_code_body *body) {
+    if (!registry || !body) return NULL;
+    for (size_t mi = 0; mi < registry->module_count; ++mi) {
+        const struct chimera_module *module = &registry->modules[mi];
+        for (size_t vi = 0; vi < module->variant_count; ++vi) {
+            const struct chimera_translation_variant *v = &module->variants[vi];
+            if (!contains(v->translated_base, v->translated_end, pc)) continue;
+            size_t left = 0, right = v->no_link_count;
+            while (left < right) {
+                size_t middle = left + (right - left) / 2;
+                if (v->no_link[middle].trap_pc < pc) left = middle + 1;
+                else right = middle;
+            }
+            if (left == v->no_link_count || v->no_link[left].trap_pc != pc)
+                return NULL;
+            *body = v->body;
+            return &v->no_link[left];
+        }
+    }
+    return NULL;
 }
 
 static int locate_address(

@@ -233,6 +233,11 @@ if(CHIMERA_BUILD_TESTS)
     if(CMAKE_SYSTEM_NAME STREQUAL "Linux"
        AND CMAKE_SYSTEM_PROCESSOR MATCHES "^(riscv64|riscv)$")
         enable_language(ASM)
+        # CMake's ASM language does not supply a MODULE rule on every target.
+        # These fixtures use the same compiler driver/linker as C DSOs.
+        if(NOT CMAKE_ASM_CREATE_SHARED_MODULE)
+            set(CMAKE_ASM_CREATE_SHARED_MODULE "${CMAKE_C_CREATE_SHARED_MODULE}")
+        endif()
         add_executable(test_signal_vector_layout
             tests/runtime/test_signal_vector_layout.c
             tests/runtime/fixtures/signal_vector_layout.S

@@ -84,6 +84,21 @@ static int load_translated_code(
     *base_slot = context->module->original_base;
     context->variant->translated_base = translated_base;
     context->variant->translated_end = translated_end;
+    /* Optional v1 extension. Older DSOs keep their fail-closed guard traps. */
+    const uint64_t *jump_abi = lookup(translated, prefix, "no_link_abi");
+    const uint64_t *jump_count = lookup(translated, prefix, "no_link_count");
+    const struct chimera_no_link_entry *jumps =
+        lookup(translated, prefix, "no_link_entries");
+    if (jump_abi || jump_count || jumps) {
+        if (!jump_abi || !jump_count || !jumps || *jump_abi != UINT64_C(1)
+            || *jump_count > SIZE_MAX / sizeof(*jumps)
+            || (uint64_t)(uintptr_t)jumps < translated_base
+            || (uint64_t)(uintptr_t)jumps > translated_end
+            || *jump_count > (translated_end - (uint64_t)(uintptr_t)jumps)
+                              / sizeof(*jumps)) return 0;
+        context->variant->no_link = jumps;
+        context->variant->no_link_count = (size_t)*jump_count;
+    }
     return 1;
 }
 

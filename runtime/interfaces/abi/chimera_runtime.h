@@ -28,6 +28,15 @@ struct chimera_safety_entry { uint64_t original_rva; uint64_t is_safe; };
  * properties it encodes. Generic layers only compare route_id for equality
  * and never parse it. body_label is a scene-owned static string (never a
  * pointer into a manifest parse buffer) kept for debug printing. */
+/* Exact no-link dispatch sites in a translated DSO. trap_pc is relocated by
+ * its loader. The query frame stays above the signal frame until dispatch;
+ * all source registers except SP have already been restored. */
+struct chimera_no_link_entry {
+    uint64_t trap_pc;
+    uint64_t frame_bytes;
+    uint64_t target_slot;
+    uint64_t original_rva;
+};
 struct chimera_translation_variant {
     uint64_t route_id;
     chimera_code_body body;
@@ -38,6 +47,8 @@ struct chimera_translation_variant {
     size_t forward_count;
     const struct chimera_reverse_entry *reverse;
     size_t reverse_count;
+    const struct chimera_no_link_entry *no_link;
+    size_t no_link_count;
 };
 
 struct chimera_module {

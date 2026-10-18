@@ -194,8 +194,20 @@ def verify_external_leaf_json(path, artifact, manifest, settings) -> None:
     if artifact.owner_kind != "module" or artifact.abi != 1:
         raise CapabilityVerificationError("invalid external scalar leaf owner or ABI")
     document = _json_document(path)
-    if (document.get("format") != "chimera-external-scalar-leaf-v1"
-            or not document.get("proofs") or not document.get("closed_calls")
+    format_name = document.get("format")
+    if format_name == "chimera-external-scalar-leaf-v1":
+        complete = bool(document.get("proofs"))
+    elif format_name == "chimera-external-call-contracts-v2":
+        interfaces = document.get("no_callback_interfaces")
+        complete = (isinstance(interfaces, list)
+                    and bool(document.get("proofs") or interfaces)
+                    and all(isinstance(item, dict)
+                            and item.get("semantic_basis") ==
+                            "standard-libc-memcpy-no-application-callback-v1"
+                            for item in interfaces))
+    else:
+        complete = False
+    if (not complete or not document.get("closed_calls")
             or document.get("rejections")):
         raise CapabilityVerificationError("incomplete external scalar leaf proof artifact")
 
