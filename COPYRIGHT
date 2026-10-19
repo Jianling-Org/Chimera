@@ -10,25 +10,29 @@ CLI, offline analysis and translation, compiler integration, runtime,
 build/development tools, tests, documentation, and examples. It also applies
 to ISCAS-authored K3 Linux kernel patch contributions.
 
-The kernel contributions are supplied as patches under kernel/patches/.
-The exact ISCAS kernel file scope is recorded by
-kernel/patches/copyright/0015-d0553fbdaf00.patch, which adds a COPYRIGHT
-notice to the patched kernel source tree.
+ISCAS-authored kernel contributions are supplied as Linux kernel patches
+under kernel/patches/. They follow the applicable Linux kernel licensing
+terms, including file-level license identifiers and relevant exceptions.
+Existing upstream copyright and license notices remain in effect.
 
 Other copyright holders
 -----------------------
 Directory names do not imply ISCAS ownership of every file they contain.
 Imported code and other contributors' work retain their own copyrights.
 In particular, the gitlinked LLVM (third_party/llvm), SVF (third_party/SVF),
-and llama.cpp (examples/applications/llama-cpp/llama.cpp) sources belong to
-their respective upstream copyright holders. The Linux/Spacemit K3 source
-baseline and other kernel patch authors' work likewise retain their original
-copyrights. Principal sources and pinned versions are listed in
-THIRD_PARTY_NOTICES.md and SOURCE-VERSIONS.json.
+and llama.cpp (examples/applications/llama-cpp/llama.cpp) sources, as well as
+the in-tree SVF source copy (preprocessing/conformance/svf_src), retain the
+copyrights of their respective upstream holders. The Linux/Spacemit K3
+source baseline and other kernel patch authors' work likewise retain their
+original copyrights. Principal sources are described in
+THIRD_PARTY_NOTICES.md; pinned gitlink and platform versions are recorded
+in the repository.
 
 License boundary
 ----------------
-Existing file-level copyright and license notices remain in force. This
-project-level copyright notice does not replace them or assign one license
-to the entire repository. Consult LICENSES/README.md and the applicable
-source and upstream license files.
+The Apache-2.0 license text for ISCAS-authored original non-kernel work is
+provided in LICENSES/Apache-2.0.txt, subject to any different file-level
+license notices. Kernel patches, the BPF trigger, and third-party sources
+retain their applicable licenses. This copyright notice does not replace
+file-level notices or assign one license to the entire repository. Consult
+LICENSES/README.md and the applicable source and upstream license files.

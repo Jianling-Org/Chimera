@@ -10,14 +10,17 @@
 
 ## 主要交付流程
 
-- `chimera-dev`：构建工具链插件和平台 wheel；LLVM/SVF 由固定子模块引用提供，SVF 仅供 FunctionPointer 路线使用。
+- `chimera-dev`：构建工具链插件和平台 wheel；FunctionPointer 路线所用 LLVM/SVF 由子模块引用提供。
 - `chimera-pkg`：根据 Profile 检查 ELF、生成需要的编译重建计划、准备并打包 Workspace。应用主程序不包含在 Workspace 内，目标机需要安装内容匹配的应用及依赖。
 - `chimera-user`：校验 Workspace 与运行环境，注册目标机上的应用文件并启动应用。可通过内核策略和 BPF 触发自动迁移，也保留手动迁移请求命令。
 - `kernel/`：提供 K3 配套内核补丁系列、冻结配置、源码身份核对和构建脚本；内核需独立获取、构建和部署。
+- `preprocessing/conformance/`：提供 VLEN 逃逸分析，检查向量长度值经返回值、堆对象或全局变量传出的情形，并生成 JSONL/Markdown 报告；其 `svf_src/` 是仓库内的 SVF 源码副本，不是子模块。
 
 ## 已记录的自动迁移验证
 
-仓库的[自动迁移验证记录](docs/validation/automigration.md)报告：缩减双向测试 3 轮通过；llama.cpp 线程矩阵覆盖 2/4/8/12/16/24/32 线程并通过 7 轮；16 线程测试连续 10 轮通过；混合线程负载运行约 2 小时、106 轮通过。记录还报告原生与 123 轮 llama.cpp 测试 PPL 均为 12.7757（预设绝对容差 0.01），并核对成功 COMMIT ACK、逐 TID CPU trace、Runtime 事件及迁移账本清理。
+以下结论仅适用于验证记录所述的特定输入与环境。其中"线程"均指应用线程，运行于 K3 的 16 个硬件线程（X100 与 A100 各 8 个）之上。
+
+仓库的[自动迁移验证记录](docs/validation/automigration.md)报告：缩减双向测试 3 轮通过；llama.cpp 应用的线程数矩阵覆盖 2/4/8/12/16/24/32 个应用线程并通过 7 轮；16 线程测试连续 10 轮通过；混合线程负载运行约 2 小时、106 轮通过。记录还报告原生与 123 轮 llama.cpp 测试 PPL 均为 12.7757（预设绝对容差 0.01），并核对成功 COMMIT ACK、逐 TID CPU trace、Runtime 事件及迁移账本清理。
 
 上述为特定测试输入和环境下的**条件性验收结论**，不是对任意 ELF、Profile、依赖、硬件或负载的通用保证，也不是性能承诺。验证依赖条件安全 Profile、`assume-scalar-independent` 范围假设、绑定 libc 身份的 `memset` scalar-leaf 契约、`min_vlen256` 及指定 llama.cpp ELF/模型/语料。变更任一输入组合都需要重新检查和验证。结果摘要及产物身份见 `docs/validation/automigration.json` 和 `docs/validation/measured-artifacts.json`。
 
@@ -29,7 +32,8 @@
 - GCC 示例中 `xgcc` 流程可执行；`cc1` 整体 prepare 仍有 OOM 阻塞。文档给出的 12 GiB systemd 限制用于限制故障影响，不表示该任务可在此内存下完成。
 - llama.cpp 的基础样例关闭 OpenMP、运行单线程 perplexity；多线程迁移验收请看固定的 `reference-v32` 示例和验证记录。不同示例用途不能互相替代。
 - 吞吐性能、其他应用及未列出的硬件组合未由当前验收记录覆盖。
+- 上述自动迁移验证数据不用于评价 VLEN 逃逸分析；其用法和验证方式见[工具文档](preprocessing/conformance/README.md)。
 
 ## 许可证与版权
 
-仓库根目录 [COPYRIGHT](COPYRIGHT) 说明 ISCAS 自研非内核代码及材料、K3 内核补丁贡献与第三方仓库代码各自的版权边界。LLVM、SVF、llama.cpp 和 Linux／Spacemit 平台源码的原权利人声明保留；各文件和组件仍按自身许可证分发，不应把整个仓库描述为统一的 Apache-2.0 项目。许可证索引见 [LICENSES/README.md](LICENSES/README.md)；[第三方软件说明](THIRD_PARTY_NOTICES.md)列出主要外部来源与版本边界。
+仓库根目录 [COPYRIGHT](COPYRIGHT) 说明 ISCAS 自研非内核代码及材料、K3 内核补丁贡献与第三方代码各自的版权边界。LLVM、SVF、llama.cpp、仓库内的 SVF 源码副本和 Linux／Spacemit 平台源码的原权利人声明保留；各文件和组件仍按自身许可证分发，不应把整个仓库描述为统一的 Apache-2.0 项目。许可证索引见 [LICENSES/README.md](LICENSES/README.md)；[第三方软件说明](THIRD_PARTY_NOTICES.md)列出主要外部来源。

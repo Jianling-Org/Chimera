@@ -6,6 +6,13 @@
 
 当前系统对应用 ELF 进行离线检查和翻译，生成 Workspace；目标机由 Runtime 与配套 K3 内核、BPF 触发器协作，使线程在 X100 与 A100 核心组之间自动迁移。系统也保留 `chimera-user migrate` 手动请求入口。自动迁移的状态机、失败回退及适用边界见[设计文档](docs/architecture/automigration.md)和[验证记录](docs/validation/automigration.md)。
 
+## 技术路线概览
+
+- **离线阶段**：检查应用 ELF，并按 Profile 中的约定做 RVV 翻译，生成 Workspace。Profile 是描述应用编译与迁移前提的配置文件；RVV 翻译是把向量指令适配到目标向量长度（VLEN）的过程。
+- **目标机阶段**：Runtime 配合 K3 内核与 BPF 触发器，在 X100（VLEN 256）与 A100（VLEN 1024）核心组之间迁移线程。
+- **辅助分析**：`preprocessing/conformance/` 提供 VLEN 逃逸检测，检查向量长度值是否经返回值、堆对象或全局变量传出；这一检查不替代应用集成检查或目标机迁移验证。
+- 细节见[设计文档](docs/architecture/automigration.md)，此处不展开。
+
 ## 开始使用
 
 源码安装需要 Python 3.11 及以上：
@@ -33,7 +40,7 @@ chimera-pkg prepare --profile "$PROFILE" --input "$ELF" --workspace "$WORKSPACE"
 chimera-pkg workspace pack --workspace "$WORKSPACE" --output application.workspace
 ```
 
-若严格检查要求补充元数据或重编，应先按[检查与重编指南](docs/deployment/cli.md#固定重编计划)处理，再对最终 ELF 重新检查。Workspace 不包含应用主程序；目标机须安装匹配的应用与依赖，并按[运行指南](docs/user/README.md)部署。可以从 [Hello World 示例](examples/applications/hello-world/README.md)了解完整样例。
+若严格检查要求补充元数据或重编，应先按[检查与重编指南](docs/deployment/cli.md#固定重编计划)处理，再对最终 ELF 重新检查。**Workspace 不包含应用主程序**；目标机须另行安装与 Workspace 匹配的应用及依赖，并按[运行指南](docs/user/README.md)部署。可以从 [Hello World 示例](examples/applications/hello-world/README.md)了解完整样例。
 
 ## 文档导航
 
@@ -43,13 +50,14 @@ chimera-pkg workspace pack --workspace "$WORKSPACE" --output application.workspa
 - [应用集成与 Workspace 交付](docs/deployment/README.md)
 - [目标机安装与运行](docs/user/README.md)
 - [LLVM、SVF 与外部输入](docs/external-dependencies.md)
+- [VLEN 逃逸检测工具](preprocessing/conformance/README.md)
 - [v0.1.0-preview.1 发布说明](RELEASE_NOTES-v0.1.0-preview.1.md)
 
 ## 仓库结构
 
 | 目录 | 内容 |
 |---|---|
-| `cli/`、`preprocessing/` | CLI、离线分析、RVV 翻译器与编译器插件 |
+| `cli/`、`preprocessing/` | CLI、离线分析、RVV 翻译器、编译器插件与 VLEN 逃逸检测工具 |
 | `runtime/` | Runtime、BPF、ABI、启动与工件管理 |
 | `kernel/` | K3 内核补丁、配置和构建检查工具 |
 | `examples/` | 应用 Profile、构建和运行示例 |
@@ -67,6 +75,6 @@ K3 自动迁移的公开验收为**条件性结论**，只覆盖验证记录中�
 
 ## 版权与许可
 
-ISCAS 对其自研的非内核代码及材料（CLI、离线分析与翻译、编译器集成、Runtime、工具、测试、文档和示例中的自研部分）及 K3 内核补丁贡献保有版权。内核贡献的准确文件范围由 `kernel/patches/copyright/0015-d0553fbdaf00.patch` 记录。LLVM、SVF、llama.cpp 子模块，以及 Linux／Spacemit 平台源码等第三方代码，版权归各自原权利人；仓库目录中引入的代码和其他贡献者作品也保留原有声明。完整边界见根目录 [COPYRIGHT](COPYRIGHT)。
+ISCAS 对其自研的非内核代码及材料（CLI、离线分析与翻译、编译器集成、Runtime、工具、测试、文档和示例中的自研部分）及 K3 内核补丁贡献保有版权。内核补丁和 BPF 组件保留逐文件许可声明。LLVM、SVF、llama.cpp 子模块，`preprocessing/conformance/svf_src/` 中的 SVF 源码副本，以及 Linux／Spacemit 平台源码等第三方代码，版权归各自原权利人；仓库目录中引入的代码和其他贡献者作品也保留原有声明。完整边界见根目录 [COPYRIGHT](COPYRIGHT)。
 
-版权声明不等于全仓统一授权；各文件与组件按自身许可证分发，不应将整个仓库概括为单一许可证。主要第三方来源和固定版本见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)，许可证文本与来源边界见 [LICENSES/README.md](LICENSES/README.md)。
+版权声明不等于全仓统一授权；各文件与组件按自身许可证分发，不应将整个仓库概括为单一许可证。主要第三方来源见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)，许可证文本与来源边界见 [LICENSES/README.md](LICENSES/README.md)。
