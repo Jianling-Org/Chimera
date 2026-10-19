@@ -1,7 +1,34 @@
-Chimera kernel contributions
+Jianling
 
 Copyright (C) 2026 Institute of Software Chinese Academy of Sciences (ISCAS)
 
-The ISCAS notices cover the kernel contributions listed in the COPYRIGHT file added by kernel/patches/copyright/0015-d0553fbdaf00.patch.
+ISCAS original contributions
+----------------------------
+The notice above applies to original work authored by ISCAS in this
+repository, including ISCAS-authored non-kernel code and materials for the
+CLI, offline analysis and translation, compiler integration, runtime,
+build/development tools, tests, documentation, and examples. It also applies
+to ISCAS-authored K3 Linux kernel patch contributions.
 
-Existing source notices and third-party licenses are retained.
+The kernel contributions are supplied as patches under kernel/patches/.
+The exact ISCAS kernel file scope is recorded by
+kernel/patches/copyright/0015-d0553fbdaf00.patch, which adds a COPYRIGHT
+notice to the patched kernel source tree.
+
+Other copyright holders
+-----------------------
+Directory names do not imply ISCAS ownership of every file they contain.
+Imported code and other contributors' work retain their own copyrights.
+In particular, the gitlinked LLVM (third_party/llvm), SVF (third_party/SVF),
+and llama.cpp (examples/applications/llama-cpp/llama.cpp) sources belong to
+their respective upstream copyright holders. The Linux/Spacemit K3 source
+baseline and other kernel patch authors' work likewise retain their original
+copyrights. Principal sources and pinned versions are listed in
+THIRD_PARTY_NOTICES.md and SOURCE-VERSIONS.json.
+
+License boundary
+----------------
+Existing file-level copyright and license notices remain in force. This
+project-level copyright notice does not replace them or assign one license
+to the entire repository. Consult LICENSES/README.md and the applicable
+source and upstream license files.
