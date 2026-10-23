@@ -69,3 +69,30 @@ Wrapper 的输入决策应固定并保存哈希；GCC 构建参数沿已核对�
 ## 运行时验证
 
 完整 prepare 后继续检查依赖、映射与补丁覆盖、实际执行、数值结果、迁移状态链和交付环境。遇到翻译 OOM 时保存独立日志、资源限制和输入身份，先诊断具体阶段；不以反复重跑或缩短检查替代问题定位。可复用工具、真实 fixture 和回归测试保留在源码中，过程性现场记录留在独立验收归档。
+
+
+## Proactive gate candidates
+
+Gate-stage publication also scans each checked ELF for a compilable function
+that contains both a non-configuration RVV instruction and a direct vlenb CSR
+read whose destination is not zero. These functions join the report-selected
+root/inherited hosts even if the current ELF has no actionable boundary in
+that function. This avoids relying solely on pre-rebuild liveness when
+inlining, lowering, and register allocation can change in a gate rebuild.
+
+The versioned policy is direct-vlenb-vector-hosts-v1. gate-candidates.json
+records the input ELF hash, function, vector instruction, and width reads;
+the owned plan pins its hash and the loader verifies its input identities and
+reconstructs the decision union. check-elf --rebuild-stage gate enables this
+using --objdump or the profile tool. Programmatic publication enables the same
+rule with gate_candidate_objdump. Metadata-stage builds are unchanged.
+
+Candidate evidence is separate from safety findings. It does not assert that
+all vector producers are implicit, that gating removes explicit RVV, or that
+an unknown scalar allocation is VLEN-dependent. It can conservatively gate
+more functions and affect performance. The rebuilt ELF still requires a fresh
+strict check under its original explicit scope. Existing baseline/metadata
+ELFs and safety reports may be reused only after checking identities and
+confirming their compiler and analysis inputs did not change; regenerate the
+gate plan and all gate objects. Never use a previous gate census or failure
+list to seed a first-round regression of this policy.

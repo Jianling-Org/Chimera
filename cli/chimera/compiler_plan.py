@@ -9,6 +9,12 @@ import shlex
 from pathlib import Path
 from typing import Any
 
+from .gate_candidates import (
+    POLICY as GATE_CANDIDATE_POLICY, SCHEMA as GATE_CANDIDATE_SCHEMA,
+    NAMES_SOURCE as GATE_CANDIDATE_NAMES_SOURCE, inventory_names,
+    scan_width_gate_candidates,
+)
+
 
 PLAN_SCHEMA = "chimera.rebuild-plan.v1"
 DECISION_SCHEMA = "chimera.rebuild-decision.v1"
@@ -184,7 +190,8 @@ def _entry_script(launcher: list[str], plan_dir: Path, *, cxx: bool) -> bytes:
 
 
 def publish_rebuild_plan(output_dir: Path, *, stage: str, profile: Path,
-                         reports: list[Path], launcher: list[str]) -> Path:
+                         reports: list[Path], launcher: list[str],
+                         gate_candidate_objdump: str | None = None) -> Path:
     """Validate reports and publish an owned, immutable build plan."""
     output_dir, profile = Path(output_dir), Path(profile)
     if stage not in {"metadata", "gate"}:
@@ -192,7 +199,7 @@ def publish_rebuild_plan(output_dir: Path, *, stage: str, profile: Path,
     if not output_dir.is_dir():
         raise FileNotFoundError(f"rebuild output directory does not exist: {output_dir}")
     output_dir = output_dir.resolve(strict=True)
-    owned = [output_dir / name for name in ("cc", "cxx", "decision.json", "build-plan.json")]
+    owned = [output_dir / name for name in ("cc", "cxx", "decision.json", "build-plan.json", "gate-candidates.json")]
     collision = next((path for path in owned if path.exists() or path.is_symlink()), None)
     if collision:
         raise FileExistsError(f"refusing to overwrite existing rebuild output: {collision}")
@@ -211,19 +218,30 @@ def publish_rebuild_plan(output_dir: Path, *, stage: str, profile: Path,
     scope_json = checked[0][2]["scope_json"]
     if any(item[2]["scope_json"] != scope_json for item in checked[1:]):
         raise ValueError("check reports have inconsistent check scopes or versions/parameters")
+    candidate_inventory = None
+    if stage == "gate" and gate_candidate_objdump is not None:
+        candidate_inventory = {
+            "schema": GATE_CANDIDATE_SCHEMA, "policy": GATE_CANDIDATE_POLICY,
+            "inputs": [scan_width_gate_candidates(Path(doc["elf"]["path"]), gate_candidate_objdump)
+                       for doc, _, _ in checked],
+        }
+    candidate_names = (inventory_names(candidate_inventory, [doc["elf"] for doc, _, _ in checked])
+                       if candidate_inventory is not None else set())
     if stage == "gate":
         if any(doc["decision"]["strategy"] == "svf"
                or doc["decision"]["function_pointer_plugin"] for doc, _, _ in checked):
             raise ValueError("gate rebuild cannot consume SVF or function-pointer decisions")
         names = sorted({name for doc, _, _ in checked for name in doc["decision"]["gate"]["names"]})
-        strategy = "gate" if any(doc["decision"]["strategy"] == "gate" for doc, _, _ in checked) else "none"
+        names = sorted(set(names) | candidate_names)
+        strategy = "gate" if candidate_names or any(doc["decision"]["strategy"] == "gate" for doc, _, _ in checked) else "none"
         if strategy == "none" and names:
             raise ValueError("none strategy cannot contain gate names")
     else:
         names, strategy = [], "none"
     decision = {
         "strategy": strategy,
-        "vector_gate": {"enabled": strategy == "gate", "names_source": "owned-reports"},
+        "vector_gate": {"enabled": strategy == "gate", "names_source": (GATE_CANDIDATE_NAMES_SOURCE
+                         if candidate_inventory is not None else "owned-reports")},
         "function_pointer_plugin": False,
         "stack_object_plugin": True,
         "gate": {"enabled": strategy == "gate", "names": names},
@@ -235,6 +253,17 @@ def publish_rebuild_plan(output_dir: Path, *, stage: str, profile: Path,
         with profile_target.open("xb") as stream:
             created.append(profile_target)
             stream.write(profile_bytes)
+
+        candidate_entry = None
+        if candidate_inventory is not None:
+            candidate_bytes = (json.dumps(candidate_inventory, ensure_ascii=False, indent=2) + "\n").encode()
+            candidate_path = output_dir / "gate-candidates.json"
+            with candidate_path.open("xb") as stream:
+                created.append(candidate_path)
+                stream.write(candidate_bytes)
+            candidate_entry = {"path": "gate-candidates.json",
+                               "sha256": _sha256_bytes(candidate_bytes),
+                               "policy": GATE_CANDIDATE_POLICY}
 
         report_entries = []
         report_root = output_dir / "reports"
@@ -281,6 +310,8 @@ def publish_rebuild_plan(output_dir: Path, *, stage: str, profile: Path,
             "profile": {"path": profile_rel, "sha256": _sha256_bytes(profile_bytes)},
             "reports": report_entries,
         }
+        if candidate_entry is not None:
+            plan["gate_candidates"] = candidate_entry
         plan_path = output_dir / "build-plan.json"
         plan_bytes = (json.dumps(plan, indent=2, ensure_ascii=False) + "\n").encode()
         with plan_path.open("xb") as stream:
@@ -360,6 +391,7 @@ def load_rebuild_plan(directory: Path) -> tuple[dict, Path]:
         raise ValueError("rebuild plan has no owned reports")
     scope_json = None
     report_recommendations = []
+    report_elves = []
     for entry in reports:
         if not isinstance(entry, dict) or not all(_valid_digest(entry.get(key)) for key in ("sha256", "elf_sha256", "check_fingerprint")):
             raise ValueError("invalid owned report identity")
@@ -368,6 +400,7 @@ def load_rebuild_plan(directory: Path) -> tuple[dict, Path]:
         if _sha256_bytes(raw) != entry["sha256"]:
             raise ValueError("owned report digest does not match build plan")
         doc, _, identity = _validate_report(report_path, verify_elf=False)
+        report_elves.append(doc["elf"])
         report_recommendations.append((doc["decision"]["strategy"],
                                        tuple(doc["decision"]["gate"]["names"]),
                                        doc["decision"]["function_pointer_plugin"]))
@@ -383,14 +416,36 @@ def load_rebuild_plan(directory: Path) -> tuple[dict, Path]:
         expected = _sha256_bytes(_json_bytes({"elf_sha256": identity["elf_sha256"], "scope": json.loads(current_scope)}))
         if expected != doc.get("check_fingerprint"):
             raise ValueError("owned report fingerprint is invalid")
+    candidate_names = set()
+    if (decision["vector_gate"].get("names_source") == GATE_CANDIDATE_NAMES_SOURCE
+            and "gate_candidates" not in plan):
+        raise ValueError("gate candidate policy requires its pinned inventory")
+    if "gate_candidates" in plan:
+        entry = plan["gate_candidates"]
+        if (stage != "gate" or not isinstance(entry, dict)
+                or entry.get("path") != "gate-candidates.json"
+                or entry.get("policy") != GATE_CANDIDATE_POLICY
+                or not _valid_digest(entry.get("sha256"))):
+            raise ValueError("invalid gate candidate inventory identity")
+        candidate_path = _ensure_plain_owned_file(directory, entry["path"])
+        candidate_bytes = candidate_path.read_bytes()
+        if _sha256_bytes(candidate_bytes) != entry["sha256"]:
+            raise ValueError("gate candidate inventory digest does not match build plan")
+        try:
+            candidate_inventory = json.loads(candidate_bytes)
+        except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+            raise ValueError("invalid gate candidate inventory JSON") from exc
+        candidate_names = inventory_names(candidate_inventory, report_elves)
+        if decision["vector_gate"].get("names_source") != GATE_CANDIDATE_NAMES_SOURCE:
+            raise ValueError("gate candidate policy disagrees with decision")
     if stage == "metadata":
         expected_names, expected_strategy = [], "none"
     else:
         if any(strategy == "svf" or function_pointer
                for strategy, _, function_pointer in report_recommendations):
             raise ValueError("owned reports contain unsupported SVF decision")
-        expected_names = sorted({name for _, names, _ in report_recommendations for name in names})
-        expected_strategy = "gate" if any(strategy == "gate" for strategy, _, _ in report_recommendations) else "none"
+        expected_names = sorted({name for _, names, _ in report_recommendations for name in names} | candidate_names)
+        expected_strategy = "gate" if candidate_names or any(strategy == "gate" for strategy, _, _ in report_recommendations) else "none"
     if decision["strategy"] != expected_strategy or decision["gate"]["names"] != expected_names:
         raise ValueError("effective decision does not match the owned reports")
     return decision, decision_path

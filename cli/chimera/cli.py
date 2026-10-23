@@ -729,6 +729,10 @@ def _check_elf(arguments: argparse.Namespace) -> int:
             manifest = publish_rebuild_plan(
                 rebuild_dir, stage=stage, profile=profile, reports=reports,
                 launcher=[sys.executable, "-I", "-m", "chimera.pkg"],
+                gate_candidate_objdump=(
+                    arguments.objdump or configuration.base.tools.objdump
+                    if stage == "gate" else None
+                ),
             )
             print(f"rebuild plan: {manifest}")
             print(f"C compiler: {rebuild_dir / 'cc'}")

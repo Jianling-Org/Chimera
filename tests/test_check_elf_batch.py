@@ -30,6 +30,8 @@ class CheckElfBatchTests(unittest.TestCase):
         self.first.write_bytes(b"xgcc test payload")
         self.second.write_bytes(b"cc1 test payload")
         self.calls = []
+        self.candidate_scans = []
+        self.candidate_functions = []
         self.fail_on = None
         self.during_check = None
         self.during_configuration = None
@@ -77,7 +79,15 @@ class CheckElfBatchTests(unittest.TestCase):
                 self.during_configuration()
             return self.configuration
 
-        with mock.patch.object(cli, "_configuration", side_effect=configuration), \
+        def scan(path, command):
+            import hashlib
+            self.candidate_scans.append((path, command))
+            return {"elf": {"path": str(path.resolve()),
+                            "content_sha256": hashlib.sha256(path.read_bytes()).hexdigest()},
+                    "functions": self.candidate_functions}
+
+        with mock.patch("chimera.compiler_plan.scan_width_gate_candidates", side_effect=scan), \
+            mock.patch.object(cli, "_configuration", side_effect=configuration), \
             mock.patch.object(cli, "build_check_plan", return_value=self.plan), \
             mock.patch.object(cli, "ElfStateRegistry", return_value=self.registry), \
             mock.patch.object(cli, "write_latest_pointer"), \
@@ -94,6 +104,18 @@ class CheckElfBatchTests(unittest.TestCase):
             "--rebuild-stage", stage, "--rebuild-dir", output, *extra,
         )
         return rc, output
+
+
+    def test_gate_publication_automatically_scans_actual_inputs(self):
+        from chimera.gate_candidates import candidates_from_dump
+        from test_gate_candidates import DUMP
+        self.candidate_functions = list(candidates_from_dump(DUMP.splitlines()))[:1]
+        rc, output = self.rebuild("gate")
+        self.assertEqual(rc, 0)
+        self.assertEqual(self.candidate_scans, [(self.first, "objdump"), (self.second, "objdump")])
+        from chimera.compiler_plan import load_rebuild_plan
+        decision, _ = load_rebuild_plan(output)
+        self.assertIn("quiet_width_vector", decision["gate"]["names"])
 
     def test_multiple_inputs_are_checked_sequentially(self):
         rc = self.invoke("--input", self.first, "--input", self.second)
