@@ -7,4 +7,5 @@ from pathlib import Path
 
 
 def sha256_file(path: Path) -> str:
-    return sha256(path.read_bytes()).hexdigest()
+    from chimera.runtime.manifest.file_identity import cached_sha256
+    return cached_sha256(path)

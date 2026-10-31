@@ -61,8 +61,8 @@ static int load_translated_code(
     if (!context->module || !context->variant || !context->variant_record
         || !symbol_prefix(prefix, sizeof(prefix),
                           context->variant_record->variant_id)
-        || !chimera_variant_fingerprint(context->manifest,
-                                        context->variant_record,
+        || !chimera_verified_variant_fingerprint(context->workspace,
+                                        context->variant_record->variant_id,
                                         fingerprint)) return 0;
     translated = chimera_linux_open_workspace_library(
         context->workspace, context->artifact->path);

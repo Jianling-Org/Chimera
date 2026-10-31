@@ -16,6 +16,7 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass
 from hashlib import sha256
+from chimera.runtime.manifest.file_identity import cached_sha256
 from pathlib import Path
 import subprocess
 from typing import NoReturn, Sequence
@@ -161,7 +162,7 @@ def _resolve_main(program: Path, manifest, root: Path):
             f"{program} is not the application this Workspace was prepared "
             f"for ({main.runtime_name})"
         )
-    if sha256(program.read_bytes()).hexdigest() != main.sha256:
+    if cached_sha256(program) != main.sha256:
         raise LaunchError(
             f"{program} does not match the file this Workspace was prepared "
             "from; re-run prepare or install the recorded build"
@@ -322,7 +323,7 @@ def _precheck(
     expected = {module.module_id: module for module in manifest.modules}
     for module_id, path in sorted(resolved.items()):
         module = expected[module_id]
-        actual = sha256(path.read_bytes()).hexdigest()
+        actual = cached_sha256(path)
         if actual != module.sha256:
             raise LaunchError(
                 f"module {module.runtime_name} resolves to {path}, whose "
@@ -395,6 +396,9 @@ def prepare_launch(
             environment["LD_BIND_NOW"] = "1"
     except (OSError, ValueError, KeyError) as error:
         raise LaunchError(str(error)) from error
+    if environment.get("CHIMERA_REGISTRY"):
+        from chimera.runtime.preload.registry import publish_registry
+        publish_registry(Path(environment["CHIMERA_REGISTRY"]), program, root, manifest)
     argv = (str(program), *arguments)
     return LaunchRequest(
         loader, program, argv, library_paths, resolved, environment
@@ -466,6 +470,21 @@ def _execve(request: LaunchRequest) -> NoReturn:
         os.pathsep.join(request.library_paths),
         *request.argv,
     ]
+    if request.environment.get("CHIMERA_REGISTRY"):
+        # Use the ELF's native interpreter: /proc/self/exe must identify the
+        # application, and child exec uses this same machine loader/libc.
+        # Bootstrap mode supports only dependencies validated by native loader.
+        native = interpreter(request.program)
+        if not native:
+            raise LaunchError("bootstrap requires a dynamically linked ELF")
+        resolved = _run_loader(Path(native), ("--list", str(request.program)))
+        if resolved[0]:
+            raise LaunchError("native loader could not resolve bootstrap application")
+        native_paths = {item.path.resolve() for item in parse_loader_list(resolved[1]) if item.path}
+        for path in request.resolved.values():
+            if path != request.program and path.resolve() not in native_paths:
+                raise LaunchError("bootstrap native dependencies differ from verified workspace resolution")
+        os.execve(str(request.program), list(request.argv), request.environment)
     os.execve(str(request.loader), command, request.environment)
     raise AssertionError("os.execve returned unexpectedly")
 

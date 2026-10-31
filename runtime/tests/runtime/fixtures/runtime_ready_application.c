@@ -9,6 +9,8 @@
 
 #include "scene_lifecycle.h"
 
+int chimera_bootstrap_validate_images(const char *workspace) { return workspace != NULL; }
+
 static void emit(const char *message) {
     size_t length = strlen(message);
     assert(write(STDOUT_FILENO, message, length) == (ssize_t)length);

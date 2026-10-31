@@ -6,6 +6,9 @@
 int chimera_artifact_matches(
     const char *workspace,
     const struct chimera_manifest_artifact *artifact);
+int chimera_verified_tables(const char *workspace);
+int chimera_verified_variant_fingerprint(const char *workspace, const char *variant_id,
+    char output[CHIMERA_SHA256_TEXT_SIZE]);
 int chimera_variant_fingerprint(
     const struct chimera_manifest *manifest,
     const struct chimera_manifest_variant *variant,

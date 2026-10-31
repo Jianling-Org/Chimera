@@ -20,7 +20,7 @@ class CommandRoleContractTests(unittest.TestCase):
         parser = build_parser("pkg", prog="chimera-pkg")
         self.assertEqual(
             set(parser._subparsers._group_actions[0].choices),
-            {"check-elf", "prepare", "llvm", "workspace", "status"},
+            {"check-elf", "prepare", "llvm", "workspace", "status", "build-bundle"},
         )
         parser.parse_args(["check-elf", "--profile", "p.toml", "--input", "app"])
         parser.parse_args(["prepare", "--profile", "p.toml", "--input", "app"])
@@ -33,7 +33,7 @@ class CommandRoleContractTests(unittest.TestCase):
         parser = build_parser("user", prog="chimera-user")
         self.assertEqual(
             set(parser._subparsers._group_actions[0].choices),
-            {"list", "verify", "register", "run", "migrate"},
+            {"list", "verify", "register", "bootstrap-register", "run", "migrate"},
         )
 
     def test_removed_entry_commands_are_rejected(self) -> None:

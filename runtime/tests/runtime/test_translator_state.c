@@ -195,7 +195,7 @@ int main(void) {
     memset(forward, 0, CHIMERA_SIMULATED_CPU_STATE_SIZE);
     memset(reverse, 0xa5, CHIMERA_SIMULATED_CPU_STATE_SIZE);
     memcpy(before_reverse, reverse, CHIMERA_SIMULATED_CPU_STATE_SIZE);
-    chimera_scene_save_vector_state(CHIMERA_DIR_1024_TO_256, &context);
+    assert(chimera_scene_save_vector_state(CHIMERA_DIR_1024_TO_256, &context));
     assert_state_layout(forward, vector_bytes);
     assert(!memcmp(
         reverse, before_reverse, CHIMERA_SIMULATED_CPU_STATE_SIZE));
@@ -203,7 +203,7 @@ int main(void) {
     memset(forward, 0x5a, CHIMERA_SIMULATED_CPU_STATE_SIZE);
     memset(reverse, 0, CHIMERA_SIMULATED_CPU_STATE_SIZE);
     memcpy(before_forward, forward, CHIMERA_SIMULATED_CPU_STATE_SIZE);
-    chimera_scene_save_vector_state(CHIMERA_DIR_256_TO_1024, &context);
+    assert(chimera_scene_save_vector_state(CHIMERA_DIR_256_TO_1024, &context));
     assert_state_layout(reverse, vector_bytes);
     assert(!memcmp(
         forward, before_forward, CHIMERA_SIMULATED_CPU_STATE_SIZE));
@@ -212,7 +212,7 @@ int main(void) {
     memset(reverse, 0xa5, CHIMERA_SIMULATED_CPU_STATE_SIZE);
     memcpy(before_forward, forward, CHIMERA_SIMULATED_CPU_STATE_SIZE);
     memcpy(before_reverse, reverse, CHIMERA_SIMULATED_CPU_STATE_SIZE);
-    chimera_scene_save_vector_state((enum chimera_direction)99, &context);
+    assert(!chimera_scene_save_vector_state((enum chimera_direction)99, &context));
     assert(!memcmp(
         forward, before_forward, CHIMERA_SIMULATED_CPU_STATE_SIZE));
     assert(!memcmp(

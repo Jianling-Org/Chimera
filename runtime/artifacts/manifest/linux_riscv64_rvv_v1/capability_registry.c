@@ -1,4 +1,5 @@
 #include "capability_registry.h"
+#include <stdio.h>
 
 #include <ctype.h>
 #include <string.h>
@@ -224,7 +225,11 @@ int chimera_capability_dispatch(
                 || registration->abi != artifact->abi) continue;
             call_context = *context;
             call_context.artifact = artifact;
-            if (!registration->load(&call_context)) return 0;
+            if (!registration->load(&call_context)) {
+                fprintf(stderr, "chimera: cannot load capability %s for %s (%s)\n",
+                        artifact->capability, owner_id, artifact->path);
+                return 0;
+            }
             break;
         }
     }

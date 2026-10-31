@@ -15,6 +15,19 @@ set(CHIMERA_TARGET_ARCH "" CACHE STRING "Runtime target architecture")
 set(CHIMERA_TARGET_EXTENSION "" CACHE STRING "Runtime target extension")
 set(CHIMERA_SCENE "" CACHE STRING "Runtime implementation scene")
 
+option(CHIMERA_BUILD_BOOTSTRAP "Build generic exec bootstrap" OFF)
+if(CHIMERA_BUILD_BOOTSTRAP)
+    enable_language(C)
+    add_library(chimera_bootstrap SHARED runtime/bootstrap/bootstrap.c
+        artifacts/manifest/linux_riscv64_rvv_v1/integrity.c)
+    target_include_directories(chimera_bootstrap PRIVATE interfaces/abi
+        artifacts/manifest/linux_riscv64_rvv_v1)
+    target_compile_options(chimera_bootstrap PRIVATE -Wall -Wextra -Werror -fvisibility=hidden)
+    target_link_libraries(chimera_bootstrap PRIVATE dl)
+    set_target_properties(chimera_bootstrap PROPERTIES OUTPUT_NAME "chimera-bootstrap")
+    install(TARGETS chimera_bootstrap LIBRARY DESTINATION artifacts/runtime)
+endif()
+
 if(CHIMERA_BUILD_RUNTIME OR CHIMERA_BUILD_TESTS)
     enable_language(C)
 endif()

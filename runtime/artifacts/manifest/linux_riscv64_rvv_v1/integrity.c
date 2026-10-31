@@ -1,4 +1,8 @@
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
 #include "integrity.h"
+#include <sys/stat.h>
 
 #include <stdint.h>
 #include <stdio.h>
@@ -117,24 +121,80 @@ static void finish(struct sha256_context *context, uint8_t digest[32]) {
 int chimera_artifact_matches(
     const char *workspace,
     const struct chimera_manifest_artifact *artifact) {
-    struct sha256_context context;
-    uint8_t input[4096], digest[32];
-    char path[4096], actual[CHIMERA_SHA256_TEXT_SIZE];
-    FILE *source;
-    size_t length, index;
-    int written = snprintf(path, sizeof(path), "%s/%s", workspace, artifact->path);
-    if (written < 0 || (size_t)written >= sizeof(path)) return 0;
-    source = fopen(path, "rb");
+    char path[4096], receipt[4096], line[8192];
+    struct stat st;
+    int written = artifact->path[0] == '/'
+        ? snprintf(path, sizeof(path), "%s", artifact->path)
+        : snprintf(path, sizeof(path), "%s/%s", workspace, artifact->path);
+    if (written < 0 || (size_t)written >= sizeof(path) || stat(path, &st)) return 0;
+    written = snprintf(receipt, sizeof(receipt), "%s/artifacts/verified-files.tsv", workspace);
+    if (written < 0 || (size_t)written >= sizeof(receipt)) return 0;
+    FILE *source = fopen(receipt, "r");
     if (!source) return 0;
-    initialize(&context);
-    while ((length = fread(input, 1, sizeof(input), source)) != 0)
-        update(&context, input, length);
-    if (ferror(source)) { fclose(source); return 0; }
-    fclose(source); finish(&context, digest);
-    for (index = 0; index < sizeof(digest); ++index)
-        (void)snprintf(actual + index * 2, 3, "%02x", digest[index]);
-    actual[64] = '\0';
-    return strcmp(actual, artifact->sha256) == 0;
+    int matched = 0;
+    while (fgets(line, sizeof(line), source)) {
+        char *digest = strchr(line, '\t');
+        if (!digest) continue;
+        char *numbers = strchr(++digest, '\t');
+        if (!numbers) continue;
+        *numbers++ = 0;
+        if (artifact->sha256[0] && strcmp(digest, artifact->sha256)) continue;
+        unsigned long long dev, ino, size, ms, mn, cs, cn;
+        if (sscanf(numbers, "%llu\t%llu\t%llu\t%llu\t%llu\t%llu\t%llu",
+            &dev, &ino, &size, &ms, &mn, &cs, &cn) != 7) continue;
+        if (dev == (unsigned long long)st.st_dev && ino == (unsigned long long)st.st_ino
+            && size == (unsigned long long)st.st_size
+            && ms == (unsigned long long)st.st_mtim.tv_sec && mn == (unsigned long long)st.st_mtim.tv_nsec
+            && cs == (unsigned long long)st.st_ctim.tv_sec && cn == (unsigned long long)st.st_ctim.tv_nsec) {
+            matched = 1; break;
+        }
+    }
+    fclose(source);
+    return matched;
+}
+
+int chimera_verified_tables(const char *workspace) {
+    char path[4096];
+    struct stat st;
+    int n = snprintf(path, sizeof(path), "%s/artifacts/verified-files.tsv", workspace);
+    if (n < 0 || (size_t)n >= sizeof(path) || stat(path, &st)) return 0;
+    n = snprintf(path, sizeof(path), "%s/artifacts/verified-tables.tsv", workspace);
+    if (n < 0 || (size_t)n >= sizeof(path)) return 0;
+    FILE *source = fopen(path, "r");
+    if (!source) return 0;
+    unsigned long long dev, ino, size, ms, mn, cs, cn;
+    int count = fscanf(source, "tables-v1\t%llu\t%llu\t%llu\t%llu\t%llu\t%llu\t%llu",
+        &dev, &ino, &size, &ms, &mn, &cs, &cn);
+    fclose(source);
+    return count == 7 && dev == (unsigned long long)st.st_dev
+        && ino == (unsigned long long)st.st_ino && size == (unsigned long long)st.st_size
+        && ms == (unsigned long long)st.st_mtim.tv_sec && mn == (unsigned long long)st.st_mtim.tv_nsec
+        && cs == (unsigned long long)st.st_ctim.tv_sec && cn == (unsigned long long)st.st_ctim.tv_nsec;
+}
+
+int chimera_verified_variant_fingerprint(const char *workspace,
+    const char *variant_id, char output[CHIMERA_SHA256_TEXT_SIZE]) {
+    struct chimera_manifest_artifact identity = {0};
+    strcpy(identity.path, "artifacts/verified-variants.tsv");
+    if (!chimera_artifact_matches(workspace, &identity)) return 0;
+    char path[4096], line[1024];
+    int n = snprintf(path, sizeof(path), "%s/artifacts/verified-variants.tsv", workspace);
+    if (n < 0 || (size_t)n >= sizeof(path)) return 0;
+    FILE *source = fopen(path, "r");
+    if (!source) return 0;
+    int found = 0;
+    while (fgets(line, sizeof(line), source)) {
+        char *digest = strchr(line, '\t');
+        if (!digest) continue;
+        *digest++ = 0;
+        digest[strcspn(digest, "\r\n")] = 0;
+        if (!strcmp(line, variant_id) && strlen(digest) == 64
+            && strspn(digest, "0123456789abcdef") == 64) {
+            strcpy(output, digest); found = 1; break;
+        }
+    }
+    fclose(source);
+    return found;
 }
 
 static int compare_properties(const void *left, const void *right) {

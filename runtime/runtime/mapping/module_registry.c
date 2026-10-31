@@ -46,7 +46,7 @@ static int safety_lookup(const struct chimera_safety_entry *entries, size_t coun
 }
 
 static int validate_variant(const struct chimera_translation_variant *variant,
-                            uint64_t original_span) {
+                            uint64_t original_span, int full) {
     size_t index;
     uint64_t translated_span;
     if (!variant || !variant->body
@@ -67,6 +67,7 @@ static int validate_variant(const struct chimera_translation_variant *variant,
             || site->original_rva >= original_span
             || (index && variant->no_link[index - 1].trap_pc >= site->trap_pc)) return 0;
     }
+    if (!full) return 1;
     for (index = 0; index < variant->forward_count; ++index) {
         if (variant->forward[index].original_rva >= original_span
             || variant->forward[index].translated_rva >= translated_span
@@ -87,7 +88,7 @@ static int validate_variant(const struct chimera_translation_variant *variant,
     return 1;
 }
 
-int chimera_registry_validate(const struct chimera_registry *registry) {
+static int registry_validate(const struct chimera_registry *registry, int full) {
     struct body_range *ranges = NULL;
     size_t mi, vi, capacity, range_count = 0;
     if (!registry || (!registry->modules && registry->module_count)) return 0;
@@ -111,14 +112,14 @@ int chimera_registry_validate(const struct chimera_registry *registry) {
                                   module->original_base,
                                   module->original_end)) goto fail;
         original_span = module->original_end - module->original_base;
-        for (vi = 0; vi < module->safety_count; ++vi) {
+        for (vi = 0; full && vi < module->safety_count; ++vi) {
             if (module->safety[vi].is_safe > 1
                 || (vi && module->safety[vi - 1].original_rva
                     >= module->safety[vi].original_rva)) goto fail;
         }
         for (vi = 0; vi < module->variant_count; ++vi) {
             size_t ov;
-            if (!validate_variant(&module->variants[vi], original_span)) goto fail;
+            if (!validate_variant(&module->variants[vi], original_span, full)) goto fail;
             for (ov = 0; ov < vi; ++ov)
                 if (module->variants[ov].route_id
                     == module->variants[vi].route_id) goto fail;
@@ -132,6 +133,13 @@ int chimera_registry_validate(const struct chimera_registry *registry) {
 fail:
     free(ranges);
     return 0;
+}
+
+int chimera_registry_validate(const struct chimera_registry *registry) {
+    return registry_validate(registry, 1);
+}
+int chimera_registry_validate_layout(const struct chimera_registry *registry) {
+    return registry_validate(registry, 0);
 }
 
 const struct chimera_module *chimera_registry_find_original_module(

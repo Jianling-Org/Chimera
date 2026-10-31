@@ -22,7 +22,16 @@ def runtime_environment(
         and artifact.representation == "elf"
     )
     inject = root / runtime.path
+    registry = os.environ.get("CHIMERA_REGISTRY")
+    if registry:
+        bootstrap = os.environ.get("CHIMERA_BOOTSTRAP")
+        if not bootstrap or not Path(bootstrap).is_absolute() or not Path(bootstrap).is_file():
+            raise ValueError("CHIMERA_BOOTSTRAP must name an installed absolute bootstrap path")
+        inject = Path(bootstrap)
     environment = dict(os.environ)
+    if registry:
+        from .bootstrap_launch import bootstrap_tunables
+        environment["GLIBC_TUNABLES"] = bootstrap_tunables(environment.get("GLIBC_TUNABLES", ""))
     environment["CHIMERA_WORKSPACE"] = str(root)
     # Runtime announces this process after initialization. Children inherit
     # the marker but must not replace the launch parent's notification.

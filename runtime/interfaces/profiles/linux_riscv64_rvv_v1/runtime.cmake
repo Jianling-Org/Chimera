@@ -23,6 +23,7 @@ set(CHIMERA_SCENE_SOURCES
     interfaces/uapi/linux/chimera_environment.c
     interfaces/uapi/linux/chimera_signal.c
     runtime/inject/inject.c
+    runtime/inject/bootstrap_validation.c
     runtime/mapping/module_registry.c
     runtime/migration/linux_riscv64_rvv_v1/route_id.c
     runtime/migration/linux_riscv64_rvv_v1/translation_control.c

@@ -42,7 +42,7 @@
  * wrappers become live only after the Linux UAPI has installed every binding.
  */
 static volatile sig_atomic_t signal_handlers_ready;
-#ifndef CHIMERA_PORTABLE_SIGNAL_TEST
+#if !defined(CHIMERA_PORTABLE_SIGNAL_TEST) && !defined(CHIMERA_SIGNAL_TEST_ACK)
 static int proposal_ack_fd = -1;
 
 struct chimera_proposal_ack {
@@ -346,10 +346,12 @@ int chimera_scene_initialize_signal_handlers(void) {
      * leave migration enabled while dispositions are being rolled back. */
     chimera_scene_disable_signal_handlers();
 #ifndef CHIMERA_PORTABLE_SIGNAL_TEST
+#ifndef CHIMERA_SIGNAL_TEST_ACK
     if (proposal_ack_fd < 0) {
         proposal_ack_fd = open("/proc/prefer_a100_ack", O_WRONLY | O_CLOEXEC);
         if (proposal_ack_fd < 0) return 0;
     }
+#endif
 #endif
     if (!chimera_linux_install_signal_bindings(
             bindings, sizeof(bindings) / sizeof(bindings[0]))) {

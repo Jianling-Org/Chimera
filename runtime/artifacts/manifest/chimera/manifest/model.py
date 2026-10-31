@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from hashlib import sha256
+from .file_identity import cached_sha256
 from pathlib import Path, PurePosixPath
 import re
 
@@ -334,7 +335,7 @@ class WorkspaceManifest:
                 candidate = (root / Path(*relative.parts)).resolve()
                 if not candidate.is_relative_to(root) or not candidate.is_file():
                     raise ValueError(f"artifact is missing or escapes workspace: {artifact.path}")
-                actual = sha256(candidate.read_bytes()).hexdigest()
+                actual = cached_sha256(candidate)
                 if actual != artifact.sha256:
                     raise ValueError(f"artifact SHA-256 mismatch: {artifact.path}")
 

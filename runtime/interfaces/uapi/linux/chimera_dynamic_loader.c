@@ -39,7 +39,9 @@ void *chimera_linux_open_workspace_library(const char *workspace, const char *re
     if (!workspace || !relative_name) return NULL;
     length = snprintf(path, sizeof(path), "%s/%s", workspace, relative_name);
     if (length < 0 || (size_t)length >= sizeof(path)) return NULL;
-    return dlopen(path, RTLD_NOW | RTLD_GLOBAL);
+    void *handle = dlopen(path, RTLD_NOW | RTLD_GLOBAL);
+    if (!handle) fprintf(stderr, "chimera: cannot load %s: %s\n", path, dlerror());
+    return handle;
 }
 
 void *chimera_linux_lookup_symbol(void *handle, const char *symbol) {

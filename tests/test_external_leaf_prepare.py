@@ -54,7 +54,10 @@ class PrepareLeafTests(unittest.TestCase):
             result = SafetyStep(min_vlen_bits=256, compiler_metadata=(),
                                external_scalar_leaf_contracts=[CONTRACT]).run(self.context)
         binder.assert_called_once()
-        self.assertFalse(result.require_global("safety_analysis").safety.records[0x1008].safe)
+        self.assertNotIn(0x1008, result.require_global("safety_analysis").iter_safe_addresses())
+        safety_document = json.loads((self.stage / "generated/app.safety.json").read_text())
+        self.assertFalse(next(entry for entry in safety_document["entries"]
+                              if entry["address"] == 0x1008)["safe"])
         artifact = self.session.registry.artifacts["external-leaves-app"]
         document = json.loads((self.stage / artifact.path).read_text(encoding="utf-8"))
         self.assertEqual(document["elf_sha256"], sha256(self.app.read_bytes()).hexdigest())

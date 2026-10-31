@@ -160,7 +160,7 @@ def _validate_cleanup_tree(root: Path) -> None:
 _COMMAND_GROUPS = {
     "dev": {"rebuild", "toolchain", "wheel"},
     "pkg": {"check-elf", "prepare", "llvm", "workspace", "status", "build-bundle"},
-    "user": {"list", "verify", "register", "run", "migrate"},
+    "user": {"list", "verify", "register", "bootstrap-register", "run", "migrate"},
 }
 
 
@@ -261,8 +261,17 @@ def build_parser(command_group: str | None = None, *, prog: str | None = None) -
     register.add_argument("--input", type=Path, required=True, dest="input_elf")
     register.add_argument("--workspace")
     run = commands.add_parser("run", help="以 Workspace 运行指定的应用")
-    run.add_argument("--input", type=Path, required=True, dest="input_elf")
+    run.add_argument("--input", type=Path, dest="input_elf")
     run.add_argument("--workspace")
+    run.add_argument("--registry", type=Path)
+    run.add_argument("--bootstrap", type=Path)
+    run.add_argument("--automigrate", action="store_true")
+    run.add_argument("--preference", choices=("prefer-x100", "prefer-a100"),
+                     help="每进程自动迁移策略，子进程继承；隐含 --automigrate")
+    bootstrap_register = commands.add_parser("bootstrap-register", help="发布已验证 ELF 到 bootstrap registry")
+    bootstrap_register.add_argument("--input", type=Path, required=True, dest="input_elf")
+    bootstrap_register.add_argument("--workspace", required=True)
+    bootstrap_register.add_argument("--registry", type=Path, required=True)
     run.add_argument("application_args", nargs=argparse.REMAINDER)
     migrate = commands.add_parser("migrate", help="选择线程执行迁移")
     migrate.add_argument(
@@ -1137,7 +1146,43 @@ def main(argv: list[str] | None = None, *, command_group: str | None = None,
                 verify_workspace(workspace, settings)
                 print("workspace verification passed")
                 return 0
+            if arguments.command == "bootstrap-register":
+                from chimera.runtime.preload.registry import publish_registry
+                workspace = _workspace(arguments, settings)
+                verify_workspace_installation(workspace)
+                # Registry publication validates artifacts, without the legacy
+                # pinned BPF map. The bootstrap uses the proc readiness API.
+                manifest = verify_workspace(workspace, settings, check_host=False)
+                publish_registry(arguments.registry, arguments.input_elf, workspace, manifest)
+                return 0
             if arguments.command == "run":
+                if arguments.preference and not (arguments.registry and arguments.bootstrap):
+                    raise ValueError("--preference requires --registry and --bootstrap")
+                if arguments.registry or arguments.bootstrap:
+                    from chimera.runtime.preload.bootstrap_launch import launch_bootstrap
+                    if not arguments.registry or not arguments.bootstrap:
+                        raise ValueError("--registry and --bootstrap must be supplied together")
+                    application_args = list(arguments.application_args)
+                    if application_args and application_args[0] == "--": application_args.pop(0)
+                    program = arguments.input_elf
+                    if program is None:
+                        import shutil
+                        if not application_args: raise ValueError("run requires a program")
+                        name = application_args.pop(0)
+                        resolved = shutil.which(name)
+                        if not resolved: raise ValueError("program not found: " + name)
+                        program = Path(resolved)
+                    if arguments.workspace:
+                        from chimera.runtime.preload.registry import publish_registry
+                        workspace = _workspace(arguments, settings)
+                        verify_workspace_installation(workspace)
+                        manifest = verify_workspace(workspace, settings, check_host=False)
+                        publish_registry(arguments.registry, program, workspace, manifest)
+                    launch_bootstrap(program, application_args, arguments.bootstrap,
+                                     arguments.registry, arguments.automigrate, arguments.preference)
+                    return 0
+                if arguments.input_elf is None:
+                    raise ValueError("legacy run requires --input; bootstrap run requires --registry and --bootstrap")
                 application_args = list(arguments.application_args)
                 if application_args and application_args[0] == "--":
                     application_args.pop(0)

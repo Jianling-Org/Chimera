@@ -37,13 +37,14 @@ int chimera_artifact_matches(
     (void)artifact;
     return 1;
 }
+int chimera_verified_tables(const char *workspace) { (void)workspace; return 1; }
 
-int chimera_variant_fingerprint(
-    const struct chimera_manifest *manifest,
-    const struct chimera_manifest_variant *variant,
+int chimera_verified_variant_fingerprint(
+    const char *workspace,
+    const char *variant_id,
     char output[CHIMERA_SHA256_TEXT_SIZE]) {
-    (void)manifest;
-    (void)variant;
+    (void)workspace;
+    (void)variant_id;
     memset(output, 'a', CHIMERA_SHA256_TEXT_SIZE - 1);
     output[CHIMERA_SHA256_TEXT_SIZE - 1] = '\0';
     return 1;

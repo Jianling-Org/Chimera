@@ -99,6 +99,7 @@ class BuildRuntimeStep:
                 )
             builder = context.toolchain.code_builder
             defines = {
+                "CMAKE_BUILD_TYPE": "Release",
                 "CHIMERA_BUILD_RUNTIME": "ON",
                 "CHIMERA_INSTALL_RUNTIME_SOURCE": "OFF",
                 "CHIMERA_BUILD_TESTS": "OFF",

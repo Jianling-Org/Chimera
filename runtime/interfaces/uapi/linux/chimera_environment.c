@@ -5,5 +5,6 @@
 #include <stdlib.h>
 
 int chimera_linux_prepare_environment(void) {
-    return unsetenv("LD_PRELOAD") == 0;
+    /* Generic bootstrap must survive ordinary exec. Legacy inject remains one-shot. */
+    return getenv("CHIMERA_REGISTRY") ? 1 : unsetenv("LD_PRELOAD") == 0;
 }

@@ -48,7 +48,7 @@ class CliTests(unittest.TestCase):
         )
         self.assertEqual(
             set(build_parser("user")._subparsers._group_actions[0].choices),
-            {"list", "verify", "register", "run", "migrate"},
+            {"list", "verify", "register", "bootstrap-register", "run", "migrate"},
         )
 
     def test_migration_explicit_threads_are_parsed(self) -> None:

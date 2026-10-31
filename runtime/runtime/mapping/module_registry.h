@@ -18,6 +18,8 @@ int chimera_registry_describe_address(
     struct chimera_address_info *out);
 
 int chimera_registry_validate(const struct chimera_registry *registry);
+/* Only after the registered file-identity receipt and table proof match. */
+int chimera_registry_validate_layout(const struct chimera_registry *registry);
 const struct chimera_module *chimera_registry_find_original_module(
     const struct chimera_registry *registry, uint64_t original_pc);
 const struct chimera_translation_variant *chimera_module_find_variant_by_route(

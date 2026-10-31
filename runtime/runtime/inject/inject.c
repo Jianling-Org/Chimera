@@ -36,8 +36,21 @@ static void announce_launch_ready(void) {
     }
 }
 
+__attribute__((visibility("default")))
+int chimera_runtime_initialize_v1(const char *workspace) {
+    extern int chimera_bootstrap_validate_images(const char *);
+    if (!chimera_bootstrap_validate_images(workspace)) return 0;
+    if (!chimera_scene_initialize_runtime(workspace)) return 0;
+    announce_launch_ready();
+    return 1;
+}
+
 __attribute__((constructor))
 static void initialize_chimera_runtime(void) {
+    if (getenv("CHIMERA_VERIFY_TABLES_ONLY")) {
+        _exit(chimera_scene_initialize_runtime(getenv("CHIMERA_WORKSPACE")) ? 0 : 125);
+    }
+    if (getenv("CHIMERA_REGISTRY")) return;
     const char *workspace = getenv("CHIMERA_WORKSPACE");
     if (chimera_scene_initialize_runtime(workspace)) {
         announce_launch_ready();

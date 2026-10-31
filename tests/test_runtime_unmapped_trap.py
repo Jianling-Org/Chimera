@@ -34,7 +34,9 @@ class NativeUnmappedTrapTests(unittest.TestCase):
             "interfaces/uapi/linux/chimera_signal.c",
             "runtime/migration/linux_riscv64_rvv_v1/signal_handlers.c",
         )
-        command = [compiler, "-std=c11", "-Wall", "-Wextra", "-Werror"]
+        # Keep real Linux sigaction while simulating the kernel ACK endpoint.
+        command = [compiler, "-std=c11", "-Wall", "-Wextra", "-Werror",
+                   "-DCHIMERA_SIGNAL_TEST_ACK=1"]
         if not sys.platform.startswith("linux"):
             command.append("-DCHIMERA_PORTABLE_SIGNAL_TEST=1")
         for include in includes:
@@ -69,6 +71,43 @@ class NativeUnmappedTrapTests(unittest.TestCase):
         result = self.run_contract()
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertNotIn("exit trap has no reverse offset-map entry", result.stderr)
+
+    @unittest.skipUnless(sys.platform.startswith("linux"), "requires Linux waitpid")
+    def test_policy_notification_restarts_child_wait(self):
+        source = Path(self.temporary.name) / "restart-wait.c"
+        executable = source.with_suffix("")
+        source.write_text(r'''
+#define _GNU_SOURCE
+#include <assert.h>
+#include <signal.h>
+#include <sys/wait.h>
+#include <unistd.h>
+#include "chimera_signal.h"
+static volatile sig_atomic_t received;
+static void notify(int n, siginfo_t *i, void *c) {
+    (void)n; (void)i; (void)c; received = 1;
+}
+int main(void) {
+    struct chimera_linux_signal_binding binding = {SIGUSR1, notify};
+    assert(chimera_linux_install_signal_bindings(&binding, 1));
+    pid_t parent = getpid(), child = fork();
+    assert(child >= 0);
+    if (!child) {
+        usleep(100000); assert(kill(parent, SIGUSR1) == 0);
+        usleep(100000); _exit(23);
+    }
+    int status = 0;
+    assert(waitpid(child, &status, 0) == child);
+    assert(received && WIFEXITED(status) && WEXITSTATUS(status) == 23);
+    return 0;
+}
+''')
+        runtime = ROOT / "runtime"
+        subprocess.run([shutil.which("cc"), "-Wall", "-Wextra", "-Werror",
+                        "-I" + str(runtime / "interfaces/uapi/linux"),
+                        str(source), str(runtime / "interfaces/uapi/linux/chimera_signal.c"),
+                        "-o", str(executable)], check=True, timeout=30)
+        subprocess.run([str(executable)], check=True, timeout=3)
 
 
 if __name__ == "__main__":

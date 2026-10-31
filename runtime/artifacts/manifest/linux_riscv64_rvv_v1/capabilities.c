@@ -3,6 +3,20 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/time.h>
+
+static double startup_seconds(void) {
+    struct timeval now;
+    gettimeofday(&now, NULL);
+    return (double)now.tv_sec + (double)now.tv_usec / 1000000.0;
+}
+static void startup_stage(const char *stage, double *start) {
+    if (getenv("CHIMERA_STARTUP_TIMING")) {
+        double now = startup_seconds();
+        fprintf(stderr, "chimera startup: %s %.6f seconds\n", stage, now - *start);
+        *start = now;
+    }
+}
 
 #include "capability_registry.h"
 #include "chimera_dynamic_loader.h"
@@ -201,13 +215,20 @@ int chimera_capabilities_load(const char *workspace,
                               struct chimera_registry *registry) {
     struct chimera_module *modules;
     size_t ai, mi;
+    double started = startup_seconds();
     memset(registry, 0, sizeof(*registry));
     if (strcmp(manifest->target_os, "linux")
         || strcmp(manifest->target_arch, "riscv64")
         || strcmp(manifest->target_arch_extension, "rvv")
         || strcmp(manifest->runtime_scene, "linux_riscv64_rvv_v1")) return 0;
+    struct chimera_manifest_artifact manifest_identity = {0};
+    strcpy(manifest_identity.path, "artifacts/modules.tsv");
+    if (!chimera_artifact_matches(workspace, &manifest_identity)) return 0;
     for (ai = 0; ai < manifest->artifact_count; ++ai)
-        if (!chimera_artifact_matches(workspace, &manifest->artifacts[ai])) return 0;
+        if (!chimera_artifact_matches(workspace, &manifest->artifacts[ai])) {
+            fprintf(stderr, "chimera: artifact hash mismatch: %s\n", manifest->artifacts[ai].path);
+            return 0;
+        }
     if (!validate_artifact_contracts(manifest)) return 0;
     if (manifest->runtime_abi != CHIMERA_RUNTIME_ABI_V1) return 0;
     {
@@ -219,6 +240,7 @@ int chimera_capabilities_load(const char *workspace,
             || runtime_artifact->abi != CHIMERA_RUNTIME_ABI_V1) return 0;
     }
     modules = calloc(manifest->module_count, sizeof(*modules));
+    startup_stage("receipts-and-contracts", &started);
     if (!modules) return 0;
     registry->modules = modules;
     registry->module_count = manifest->module_count;
@@ -226,9 +248,20 @@ int chimera_capabilities_load(const char *workspace,
         const struct chimera_manifest_module *descriptor = &manifest->modules[mi];
         struct chimera_module *module = &modules[mi];
         if (!chimera_load_module(workspace, manifest, registry,
-                                 descriptor, module)) goto fail;
+                                 descriptor, module)) {
+            fprintf(stderr, "chimera: cannot initialize module %s\n", descriptor->module_id);
+            goto fail;
+        }
     }
-    if (!chimera_registry_validate(registry)) goto fail;
+    startup_stage("load-modules", &started);
+    int verifying = getenv("CHIMERA_VERIFY_TABLES_ONLY") != NULL;
+    if ((!verifying && !chimera_verified_tables(workspace))
+        || !(verifying ? chimera_registry_validate(registry)
+                       : chimera_registry_validate_layout(registry))) {
+        fprintf(stderr, "chimera: loaded registry contract is invalid\n");
+        goto fail;
+    }
+    startup_stage("validate-tables", &started);
     return 1;
 fail:
     chimera_capabilities_destroy(registry);
