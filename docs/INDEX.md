@@ -170,6 +170,13 @@
 | [experiments/gcc-validation/k3-20261029/LICENSE.md](../experiments/gcc-validation/k3-20261029/LICENSE.md) | 迁移验收代码许可证范围 |
 | [docs/validation/performance-report-feedback.zh-CN.md](validation/performance-report-feedback.zh-CN.md) | 报告修改建议及未整理项目 |
 
+## 初始化与模型复测（2）
+
+| 文档 | 内容 |
+|---|---|
+| [experiments/runtime-evaluation/README.md](../experiments/runtime-evaluation/README.md) | 初始化开销、模型迁移及新复测协议 |
+| [docs/validation/performance-report-update.zh-CN.md](validation/performance-report-update.zh-CN.md) | 补充脚本后的报告修改说明 |
+
 ## 许可证正文
 
 - [Apache-2.0](../LICENSES/Apache-2.0.txt)

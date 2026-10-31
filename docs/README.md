@@ -55,3 +55,4 @@ Chimera 为 RISC-V 向量应用生成离线检查与翻译工件，并通过运�
 - [GCC 64任务并发矩阵与原执行脚本](../experiments/gcc-performance/k3-20261029/README.md)
 - [GCC 子进程迁移验收与准备时间](../experiments/gcc-validation/k3-20261029/README.md)
 - [性能测试报告反馈](validation/performance-report-feedback.zh-CN.md)
+- [初始化开销与模型迁移复测](../experiments/runtime-evaluation/README.md)

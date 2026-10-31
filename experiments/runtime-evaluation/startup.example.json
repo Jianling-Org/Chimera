@@ -1,0 +1,165 @@
+{
+  "protocol": "startup-retest-v1",
+  "source_tree": "/absolute/Chimera-source",
+  "source_commit": "REPLACE_WITH_40_CHARACTER_COMMIT",
+  "kernel": "REPLACE_WITH_UNAME_R",
+  "cpus": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+  ],
+  "environment": {},
+  "assets": {
+    "bootstrap": {
+      "path": "/absolute/libchimera-bootstrap.so",
+      "sha256": "REPLACE_WITH_SHA256"
+    },
+    "registry": {
+      "path": "/absolute/registry.tsv",
+      "sha256": "REPLACE_WITH_SHA256"
+    },
+    "profile": {
+      "path": "/absolute/profile.toml",
+      "sha256": "REPLACE_WITH_SHA256"
+    },
+    "gcc": {
+      "path": "/absolute/gcc/xgcc",
+      "sha256": "REPLACE_WITH_SHA256"
+    },
+    "cc1": {
+      "path": "/absolute/gcc/cc1",
+      "sha256": "REPLACE_WITH_SHA256"
+    },
+    "tiny_source": {
+      "path": "/absolute/tiny.c",
+      "sha256": "REPLACE_WITH_SHA256"
+    },
+    "source_inventory": {
+      "path": "/absolute/source-inputs.json",
+      "sha256": "REPLACE_WITH_SHA256"
+    },
+    "seed_inventory": {
+      "path": "/absolute/seed-inputs.json",
+      "sha256": "REPLACE_WITH_SHA256"
+    }
+  },
+  "repeats": 3,
+  "workspaces": [
+    {
+      "path": "/absolute/workspaces/xgcc",
+      "receipt_rows": 34,
+      "sha256": {
+        "workspace.json": "REPLACE_WITH_SHA256",
+        "artifacts/verified-files.tsv": "REPLACE_WITH_SHA256",
+        "artifacts/verified-variants.tsv": "REPLACE_WITH_SHA256",
+        "artifacts/verified-tables.tsv": "REPLACE_WITH_SHA256"
+      }
+    },
+    {
+      "path": "/absolute/workspaces/cc1",
+      "receipt_rows": 44,
+      "sha256": {
+        "workspace.json": "REPLACE_WITH_SHA256",
+        "artifacts/verified-files.tsv": "REPLACE_WITH_SHA256",
+        "artifacts/verified-variants.tsv": "REPLACE_WITH_SHA256",
+        "artifacts/verified-tables.tsv": "REPLACE_WITH_SHA256"
+      }
+    }
+  ],
+  "inventories": [
+    "source_inventory",
+    "seed_inventory"
+  ],
+  "workloads": [
+    {
+      "name": "cc1-version",
+      "argv": [
+        "/absolute/gcc/cc1",
+        "--version"
+      ],
+      "cwd": "/absolute/prepared-seed",
+      "timeout_seconds": 60,
+      "initialized_assets": [
+        "cc1"
+      ]
+    },
+    {
+      "name": "tiny-c",
+      "argv": [
+        "/absolute/gcc/xgcc",
+        "-B/absolute/gcc/",
+        "-O2",
+        "-march=rv64gc",
+        "-mabi=lp64d",
+        "-frandom-seed=chimera-startup-retest",
+        "-fno-ident",
+        "-x",
+        "c",
+        "-c",
+        "-",
+        "-o",
+        "{output}"
+      ],
+      "stdin_asset": "tiny_source",
+      "cwd": "/absolute/prepared-seed",
+      "timeout_seconds": 120,
+      "initialized_assets": [
+        "gcc",
+        "cc1"
+      ]
+    },
+    {
+      "name": "lib-bsearch",
+      "argv": [
+        "/absolute/gcc/xgcc",
+        "-B/absolute/gcc/",
+        "REPLACE_WITH_SAVED_KBUILD_ARGUMENTS",
+        "-o",
+        "{output}"
+      ],
+      "cwd": "/absolute/prepared-seed",
+      "timeout_seconds": 600,
+      "initialized_assets": [
+        "gcc",
+        "cc1"
+      ]
+    },
+    {
+      "name": "kernel-fork",
+      "argv": [
+        "/absolute/gcc/xgcc",
+        "-B/absolute/gcc/",
+        "REPLACE_WITH_SAVED_KBUILD_ARGUMENTS",
+        "-o",
+        "{output}"
+      ],
+      "cwd": "/absolute/prepared-seed",
+      "timeout_seconds": 600,
+      "initialized_assets": [
+        "gcc",
+        "cc1"
+      ]
+    },
+    {
+      "name": "mm-mmap",
+      "argv": [
+        "/absolute/gcc/xgcc",
+        "-B/absolute/gcc/",
+        "REPLACE_WITH_SAVED_KBUILD_ARGUMENTS",
+        "-o",
+        "{output}"
+      ],
+      "cwd": "/absolute/prepared-seed",
+      "timeout_seconds": 600,
+      "initialized_assets": [
+        "gcc",
+        "cc1"
+      ]
+    }
+  ]
+}

@@ -77,3 +77,7 @@ chimera-user run --workspace "$WORKSPACE" --input "$ELF" -- \
 | 预先声明的 PPL 绝对容差 | 0.01 |
 
 主线程和工作线程采用相同迁移条件，状态转换见[双向自动迁移](../../../../docs/architecture/automigration.md)。部署验证包括缩减双向往返、线程矩阵、账本与告警检查、16 线程连续 10 轮，以及至少两小时的混合线程数负载。完整项目和结果见[自动迁移验证](../../../../docs/validation/automigration.md)，实测文件身份见[产物记录](../../../../docs/validation/measured-artifacts.json)。
+
+## 批次复测
+
+新的[模型迁移复测入口](../../../../experiments/runtime-evaluation/README.md)覆盖线程矩阵、十次16线程重复和两小时混合负载，并保留原始ACK/CPU及退出资源证据。该入口尚未完成新的K3运行；本页既有数值仍是历史记录。
