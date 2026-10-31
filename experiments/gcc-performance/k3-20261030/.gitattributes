@@ -1,0 +1,2 @@
+harness/** -text -whitespace
+results/** -text -whitespace

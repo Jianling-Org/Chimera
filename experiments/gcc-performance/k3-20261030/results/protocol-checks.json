@@ -1,0 +1,21 @@
+{
+  "passed": true,
+  "checks": [
+    "12 unique all-j16 Image rows",
+    "3 warmups and9 measured",
+    "balanced three-mode order",
+    "runtime rejects non16 workers",
+    "native CPU mask0-7 enforced",
+    "raw CPU tick boundaries saved"
+  ],
+  "source_sha256": {
+    "image_controller_j16.py": "ab84e1df3ea232a077164d2989f6d5f2985c86ae7930e7bd3fde65a957d8625b",
+    "performance_round_j16.py": "01c303ef1290e769efdcc33f0ccdcc4eb20a729ad31ee8fd33f521791deb98da",
+    "perf_common_j16.py": "91a854f8ed59fd51dd3e4e38ac68c8488e125b8298fab40e771353c969a12bb2",
+    "perf_storage_policy_v2.py": "cae0d24438faeb350e2b0d534c73554c92cef8d0aba5b02ef49fe4d2564ab0bf",
+    "prelaunch_j16.py": "cf6eb528c81a9a59ac3d42faa7d2514718444e830b207ee82ee337e17d2c4eda",
+    "record_resources.py": "7e94f65d340cdb788e6bae100cba1959d33d6390682e621f6e7db29af8e24702",
+    "test_perf_policy_v2.py": "98d83aaf61881ee57fc79eea46934aff2db0e536f2840fc6df118de65b75a3a3",
+    "watchdog.py": "2fc70f4aa4d93643e71224034b954b59dd192ff3807bd540dc88fbec13e9df5a"
+  }
+}

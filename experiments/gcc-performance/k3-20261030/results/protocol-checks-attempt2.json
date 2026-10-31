@@ -1,0 +1,12 @@
+{
+  "passed": true,
+  "diagnosed_fix": "Legacy plan test imported a controller absent from new isolated namespace; override only that test to verify current12all-j16 IDs and disjointness;13otherpolicytests inherited unchanged",
+  "failed_attempt_preserved": true,
+  "formal_rounds_started_in_failed_attempt": 0,
+  "source_sha256": {
+    "image_controller_j16_v2.py": "042fb91d6e1883cab61709ce1a79d54379de081c208bdb368cf51767e05f7924",
+    "prelaunch_j16_v2.py": "151188f7c3cf15ac02571197d5c5fddaaafabbd66c98437b158a1bd14327050b",
+    "performance_round_j16_v2.py": "6b22cc33acab36cc35dda9aa6f6fd02f6d37e85b330ef31f88fec574e8aafced",
+    "test_perf_policy_j16.py": "1839c1aa9d52df3a99a7975990dca6b560db30f702c390024d77b958e7eed82e"
+  }
+}

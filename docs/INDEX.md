@@ -126,6 +126,14 @@
 |---|---|
 | [tools/README.md](../tools/README.md) | 开发与诊断工具 |
 
+## GCC性能实验记录（3）
+
+| 文档 | 内容 |
+|---|---|
+| [experiments/gcc-performance/k3-20261030/README.md](../experiments/gcc-performance/k3-20261030/README.md) | 同16并发测试、结果与复现边界 |
+| [experiments/gcc-performance/k3-20261030/results/同16并发性能报告.zh-CN.md](../experiments/gcc-performance/k3-20261030/results/同16并发性能报告.zh-CN.md) | 完整性能报告与CPU/维护观测 |
+| [experiments/gcc-performance/k3-20261030/LICENSE.md](../experiments/gcc-performance/k3-20261030/LICENSE.md) | 本实验代码许可证范围 |
+
 ## 许可证正文
 
 - [Apache-2.0](../LICENSES/Apache-2.0.txt)
