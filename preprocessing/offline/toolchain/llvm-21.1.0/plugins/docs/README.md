@@ -89,3 +89,11 @@ cmake --build build/chimera-svf --target ChimeraFunctionPointer
 1. [architecture.md](architecture.md) —— 最终架构、模块边界、PCSections transport、三条 pipeline、wire format、classifier、inline-asm 规则、废弃方案。
 2. [llvm-patches.md](llvm-patches.md) —— `patches/*.patch` 中的 patch 逐个说明。
 3. [testing.md](testing.md) —— 可复现的测试指南；结果以 runner 输出为准。
+# SVF analysis profiling
+
+Set `CHIMERA_SVF_PROFILE=1` in the linker environment to print function and
+indirect-call counts, stage and total elapsed milliseconds, and process peak
+RSS in KiB. Stages cover module cloning, SVF module/PAG construction, Andersen
+analysis, metadata emission and cleanup. RSS is the process high-water mark,
+not memory allocated exclusively by a stage. Profiling is disabled by default
+and does not change safety decisions or function-pointer metadata.

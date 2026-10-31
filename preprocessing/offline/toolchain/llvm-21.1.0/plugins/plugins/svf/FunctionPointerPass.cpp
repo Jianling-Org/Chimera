@@ -23,8 +23,11 @@
 #include <dlfcn.h>
 
 #include <cstdlib>
+#include <chrono>
+#include <sys/resource.h>
 #include <filesystem>
 #include <string>
+#include <utility>
 
 using namespace llvm;
 
@@ -56,6 +59,26 @@ FunctionPointerPass::run(
     Module &M,
     ModuleAnalysisManager &) {
 
+  // Opt-in diagnostics only: never alter the analysis or emitted metadata.
+  const char *Profile = std::getenv("CHIMERA_SVF_PROFILE");
+  const bool ProfileEnabled = Profile && std::string(Profile) == "1";
+  const auto ProfileStart = std::chrono::steady_clock::now();
+  auto ProfileLast = ProfileStart;
+  auto ProfileStage = [&](const char *Stage) {
+    if (!ProfileEnabled)
+      return;
+    const auto Now = std::chrono::steady_clock::now();
+    struct rusage Usage = {};
+    const bool HasUsage = getrusage(RUSAGE_SELF, &Usage) == 0;
+    errs() << "[Chimera SVF profile] stage=" << Stage
+           << " elapsed_ms="
+           << std::chrono::duration_cast<std::chrono::milliseconds>(Now - ProfileStart).count()
+           << " stage_ms="
+           << std::chrono::duration_cast<std::chrono::milliseconds>(Now - ProfileLast).count()
+           << " maxrss_kib=" << (HasUsage ? Usage.ru_maxrss : -1) << "\n";
+    ProfileLast = Now;
+  };
+
   /*
    * Collect indirect callsites from the ORIGINAL module.
    *
@@ -77,6 +100,10 @@ FunctionPointerPass::run(
     }
   }
 
+  if (ProfileEnabled)
+    errs() << "[Chimera SVF profile] functions=" << M.size()
+           << " indirect_calls=" << OriginalCallsites.size() << "\n";
+  ProfileStage("collect-callsites");
   if (OriginalCallsites.empty())
     return PreservedAnalyses::all();
 
@@ -94,6 +121,7 @@ FunctionPointerPass::run(
 
   std::unique_ptr<Module> AnalysisModule =
       CloneModule(M, VMap);
+  ProfileStage("clone-module");
 
   /*
    * Reverse function mapping:
@@ -208,11 +236,13 @@ FunctionPointerPass::run(
    */
   SVF::LLVMModuleSet::buildSVFModule(
       *AnalysisModule);
+  ProfileStage("build-svf-module");
 
   SVF::SVFIRBuilder Builder;
 
   SVF::SVFIR *Pag =
       Builder.build();
+  ProfileStage("build-pag");
 
   /*
    * Run Andersen WaveDiff manually rather than using
@@ -225,11 +255,13 @@ FunctionPointerPass::run(
   auto *Andersen =
       new SVF::AndersenWaveDiff(
           Pag,
-          SVF::PointerAnalysis::AndersenWaveDiff_WPA,
+          decltype(std::declval<SVF::AndersenWaveDiff>().getAnalysisTy())::AndersenWaveDiff_WPA,
           false);
 
   Andersen->disablePrintStat();
+  ProfileStage("andersen-start");
   Andersen->analyze();
+  ProfileStage("andersen-complete");
 
   SVF::LLVMModuleSet *ModuleSet =
       SVF::LLVMModuleSet::
@@ -442,12 +474,14 @@ FunctionPointerPass::run(
   /*
    * Clean up SVF global/singleton state.
    */
+  ProfileStage("emit-callsite-metadata");
   delete Andersen;
 
   SVF::SVFIR::releaseSVFIR();
 
   SVF::LLVMModuleSet::
       releaseLLVMModuleSet();
+  ProfileStage("cleanup");
 
   /*
    * Every indirect callsite received metadata.
