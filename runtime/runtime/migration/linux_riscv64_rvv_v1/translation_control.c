@@ -83,8 +83,13 @@ enum chimera_migration_decision_status chimera_decide_migration_status(
      * Refuse before saving/committing the signal context instead. */
     if (!module->safety || !module->safety_count)
         return CHIMERA_MIGRATION_PREPARE_FAILED;
-    if (chimera_module_address_is_safe(module, current_pc))
-        return CHIMERA_MIGRATION_NOT_MIGRATABLE;
+    /* A safe source instruction is also a valid transition boundary.  The
+     * offline patcher replaces its mapped translated entry with an exit trap;
+     * after ACK commits the CPU, that trap returns to the original instruction
+     * on the target group.  Do not reject scalar programs merely because all
+     * their instructions are safe.  Keep the ordinary route/map/save/ACK path
+     * (including translated-body rejection); never return directly at this PC.
+     * Missing Safety tables remain rejected above. */
     if (source_vlen_bits == UINT64_C(1024)) {
         decision.direction = CHIMERA_DIR_1024_TO_256;
         decision.target_type = CHIMERA_CODE_TRANSLATED_1024_TO_256;

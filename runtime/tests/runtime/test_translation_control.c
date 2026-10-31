@@ -136,7 +136,12 @@ int main(void) {
         == CHIMERA_MIGRATION_MISSING_ROUTE);
     assert(chimera_decide_migration_status(
         &registry, UINT64_C(0x1010), UINT64_C(1024), &decision)
-        == CHIMERA_MIGRATION_NOT_MIGRATABLE);
+        == CHIMERA_MIGRATION_READY);
+    assert(decision.direction == CHIMERA_DIR_1024_TO_256);
+    assert(chimera_decide_migration_status(
+        &registry, UINT64_C(0x1010), UINT64_C(256), &decision)
+        == CHIMERA_MIGRATION_READY);
+    assert(decision.direction == CHIMERA_DIR_256_TO_1024);
     assert(chimera_decide_migration_status(
         &registry, UINT64_C(0x1020), UINT64_C(512), &decision)
         == CHIMERA_MIGRATION_PREPARE_FAILED);
@@ -148,7 +153,7 @@ int main(void) {
         &one_way_registry, UINT64_C(0x1030), UINT64_C(1024), &decision));
 
     assert_decision_unchanged(
-        &registry, UINT64_C(0x1010), UINT64_C(1024));
+        &registry, UINT64_C(0x5020), UINT64_C(1024));
     assert_decision_unchanged(
         &empty_registry, UINT64_C(0x1020), UINT64_C(1024));
     assert_decision_unchanged(
