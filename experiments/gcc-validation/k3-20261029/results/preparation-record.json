@@ -1,0 +1,47 @@
+{
+  "record_type": "selected_checkpoint_fields",
+  "source": "tmp/gcc-validation/checkpoint.json",
+  "source_sha256": "9911949b8aba05f34623cbb9acee5ed05208e2c27fedbd9464b42612b772c64b",
+  "scope": "single successful build/preparation attempts; not formal performance repeats",
+  "source_commit": "578ab8321c0788ab8cba1ad24324f220e1e4a149",
+  "phases": {
+    "gate_build_completed": {
+      "attempt": 1,
+      "exit_code": 0,
+      "seconds": 5133.349441954,
+      "elf_sha256": {
+        "xgcc": "88931e9e1309afa31f1e5e056700a8cb1a1684990b9939ea62205f8a31e3a89b",
+        "cc1": "d4e48555d5cd292da07dc820f57eb964df37ffef87723fd799f6a50bb993b7ff"
+      }
+    },
+    "prepare_xgcc_completed": {
+      "attempt": 1,
+      "exit_code": 0,
+      "seconds": 1190.4103371289966,
+      "completed_utc": "2026-10-28T03:37:26Z",
+      "workspace": "/root/chimera-gcc-validation-578ab8321/workspaces/xgcc",
+      "memory_peak_bytes": 3196133376,
+      "oom_kill": 0,
+      "scope": "Both-route native-bootstrap artifact verification passed; actual runtime readiness and migration remain pending",
+      "artifact_verification": {
+        "passed": true,
+        "both_routes": true,
+        "artifact_count": 26,
+        "host_check": false,
+        "scope": "native-bootstrap artifacts and route topology; legacy BPF host check not applicable; native proc readiness and actual migration remain pending",
+        "evidence_archive": "tmp/gcc-validation/xgcc-prepare-verified-recovery-evidence.tar.gz"
+      }
+    },
+    "prepare_cc1_completed": {
+      "attempt": 2,
+      "exit_code": 0,
+      "seconds": 27556.452372765998,
+      "workspace": "/root/chimera-gcc-validation-578ab8321/workspaces/cc1",
+      "memory_peak_bytes": 12887232512,
+      "swap_peak_bytes": 12063731712,
+      "completed_utc": "2026-10-28T21:06:47Z",
+      "artifact_verification": "passed",
+      "scope": "Preparation only; full actual runtime and migration acceptance pending"
+    }
+  }
+}

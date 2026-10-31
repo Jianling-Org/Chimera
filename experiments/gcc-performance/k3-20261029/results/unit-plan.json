@@ -1,0 +1,680 @@
+{
+  "record_type": "units_only_projection_of_archived_plan_function",
+  "controller_sha256": "5e967f5cada2a88aa0f99c94e013717fced2cc7f9cfd3179bc29857a5ecce6e0",
+  "archived_controller_total_rounds": 108,
+  "excluded_old_image_rounds": 12,
+  "rows": [
+    {
+      "run_id": "a2-u1-warm-x100",
+      "kind": "units",
+      "mode": "x100",
+      "workers": 1,
+      "measured": false
+    },
+    {
+      "run_id": "a2-u1-warm-auto-x100",
+      "kind": "units",
+      "mode": "auto-x100",
+      "workers": 1,
+      "measured": false
+    },
+    {
+      "run_id": "a2-u1-warm-auto-a100",
+      "kind": "units",
+      "mode": "auto-a100",
+      "workers": 1,
+      "measured": false
+    },
+    {
+      "run_id": "a2-u1-warm-static16",
+      "kind": "units",
+      "mode": "static16",
+      "workers": 1,
+      "measured": false
+    },
+    {
+      "run_id": "a2-u1-r1-x100",
+      "kind": "units",
+      "mode": "x100",
+      "workers": 1,
+      "measured": true
+    },
+    {
+      "run_id": "a2-u1-r1-auto-x100",
+      "kind": "units",
+      "mode": "auto-x100",
+      "workers": 1,
+      "measured": true
+    },
+    {
+      "run_id": "a2-u1-r1-auto-a100",
+      "kind": "units",
+      "mode": "auto-a100",
+      "workers": 1,
+      "measured": true
+    },
+    {
+      "run_id": "a2-u1-r1-static16",
+      "kind": "units",
+      "mode": "static16",
+      "workers": 1,
+      "measured": true
+    },
+    {
+      "run_id": "a2-u1-r2-auto-x100",
+      "kind": "units",
+      "mode": "auto-x100",
+      "workers": 1,
+      "measured": true
+    },
+    {
+      "run_id": "a2-u1-r2-static16",
+      "kind": "units",
+      "mode": "static16",
+      "workers": 1,
+      "measured": true
+    },
+    {
+      "run_id": "a2-u1-r2-x100",
+      "kind": "units",
+      "mode": "x100",
+      "workers": 1,
+      "measured": true
+    },
+    {
+      "run_id": "a2-u1-r2-auto-a100",
+      "kind": "units",
+      "mode": "auto-a100",
+      "workers": 1,
+      "measured": true
+    },
+    {
+      "run_id": "a2-u1-r3-static16",
+      "kind": "units",
+      "mode": "static16",
+      "workers": 1,
+      "measured": true
+    },
+    {
+      "run_id": "a2-u1-r3-auto-a100",
+      "kind": "units",
+      "mode": "auto-a100",
+      "workers": 1,
+      "measured": true
+    },
+    {
+      "run_id": "a2-u1-r3-auto-x100",
+      "kind": "units",
+      "mode": "auto-x100",
+      "workers": 1,
+      "measured": true
+    },
+    {
+      "run_id": "a2-u1-r3-x100",
+      "kind": "units",
+      "mode": "x100",
+      "workers": 1,
+      "measured": true
+    },
+    {
+      "run_id": "a2-u1-r4-auto-a100",
+      "kind": "units",
+      "mode": "auto-a100",
+      "workers": 1,
+      "measured": true
+    },
+    {
+      "run_id": "a2-u1-r4-x100",
+      "kind": "units",
+      "mode": "x100",
+      "workers": 1,
+      "measured": true
+    },
+    {
+      "run_id": "a2-u1-r4-static16",
+      "kind": "units",
+      "mode": "static16",
+      "workers": 1,
+      "measured": true
+    },
+    {
+      "run_id": "a2-u1-r4-auto-x100",
+      "kind": "units",
+      "mode": "auto-x100",
+      "workers": 1,
+      "measured": true
+    },
+    {
+      "run_id": "a2-u1-r5-static16",
+      "kind": "units",
+      "mode": "static16",
+      "workers": 1,
+      "measured": true
+    },
+    {
+      "run_id": "a2-u1-r5-auto-a100",
+      "kind": "units",
+      "mode": "auto-a100",
+      "workers": 1,
+      "measured": true
+    },
+    {
+      "run_id": "a2-u1-r5-auto-x100",
+      "kind": "units",
+      "mode": "auto-x100",
+      "workers": 1,
+      "measured": true
+    },
+    {
+      "run_id": "a2-u1-r5-x100",
+      "kind": "units",
+      "mode": "x100",
+      "workers": 1,
+      "measured": true
+    },
+    {
+      "run_id": "a2-u8-warm-x100",
+      "kind": "units",
+      "mode": "x100",
+      "workers": 8,
+      "measured": false
+    },
+    {
+      "run_id": "a2-u8-warm-auto-x100",
+      "kind": "units",
+      "mode": "auto-x100",
+      "workers": 8,
+      "measured": false
+    },
+    {
+      "run_id": "a2-u8-warm-auto-a100",
+      "kind": "units",
+      "mode": "auto-a100",
+      "workers": 8,
+      "measured": false
+    },
+    {
+      "run_id": "a2-u8-warm-static16",
+      "kind": "units",
+      "mode": "static16",
+      "workers": 8,
+      "measured": false
+    },
+    {
+      "run_id": "a2-u8-r1-x100",
+      "kind": "units",
+      "mode": "x100",
+      "workers": 8,
+      "measured": true
+    },
+    {
+      "run_id": "a2-u8-r1-auto-x100",
+      "kind": "units",
+      "mode": "auto-x100",
+      "workers": 8,
+      "measured": true
+    },
+    {
+      "run_id": "a2-u8-r1-auto-a100",
+      "kind": "units",
+      "mode": "auto-a100",
+      "workers": 8,
+      "measured": true
+    },
+    {
+      "run_id": "a2-u8-r1-static16",
+      "kind": "units",
+      "mode": "static16",
+      "workers": 8,
+      "measured": true
+    },
+    {
+      "run_id": "a2-u8-r2-auto-x100",
+      "kind": "units",
+      "mode": "auto-x100",
+      "workers": 8,
+      "measured": true
+    },
+    {
+      "run_id": "a2-u8-r2-static16",
+      "kind": "units",
+      "mode": "static16",
+      "workers": 8,
+      "measured": true
+    },
+    {
+      "run_id": "a2-u8-r2-x100",
+      "kind": "units",
+      "mode": "x100",
+      "workers": 8,
+      "measured": true
+    },
+    {
+      "run_id": "a2-u8-r2-auto-a100",
+      "kind": "units",
+      "mode": "auto-a100",
+      "workers": 8,
+      "measured": true
+    },
+    {
+      "run_id": "a2-u8-r3-static16",
+      "kind": "units",
+      "mode": "static16",
+      "workers": 8,
+      "measured": true
+    },
+    {
+      "run_id": "a2-u8-r3-auto-a100",
+      "kind": "units",
+      "mode": "auto-a100",
+      "workers": 8,
+      "measured": true
+    },
+    {
+      "run_id": "a2-u8-r3-auto-x100",
+      "kind": "units",
+      "mode": "auto-x100",
+      "workers": 8,
+      "measured": true
+    },
+    {
+      "run_id": "a2-u8-r3-x100",
+      "kind": "units",
+      "mode": "x100",
+      "workers": 8,
+      "measured": true
+    },
+    {
+      "run_id": "a2-u8-r4-auto-a100",
+      "kind": "units",
+      "mode": "auto-a100",
+      "workers": 8,
+      "measured": true
+    },
+    {
+      "run_id": "a2-u8-r4-x100",
+      "kind": "units",
+      "mode": "x100",
+      "workers": 8,
+      "measured": true
+    },
+    {
+      "run_id": "a2-u8-r4-static16",
+      "kind": "units",
+      "mode": "static16",
+      "workers": 8,
+      "measured": true
+    },
+    {
+      "run_id": "a2-u8-r4-auto-x100",
+      "kind": "units",
+      "mode": "auto-x100",
+      "workers": 8,
+      "measured": true
+    },
+    {
+      "run_id": "a2-u8-r5-static16",
+      "kind": "units",
+      "mode": "static16",
+      "workers": 8,
+      "measured": true
+    },
+    {
+      "run_id": "a2-u8-r5-auto-a100",
+      "kind": "units",
+      "mode": "auto-a100",
+      "workers": 8,
+      "measured": true
+    },
+    {
+      "run_id": "a2-u8-r5-auto-x100",
+      "kind": "units",
+      "mode": "auto-x100",
+      "workers": 8,
+      "measured": true
+    },
+    {
+      "run_id": "a2-u8-r5-x100",
+      "kind": "units",
+      "mode": "x100",
+      "workers": 8,
+      "measured": true
+    },
+    {
+      "run_id": "a2-u16-warm-x100",
+      "kind": "units",
+      "mode": "x100",
+      "workers": 16,
+      "measured": false
+    },
+    {
+      "run_id": "a2-u16-warm-auto-x100",
+      "kind": "units",
+      "mode": "auto-x100",
+      "workers": 16,
+      "measured": false
+    },
+    {
+      "run_id": "a2-u16-warm-auto-a100",
+      "kind": "units",
+      "mode": "auto-a100",
+      "workers": 16,
+      "measured": false
+    },
+    {
+      "run_id": "a2-u16-warm-static16",
+      "kind": "units",
+      "mode": "static16",
+      "workers": 16,
+      "measured": false
+    },
+    {
+      "run_id": "a2-u16-r1-x100",
+      "kind": "units",
+      "mode": "x100",
+      "workers": 16,
+      "measured": true
+    },
+    {
+      "run_id": "a2-u16-r1-auto-x100",
+      "kind": "units",
+      "mode": "auto-x100",
+      "workers": 16,
+      "measured": true
+    },
+    {
+      "run_id": "a2-u16-r1-auto-a100",
+      "kind": "units",
+      "mode": "auto-a100",
+      "workers": 16,
+      "measured": true
+    },
+    {
+      "run_id": "a2-u16-r1-static16",
+      "kind": "units",
+      "mode": "static16",
+      "workers": 16,
+      "measured": true
+    },
+    {
+      "run_id": "a2-u16-r2-auto-x100",
+      "kind": "units",
+      "mode": "auto-x100",
+      "workers": 16,
+      "measured": true
+    },
+    {
+      "run_id": "a2-u16-r2-static16",
+      "kind": "units",
+      "mode": "static16",
+      "workers": 16,
+      "measured": true
+    },
+    {
+      "run_id": "a2-u16-r2-x100",
+      "kind": "units",
+      "mode": "x100",
+      "workers": 16,
+      "measured": true
+    },
+    {
+      "run_id": "a2-u16-r2-auto-a100",
+      "kind": "units",
+      "mode": "auto-a100",
+      "workers": 16,
+      "measured": true
+    },
+    {
+      "run_id": "a2-u16-r3-static16",
+      "kind": "units",
+      "mode": "static16",
+      "workers": 16,
+      "measured": true
+    },
+    {
+      "run_id": "a2-u16-r3-auto-a100",
+      "kind": "units",
+      "mode": "auto-a100",
+      "workers": 16,
+      "measured": true
+    },
+    {
+      "run_id": "a2-u16-r3-auto-x100",
+      "kind": "units",
+      "mode": "auto-x100",
+      "workers": 16,
+      "measured": true
+    },
+    {
+      "run_id": "a2-u16-r3-x100",
+      "kind": "units",
+      "mode": "x100",
+      "workers": 16,
+      "measured": true
+    },
+    {
+      "run_id": "a2-u16-r4-auto-a100",
+      "kind": "units",
+      "mode": "auto-a100",
+      "workers": 16,
+      "measured": true
+    },
+    {
+      "run_id": "a2-u16-r4-x100",
+      "kind": "units",
+      "mode": "x100",
+      "workers": 16,
+      "measured": true
+    },
+    {
+      "run_id": "a2-u16-r4-static16",
+      "kind": "units",
+      "mode": "static16",
+      "workers": 16,
+      "measured": true
+    },
+    {
+      "run_id": "a2-u16-r4-auto-x100",
+      "kind": "units",
+      "mode": "auto-x100",
+      "workers": 16,
+      "measured": true
+    },
+    {
+      "run_id": "a2-u16-r5-static16",
+      "kind": "units",
+      "mode": "static16",
+      "workers": 16,
+      "measured": true
+    },
+    {
+      "run_id": "a2-u16-r5-auto-a100",
+      "kind": "units",
+      "mode": "auto-a100",
+      "workers": 16,
+      "measured": true
+    },
+    {
+      "run_id": "a2-u16-r5-auto-x100",
+      "kind": "units",
+      "mode": "auto-x100",
+      "workers": 16,
+      "measured": true
+    },
+    {
+      "run_id": "a2-u16-r5-x100",
+      "kind": "units",
+      "mode": "x100",
+      "workers": 16,
+      "measured": true
+    },
+    {
+      "run_id": "a2-u24-warm-x100",
+      "kind": "units",
+      "mode": "x100",
+      "workers": 24,
+      "measured": false
+    },
+    {
+      "run_id": "a2-u24-warm-auto-x100",
+      "kind": "units",
+      "mode": "auto-x100",
+      "workers": 24,
+      "measured": false
+    },
+    {
+      "run_id": "a2-u24-warm-auto-a100",
+      "kind": "units",
+      "mode": "auto-a100",
+      "workers": 24,
+      "measured": false
+    },
+    {
+      "run_id": "a2-u24-warm-static16",
+      "kind": "units",
+      "mode": "static16",
+      "workers": 24,
+      "measured": false
+    },
+    {
+      "run_id": "a2-u24-r1-x100",
+      "kind": "units",
+      "mode": "x100",
+      "workers": 24,
+      "measured": true
+    },
+    {
+      "run_id": "a2-u24-r1-auto-x100",
+      "kind": "units",
+      "mode": "auto-x100",
+      "workers": 24,
+      "measured": true
+    },
+    {
+      "run_id": "a2-u24-r1-auto-a100",
+      "kind": "units",
+      "mode": "auto-a100",
+      "workers": 24,
+      "measured": true
+    },
+    {
+      "run_id": "a2-u24-r1-static16",
+      "kind": "units",
+      "mode": "static16",
+      "workers": 24,
+      "measured": true
+    },
+    {
+      "run_id": "a2-u24-r2-auto-x100",
+      "kind": "units",
+      "mode": "auto-x100",
+      "workers": 24,
+      "measured": true
+    },
+    {
+      "run_id": "a2-u24-r2-static16",
+      "kind": "units",
+      "mode": "static16",
+      "workers": 24,
+      "measured": true
+    },
+    {
+      "run_id": "a2-u24-r2-x100",
+      "kind": "units",
+      "mode": "x100",
+      "workers": 24,
+      "measured": true
+    },
+    {
+      "run_id": "a2-u24-r2-auto-a100",
+      "kind": "units",
+      "mode": "auto-a100",
+      "workers": 24,
+      "measured": true
+    },
+    {
+      "run_id": "a2-u24-r3-static16",
+      "kind": "units",
+      "mode": "static16",
+      "workers": 24,
+      "measured": true
+    },
+    {
+      "run_id": "a2-u24-r3-auto-a100",
+      "kind": "units",
+      "mode": "auto-a100",
+      "workers": 24,
+      "measured": true
+    },
+    {
+      "run_id": "a2-u24-r3-auto-x100",
+      "kind": "units",
+      "mode": "auto-x100",
+      "workers": 24,
+      "measured": true
+    },
+    {
+      "run_id": "a2-u24-r3-x100",
+      "kind": "units",
+      "mode": "x100",
+      "workers": 24,
+      "measured": true
+    },
+    {
+      "run_id": "a2-u24-r4-auto-a100",
+      "kind": "units",
+      "mode": "auto-a100",
+      "workers": 24,
+      "measured": true
+    },
+    {
+      "run_id": "a2-u24-r4-x100",
+      "kind": "units",
+      "mode": "x100",
+      "workers": 24,
+      "measured": true
+    },
+    {
+      "run_id": "a2-u24-r4-static16",
+      "kind": "units",
+      "mode": "static16",
+      "workers": 24,
+      "measured": true
+    },
+    {
+      "run_id": "a2-u24-r4-auto-x100",
+      "kind": "units",
+      "mode": "auto-x100",
+      "workers": 24,
+      "measured": true
+    },
+    {
+      "run_id": "a2-u24-r5-static16",
+      "kind": "units",
+      "mode": "static16",
+      "workers": 24,
+      "measured": true
+    },
+    {
+      "run_id": "a2-u24-r5-auto-a100",
+      "kind": "units",
+      "mode": "auto-a100",
+      "workers": 24,
+      "measured": true
+    },
+    {
+      "run_id": "a2-u24-r5-auto-x100",
+      "kind": "units",
+      "mode": "auto-x100",
+      "workers": 24,
+      "measured": true
+    },
+    {
+      "run_id": "a2-u24-r5-x100",
+      "kind": "units",
+      "mode": "x100",
+      "workers": 24,
+      "measured": true
+    }
+  ]
+}

@@ -1,0 +1,200 @@
+{
+  "schema_version": 1,
+  "measured_source_commit": "578ab8321c0788ab8cba1ad24324f220e1e4a149",
+  "scope": "assume-scalar-independent",
+  "hardware_tests_rerun_at_publication": false,
+  "raw_device_evidence_included": false,
+  "files": {
+    ".gitattributes": {
+      "bytes": 55,
+      "sha256": "4ba8b6ae2fba65a1b48886bc09706bf44d6413c3441e8bb84475681c0c151a3c",
+      "record_type": "publication_documentation_or_extracted_summary"
+    },
+    "harness/controller.py": {
+      "bytes": 5273,
+      "sha256": "6385f935eafb29091a0218f8df7a40d9355ee7fb61e3dc0617be234adc8e6be2",
+      "source": "tmp/gcc-validation/controller.py",
+      "byte_identical": true
+    },
+    "harness/final_independent_audit.py": {
+      "bytes": 25345,
+      "sha256": "13642e8ca2e77632b4b13ca807c0e2a05b4d5ed65a6083f0d82bfa82e14fcc3e",
+      "source": "tmp/gcc-validation/final_independent_audit.py",
+      "byte_identical": true
+    },
+    "harness/kernel_event_policy.py": {
+      "bytes": 3203,
+      "sha256": "9a181dee2a8d2b16e86f1e62d49f19b6e44d388a5de58810199b7fef08f83e5d",
+      "source": "tmp/gcc-validation/kernel_event_policy.py",
+      "byte_identical": true
+    },
+    "harness/migration_trace.py": {
+      "bytes": 9899,
+      "sha256": "685f9abeba72e616be18b056ac95abf9d7a767e55ab2b5a2069322467f77e247",
+      "source": "tmp/gcc-validation/migration_trace.py",
+      "byte_identical": true
+    },
+    "harness/phase_outcome.py": {
+      "bytes": 2007,
+      "sha256": "291b46043a0fef5ddf70d9609e66d5829ffe99a5cd5432a9346a60ffc9928b75",
+      "source": "tmp/gcc-validation/phase_outcome.py",
+      "byte_identical": true
+    },
+    "harness/readiness_probe.py": {
+      "bytes": 562,
+      "sha256": "c82cd9503adb7be0bd7d7f49bbbb20e0290c2106f9014b5db4df962c33bbb7cb",
+      "source": "tmp/gcc-validation/readiness_probe.py",
+      "byte_identical": true
+    },
+    "harness/record_cgroup.py": {
+      "bytes": 755,
+      "sha256": "12838883b64bc2b498e7cb9a0c3711e07f9dbd5f999a19522241eab89890721a",
+      "source": "tmp/gcc-validation/record_cgroup.py",
+      "byte_identical": true
+    },
+    "harness/resource_policy.py": {
+      "bytes": 5927,
+      "sha256": "bc8ec07992015979347cc458494ee7623a1062447a8cb9779b4032464cf9ad61",
+      "source": "tmp/gcc-validation/resource_policy.py",
+      "byte_identical": true
+    },
+    "harness/runtime_acceptance_v3.py": {
+      "bytes": 25308,
+      "sha256": "01bedc526a131a8605ec0886a229049751d803d1fd6f2f53568bab9c1ae505da",
+      "source": "tmp/gcc-validation/runtime_acceptance_v3.py",
+      "byte_identical": true
+    },
+    "harness/runtime_acceptance_v4.py": {
+      "bytes": 26467,
+      "sha256": "155a9934ce735cc2d178cf3cb04d0210b97b10c94238678592510a8f9bb1de37",
+      "source": "tmp/gcc-validation/runtime_acceptance_v4.py",
+      "byte_identical": true
+    },
+    "harness/runtime_acceptance_v5.py": {
+      "bytes": 28645,
+      "sha256": "5d0406e74c38fa6e30ba5a648650fed5a3e9ccd835cd8955f4ce39bc452161b1",
+      "source": "tmp/gcc-validation/runtime_acceptance_v5.py",
+      "byte_identical": true
+    },
+    "harness/runtime_smoke.py": {
+      "bytes": 12082,
+      "sha256": "a8e5b391542f5af38818b2b5e08309f588f6f7b29edfed5547c7b9620ead0d09",
+      "source": "tmp/gcc-validation/runtime_smoke.py",
+      "byte_identical": true
+    },
+    "harness/setup_remote.py": {
+      "bytes": 9880,
+      "sha256": "87e8a8bb6a6777869b1057146230b639535d1556e474068df71935d85b56a5ad",
+      "source": "tmp/gcc-validation/setup_remote.py",
+      "byte_identical": true
+    },
+    "harness/start_runtime_stability_2.py": {
+      "bytes": 7878,
+      "sha256": "f95aae5dec0cc0ed91478ee273faebb16641f522a72f0bb428027fcc91c65e58",
+      "source": "tmp/gcc-validation/start_runtime_stability_2.py",
+      "byte_identical": true
+    },
+    "harness/test_kernel_event_policy.py": {
+      "bytes": 3110,
+      "sha256": "a5418a5a7333413e137300391735fe50b901fa1ee16d33f16b8a452468290a35",
+      "source": "tmp/gcc-validation/test_kernel_event_policy.py",
+      "byte_identical": true
+    },
+    "harness/test_migration_trace.py": {
+      "bytes": 1929,
+      "sha256": "b43056dabf64b327210aafaade1c14cd5a10462865b7432eaeaefb43f1dae452",
+      "source": "tmp/gcc-validation/test_migration_trace.py",
+      "byte_identical": true
+    },
+    "harness/test_phase_outcome.py": {
+      "bytes": 2260,
+      "sha256": "55006727bd445f423f42f90afaee7c21bbc0c0accc3d4311a063b20faf3a4a2a",
+      "source": "tmp/gcc-validation/test_phase_outcome.py",
+      "byte_identical": true
+    },
+    "harness/test_readiness_probe.py": {
+      "bytes": 1277,
+      "sha256": "ab5e7723bed2874472392ca3ccfe78f9a62cc1af52605693b89a3285384f11bb",
+      "source": "tmp/gcc-validation/test_readiness_probe.py",
+      "byte_identical": true
+    },
+    "harness/test_resource_policy.py": {
+      "bytes": 1680,
+      "sha256": "c2912442746cacbc1fb72797dac6877c6c26c5bf7a3d3e9f3fad236aa4169688",
+      "source": "tmp/gcc-validation/test_resource_policy.py",
+      "byte_identical": true
+    },
+    "harness/watchdog.py": {
+      "bytes": 1238,
+      "sha256": "fdaa611eef49eb5fa77ec91c061466509208d8db6cb371ff73f5b49cb0a552be",
+      "source": "tmp/gcc-validation/watchdog.py",
+      "byte_identical": true
+    },
+    "harness/worker.py": {
+      "bytes": 13693,
+      "sha256": "a7a3ae259e1e0513bf777f16560da22de3a20a4a167193f3ba48183660f1cb7b",
+      "source": "tmp/gcc-validation/worker.py",
+      "byte_identical": true
+    },
+    "LICENSE.md": {
+      "bytes": 437,
+      "sha256": "4a19abf3cde23be6c3a8557f90f7f5d927d769f87d5a5cce9dde5ff02766b42e",
+      "record_type": "publication_documentation_or_extracted_summary"
+    },
+    "README.md": {
+      "bytes": 4330,
+      "sha256": "b828099eef9153526b4c74a893dbbca5533dc378bdd601f2907e7931f621bdbd",
+      "record_type": "publication_documentation_or_extracted_summary"
+    },
+    "requirements.txt": {
+      "bytes": 31,
+      "sha256": "6dbd7fca025288bd5f03035b7edca53e0ac5a87dad6b64cd411928452ffba92d",
+      "record_type": "publication_documentation_or_extracted_summary"
+    },
+    "results/completion.json": {
+      "bytes": 3642,
+      "sha256": "5bf253559eb325bd7645fb92dba0b1efa6eba80441f0230199a760ad5ab97eab",
+      "source": "tmp/gcc-validation/completion.json",
+      "byte_identical": true
+    },
+    "results/final-audit-resources.json": {
+      "bytes": 316,
+      "sha256": "149654815369134b31d16e5cbfca0d7336224896c6636c80d5f3dfc01a761313",
+      "source": "tmp/gcc-validation/final-audit-resources.json",
+      "byte_identical": true
+    },
+    "results/final-audit-result.json": {
+      "bytes": 6939,
+      "sha256": "5399f79ab668789f0d116130a3a2b93398a6642c7c0a281667c7ce62ee114ccd",
+      "source": "tmp/gcc-validation/final-audit-result.json",
+      "byte_identical": true
+    },
+    "results/preparation-record.json": {
+      "bytes": 1958,
+      "sha256": "eebcf6945d02418a59a06537920572d5a27d226af5a661de4a27bdb054c00020",
+      "record_type": "publication_documentation_or_extracted_summary"
+    },
+    "results/publication-checks.json": {
+      "bytes": 1481,
+      "sha256": "9fa93d3c88239f2989ad270414c68f5ecf3d70fe7444dab985bc0ebebefaa354",
+      "record_type": "local_publication_checks"
+    },
+    "results/runtime-kernel-policy-20261029.json": {
+      "bytes": 1105,
+      "sha256": "7b4486c33358533777d63b85a5d8b50e51bfb9be3027f7547f9b3728f649c30f",
+      "source": "tmp/gcc-validation/runtime-kernel-policy-20261029.json",
+      "byte_identical": true
+    },
+    "results/stability-1-record.json": {
+      "bytes": 2053,
+      "sha256": "ad17e8ec3daaaae7d195421a3bb144cf84c2fe0d087048ac3589266a280c0d95",
+      "record_type": "publication_documentation_or_extracted_summary"
+    },
+    "results/stability-2-resume-upload.json": {
+      "bytes": 612,
+      "sha256": "af0f7f77754ee06f89dad07cedc43f3724853ac4cb90fd4db8abc552f6895562",
+      "source": "tmp/gcc-validation/stability-2-resume-upload.json",
+      "byte_identical": true
+    }
+  }
+}

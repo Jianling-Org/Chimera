@@ -160,6 +160,16 @@
 | [experiments/gcc-performance/k3-20261030/results/同16并发性能报告.zh-CN.md](../experiments/gcc-performance/k3-20261030/results/同16并发性能报告.zh-CN.md) | 完整性能报告与CPU/维护观测 |
 | [experiments/gcc-performance/k3-20261030/LICENSE.md](../experiments/gcc-performance/k3-20261030/LICENSE.md) | 本实验代码许可证范围 |
 
+## GCC验收与性能报告补充（5）
+
+| 文档 | 内容 |
+|---|---|
+| [experiments/gcc-performance/k3-20261029/README.md](../experiments/gcc-performance/k3-20261029/README.md) | 64任务并发矩阵、执行快照与统计 |
+| [experiments/gcc-performance/k3-20261029/LICENSE.md](../experiments/gcc-performance/k3-20261029/LICENSE.md) | 单位任务实验代码许可证范围 |
+| [experiments/gcc-validation/k3-20261029/README.md](../experiments/gcc-validation/k3-20261029/README.md) | GCC子进程验收、长期负载与准备阶段 |
+| [experiments/gcc-validation/k3-20261029/LICENSE.md](../experiments/gcc-validation/k3-20261029/LICENSE.md) | 迁移验收代码许可证范围 |
+| [docs/validation/performance-report-feedback.zh-CN.md](validation/performance-report-feedback.zh-CN.md) | 报告修改建议及未整理项目 |
+
 ## 许可证正文
 
 - [Apache-2.0](../LICENSES/Apache-2.0.txt)

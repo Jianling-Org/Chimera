@@ -1,0 +1,27 @@
+{
+  "attempt": 2,
+  "data_epoch": "attempt-2",
+  "authorization_type": "explicit_user_choice_and_followup",
+  "user_choice": "明确允许实际 BKOPS=2 单列，另开新 attempt 继续；保留性能影响说明，状态 3、critical health、I/O 和其他标准不变",
+  "user_followup": "不要被类似这种东西阻断测试",
+  "allowed_actual_bkops_states": [
+    0,
+    1,
+    2
+  ],
+  "allowed_maintenance_log_states": [
+    1,
+    2
+  ],
+  "controller": "c0e00000.ufshc",
+  "exact_message_prefix": "ufshcd-spacemit-k3 c0e00000.ufshc: ufshcd_bkops_exception_event_handler: device raised urgent BKOPS exception for bkops status ",
+  "log_priority": 3,
+  "critical_health_must_equal": 0,
+  "other_io_errors_unknown_logs_and_safety_checks_unchanged": true,
+  "all_raw_evidence_retained": true,
+  "performance_impact_must_be_disclosed": true,
+  "old_failed_attempt_remains_failed": true,
+  "fresh_full_108_rounds": true,
+  "pool_attempt1_and_attempt2": false,
+  "created_utc": "2026-10-29T11:29:53.320171+00:00"
+}

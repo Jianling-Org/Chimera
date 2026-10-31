@@ -1,0 +1,99 @@
+{
+  "status": "passed_conditional",
+  "acceptance_passed": true,
+  "completed_utc": "2026-10-29T05:47:58.894045+00:00",
+  "commit": "578ab8321c0788ab8cba1ad24324f220e1e4a149",
+  "kernel": "6.18.3-chimera-d02cd7352",
+  "conditional_scope": "assume-scalar-independent",
+  "kernel_event_policy": {
+    "name": "user-authorized-exact-c0e00000-ufs-bkops-status1",
+    "message": "ufshcd-spacemit-k3 c0e00000.ufshc: ufshcd_bkops_exception_event_handler: device raised urgent BKOPS exception for bkops status 1",
+    "priority": 3,
+    "retain_raw_bytes_sequence_hash_and_count": true,
+    "all_other_warning_or_error_records_fail": true,
+    "storage_status_2_or_3_and_critical_health_fail": true,
+    "source_user_url": "https://lkml.org/lkml/2026/10/2/188#1",
+    "source_mail_mirror": "https://lore-kernel.gnuweeb.org/spacemit/20261002-08-k3-ufs-support-v7-1-bb39007ff9ae%40kernel.org/T/"
+  },
+  "matrix_cases": 15,
+  "matrix_compiler_chains": 210,
+  "stability_cases": 383,
+  "stability_compiler_chains": 4680,
+  "stability_mixed_monotonic_seconds": 7216.573022772005,
+  "stability_child_route_counts": {
+    "256-to-1024": 2270,
+    "1024-to-256": 1993
+  },
+  "stability_same_tid_roundtrips": 1652,
+  "known_kernel_background_events": 4,
+  "unexpected_kernel_alerts": 0,
+  "independent_final_audit_actual_exit": "success/exited/0",
+  "independent_final_audit_evidence_files": 11117,
+  "watchdog": {
+    "chimera-gcc-watchdog.timer": {
+      "LoadState": "not-found",
+      "ActiveState": "inactive",
+      "SubState": "dead"
+    },
+    "chimera-gcc-watchdog.service": {
+      "LoadState": "not-found",
+      "ActiveState": "inactive",
+      "SubState": "dead"
+    }
+  },
+  "final_ledgers": {
+    "policy_a100_assigned_regular": 0,
+    "policy_a100_assigned_ai": 0,
+    "policy_x100_assigned_regular": 0,
+    "policy_x100_assigned_ai": 0,
+    "prefer_assigned_regular": 0,
+    "prefer_assigned_ai": 0,
+    "prefer_pending_to_regular": 0,
+    "prefer_pending_to_ai": 0,
+    "prefer_a100_cpu_reservations": 0
+  },
+  "migration_timeouts": 0,
+  "task_trace_and_probes_clean": true,
+  "task_swap_absent": true,
+  "root_free_bytes": 25145622528,
+  "original_failed_attempts_retained": true,
+  "large_archive_downloaded": false,
+  "files": {
+    "最终验收报告.zh-CN.md": {
+      "bytes": 10823,
+      "sha256": "41ffb509eaacd12cbe08bc13523dfafba529ae86b8537e1abbe4c8d47a0568a2"
+    },
+    "stage-results/final-audit-1.json": {
+      "bytes": 6939,
+      "sha256": "5399f79ab668789f0d116130a3a2b93398a6642c7c0a281667c7ce62ee114ccd"
+    },
+    "stage-results/final-audit-1.resources.json": {
+      "bytes": 316,
+      "sha256": "149654815369134b31d16e5cbfca0d7336224896c6636c80d5f3dfc01a761313"
+    },
+    "stage-results/runtime-stability-2.json": {
+      "bytes": 2336741,
+      "sha256": "1e71e7cfa37ab0ed9790dc4336ed77006ef14a169ba3facf80b39ab37d3dfa2c"
+    },
+    "stage-results/runtime-stability-2.resources.json": {
+      "bytes": 318,
+      "sha256": "2f9ba26d413e1c0350e364d87f608feb4213672490a09a67b638c8c6ae361158"
+    },
+    "provenance/final-audit-1/evidence-sha256.json": {
+      "bytes": 2332542,
+      "sha256": "edbe978201978caffcad59660cf3f4c51c1e96be039283d7eb9b0ccf3690a32a"
+    },
+    "runtime-kernel-policy-20261029.json": {
+      "bytes": 1105,
+      "sha256": "7b4486c33358533777d63b85a5d8b50e51bfb9be3027f7547f9b3728f649c30f"
+    },
+    "profile.gcc.toml": {
+      "bytes": 2241,
+      "sha256": "1905a136b12c3b4cb71508d546042767b2311780bbf9527c4d218dde6c11ef38"
+    },
+    "final_independent_audit.py": {
+      "bytes": 25345,
+      "sha256": "13642e8ca2e77632b4b13ca807c0e2a05b4d5ed65a6083f0d82bfa82e14fcc3e"
+    }
+  }
+}

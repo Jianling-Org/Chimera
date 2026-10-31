@@ -1,0 +1,46 @@
+{
+  "checked_utc": "2026-10-31T09:35:56.422937+00:00",
+  "checks_scope": "local publication verification; no hardware execution or full device evidence replay",
+  "original_file_snapshots_checked": 39,
+  "archived_python_sources_parsed": 32,
+  "missing_local_python_imports": [],
+  "production_python_namespace": "chimera",
+  "third_party_python_dependencies": [
+    "pyelftools==0.33",
+    "pytest==9.1.1"
+  ],
+  "original_stability_script_hashes_match_retained_upload_record": true,
+  "final_audit_script_and_results_match_completion_hashes": true,
+  "unit_statistics_groups_recomputed": 16,
+  "unit_plan_rounds": 96,
+  "tests": [
+    {
+      "name": "archived_validation_regressions",
+      "exit_code": 0,
+      "tests": 27,
+      "passed": 27,
+      "skipped": 0,
+      "output_sha256": "61468a698ef5705f95bc47b3e82de41f5af91df6233852469f6aa976657ff90c"
+    },
+    {
+      "name": "archived_performance_policy_regressions",
+      "exit_code": 0,
+      "tests": 14,
+      "passed": 12,
+      "skipped": 2,
+      "output_sha256": "8de1b18b21a5aca7e2abcdd27d3211070e3b5bf483fb5d7fb12c49ae656eae88"
+    },
+    {
+      "name": "existing_j16_publication_regressions",
+      "exit_code": 0,
+      "tests": 7,
+      "passed": 7,
+      "skipped": 0,
+      "output_sha256": "6c62bf7909bb2599bbfad87369f483b9ba4a5e1f5126644b0d2d856f9913e30e"
+    }
+  ],
+  "passed": 46,
+  "skipped": 2,
+  "hardware_tests_run": false,
+  "skips_require": "K3 original evidence and fixed validation paths"
+}

@@ -1,0 +1,50 @@
+{
+  "record_type": "selected_checkpoint_fields",
+  "source": "tmp/gcc-validation/checkpoint.json",
+  "source_sha256": "9911949b8aba05f34623cbb9acee5ed05208e2c27fedbd9464b42612b772c64b",
+  "source_field": "runtime_stability_attempt1",
+  "record": {
+    "status": "failed",
+    "unit": "chimera-gcc-runtime-stability-1.service",
+    "started_utc": "2026-10-29T01:43:28Z",
+    "attempt": 1,
+    "matrix_attempt": 3,
+    "script": "runtime_acceptance_v4.py --stage stability --attempt 1 --matrix-attempt 3",
+    "result": "/root/chimera-gcc-validation-578ab8321/stage-results/runtime-stability-1.json",
+    "evidence": "/root/chimera-gcc-validation-578ab8321/provenance/runtime-stability-1",
+    "minimum_mixed_seconds": 7200,
+    "memory_max_gib": 12,
+    "swap_gib": 0,
+    "runtime_max_hours": 3,
+    "prelaunch_free_bytes": 25328885760,
+    "working_capacity_probe_bytes": 4294967296,
+    "residual_free_during_probe_bytes": 21033914368,
+    "runtime_minimum_disk_margin_bytes": 6442450944,
+    "logging_control": "v4 adds informational begin/end kmsg markers only; control smoke seq857-858 passed, no alert; production/runtime/profile/acceptance unchanged",
+    "last_snapshot_utc": "2026-10-29T01:59:39Z",
+    "completed_cases": 77,
+    "last_memory_current_bytes": 1166700544,
+    "last_memory_peak_bytes": 2101186560,
+    "last_free_bytes": 25308278784,
+    "observed_child_commits": 927,
+    "active_case": {
+      "number": 51,
+      "workers": 16,
+      "category": "two-hour-mixed"
+    },
+    "exit_code": 1,
+    "actual_exit": "exit-code/exited/1",
+    "finished_utc": "2026-10-29T02:08:03Z",
+    "phase_elapsed_before_stop_seconds": 1469.2324835610052,
+    "peak_bytes": 2193268736,
+    "oom_kill": 0,
+    "swap_peak_bytes": 0,
+    "failure": "Strict new-kernel-alert gate stopped on UFS urgentBKOPS status1 message at kmsgseq860; no2hour pass",
+    "kernel_log_sequence": [
+      859,
+      861
+    ],
+    "kernel_record_hash": "43e48d49f65010943769813bdb8f18adffbd6998e05e5db33954775956485087"
+  },
+  "raw_device_evidence_included": false
+}

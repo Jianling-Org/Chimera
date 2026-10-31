@@ -1,0 +1,283 @@
+{
+  "rc": 0,
+  "passed": true,
+  "commit": "578ab8321c0788ab8cba1ad24324f220e1e4a149",
+  "kernel": "6.18.3-chimera-d02cd7352",
+  "conditional_scope": "assume-scalar-independent",
+  "kernel_event_policy": {
+    "name": "user-authorized-exact-c0e00000-ufs-bkops-status1",
+    "message": "ufshcd-spacemit-k3 c0e00000.ufshc: ufshcd_bkops_exception_event_handler: device raised urgent BKOPS exception for bkops status 1",
+    "priority": 3,
+    "retain_raw_bytes_sequence_hash_and_count": true,
+    "all_other_warning_or_error_records_fail": true,
+    "storage_status_2_or_3_and_critical_health_fail": true,
+    "source_user_url": "https://lkml.org/lkml/2026/10/2/188#1",
+    "source_mail_mirror": "https://lore-kernel.gnuweeb.org/spacemit/20261002-08-k3-ufs-support-v7-1-bb39007ff9ae%40kernel.org/T/"
+  },
+  "workspaces": {
+    "xgcc": {
+      "passed": true,
+      "artifact_count": 26,
+      "modules": 6,
+      "routes": {
+        "ld_linux_riscv64_lp64d_so_1": [
+          [
+            1024,
+            256
+          ],
+          [
+            256,
+            1024
+          ]
+        ],
+        "libc_so_6": [
+          [
+            1024,
+            256
+          ],
+          [
+            256,
+            1024
+          ]
+        ],
+        "libgcc_s_so_1": [
+          [
+            1024,
+            256
+          ],
+          [
+            256,
+            1024
+          ]
+        ],
+        "libm_so_6": [
+          [
+            1024,
+            256
+          ],
+          [
+            256,
+            1024
+          ]
+        ],
+        "libstdc___so_6": [
+          [
+            1024,
+            256
+          ],
+          [
+            256,
+            1024
+          ]
+        ],
+        "xgcc": [
+          [
+            1024,
+            256
+          ],
+          [
+            256,
+            1024
+          ]
+        ]
+      },
+      "receipt_rows": 34,
+      "variant_receipts": 12,
+      "official_check_host": false,
+      "native_full_table_validation_rc": 0,
+      "receipt_content_identity_and_semantics_verified": true,
+      "receipts_unchanged": true
+    },
+    "cc1": {
+      "passed": true,
+      "artifact_count": 34,
+      "modules": 8,
+      "routes": {
+        "cc1": [
+          [
+            1024,
+            256
+          ],
+          [
+            256,
+            1024
+          ]
+        ],
+        "ld_linux_riscv64_lp64d_so_1": [
+          [
+            1024,
+            256
+          ],
+          [
+            256,
+            1024
+          ]
+        ],
+        "libc_so_6": [
+          [
+            1024,
+            256
+          ],
+          [
+            256,
+            1024
+          ]
+        ],
+        "libgcc_s_so_1": [
+          [
+            1024,
+            256
+          ],
+          [
+            256,
+            1024
+          ]
+        ],
+        "libm_so_6": [
+          [
+            1024,
+            256
+          ],
+          [
+            256,
+            1024
+          ]
+        ],
+        "libstdc___so_6": [
+          [
+            1024,
+            256
+          ],
+          [
+            256,
+            1024
+          ]
+        ],
+        "libz_so_1": [
+          [
+            1024,
+            256
+          ],
+          [
+            256,
+            1024
+          ]
+        ],
+        "libzstd_so_1": [
+          [
+            1024,
+            256
+          ],
+          [
+            256,
+            1024
+          ]
+        ]
+      },
+      "receipt_rows": 44,
+      "variant_receipts": 16,
+      "official_check_host": false,
+      "native_full_table_validation_rc": 0,
+      "receipt_content_identity_and_semantics_verified": true,
+      "receipts_unchanged": true
+    }
+  },
+  "stages": {
+    "runtime-matrix-3": {
+      "passed": true,
+      "cases": 15,
+      "compiler_chains": 210,
+      "child_route_counts": {
+        "256-to-1024": 92,
+        "1024-to-256": 104
+      },
+      "same_tid_roundtrips": 82,
+      "kernel": {
+        "raw_bytes": 0,
+        "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "sequences": [],
+        "known_background_events": 0,
+        "unexpected_alerts": 0,
+        "health": null
+      },
+      "peak_bytes": 1909932032,
+      "swap_peak_bytes": 0,
+      "actual_exit": "success/exited/0"
+    },
+    "runtime-stability-2": {
+      "passed": true,
+      "cases": 383,
+      "compiler_chains": 4680,
+      "child_route_counts": {
+        "256-to-1024": 2270,
+        "1024-to-256": 1993
+      },
+      "same_tid_roundtrips": 1652,
+      "kernel": {
+        "raw_bytes": 952,
+        "raw_sha256": "e539aabe29ec8e3d79b7b067544d83b4a86a7f28b74254b74cad286e5a446d17",
+        "sequences": [
+          866,
+          867,
+          868,
+          869,
+          870,
+          871
+        ],
+        "known_background_events": 4,
+        "unexpected_alerts": 0,
+        "health": {
+          "samples": 223,
+          "max_bkops": 1,
+          "max_critical_health": 0,
+          "maximum_sample_gap_seconds": 34.9461807589978,
+          "mixed_seconds": 7216.573022772005
+        }
+      },
+      "peak_bytes": 2311704576,
+      "swap_peak_bytes": 0,
+      "actual_exit": "success/exited/0"
+    }
+  },
+  "preserved_failed_records": 4,
+  "final_counters": {
+    "policy_a100_assigned_regular": 0,
+    "policy_a100_assigned_ai": 0,
+    "policy_x100_assigned_regular": 0,
+    "policy_x100_assigned_ai": 0,
+    "prefer_assigned_regular": 0,
+    "prefer_assigned_ai": 0,
+    "prefer_pending_to_regular": 0,
+    "prefer_pending_to_ai": 0,
+    "prefer_a100_initial_placements": 1345,
+    "prefer_a100_idle_pull_attempts": 130807,
+    "prefer_a100_proposals": 16979,
+    "prefer_a100_x100_to_a100_migrations": 3433,
+    "prefer_a100_a100_to_x100_migrations": 2535,
+    "prefer_a100_pull_failures": 126109,
+    "prefer_a100_fail_runtime": 1562,
+    "prefer_a100_fail_task_state": 1514,
+    "prefer_a100_fail_target": 116,
+    "prefer_a100_fail_ledger": 431665,
+    "prefer_a100_fail_cpu_reservation": 0,
+    "prefer_a100_fail_signal": 0,
+    "prefer_a100_fail_nack": 8154,
+    "prefer_a100_same_group_skipped": 121,
+    "prefer_a100_nack_translated": 1,
+    "prefer_a100_nack_missing_route": 0,
+    "prefer_a100_nack_prepare_or_safepoint": 8153,
+    "prefer_a100_cooldown_suppressed": 8406,
+    "prefer_a100_cpu_reservations": 0,
+    "prefer_a100_fail_timeout": 0,
+    "prefer_a100_fail_cpuset": 0,
+    "prefer_a100_fail_stopper": 2852
+  },
+  "task_trace_and_probes_clean": true,
+  "task_swap_absent": true,
+  "evidence_file_count": 11117,
+  "evidence_manifest_sha256": "edbe978201978caffcad59660cf3f4c51c1e96be039283d7eb9b0ccf3690a32a",
+  "receipts_republished": false,
+  "original_results_modified": false,
+  "successful_temporary_worker_outputs": "Removed after original execution/hash verification; all recorded digests/stdout audited against retained native baselines; no claim to rehash removed files",
+  "completed_utc": "2026-10-29T05:41:21.712914+00:00"
+}

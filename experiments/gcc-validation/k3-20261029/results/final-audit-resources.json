@@ -1,0 +1,11 @@
+{
+  "recorded_utc": "2026-10-29T05:41:21Z",
+  "SERVICE_RESULT": "success",
+  "EXIT_CODE": "exited",
+  "EXIT_STATUS": "0",
+  "memory.peak": "157028352",
+  "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+  "memory.swap.peak": "0",
+  "memory.max": "4294967296",
+  "memory.swap.max": "0"
+}

@@ -1,0 +1,18 @@
+{
+  "utc": "2026-10-29T03:27:46.465423+00:00",
+  "user_instruction": "这个问题，已经有https://lkml.org/lkml/2026/10/2/188#1 解释了，高负载测试可能导致错误抛出异常，然后，并不会产生写日志以外的实际影响，先把持续测试做完吧",
+  "user_authorized_exact_known_ufs_status1": true,
+  "policy": {
+    "name": "user-authorized-exact-c0e00000-ufs-bkops-status1",
+    "message": "ufshcd-spacemit-k3 c0e00000.ufshc: ufshcd_bkops_exception_event_handler: device raised urgent BKOPS exception for bkops status 1",
+    "priority": 3,
+    "retain_raw_bytes_sequence_hash_and_count": true,
+    "all_other_warning_or_error_records_fail": true,
+    "storage_status_2_or_3_and_critical_health_fail": true,
+    "source_user_url": "https://lkml.org/lkml/2026/10/2/188#1",
+    "source_mail_mirror": "https://lore-kernel.gnuweeb.org/spacemit/20261002-08-k3-ufs-support-v7-1-bb39007ff9ae%40kernel.org/T/"
+  },
+  "production_kernel_or_safety_profile_changed": false,
+  "prior_failed_stability_preserved": true,
+  "new_full_minimum_monotonic_seconds": 7200
+}

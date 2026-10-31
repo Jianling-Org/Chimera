@@ -1,0 +1,112 @@
+{
+  "schema_version": 1,
+  "measured_source_commit": "578ab8321c0788ab8cba1ad24324f220e1e4a149",
+  "scope": "assume-scalar-independent",
+  "hardware_tests_rerun_at_publication": false,
+  "raw_device_evidence_included": false,
+  "files": {
+    ".gitattributes": {
+      "bytes": 55,
+      "sha256": "4ba8b6ae2fba65a1b48886bc09706bf44d6413c3441e8bb84475681c0c151a3c",
+      "record_type": "publication_documentation_or_extracted_summary"
+    },
+    "harness/native-launch.c": {
+      "bytes": 4077,
+      "sha256": "f95f456955db42a4ae53a28805e93eb77dc81a5b8d27375782d5ebb0e498711b",
+      "source": "tmp/gcc-performance/native-launch.c",
+      "byte_identical": true
+    },
+    "harness/perf_common.py": {
+      "bytes": 3794,
+      "sha256": "ff12570800fb49121560c82623e2d4ad067030f954732cad327d017ca7996262",
+      "source": "tmp/gcc-performance/perf_common.py",
+      "byte_identical": true
+    },
+    "harness/perf_common_v2.py": {
+      "bytes": 201,
+      "sha256": "8399b962aad1636da8d35d071f295a32d4e5fe1f5759293350e2895ee28432e6",
+      "source": "tmp/gcc-performance/perf_common_v2.py",
+      "byte_identical": true
+    },
+    "harness/perf_storage_policy_v2.py": {
+      "bytes": 9896,
+      "sha256": "cae0d24438faeb350e2b0d534c73554c92cef8d0aba5b02ef49fe4d2564ab0bf",
+      "source": "tmp/gcc-performance/perf_storage_policy_v2.py",
+      "byte_identical": true
+    },
+    "harness/performance_controller_v2.py": {
+      "bytes": 7748,
+      "sha256": "5e967f5cada2a88aa0f99c94e013717fced2cc7f9cfd3179bc29857a5ecce6e0",
+      "source": "tmp/gcc-performance/performance_controller_v2.py",
+      "byte_identical": true
+    },
+    "harness/performance_preflight.py": {
+      "bytes": 11249,
+      "sha256": "791c192e890b721c1c5a8868ba59a7a0978c912b26907ff69aebfadbd4af64c2",
+      "source": "tmp/gcc-performance/performance_preflight.py",
+      "byte_identical": true
+    },
+    "harness/performance_round_v2.py": {
+      "bytes": 17134,
+      "sha256": "193ada048b59a176b888c2da245a8765b8a290ffc1294f862c53af8ca7ae3e6d",
+      "source": "tmp/gcc-performance/performance_round_v2.py",
+      "byte_identical": true
+    },
+    "harness/prelaunch_attempt2.py": {
+      "bytes": 4701,
+      "sha256": "2bdf5c8a2ab2e80b19d1758502dba90f04887a0f2d296aa063162b2dc5dbafa4",
+      "source": "tmp/gcc-performance/prelaunch_attempt2.py",
+      "byte_identical": true
+    },
+    "harness/record_resources.py": {
+      "bytes": 703,
+      "sha256": "7713550f71ec23a3f7f60c541ce99345ed73f9bd4a447d0f14114d8729be9be8",
+      "source": "tmp/gcc-performance/record_resources.py",
+      "byte_identical": true
+    },
+    "harness/setup_performance.py": {
+      "bytes": 11326,
+      "sha256": "2f83ae3cc84aee5f183e5f2432c047ba04985b05b2bc31cfd3d2945d1a4af1bf",
+      "source": "tmp/gcc-performance/setup_performance.py",
+      "byte_identical": true
+    },
+    "harness/setup_performance_v2.py": {
+      "bytes": 6727,
+      "sha256": "b88d4beb1479bc28e8c42f401e006ef2053b952c5cb16412d36a94a04df4a623",
+      "source": "tmp/gcc-performance/setup_performance_v2.py",
+      "byte_identical": true
+    },
+    "harness/test_perf_policy_v2.py": {
+      "bytes": 5017,
+      "sha256": "630950f7a3381354ec5d00eca6072a5f470f4d15552095b6857eb5cadd5a7b3d",
+      "source": "tmp/gcc-performance/test_perf_policy_v2.py",
+      "byte_identical": true
+    },
+    "LICENSE.md": {
+      "bytes": 437,
+      "sha256": "4a19abf3cde23be6c3a8557f90f7f5d927d769f87d5a5cce9dde5ff02766b42e",
+      "record_type": "publication_documentation_or_extracted_summary"
+    },
+    "README.md": {
+      "bytes": 3988,
+      "sha256": "52942db1a0ad16c1ba6c55b0aeb52fa03a671b800af5a3a5a82c926f0e2c89ab",
+      "record_type": "publication_documentation_or_extracted_summary"
+    },
+    "results/storage-policy-authorization-attempt2.json": {
+      "bytes": 1049,
+      "sha256": "342afb5c200c4bcb9e947e80b09352fae60ded03d435f13a4f22abef1aa095c2",
+      "source": "tmp/gcc-performance/storage-policy-authorization-attempt2.json",
+      "byte_identical": true
+    },
+    "results/unit-plan.json": {
+      "bytes": 13936,
+      "sha256": "9fc4a182b2bb98ea868bccd2557f2cd725c2309298bfd622c7c357f85c4fb1be",
+      "record_type": "publication_documentation_or_extracted_summary"
+    },
+    "results/unit-statistics.json": {
+      "bytes": 8951,
+      "sha256": "df9509a650bcc78ab762d515003e93a5ebf8cd2087d05c034cfb0586518ff480",
+      "record_type": "publication_documentation_or_extracted_summary"
+    }
+  }
+}
