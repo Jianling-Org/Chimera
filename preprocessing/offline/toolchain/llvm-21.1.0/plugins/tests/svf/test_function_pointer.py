@@ -2,6 +2,7 @@
 
 from collections import Counter
 import argparse
+import os
 import pathlib
 import re
 import shutil
@@ -388,6 +389,37 @@ def test_missing_extapi_failure(
     )
 
 
+def test_input_snapshot_replay(work_dir, llvm_bin, plugin):
+    source = work_dir / "snapshot.c"
+    source.write_text("int a(int x){return x+1;} int (*volatile fp)(int)=a; int main(int c,char **v){return fp(c);}\n")
+    obj = work_dir / "snapshot.o"
+    run([llvm_bin / "clang", "-O2", "-flto", "-c", source, "-o", obj])
+    snapshot = work_dir / "input.bc"
+    binaries = []
+    for mode in (0, 1, 2):
+        env = os.environ.copy()
+        env.pop("CHIMERA_SVF_INPUT_DUMP", None)
+        if mode:
+            env["CHIMERA_SVF_INPUT_DUMP"] = str(snapshot)
+        binary = work_dir / f"snapshot-{mode}"
+        result = subprocess.run([
+            llvm_bin / "clang", "-O2", "-flto", "--ld-path=" + str(llvm_bin / "ld.lld"),
+            obj, "-Wl,--load-pass-plugin=" + str(plugin), "-o", binary,
+        ], env=env, capture_output=True, text=True)
+        if mode == 2:
+            require(result.returncode != 0 and "cannot create SVF input snapshot" in result.stderr,
+                    "existing input snapshot was not rejected")
+        else:
+            require(result.returncode == 0, result.stderr)
+            binaries.append(binary.read_bytes())
+    require(binaries[0] == binaries[1], "snapshot changed linked ELF")
+    replay = work_dir / "replayed.ll"
+    run([llvm_bin / "opt", "-load-pass-plugin=" + str(plugin),
+         "-passes=chimera-function-pointer,verify", snapshot, "-S", "-o", replay])
+    require(".chimera.function_pointer!A" in replay.read_text(),
+            "replay did not emit function pointer metadata")
+
+
 def main():
     parser = argparse.ArgumentParser()
 
@@ -413,6 +445,7 @@ def main():
         prefix="chimera-svf-test-"
     ) as tmp:
         work_dir = pathlib.Path(tmp)
+        test_input_snapshot_replay(work_dir, llvm_bin, plugin)
 
         test_resolved(
             source_dir,

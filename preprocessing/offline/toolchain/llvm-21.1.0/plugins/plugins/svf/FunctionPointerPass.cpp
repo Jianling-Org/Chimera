@@ -17,6 +17,9 @@
 #include "llvm/IR/Function.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/Module.h"
+#include "llvm/Bitcode/BitcodeWriter.h"
+#include "llvm/Support/FileSystem.h"
+#include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Transforms/Utils/Cloning.h"
 
@@ -104,6 +107,21 @@ FunctionPointerPass::run(
     errs() << "[Chimera SVF profile] functions=" << M.size()
            << " indirect_calls=" << OriginalCallsites.size() << "\n";
   ProfileStage("collect-callsites");
+  // Optional complete input snapshot for reproducing large SVF analyses.
+  // Never overwrite an earlier input, and never skip analysis after dumping.
+  if (const char *DumpPath = std::getenv("CHIMERA_SVF_INPUT_DUMP")) {
+    int FD;
+    std::error_code EC = sys::fs::openFileForWrite(
+        DumpPath, FD, sys::fs::CD_CreateNew);
+    if (EC)
+      report_fatal_error(Twine("cannot create SVF input snapshot: ") + EC.message());
+    raw_fd_ostream Dump(FD, true);
+    WriteBitcodeToFile(M, Dump);
+    Dump.flush();
+    if (Dump.has_error())
+      report_fatal_error("cannot write SVF input snapshot");
+    ProfileStage("dump-input");
+  }
   if (OriginalCallsites.empty())
     return PreservedAnalyses::all();
 
@@ -117,10 +135,10 @@ FunctionPointerPass::run(
    *
    *   original LLVM Value -> cloned LLVM Value
    */
-  ValueToValueMapTy VMap;
+  auto VMap = std::make_unique<ValueToValueMapTy>();
 
   std::unique_ptr<Module> AnalysisModule =
-      CloneModule(M, VMap);
+      CloneModule(M, *VMap);
   ProfileStage("clone-module");
 
   /*
@@ -137,7 +155,7 @@ FunctionPointerPass::run(
 
   for (Function &OriginalF : M) {
     Value *Mapped =
-        VMap.lookup(&OriginalF);
+        VMap->lookup(&OriginalF);
 
     auto *CloneF =
         dyn_cast_or_null<Function>(Mapped);
@@ -148,6 +166,15 @@ FunctionPointerPass::run(
     CloneToOriginalFunction[CloneF] =
         &OriginalF;
   }
+
+  // Only indirect calls need forward mappings after preprocessing. Preserve
+  // WeakTrackingVH replacement/deletion tracking, while releasing the complete
+  // per-value clone map before allocating SVF's graphs.
+  DenseMap<const CallBase *, WeakTrackingVH> OriginalToCloneCall;
+  for (CallBase *CB : OriginalCallsites)
+    OriginalToCloneCall[CB] = VMap->lookup(CB);
+  VMap.reset();
+  ProfileStage("release-clone-map");
 
   LLVMContext &Ctx = M.getContext();
 
@@ -282,7 +309,7 @@ FunctionPointerPass::run(
      * original CallBase -> cloned CallBase
      */
     Value *Mapped =
-        VMap.lookup(OriginalCB);
+        OriginalToCloneCall.lookup(OriginalCB);
 
     auto *CloneCB =
         dyn_cast_or_null<CallBase>(Mapped);

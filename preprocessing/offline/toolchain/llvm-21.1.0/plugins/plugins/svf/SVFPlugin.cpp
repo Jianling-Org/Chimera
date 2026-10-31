@@ -12,6 +12,14 @@ PassPluginLibraryInfo llvmGetPassPluginInfo() {
       "ChimeraFunctionPointer",
       LLVM_VERSION_STRING,
       [](PassBuilder &PB) {
+        PB.registerPipelineParsingCallback(
+            [](StringRef Name, ModulePassManager &MPM,
+               ArrayRef<PassBuilder::PipelineElement>) {
+              if (Name != "chimera-function-pointer")
+                return false;
+              MPM.addPass(chimera::FunctionPointerPass());
+              return true;
+            });
         PB.registerFullLinkTimeOptimizationLastEPCallback(
             [](ModulePassManager &MPM,
                OptimizationLevel) {

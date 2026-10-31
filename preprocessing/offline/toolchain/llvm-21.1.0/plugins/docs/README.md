@@ -97,3 +97,14 @@ RSS in KiB. Stages cover module cloning, SVF module/PAG construction, Andersen
 analysis, metadata emission and cleanup. RSS is the process high-water mark,
 not memory allocated exclusively by a stage. Profiling is disabled by default
 and does not change safety decisions or function-pointer metadata.
+
+Set `CHIMERA_SVF_INPUT_DUMP=/absolute/new-input.bc` to save the complete
+optimized FullLTO module before SVF clones it. The path must not already exist;
+creation or write failure stops the link. Dumping does not skip any analysis
+and does not certify the saved module or linked executable as migration-safe.
+
+Replay that complete input in a separate process with
+`opt -load-pass-plugin=/path/ChimeraFunctionPointer.so -passes=chimera-function-pointer input.bc -o analyzed.bc`.
+This runs the same analysis pass without repeating LTO optimization. Use inputs
+captured before this pass; replay is diagnostic and does not replace strict
+verification of the final linked ELF.
