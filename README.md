@@ -51,6 +51,7 @@ chimera-pkg workspace pack --workspace "$WORKSPACE" --output application.workspa
 - [目标机安装与运行](docs/user/README.md)
 - [LLVM、SVF 与外部输入](docs/external-dependencies.md)
 - [VLEN 逃逸检测工具](preprocessing/conformance/README.md)
+- [GCC 子进程迁移与同16并发记录](docs/updates/2026-10-31-gcc-bootstrap.md)
 - [v0.1.0-preview.1 发布说明](RELEASE_NOTES-v0.1.0-preview.1.md)
 
 ## 仓库结构
@@ -68,6 +69,8 @@ chimera-pkg workspace pack --workspace "$WORKSPACE" --output application.workspa
 ## 验证范围
 
 K3 自动迁移的公开验收为**条件性结论**，只覆盖验证记录中固定的硬件、ELF、Profile、依赖和负载；吞吐性能需单独测量。检查通过不代替目标机验证，手动 `migrate` 命令返回 0 也只表示请求提交。详细结论见[发布说明](RELEASE_NOTES-v0.1.0-preview.1.md)及[自动迁移验证](docs/validation/automigration.md)。
+
+GCC 子进程迁移、内存处理改进及同16并发实验见[更新说明](docs/updates/2026-10-31-gcc-bootstrap.md)。实验记录绑定原开发版本和配套内核；现有冻结内核补丁集及旧版本验收范围保持独立。
 
 ## 参与贡献
 

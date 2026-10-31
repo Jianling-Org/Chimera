@@ -4,13 +4,15 @@
 
 从根 README 或文档首页选择任务入口。下表列出指南、接口参考和专项验证说明。
 
-## 项目入口与许可证（3）
+## 项目入口与许可证（5）
 
 | 文档 | 内容 |
 |---|---|
 | [CONTRIBUTING.md](../CONTRIBUTING.md) | 开发与验证 |
 | [LICENSES/README.md](../LICENSES/README.md) | 许可证文本与来源边界 |
 | [README.md](../README.md) | Chimera |
+| [RELEASE_NOTES-v0.1.0-preview.1.md](../RELEASE_NOTES-v0.1.0-preview.1.md) | 技术预览版发布说明 |
+| [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md) | 第三方软件说明 |
 
 ## 正式指南与协议（45）
 
@@ -62,10 +64,11 @@
 | [docs/user/cli.md](user/cli.md) | 应用使用者 CLI |
 | [docs/validation/automigration.md](validation/automigration.md) | 自动迁移验证 |
 
-## 应用示例（6）
+## 应用示例（7）
 
 | 文档 | 内容 |
 |---|---|
+| [examples/applications/gnu-make/README.md](../examples/applications/gnu-make/README.md) | GNU make 子进程迁移 |
 | [examples/applications/gcc/README.md](../examples/applications/gcc/README.md) | GCC 应用适配样例 |
 | [examples/applications/hello-world/README.md](../examples/applications/hello-world/README.md) | Hello World 迁移样例 |
 | [examples/applications/llama-cpp/README.md](../examples/applications/llama-cpp/README.md) | llama.cpp 应用集成样例 |
@@ -125,6 +128,29 @@
 | 文档 | 内容 |
 |---|---|
 | [tools/README.md](../tools/README.md) | 开发与诊断工具 |
+
+## 子进程迁移与 GCC（12）
+
+| 文档 | 内容 |
+|---|---|
+| [docs/updates/2026-10-31-gcc-bootstrap.md](updates/2026-10-31-gcc-bootstrap.md) | 当前接口、准备改进与验证范围 |
+| [docs/BOOTSTRAP-EXEC-INHERITANCE.md](BOOTSTRAP-EXEC-INHERITANCE.md) | fork/exec 初始化与早期验收 |
+| [docs/BOOTSTRAP-EXEC-INHERITANCE.zh-CN.md](BOOTSTRAP-EXEC-INHERITANCE.zh-CN.md) | exec 继承实现与验收记录 |
+| [docs/BOOTSTRAP-NATIVE-BASELINE.md](BOOTSTRAP-NATIVE-BASELINE.md) | native 基线与 VLEN 边界 |
+| [docs/BOOTSTRAP-NESTED-SIGNAL-FAILURE.zh-CN.md](BOOTSTRAP-NESTED-SIGNAL-FAILURE.zh-CN.md) | 嵌套信号帧故障 |
+| [docs/BOOTSTRAP-STARTUP-COST.zh-CN.md](BOOTSTRAP-STARTUP-COST.zh-CN.md) | 启动开销与离线验证 |
+| [docs/GCC-BOOTSTRAP-BUILD.zh-CN.md](GCC-BOOTSTRAP-BUILD.zh-CN.md) | GCC 构建与准备记录 |
+| [docs/GCC-MAKE-FIRST-COMPARISON.zh-CN.md](GCC-MAKE-FIRST-COMPARISON.zh-CN.md) | 早期首对构建结果 |
+| [docs/MAKE-KERNEL-PERFORMANCE.zh-CN.md](MAKE-KERNEL-PERFORMANCE.zh-CN.md) | 早期内核构建对照 |
+| [docs/MIGRATION-PREFERENCE.zh-CN.md](MIGRATION-PREFERENCE.zh-CN.md) | 按进程选择迁移策略 |
+| [docs/SIGNAL-DEPTH-CANDIDATE-REVIEW.zh-CN.md](SIGNAL-DEPTH-CANDIDATE-REVIEW.zh-CN.md) | signal-depth 候选审查 |
+| [experiments/gcc-bootstrap/README.md](../experiments/gcc-bootstrap/README.md) | GCC 工作负载适配补丁 |
+
+## VLEN 逃逸分析（1）
+
+| 文档 | 内容 |
+|---|---|
+| [preprocessing/conformance/README.md](../preprocessing/conformance/README.md) | VLEN 逃逸检测工具 |
 
 ## GCC性能实验记录（3）
 

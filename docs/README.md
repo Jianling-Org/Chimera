@@ -42,7 +42,9 @@ Chimera 为 RISC-V 向量应用生成离线检查与翻译工件，并通过运�
 
 全部页面见[完整文档目录](INDEX.md)。
 
-## 子进程自动迁移实验
+## 子进程迁移与 GCC
+
+当前接口与同16并发记录见[更新说明](updates/2026-10-31-gcc-bootstrap.md)。下列早期实验文档保留各自的日期、内核和输入范围。
 
 - [exec 继承设计](BOOTSTRAP-EXEC-INHERITANCE.md)
 - [exec 继承中文说明](BOOTSTRAP-EXEC-INHERITANCE.zh-CN.md)

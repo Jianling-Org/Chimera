@@ -9,13 +9,17 @@ chimera-user [--debug] list
 chimera-user [--debug] verify --workspace ID_OR_PATH [--input ELF]
 chimera-user [--debug] register --input ELF [--workspace ID_OR_PATH]
 chimera-user [--debug] run --input ELF [--workspace ID_OR_PATH] -- APPLICATION_ARGUMENTS...
+chimera-user [--debug] bootstrap-register --input ELF --workspace ID_OR_PATH --registry PATH
+chimera-user [--debug] run --registry PATH --bootstrap DSO
+  [--input ELF] [--workspace ID_OR_PATH] [--automigrate]
+  [--preference {prefer-x100,prefer-a100}] -- [PROGRAM] APPLICATION_ARGUMENTS...
 chimera-user [--debug] migrate [--workspace ID_OR_PATH]
   --parent-thread TID --migration-count N --direction ROUTE
 chimera-user [--debug] migrate [--workspace ID_OR_PATH]
   --threads TID [TID ...] --direction ROUTE
 ```
 
-安装由 `chimera-pkg workspace install` 执行，见 [Workspace](../deployment/workspace.md)。`register` 没有 `--verify` 参数；`register/run` 必须显式提供 `--input`。
+安装由 `chimera-pkg workspace install` 执行，见 [Workspace](../deployment/workspace.md)。`register` 没有 `--verify` 参数；普通 `register/run` 必须显式提供 `--input`；bootstrap 启动也可从参数中的程序名解析实际路径。
 
 ## 运行设置
 
@@ -53,6 +57,28 @@ chimera-user run --workspace "$WORKSPACE" --input "$ELF" -- APPLICATION_ARGUMENT
 注册把这台机器实际文件的 inode 告知内核。即使文件内容相同，更换路径指向的文件、重新安装或重新链接应用后也应重新注册；不能把另一台机器或旧 inode 的注册当作仍然有效。保留应用和所需库的安装位置，待注册后再启动。
 
 `run` 用 `os.execve` 显式执行包内 scalar loader，配置库搜索路径与 Runtime preload，以原位置应用路径和传入参数启动；输入 ELF 的 `PT_INTERP` 不被改写。包内 `resources/` 也不会自动成为应用参数，须提供安装后资源的实际路径。
+
+## exec 子进程与迁移策略
+
+bootstrap 启动用于普通动态 ELF 的进程树。每个需要迁移的可执行文件须先完成 prepare、安装及注册；子进程按自身 ELF 选择 Workspace，不继承父程序的映射。
+
+```bash
+cmake -S runtime -B build/bootstrap -DCHIMERA_BUILD_BOOTSTRAP=ON
+cmake --build build/bootstrap --parallel
+
+chimera-user bootstrap-register --input "$ELF" --workspace "$WORKSPACE" \
+  --registry "$REGISTRY"
+chimera-user run --registry "$REGISTRY" --bootstrap "$BOOTSTRAP" \
+  --preference prefer-x100 -- "$PROGRAM" APPLICATION_ARGUMENTS
+```
+
+`--registry` 与 `--bootstrap` 必须成对提供。`--preference` 隐含 `--automigrate`，支持 `prefer-x100` 和 `prefer-a100`；仅用 `--automigrate` 时选择 A100 优先。省略两者可验证初始化，不启用自动迁移。显式提供 `--input` 时，双横线后直接传应用参数；否则第一个参数为程序名，可通过 PATH 查找。
+
+继承启动要求内核提供 `inherit:TID`；每次 exec 后须重新初始化并发布 ready。未注册程序保持未就绪。策略接口与兼容范围见[按进程选择迁移策略](../MIGRATION-PREFERENCE.zh-CN.md)及[GCC 更新说明](../updates/2026-10-31-gcc-bootstrap.md)。
+
+注册生成的 file receipt 和 table proof 绑定本机文件身份。更换文件、依赖、安装位置或 Workspace 后应重新核验并注册；凭据须来自受控发布目录。该入口不使用旧的 pinned BPF map 注册流程。
+
+`run` 保留 `parent_thread_id=...` 标准输出通知。需要逐字节解析编译器标准输出的 Kbuild 流程不能直接把它当作透明编译器 wrapper；同16并发实验使用[专用启动器](../../experiments/gcc-performance/k3-20261030/harness/native-launch-image-v3.c)省略该可选通知。
 
 ## 迁移线程
 

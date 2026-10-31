@@ -86,5 +86,14 @@
   "svf_gitlink": "5c45081f75d16afffc5fc9121e1f2f7a614e0bef",
   "llama_cpp_gitlink": "4fc4ec5541b243957ae5099edb67372f8f3b550e",
   "kernel_release_commit": "d0553fbdaf002abf4dfc2b3dae9d293602eb6bac",
-  "kernel_acceptance_tree": "9ee696466a8210dea73bea7451118e43dec7c31c"
+  "kernel_acceptance_tree": "9ee696466a8210dea73bea7451118e43dec7c31c",
+  "updates": [
+    {
+      "name": "gcc-bootstrap",
+      "source_head": "0c6e21538c26d46d9927a4e855b83360f4e50ee3",
+      "public_base": "c1e5188cc3bda287d44326daf196a2771e95c7c6",
+      "public_code_head": "9d23052d04237ec045cbf1a0aa48dd1e120a10b5",
+      "record": "docs/updates/gcc-bootstrap-sync.json"
+    }
+  ]
 }

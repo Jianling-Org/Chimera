@@ -32,6 +32,6 @@
 
 板端证据位于独立 GCC 根 `evidence/no-runtime-sha-v3/overhead.json` 和 `kernel-probes/results.json`。新版 64 对象、16 并发迁移预检通过，覆盖 CPU0–15，31 个 cc1 被采样到跨组执行，产物及运行输出一致，退出账本、pending、reservation 为零，无迁移超时增量。相关 Python 回归 55 项和 20 子测试通过，portable C 合同 11 项通过。
 
-## 新一轮完整构建
+## 后续完整构建
 
-用户已要求废弃此前所有性能数据。新的对照为同一重编 GCC、make、源码及配置：普通 X100 8 核不设置 preload、registry 或自动迁移；异构 16 核启用新版 bootstrap 和自动迁移。两组均从新输出目录完整构建，记录开销、CPU、温度、真实迁移、账本及告警。证据目录为 `evidence/kernel-performance-final-v1`，尚无可报告的完整加速比。不会安装或启动测试产物。
+后续对照改用同一重编 GCC、make、源码及配置，普通 X100 组不设置 preload、registry 或自动迁移，异构组承担全部初始化和迁移开销。该阶段证据位于 `evidence/kernel-performance-final-v1`，不与更早的逐执行全量校验数据混合。2026-10-30的三组同16并发结果另见[性能记录](../experiments/gcc-performance/k3-20261030/README.md)。

@@ -3,9 +3,9 @@
 bootstrap 启动时可以明确选择一种策略：
 
 ```sh
-chimera user run --registry /absolute/registry.tsv --bootstrap /absolute/libchimera-bootstrap.so \
+chimera-user run --registry /absolute/registry.tsv --bootstrap /absolute/libchimera-bootstrap.so \
   --preference prefer-x100 /absolute/program argument
-chimera user run --registry /absolute/registry.tsv --bootstrap /absolute/libchimera-bootstrap.so \
+chimera-user run --registry /absolute/registry.tsv --bootstrap /absolute/libchimera-bootstrap.so \
   --preference prefer-a100 /absolute/program argument
 ```
 

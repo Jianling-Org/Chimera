@@ -1,0 +1,213 @@
+{
+  "source_head": "0c6e21538c26d46d9927a4e855b83360f4e50ee3",
+  "public_base": "c1e5188cc3bda287d44326daf196a2771e95c7c6",
+  "public_code_head": "9d23052d04237ec045cbf1a0aa48dd1e120a10b5",
+  "commits": [
+    {
+      "order": 1,
+      "source": [
+        "b11b55adc006159ce0bd8444e47d947fd02fea1d"
+      ],
+      "public": "b70a523ff55ef2c88ea12d214c2e70a6aa2528c0",
+      "subject": "analysis: preserve linked function-pointer metadata addresses"
+    },
+    {
+      "order": 2,
+      "source": [
+        "a0ce22bcd5237e66999a033a40aeac9f744916a3"
+      ],
+      "public": "9efa2133c3941a6318f95b55db884563fc38f56d",
+      "subject": "preprocessing: stream large offset maps and translation output"
+    },
+    {
+      "order": 3,
+      "source": [
+        "a0ce22bcd5237e66999a033a40aeac9f744916a3"
+      ],
+      "public": "b8fddbf22ad5ba5c80a505476f2783b915026a68",
+      "subject": "translator: match exact PLT entries and omit generated DSO startup files"
+    },
+    {
+      "order": 4,
+      "source": [
+        "a0ce22bcd5237e66999a033a40aeac9f744916a3"
+      ],
+      "public": "60341fe0ec45e4214a1e41048f9b89bdadda4eb4",
+      "subject": "runtime: restart interrupted application waits after policy signals"
+    },
+    {
+      "order": 5,
+      "source": [
+        "a0ce22bcd5237e66999a033a40aeac9f744916a3"
+      ],
+      "public": "b1ac785fa2311a68bf39a8b2fc6afbd6975396ae",
+      "subject": "runtime: allow safe source PCs through the migration handshake"
+    },
+    {
+      "order": 6,
+      "source": [
+        "a0ce22bcd5237e66999a033a40aeac9f744916a3"
+      ],
+      "public": "f7b1caa743753cadcba5caa346a22f696d0f25a6",
+      "subject": "bootstrap: inherit migration policy across verified exec chains"
+    },
+    {
+      "order": 7,
+      "source": [
+        "3ac76d37735cd901601257cce729219ef15d27b7"
+      ],
+      "public": "1c14e191ab6c8f5c164e99e4c2a4aa97fed294a0",
+      "subject": "svf: add opt-in stage timing and peak memory diagnostics"
+    },
+    {
+      "order": 8,
+      "source": [
+        "a559fffb4d20affbb143aad9f54a4eb0cf2fc4a0"
+      ],
+      "public": "f78b0a4e38e8027637c6ba2980e692a0eaa2e9b0",
+      "subject": "svf: release clone mappings early and support analysis replay"
+    },
+    {
+      "order": 9,
+      "source": [
+        "c66189a60f1364da40d5f2a47663ac8acbbb1ffa"
+      ],
+      "public": "a7b6df23a481fa70e64cb8aa2e44bab6925abf6b",
+      "subject": "svf: instrument PAG construction subphases on demand"
+    },
+    {
+      "order": 10,
+      "source": [
+        "a0ce22bcd5237e66999a033a40aeac9f744916a3"
+      ],
+      "public": "5b41809abdbed6ceee5e61d60c965c009757278b",
+      "subject": "examples: add GCC and GNU make bootstrap workloads"
+    },
+    {
+      "order": 11,
+      "source": [
+        "a0ce22bcd5237e66999a033a40aeac9f744916a3",
+        "373c45bb75bb605feaeb483150bb6485b2eeaa30",
+        "8919d15cfb749af03cf22a885c7dab20e73a7eb9"
+      ],
+      "public": "a7f288904be1bc871a53d92e7da1dc5893c024cd",
+      "subject": "docs: document exec inheritance and per-process migration policy"
+    },
+    {
+      "order": 12,
+      "source": [
+        "0c6e21538c26d46d9927a4e855b83360f4e50ee3"
+      ],
+      "public": "9d23052d04237ec045cbf1a0aa48dd1e120a10b5",
+      "subject": "experiments: archive audited K3 GCC j16 benchmark"
+    }
+  ],
+  "integration_fixes": [
+    {
+      "sha": "d84a594b063824da4244ce160328ce686c8038bd",
+      "subject": "tests: resolve omitted workspace roots in example Profiles",
+      "validation": "12 Profile tests passed on Linux",
+      "paths": [
+        "tests/test_profile_config.py"
+      ]
+    }
+  ],
+  "retained": {
+    "conformance_files": 311,
+    "copyright": "unchanged",
+    "third_party_notices": "unchanged",
+    "gitlinks": "unchanged",
+    "performance_archive_bytes": "unchanged"
+  },
+  "validation": {
+    "python": {
+      "tests_run": 1624,
+      "failures": 5,
+      "errors": 7,
+      "skipped": 9,
+      "seconds": 96.003956391,
+      "baseline_comparison": {
+        "source_commit": "c1e5188cc3bda287d44326daf196a2771e95c7c6",
+        "modules_replayed": 7,
+        "tests_run": 83,
+        "failures": 6,
+        "errors": 11,
+        "skipped": 6
+      },
+      "new_failure_ids": [],
+      "remaining_baseline_failure_ids": [
+        "test_diagnostic_driver_inputs.DiagnosticDriverInputTests.test_missing_required_inputs_create_no_reports (script='k3-builtin-gate-experiment.sh', missing='COLLECTION')",
+        "test_diagnostic_driver_inputs.DiagnosticDriverInputTests.test_missing_required_inputs_create_no_reports (script='k3-collect-builtin-gate-inputs.sh', missing='ORIGIN')",
+        "test_diagnostic_driver_inputs.DiagnosticDriverInputTests.test_missing_required_inputs_create_no_reports (script='k3-gate-source-audit.sh', missing='EXPECTED_GATE_COUNT')",
+        "test_documentation_contracts.DocumentationContractTests.test_current_cli_and_plugin_contracts_are_documented",
+        "test_documentation_contracts.DocumentationContractTests.test_extensibility_guide_is_indexed_and_describes_current_hooks",
+        "test_installation.InstallationTests.test_repeated_init_repairs_existing_compiler_mode",
+        "test_llamacpp_benchmark.LlamaCppBenchmarkScriptTests.test_failure_is_recorded_and_remaining_runs_continue",
+        "test_llamacpp_benchmark.LlamaCppBenchmarkScriptTests.test_runs_rotate_scenarios_and_writes_averages",
+        "test_release_wheel.ReleaseWheelTests.test_missing_artifacts_require_confirmation_before_builder",
+        "test_release_wheel.ReleaseWheelTests.test_package_staging_prunes_llvm_development_files_and_model",
+        "test_release_wheel.ReleaseWheelTests.test_package_staging_restores_executable_modes",
+        "test_vector_census_build_scripts.VectorCensusBuildScriptTests.test_run_scripts_use_single_migration_contract"
+      ],
+      "fixed_baseline_failure_ids": [
+        "test_documentation_contracts.DocumentationContractTests.test_stale_public_documentation_terms_are_absent",
+        "test_profile_config.ProfileConfigTests.test_k3_example_profiles_share_user_chimera_roots (profile='hello-world.toml')",
+        "test_profile_config.ProfileConfigTests.test_k3_example_profiles_share_user_chimera_roots (profile='linux-riscv64-rvv-1024-256-bidirectional.toml')",
+        "test_profile_config.ProfileConfigTests.test_k3_example_profiles_share_user_chimera_roots (profile='linux-riscv64-rvv-1024-to-256.toml')",
+        "test_profile_config.ProfileConfigTests.test_k3_example_profiles_share_user_chimera_roots (profile='linux-riscv64-rvv-256-to-1024.toml')"
+      ],
+      "result_sha256": "745739488c9cedf8d2c62a912bd3b68c3091bd2d399cd19a5349853403110d52"
+    },
+    "portable_c": {
+      "passed": 10,
+      "build_type": "Debug",
+      "assertions_enabled": true,
+      "host": "Linux/x86_64"
+    },
+    "bootstrap_identity_and_traps": {
+      "passed": 15,
+      "exec_fixture": "make and child execs with a stub Runtime",
+      "rvv_migration_claimed": false
+    },
+    "translator_plt_transition": {
+      "passed": 166,
+      "skipped": 98,
+      "scope": "test_plt_target_lookup.py and test_rvv1024_transition.py"
+    },
+    "performance_record": {
+      "passed": 7,
+      "device_independent_storage_policy_cases": 12,
+      "archive_bytes": "unchanged",
+      "hardware_rerun": false
+    },
+    "scalar_launchers": {
+      "target": "riscv64-linux-gnu rv64gc lp64d",
+      "result": "both objects compiled",
+      "execution": "not_run"
+    },
+    "documentation": {
+      "local_markdown_files_checked": 16,
+      "missing_file_targets": 0,
+      "source_and_measured_version_scopes": "separate"
+    },
+    "svf_plugin": {
+      "status": "not_built",
+      "required_llvm": "21.1.0",
+      "available_llvm": "21.0.0git"
+    },
+    "conformance_e2e": {
+      "status": "not_run",
+      "source_files": "unchanged"
+    },
+    "k3": {
+      "status": "not_rerun",
+      "reason": "existing SSH endpoint refused connection"
+    },
+    "source_and_retention": {
+      "production_and_archive_bytes": "match source commit",
+      "test_only_exception": "tests/test_profile_config.py",
+      "protected_files_checked": 315,
+      "result": "passed"
+    }
+  }
+}

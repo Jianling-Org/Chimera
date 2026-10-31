@@ -22,4 +22,4 @@
 
 此前完整异构构建的 make 信号帧故障确实复现并留下 core。修复候选限制嵌套应用信号帧尚未返回时提交迁移；十轮嵌套 ACK 拒绝、exec 继承、64 对象正常迁移及本轮完整 make 构建通过。`siglongjmp` 跳过 sigreturn 可能使迁移保守阻止至 exec，仍是已知限制，不代表一般信号控制流已全部验证。
 
-板端证据：`/root/kaiwen/chimera-gcc-bootstrap-build/evidence/signal-depth-v1/kernel-performance-v2`，含命令、源码/配置身份、逐核采样、资源统计、迁移账本、前后 dmesg、产物与 `comparison.json`。完整 Python 回归对照正在重跑，后续还须处理真实新增失败、执行要求的 RVV/llama 矩阵与长期循环并整理最终结论，当前不标记任务完成。
+板端证据：`/root/kaiwen/chimera-gcc-bootstrap-build/evidence/signal-depth-v1/kernel-performance-v2`，含命令、源码/配置身份、逐核采样、资源统计、迁移账本、前后 dmesg、产物与 `comparison.json`。该页保留首对样本；后续[同16并发实验](../experiments/gcc-performance/k3-20261030/README.md)使用新的轮次和输入身份，不混合上述时间。
