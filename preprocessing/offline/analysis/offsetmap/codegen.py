@@ -3,10 +3,20 @@
 from __future__ import annotations
 
 import json
+import gzip
 from pathlib import Path
 import re
 
 OFFSET_MAP_ABI_VERSION = 1
+
+
+def _read_lines(path):
+    path = Path(path)
+    if not path.exists() and Path(str(path) + ".gz").is_file():
+        path = Path(str(path) + ".gz")
+    opener = gzip.open if path.suffix == ".gz" else open
+    with opener(path, "rt", encoding="utf-8", errors="ignore") as source:
+        yield from source
 
 
 def parse_asm_source(path: str | Path, translator_format) -> dict[str, int]:
@@ -17,7 +27,7 @@ def parse_asm_source(path: str | Path, translator_format) -> dict[str, int]:
     translated_to_original: dict[str, int] = {}
     pending_translated: str | None = None
 
-    for line in Path(path).read_text(encoding="utf-8", errors="ignore").splitlines():
+    for line in _read_lines(path):
         match = label_pattern.match(line)
         if match is None:
             continue
@@ -44,7 +54,7 @@ def parse_translated_dump(
         re.escape(translator_format.target_label_prefix) + r"([0-9a-fA-F]+)"
     )
     mapping: dict[int, int] = {}
-    for line in Path(path).read_text(encoding="utf-8", errors="ignore").splitlines():
+    for line in _read_lines(path):
         match = dump_label_pattern.search(line)
         if match is None:
             continue
@@ -92,23 +102,20 @@ def export_asm(
 
 
 def export_json(mapping: dict[int, int], output_path: str | Path) -> None:
-    entries = [
-        {
-            "original": original,
-            "original_hex": hex(original),
-            "translated": translated,
-            "translated_hex": hex(translated),
-        }
-        for original, translated in sorted(mapping.items())
-    ]
-    document = {
-        "format": "chimera-offset-map-v1",
-        "entries": entries,
-    }
-    Path(output_path).write_text(
-        json.dumps(document, ensure_ascii=False, indent=2) + "\n",
-        encoding="utf-8",
-    )
+    # Match the existing indented JSON byte for byte without retaining a
+    # second object graph and a whole-document string for large programs.
+    with Path(output_path).open("w", encoding="utf-8") as output:
+        output.write('{\n  "format": "chimera-offset-map-v1",\n  "entries": [')
+        count = 0
+        for original in sorted(mapping):
+            translated = mapping[original]
+            row = {"original": original, "original_hex": hex(original),
+                   "translated": translated, "translated_hex": hex(translated)}
+            output.write(",\n" if count else "\n")
+            output.write("\n".join("    " + line for line in
+                json.dumps(row, ensure_ascii=False, indent=2).splitlines()))
+            count += 1
+        output.write("\n  ]\n}\n" if count else "]\n}\n")
 
 
 def _safe_symbol(name: str) -> str:

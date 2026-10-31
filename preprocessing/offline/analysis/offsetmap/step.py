@@ -6,7 +6,7 @@ from chimera.runtime.manifest import ArtifactRecord
 from ..core.contracts import AnalysisContext, ElfModuleServices
 from ..core.monitor import local, monitored, returned
 from ..core.workspace import sha256_file
-from .model import OffsetMapArtifact
+from .model import OffsetMapArtifact, PackedOffsetMapping
 from ..translation.model import ensure_production_outputs_are_writable
 from .codegen import (
     OFFSET_MAP_ABI_VERSION,
@@ -77,6 +77,7 @@ class OffsetMapStep:
                 translator_format,
                 disassembly_format,
             )
+            del labels
             original_base = context.platform.load_base(module.selected_path)
             translated_base = context.platform.load_base(translated.library)
             mapping = {
@@ -84,6 +85,8 @@ class OffsetMapStep:
                 for original, target in absolute.items()
                 if original >= original_base and target >= translated_base
             }
+            del absolute
+            mapping = PackedOffsetMapping(mapping)
             table = (
                 context.stage / spec.offset_map_assembly_path
             )

@@ -363,6 +363,11 @@ def resolve_jal_ranges(
             report = inspect_object(probe_object, readelf=readelf)
             _raise_report_errors(report, prefix=f"第 {iteration + 1} 轮：")
 
+            # The report owns all relocation information needed below. Large
+            # inputs must not retain prior probes beside the final assembly.
+            probe_source.unlink(missing_ok=True)
+            probe_object.unlink(missing_ok=True)
+
             still_out_of_range = report.out_of_range_sites & sites
             if still_out_of_range:
                 addresses = ", ".join(

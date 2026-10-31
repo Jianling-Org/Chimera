@@ -11,6 +11,8 @@ from __future__ import annotations
 
 import argparse
 import sys
+import os
+import tempfile
 
 from pathlib import Path
 
@@ -166,7 +168,8 @@ def translate_program(
     lib_name: str = "main",
     state_base_mode: str = "initial-exec",
     runtime_vtype_guard: bool = True,
-) -> str:
+    stream: bool = False,
+):
     """翻译完整 objdump 输入，并保持现有 offset-map/地址标签合同。"""
     if not isinstance(program, RVProgram):
         raise TypeError("translate_program() 需要 RVProgram；请先构造统一程序对象")
@@ -199,7 +202,8 @@ def translate_program(
         backend_profile=profile,
         init_vtype=init_vtype,
     )
-    return pipeline.emit_program(
+    emit = pipeline.iter_emit_program if stream else pipeline.emit_program
+    result = emit(
         prepared,
         state_factory=lambda: StateTracker(vlenb=source_vlenb),
         allocator_factory=SimulatedStateLayout,
@@ -208,6 +212,12 @@ def translate_program(
         text_only=text_only,
         lib_name=lib_name,
     )
+    if not stream:
+        return result
+    def chunks():
+        for index, line in enumerate(result):
+            yield ("\n" if index else "") + line
+    return chunks()
 
 
 def main() -> None:
@@ -266,6 +276,7 @@ def main() -> None:
                 init_vtype=args.init_vtype,
                 lib_name=args.lib_name,
                 state_base_mode=args.state_base_mode,
+                stream=bool(args.output),
             )
         else:
             instructions = asm_parser.parse_file(args.input)
@@ -289,8 +300,22 @@ def main() -> None:
         raise SystemExit(1)
 
     if args.output:
-        with open(args.output, "w", encoding="utf-8") as output:
-            output.write(result)
+        target = Path(args.output)
+        temporary = None
+        try:
+            with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8",
+                    dir=target.parent, prefix=target.name + ".", delete=False) as output:
+                temporary = Path(output.name)
+                if isinstance(result, str):
+                    output.write(result)
+                else:
+                    output.writelines(result)
+            os.replace(temporary, target)
+        except Exception as exc:
+            if temporary is not None:
+                temporary.unlink(missing_ok=True)
+            print(f"翻译失败: {exc}", file=sys.stderr)
+            raise SystemExit(1)
         print(f"已翻译: {source_label} -> {args.output}")
     else:
         print(result)
