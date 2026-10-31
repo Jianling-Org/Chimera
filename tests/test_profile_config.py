@@ -133,12 +133,18 @@ class ProfileConfigTests(unittest.TestCase):
             ],
         )
 
-    def test_k3_example_profiles_share_user_chimera_roots(self) -> None:
+    def test_k3_example_profiles_resolve_declared_and_default_roots(self) -> None:
         for source in Path("examples/platforms/k3").glob("*.toml"):
             with self.subTest(profile=source.name):
                 config = tomllib.loads(source.read_text(encoding="utf-8"))["config"]
                 self.assertEqual(config["data_root"], "~/.chimera/data")
-                self.assertEqual(config["workspace_root"], "~/.chimera/workspaces")
+                parsed = parse_base_config(config, source=source)
+                expected_workspace = (
+                    Path("~/.chimera/workspaces").expanduser()
+                    if source.stem.endswith("-bootstrap-native")
+                    else source.parent / "build/workspaces"
+                )
+                self.assertEqual(parsed.workspace_root, expected_workspace.resolve())
                 # The native-only experiment deliberately has no scalar replacements.
                 scalar_root = ("~/.chimera/bootstrap-native-empty-scalar"
                     if source.stem.endswith("-bootstrap-native") else "~/.chimera/scalar")
