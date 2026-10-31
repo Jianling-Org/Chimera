@@ -324,7 +324,7 @@ python3 tools/check_backend_quality.py
 - 1024→256 状态块中 v0-v31 各 128B（0x000-0xF80）；256→1024 状态块中源 vN 位于 N*32B；两者 CSR 均位于 0x1000-0x1030
 - `t6` 在每个翻译块内重载为当前契约指定的状态基址。默认使用 `la.tls.ie` + `add t6, t6, tp`，避免旧 helper 调用导致的全 caller-saved GPR/FPR 保存
 - **块级 save/restore**，非函数级栈帧——避免破坏原始标量代码中的 `sp` 相对寻址
-- 默认 Initial-Exec TLS 要求 `libinject.so` 通过 `LD_PRELOAD` 在启动期加载；翻译库仍由 `dlopen` 装入，必须先在目标动态加载器验证 IE 重定位/加载，门禁失败时显式使用 `--state-base-mode helper`
+- 默认 Initial-Exec TLS 要求 `libchimera_inject.so` 通过 `LD_PRELOAD` 在启动期加载；翻译库仍由 `dlopen` 装入，必须先在目标动态加载器验证 IE 重定位/加载，门禁失败时显式使用 `--state-base-mode helper`
 - 每条源 RVV 指令结束时继续 write-through（直写）到 `simulated_cpu_state`；每个源地址均可能是迁移入口，禁止在没有新安全点/flush 合同的情况下跨指令延迟写回
 - `vl` 从 CSR 内存（0x1020）运行时读取，不做静态写死
 - `--init-vtype` 仅播种 StateTracker，不产生输出代码

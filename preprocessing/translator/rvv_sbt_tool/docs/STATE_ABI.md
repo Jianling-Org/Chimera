@@ -72,7 +72,7 @@ add       t6, t6, tp
 - `t6` 只在当前翻译块内是状态基址，不得假设它跨原始指令、函数调用或 `branch_j_target_*` 入口永久有效；
 - wrapper 必须按实际 handler 触及的 caller-saved 寄存器保存/恢复，不能把 `t6` 当成永远空闲的临时寄存器；
 - `--state-base-mode helper` 是动态加载或 TLS 门禁不满足时的兼容回退；
-- Initial-Exec TLS 要求 `libinject.so` 在进程启动期通过 `LD_PRELOAD` 加载。翻译库由 `dlopen` 装入这一部署组合仍需在 RISC-V 目标机验证；
+- Initial-Exec TLS 要求 `libchimera_inject.so` 在进程启动期通过 `LD_PRELOAD` 加载。翻译库由 `dlopen` 装入这一部署组合仍需在 RISC-V 目标机验证；
 - `simulated_cpu_state_ptr` 是运行时导出的 TLS 对象，不能只修改翻译器文本而不检查 `runtime/runtime/state/linux_riscv64_rvv_v1/translator_state.c`。
 
 ## 写回和迁移安全点

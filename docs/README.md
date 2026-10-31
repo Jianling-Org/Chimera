@@ -41,3 +41,11 @@ Chimera 为 RISC-V 向量应用生成离线检查与翻译工件，并通过运�
 - [扩展机制](developer/architecture/extensibility.md)：新增处理步骤、目标和运行时能力。
 
 全部页面见[完整文档目录](INDEX.md)。
+
+## 子进程自动迁移实验
+
+- [exec 继承设计](BOOTSTRAP-EXEC-INHERITANCE.md)
+- [exec 继承中文说明](BOOTSTRAP-EXEC-INHERITANCE.zh-CN.md)
+- [native 基线](BOOTSTRAP-NATIVE-BASELINE.md)
+- [GCC 构建与严格准入](GCC-BOOTSTRAP-BUILD.zh-CN.md)
+- [make 内核构建性能实验](MAKE-KERNEL-PERFORMANCE.zh-CN.md)
