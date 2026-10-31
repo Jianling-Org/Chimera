@@ -51,7 +51,10 @@ static int install_one(
 #ifdef CHIMERA_PORTABLE_SIGNAL_TEST
     action.sa_flags = 1UL;
 #else
-    action.sa_flags = SA_SIGINFO;
+    /* Policy notifications are transparent to blocking application I/O and
+     * child waits when migration is rejected.  In particular, GCC's pex wait
+     * treats EINTR as a fatal compiler error. */
+    action.sa_flags = SA_SIGINFO | SA_RESTART;
 #endif
 #ifndef _WIN32
     /* Both transition handlers touch direction-local staging and the saved

@@ -280,6 +280,12 @@ int main(int argc, char **argv) {
         return 7; /* The handler must not return to an unmapped trap. */
     }
 #ifndef CHIMERA_PORTABLE_SIGNAL_TEST
+    {
+        struct sigaction installed;
+        assert(chimera_scene_initialize_signal_handlers());
+        assert(sigaction(SIGTRAP, NULL, &installed) == 0);
+        assert((installed.sa_flags & SA_RESTART) != 0);
+    }
     if (argc == 2 && strcmp(argv[1], "--unmapped-trap") == 0) {
         reset();
         current_pc = UINT64_C(0x50f0);
