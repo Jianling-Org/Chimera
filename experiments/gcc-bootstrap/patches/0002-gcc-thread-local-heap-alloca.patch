@@ -1,0 +1,61 @@
+--- a/include/libiberty.h
++++ b/include/libiberty.h
+@@ -769,9 +769,15 @@
+ # define USE_C_ALLOCA 1
+ # undef C_ALLOCA
+ # define C_ALLOCA 1
++#ifdef CHIMERA_GCC_HEAP_ALLOCA
++extern __thread const char *libiberty_optr;
++extern __thread char *libiberty_nptr;
++extern __thread unsigned long libiberty_len;
++#else
+ extern const char *libiberty_optr;
+ extern char *libiberty_nptr;
+ extern unsigned long libiberty_len;
++#endif
+ # define ASTRDUP(X) \
+   (libiberty_optr = (X), \
+    libiberty_len = strlen (libiberty_optr) + 1, \
+--- a/libiberty/alloca.c
++++ b/libiberty/alloca.c
+@@ -60,9 +60,15 @@
+ #ifdef __cplusplus
+ extern "C" {
+ #endif /* __cplusplus */
++#ifdef CHIMERA_GCC_HEAP_ALLOCA
++__thread const char *libiberty_optr;
++__thread char *libiberty_nptr;
++__thread unsigned long libiberty_len;
++#else
+ const char *libiberty_optr;
+ char *libiberty_nptr;
+ unsigned long libiberty_len;
++#endif
+ #ifdef __cplusplus
+ }
+ #endif /* __cplusplus */
+@@ -147,7 +153,11 @@
+     } h;
+ } header;
+ 
+-static header *last_alloca_header = NULL;	/* -> last alloca header.  */
++#ifdef CHIMERA_GCC_HEAP_ALLOCA
++static __thread header *last_alloca_header = NULL;
++#else
++static header *last_alloca_header = NULL;
++#endif	/* -> last alloca header.  */
+ 
+ /* Return a pointer to at least SIZE bytes of storage,
+    which will be automatically reclaimed upon exit from
+@@ -193,6 +203,11 @@
+ 
+   if (size == 0)
+     return NULL;		/* No allocation required.  */
++
++#ifdef CHIMERA_GCC_HEAP_ALLOCA
++  if (size > (size_t) -1 - sizeof (header))
++    xmalloc_failed (size);
++#endif
+ 
+   /* Allocate combined header + user data storage.  */
+ 

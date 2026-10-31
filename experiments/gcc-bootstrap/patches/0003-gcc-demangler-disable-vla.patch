@@ -1,0 +1,15 @@
+--- a/libiberty/cp-demangle.c
++++ b/libiberty/cp-demangle.c
+@@ -198,6 +198,12 @@
+ #endif /* defined (__STDC_VERSION__) */
+ #endif /* defined (__STDC__) */
+ #endif /* ! defined (__GNUC__) */
++
++/* Select the portable alloca branch, backed by GNU C_alloca in this build.
++   Native VLAs bypass USE_C_ALLOCA and retain dynamic stack frames.  */
++#ifdef CHIMERA_GCC_HEAP_ALLOCA
++#undef CP_DYNAMIC_ARRAYS
++#endif
+ 
+ /* We avoid pulling in the ctype tables, to prevent pulling in
+    additional unresolved symbols when this code is used in a library.

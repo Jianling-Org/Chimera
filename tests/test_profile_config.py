@@ -139,7 +139,10 @@ class ProfileConfigTests(unittest.TestCase):
                 config = tomllib.loads(source.read_text(encoding="utf-8"))["config"]
                 self.assertEqual(config["data_root"], "~/.chimera/data")
                 self.assertEqual(config["workspace_root"], "~/.chimera/workspaces")
-                self.assertEqual(config["scalar_root"], "~/.chimera/scalar")
+                # The native-only experiment deliberately has no scalar replacements.
+                scalar_root = ("~/.chimera/bootstrap-native-empty-scalar"
+                    if source.stem.endswith("-bootstrap-native") else "~/.chimera/scalar")
+                self.assertEqual(config["scalar_root"], scalar_root)
 
     def test_tilde_paths_expand_before_profile_relative_resolution(self) -> None:
         profile = Path.cwd() / "profile.toml"

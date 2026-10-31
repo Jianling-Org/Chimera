@@ -1,0 +1,35 @@
+--- a/gcc/gcc.cc
++++ b/gcc/gcc.cc
+@@ -8508,8 +8508,11 @@
+ 
+   /* We need to check standard_exec_prefix/spec_machine_suffix/specs
+      for any override of as, ld and libraries.  */
+-  specs_file = (char *) alloca (strlen (standard_exec_prefix)
+-		       + strlen (spec_machine_suffix) + sizeof ("specs"));
++  /* Keep the variable-length path off the stack across callees.  */
++  auto_vec<char> specs_storage;
++  specs_storage.safe_grow (strlen (standard_exec_prefix)
++                          + strlen (spec_machine_suffix) + sizeof ("specs"));
++  specs_file = specs_storage.address ();
+   strcpy (specs_file, standard_exec_prefix);
+   strcat (specs_file, spec_machine_suffix);
+   strcat (specs_file, "specs");
+--- a/libcpp/directives.cc
++++ b/libcpp/directives.cc
+@@ -2399,7 +2399,7 @@
+   int count;
+   const struct directive *save_directive;
+ 
+-  dest = result = (char *) alloca (in->len - 1);
++  dest = result = XNEWVEC (char, in->len - 1);
+   src = in->text + 1 + (in->text[0] == 'L');
+   limit = in->text + in->len - 1;
+   while (src < limit)
+@@ -2508,6 +2508,7 @@
+      make that applicable to the real buffer too.  */
+   pfile->buffer->prev->sysp = pfile->buffer->sysp;
+   _cpp_pop_buffer (pfile);
++  XDELETEVEC (result);
+   pfile->diagnostic_override_loc = prev_loc_override;
+ 
+   /* Reset the old macro state before ...  */

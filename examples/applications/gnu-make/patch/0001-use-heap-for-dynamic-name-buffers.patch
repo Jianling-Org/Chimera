@@ -1,0 +1,89 @@
+--- a/src/arscan.c
++++ b/src/arscan.c
+@@ -450,6 +450,7 @@
+ # endif
+ #endif
+   char *namemap = 0;
++  char *member_name = 0;
+   unsigned int namemap_size = 0;
+   int desc = open (archive, O_RDONLY, 0);
+   if (desc < 0)
+@@ -730,7 +731,7 @@
+               if (err || name_len == 0 || name_len >= MIN (PATH_MAX, INT_MAX))
+                 goto invalid;
+ 
+-              name = alloca (name_len + 1);
++              name = member_name = xmalloc (name_len + 1);
+               nread = readbuf (desc, name, name_len);
+               if (nread < 0 || (unsigned int) nread != name_len)
+                 goto invalid;
+@@ -774,9 +775,13 @@
+ 
+         if (fnval)
+           {
++            free (member_name);
++            free (namemap);
+             (void) close (desc);
+             return fnval;
+           }
++        free (member_name);
++        member_name = 0;
+ 
+ #ifdef AIAMAG
+         if (member_offset == last_member_offset)
+@@ -804,7 +809,8 @@
+ 
+             if (eltsize > INT_MAX)
+               goto invalid;
+-            namemap = alloca (eltsize + 1);
++            free (namemap);
++            namemap = xmalloc (eltsize + 1);
+             nread = readbuf (desc, namemap, eltsize);
+             if (nread != eltsize)
+               goto invalid;
+@@ -835,10 +841,14 @@
+       }
+   }
+ 
++  free (member_name);
++  free (namemap);
+   close (desc);
+   return 0;
+ 
+  invalid:
++  free (member_name);
++  free (namemap);
+   close (desc);
+   return -2;
+ }
+--- a/src/load.c
++++ b/src/load.c
+@@ -125,7 +125,7 @@
+ {
+   const char *ldname = file->name;
+   size_t nmlen = strlen (ldname);
+-  char *new = alloca (nmlen + CSTRLEN (SYMBOL_EXTENSION) + 1);
++  char *new = xmalloc (nmlen + CSTRLEN (SYMBOL_EXTENSION) + 1);
+   char *symname = NULL;
+   const char *fp;
+   int r;
+@@ -171,7 +171,10 @@
+      object was initially loaded.  */
+   file = lookup_file (ldname);
+   if (file && file->loaded)
+-    return -1;
++    {
++      free (new);
++      return -1;
++    }
+ 
+   /* If we didn't find a symbol name yet, construct it from the ldname.  */
+   if (! symname)
+@@ -207,6 +210,7 @@
+ 
+   /* Load it!  */
+   symp = load_object (flocp, noerror, ldname, symname);
++  free (new);
+   if (! symp)
+     return 0;
+ 

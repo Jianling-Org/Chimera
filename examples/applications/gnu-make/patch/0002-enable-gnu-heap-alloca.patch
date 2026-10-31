@@ -1,0 +1,55 @@
+--- a/lib/alloca.c
++++ b/lib/alloca.c
+@@ -31,11 +31,11 @@
+ #include <stdlib.h>
+ 
+ /* If compiling with GCC or clang, this file is not needed.  */
+-#if !(defined __GNUC__ || defined __clang__)
++#if defined CHIMERA_MAKE_HEAP_ALLOCA || !(defined __GNUC__ || defined __clang__)
+ 
+ /* If someone has defined alloca as a macro,
+    there must be some other way alloca is supposed to work.  */
+-# ifndef alloca
++# if !defined alloca || defined CHIMERA_MAKE_HEAP_ALLOCA
+ 
+ /* Define STACK_DIRECTION if you know the direction of stack
+    growth for your system; otherwise it will be automatically
+@@ -92,7 +92,7 @@
+     } h;
+ } header;
+ 
+-static header *last_alloca_header = NULL;       /* -> last alloca header.  */
++static _Thread_local header *last_alloca_header = NULL;       /* -> last alloca header.  */
+ 
+ /* Return a pointer to at least SIZE bytes of storage,
+    which will be automatically reclaimed upon exit from
+--- a/src/makeint.h
++++ b/src/makeint.h
+@@ -24,7 +24,9 @@
+    around so avoid it via the preprocessor.
+    See https://gcc.gnu.org/bugzilla/show_bug.cgi?id=98055  */
+ 
+-#if defined (__has_builtin)
++#if defined CHIMERA_MAKE_HEAP_ALLOCA
++# define free_alloca() alloca (0)
++#elif defined (__has_builtin)
+ # if __has_builtin (__builtin_alloca)
+ #   define free_alloca()
+ # else
+--- a/lib/alloca.c
++++ b/lib/alloca.c
+@@ -145,12 +145,12 @@
+ 
+     size_t combined_size = sizeof (header) + size;
+     if (combined_size < sizeof (header))
+-      memory_full ();
++      abort ();
+ 
+     new = malloc (combined_size);
+ 
+     if (! new)
+-      memory_full ();
++      abort ();
+ 
+     new->h.next = last_alloca_header;
+     new->h.deep = depth;
