@@ -215,7 +215,9 @@ class TextProgramIndex:
         指令，也不能把它们的局部行为当成真实外部函数的 vtype 摘要。
         """
 
-        return function is not None and "@plt" in function.name
+        # Stripped .text can be labelled relative to the last PLT symbol,
+        # e.g. dlclose@plt+0x10. That is code, not the PLT entry itself.
+        return function is not None and function.name.endswith("@plt")
 
     def resolve_target(
         self,

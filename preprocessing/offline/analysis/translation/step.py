@@ -186,7 +186,11 @@ class TranslationStep:
                 context.toolchain.compiler.compile(
                     [request.assembly_output, provenance_output],
                     request.library_output,
-                    flags=("-fPIC", "-shared", "-Wl,-Bsymbolic-functions"),
+                    # These DSOs contain generated code and immutable
+                    # provenance, not a second application lifecycle. CRT
+                    # finalizers would be called by a translated loader and
+                    # appear to be cross-variant translated entry points.
+                    flags=("-fPIC", "-shared", "-nostartfiles", "-Wl,-Bsymbolic-functions"),
                 )
             )
             if not request.library_output.is_file():

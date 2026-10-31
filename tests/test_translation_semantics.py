@@ -183,7 +183,7 @@ class TranslationSemanticsContractTests(unittest.TestCase):
             self.assertEqual(key.canonical_route, ("toy;scalar;v1", "toy;wide;v2"))
             self.assertIn("translated-main-toy", session.registry.artifacts)
             self.assertEqual(compile_options, [{
-                "flags": ("-fPIC", "-shared", "-Wl,-Bsymbolic-functions")
+                "flags": ("-fPIC", "-shared", "-nostartfiles", "-Wl,-Bsymbolic-functions")
             }])
 
 

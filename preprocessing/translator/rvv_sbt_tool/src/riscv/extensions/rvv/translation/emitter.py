@@ -289,7 +289,7 @@ class ProgramEmitter:
         functions = (
             function
             for function in context.program.functions
-            if "@plt" not in function.name
+            if not function.name.endswith("@plt")
         )
         if not text_only:
             prefix = 'chimera_' + self.control_flow.sanitize_symbol_component(lib_name)

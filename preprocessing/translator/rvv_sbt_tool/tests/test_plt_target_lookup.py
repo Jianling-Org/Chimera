@@ -221,6 +221,30 @@ Disassembly of section .text:
         )
 
 
+@pytest.mark.parametrize("profile", [1, 2])
+def test_stripped_text_relative_to_plt_is_internal_code(profile):
+    from rvv_sbt_rvv import translate_program as forward
+    from rvv_sbt_rvv1024 import translate_program as reverse
+
+    program = AsmParser().parse_string_program("""
+Disassembly of section .plt:
+00000000000e5540 <dlclose@plt>:
+    e5540: 00000013 nop
+Disassembly of section .text:
+00000000000e5550 <dlclose@plt+0x10>:
+    e5550: a011 j e5554 <dlclose@plt+0x14>
+    e5552: 0001 nop
+    e5554: 8082 ret
+""")
+    structure = analyze_structure(program)
+    assert not structure.plt_candidates
+    output = (forward if profile == 1 else reverse)(program)
+    assert "branch_j_target_e5550:" in output
+    assert "branch_j_target_e5554:" in output
+    assert "%got_pcrel_hi(dlclose)" not in output
+    assert "branch_j_target_e5540:" not in output
+
+
 def test_unknown_irelative_pair_keeps_synthetic_symbol():
     program = AsmParser().parse_string_program("""
 Disassembly of section .plt:

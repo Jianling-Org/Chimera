@@ -53,6 +53,15 @@ def _instructions(asm: str):
     return AsmParser().parse_string(asm)
 
 
+def test_program_stream_matches_string_output():
+    functions = [RVFunction("stream_contract", 0,
+        _instructions("vsetivli t0, 4, e32, m1, ta, ma\nvadd.vv v8, v16, v24\nret"))]
+    expected = _translate_program(functions)
+    chunks = _translate_program(functions, stream=True)
+    assert not isinstance(chunks, str)
+    assert "".join(chunks) == expected
+
+
 def test_preflight_builds_plans_without_calling_lowerer(monkeypatch):
     """预检只能运行纯 validator，不能生成再丢弃汇编。"""
 
