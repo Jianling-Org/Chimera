@@ -1,0 +1,81 @@
+--- a/svf-llvm/lib/SVFIRBuilder.cpp
++++ b/svf-llvm/lib/SVFIRBuilder.cpp
+@@ -29,6 +29,9 @@
+  *      Author: Xiao Cheng, Yulei Sui
+  */
+ 
++#include <chrono>
++#include <cstdlib>
++#include <sys/resource.h>
+ #include "SVF-LLVM/SVFIRBuilder.h"
+ #include "SVF-LLVM/BasicTypes.h"
+ #include "SVF-LLVM/CHGBuilder.h"
+@@ -55,6 +58,21 @@
+ SVFIR* SVFIRBuilder::build()
+ {
+     double startTime = SVFStat::getClk(true);
++    const bool profile = std::getenv("CHIMERA_SVF_PROFILE") &&
++        std::string(std::getenv("CHIMERA_SVF_PROFILE")) == "1";
++    const auto profileStart = std::chrono::steady_clock::now();
++    auto profileStage = [&](const char* stage) {
++        if (!profile) return;
++        struct rusage usage{};
++        getrusage(RUSAGE_SELF, &usage);
++        llvm::errs() << "[Chimera PAG profile] stage=" << stage
++            << " elapsed_ms=" << std::chrono::duration_cast<std::chrono::milliseconds>(
++                std::chrono::steady_clock::now() - profileStart).count()
++            << " nodes=" << pag->getTotalNodeNum()
++            << " maxrss_kib=" << usage.ru_maxrss << "\n";
++    };
++    profileStage("start");
++
+ 
+     DBOUT(DGENERAL, outs() << pasMsg("\t Building SVFIR ...\n"));
+ 
+@@ -64,17 +82,21 @@
+ 
+ 
+     createFunObjVars();
++    profileStage("function-objects");
+ 
+     /// build icfg
+     ICFGBuilder icfgbuilder;
+     pag->icfg = icfgbuilder.build();
++    profileStage("icfg");
+ 
+     /// initial external library information
+     /// initial SVFIR nodes
+     initialiseNodes();
++    profileStage("nodes");
+     /// initial SVFIR edges:
+     ///// handle globals
+     visitGlobal();
++    profileStage("globals");
+     ///// collect exception vals in the program
+ 
+ 
+@@ -87,11 +109,13 @@
+         funset.push_back(llvmModuleSet()->getFunObjVar(item));
+     }
+     pag->callGraph = callGraphBuilder.buildSVFIRCallGraph(funset);
++    profileStage("callgraph");
+ 
+     CHGraph* chg = new CHGraph();
+     CHGBuilder chgbuilder(chg);
+     chgbuilder.buildCHG();
+     pag->setCHG(chg);
++    profileStage("class-hierarchy");
+ 
+     /// handle functions
+     for (Module& M : llvmModuleSet()->getLLVMModules())
+@@ -148,8 +172,10 @@
+     }
+ 
+     sanityCheck();
++    profileStage("instruction-edges");
+ 
+     pag->initialiseCandidatePointers();
++    profileStage("candidate-pointers");
+ 
+     pag->setNodeNumAfterPAGBuild(pag->getTotalNodeNum());
+ 
