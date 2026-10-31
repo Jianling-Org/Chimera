@@ -248,14 +248,8 @@ class StackObjectMetadataAddressTests(unittest.TestCase):
             duplicates.stack_ids, {EXEC_LINKED_ADDRESS: EXEC_OBJECT_ID}
         )
 
-    def test_function_pointer_conversion_is_unchanged(self) -> None:
-        """The function-pointer section keeps its own (base-applied) conversion.
-
-        This fix deliberately only touches ``.chimera.stackobj_map``; the
-        function-pointer reader, its record layout and its validation are out of
-        scope.  The assertions below therefore describe the existing behaviour,
-        and the stackobj part of the same ELF is the only thing that changed.
-        """
+    def test_function_pointer_linked_addresses_are_not_rebased(self) -> None:
+        """Both section payloads use linked virtual addresses."""
 
         load_base = 0x4000
         call_site = 0x2000
@@ -274,9 +268,9 @@ class StackObjectMetadataAddressTests(unittest.TestCase):
         self.assertEqual(
             metadata.function_pointer,
             {
-                load_base + call_site: CallTargetEntry(
-                    callsite_rva=load_base + call_site,
-                    targets=tuple(load_base + target for target in targets),
+                call_site: CallTargetEntry(
+                    callsite_rva=call_site,
+                    targets=targets,
                 )
             },
         )
@@ -284,6 +278,22 @@ class StackObjectMetadataAddressTests(unittest.TestCase):
             metadata.capabilities,
             frozenset({"stack_access_ids", "function_pointer"}),
         )
+
+    def test_function_pointer_exec_and_dyn_address_domains(self) -> None:
+        for elf_type in (ET_EXEC, ET_DYN):
+            for base in (0, 0x10000, 0x400000):
+                with self.subTest(elf_type=elf_type, base=base):
+                    call = base + 0x2100
+                    targets = (base + 0x2200, base + 0x2300)
+                    path = _elf_with_metadata(
+                        self.root / f"fp-{elf_type}-{base:x}.elf",
+                        elf_type=elf_type, load_vaddr=base,
+                        function_pointer=_function_pointer_payload(
+                            (call, targets), (call + 4, ())),
+                    )
+                    metadata = ChimeraMetadata.from_elf(path)
+                    self.assertEqual(metadata.function_pointer[call].targets, targets)
+                    self.assertEqual(metadata.function_pointer[call + 4].targets, ())
 
     def test_analysis_detects_the_same_accesses_as_hand_built_metadata(self) -> None:
         """Regression: ELF-read metadata must not lose the stack accesses.

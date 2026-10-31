@@ -378,13 +378,10 @@ class ChimeraMetadata:
         # never inferred from the ELF type or from an address hit rate: the
         # plugin only emits this absolute, already-linked form.
         stack_ids = dict(raw_stack_ids)
-        function_pointer = {
-            load_base + address: CallTargetEntry(
-                callsite_rva=load_base + entry.callsite_rva,
-                targets=tuple(load_base + target for target in entry.targets),
-            )
-            for address, entry in raw_function_pointer.items()
-        }
+        # DeferredPCSections !A emits linked call PCs, and target ptrtoint
+        # constants are also linked VAs. Offline instruction addresses use the
+        # same domain for both ET_EXEC and ET_DYN; no load-base addition applies.
+        function_pointer = dict(raw_function_pointer)
 
         return cls(
             stack_ids=stack_ids,
