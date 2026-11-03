@@ -1,0 +1,27 @@
+{
+  "examples/applications/llama-cpp/patch/llama-cpp-rvv-vlen1024-q5-fix-4fc4ec554.patch": {
+    "measured_sha256": "f236329088346cf662ca78e8bd370e1fe53298446860f283b7e17b5bbf66be8f",
+    "local_sha256": "4f58b20aba354ff4a0971e01e2e9bdd76ad5759e4867b8d38482b89a7fc0b103",
+    "lf_sha256": "f236329088346cf662ca78e8bd370e1fe53298446860f283b7e17b5bbf66be8f"
+  },
+  "examples/applications/llama-cpp/patch/0001-llama.cpp-rvv-vlen1024-compatible-with-vlen256.patch": {
+    "measured_sha256": "b069bcf750adc550741d6f4287c4e6a5879904587b10149dea5a4e4cacfee5ba",
+    "local_sha256": "06e96e4145f3a11467342fcf0d7a54bb38821818a78f1f6fc117dcac36acf32c",
+    "lf_sha256": "b069bcf750adc550741d6f4287c4e6a5879904587b10149dea5a4e4cacfee5ba"
+  },
+  "experiments/runtime-evaluation/patches/llama-cpp-rvv-migration-call-boundaries-4fc4ec554.patch": {
+    "measured_sha256": "db111ec92095b6953b3c9c4fcffc42bb65fec3807ffbab09a20edd3b3bd19ab6",
+    "local_sha256": "db111ec92095b6953b3c9c4fcffc42bb65fec3807ffbab09a20edd3b3bd19ab6",
+    "lf_sha256": "db111ec92095b6953b3c9c4fcffc42bb65fec3807ffbab09a20edd3b3bd19ab6"
+  },
+  "experiments/runtime-evaluation/patches/llama-cpp-q8-k-zero-call-boundary-4fc4ec554.patch": {
+    "measured_sha256": "90b4458e630134de0c956cd19e8ef8dc625e7ca9151691350a1d8075001b9ec3",
+    "local_sha256": "90b4458e630134de0c956cd19e8ef8dc625e7ca9151691350a1d8075001b9ec3",
+    "lf_sha256": "90b4458e630134de0c956cd19e8ef8dc625e7ca9151691350a1d8075001b9ec3"
+  },
+  "examples/applications/llama-cpp/scalar-control.cmake": {
+    "measured_sha256": "3a5e6efebf8a11ed4d4d3aeaf704338d26a3fb47f706a454035e9e5615695463",
+    "local_sha256": "3a5e6efebf8a11ed4d4d3aeaf704338d26a3fb47f706a454035e9e5615695463",
+    "lf_sha256": "3a5e6efebf8a11ed4d4d3aeaf704338d26a3fb47f706a454035e9e5615695463"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "user_authorization_quote": "改为2%新协议重测，报告披露并保留旧失败",
+  "relative_ppl_tolerance": 0.02,
+  "reference": "Fresh native reference for each independent build",
+  "application_configuration": "original-default",
+  "automatic_preference": "prefer-a100",
+  "authorization_artifact_sha256": "a3b90687e179431df61acd9fc60ea50b38478c0144ef6a0ed018f0ad6ec23755",
+  "numerical_difference_cause_resolved": false,
+  "old_1percent_failures_not_reclassified": true
+}

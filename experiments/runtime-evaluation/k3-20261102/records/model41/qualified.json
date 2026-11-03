@@ -1,0 +1,39 @@
+{
+  "passed": true,
+  "qualified_utc": "2026-11-02T09:47:03.960444+00:00",
+  "protocol": "llama-retest-v5",
+  "relative_ppl_tolerance": 0.02,
+  "application_configuration": "original-default",
+  "completion": {
+    "path": "/root/chimera-runtime-retest-20261031/model41-runtime-ppl2pct-v5-attempt2/completion.json",
+    "sha256": "b5e54893e606802a1aeeeb2bc4fbe894c078a673f49613581c4379aeb250e9ef"
+  },
+  "audit": {
+    "path": "/root/chimera-runtime-retest-20261031/model41-ppl2pct-v5-attempt2-independent-audit1/verification.json",
+    "sha256": "7110bd4edb18a2bb6d2133ea6382a748cf748d062afc48d628d42a2000ec8310"
+  },
+  "audit_completion": {
+    "path": "/root/chimera-runtime-retest-20261031/model41-ppl2pct-v5-attempt2-independent-audit1/completion.json",
+    "sha256": "3fd66bfb31bf821cb079835a70e5d5d3f59e8e2a6235874d46eb7ec42c9f8c7d"
+  },
+  "audit_resources": {
+    "path": "/root/chimera-runtime-retest-20261031/model41-ppl2pct-v5-attempt2-independent-audit1/unit.resources.json",
+    "sha256": "15532f14c400ff9dc7910d2a1d9b9483dbd62781dc211faf86ec991af7c7de4d"
+  },
+  "report": {
+    "path": "/root/chimera-runtime-retest-20261031/model41-ppl2pct-v5-attempt2-independent-audit1/4.1-完整重测独立审计报告.zh-CN.md",
+    "sha256": "e57898d1a6afbf0bdf0487c1a3cc4d59a8eb7bbdc2ab26eb9751a574bcc14afe"
+  },
+  "report_change_notes": {
+    "path": "/root/chimera-runtime-retest-20261031/model41-ppl2pct-v5-attempt2-independent-audit1/性能报告4.1修改意见.zh-CN.md",
+    "sha256": "7eb8f9d98f8fee651a317059e987f79ae0b385c32b6d82b1377b4cd05f318af7"
+  },
+  "local_verification": {
+    "path": "/root/chimera-runtime-retest-20261031/model41-full-independent-local-verification1.json",
+    "sha256": "6d0ac9edbe2484d3961d8fe2d9ab44928c5208d4b155cd6d78fd00bdb4690b50"
+  },
+  "automatic_rounds": 291,
+  "mixed_rounds": 274,
+  "mixed_actual_application_seconds": 7231.521526972298,
+  "all_prior_failures_preserved": true
+}

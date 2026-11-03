@@ -30,6 +30,13 @@ TIMEOUT = 'prefer_a100_fail_timeout'
 STARTUP_NAMES = ('cc1-version', 'tiny-c', 'lib-bsearch', 'kernel-fork', 'mm-mmap')
 MODEL_SHA = '6d58c8fbdaa822b004d7ba473f9b9ad4d1ef7c2dd2c4cf9f9856451aa44bf0ca'
 CORPUS_SHA = 'b62ca0b765cc22e0f1ab25b0a53ae2b04c5a462650c49bbb9b18c315c1c18033'
+MODEL_PREFERENCES = {'llama-retest-v1':'prefer-x100', 'llama-scalar-retest-v1':'prefer-x100',
+                     'llama-retest-v2':'prefer-a100', 'llama-scalar-retest-v2':'prefer-a100',
+                     'llama-retest-v3':'prefer-a100', 'llama-scalar-retest-v3':'prefer-a100',
+                     'llama-retest-v4':'prefer-a100', 'llama-scalar-retest-v4':'prefer-a100',
+                     'llama-retest-v5':'prefer-a100', 'llama-scalar-retest-v5':'prefer-a100'}
+SCALAR_MODEL_PROTOCOLS = ('llama-scalar-retest-v1', 'llama-scalar-retest-v2', 'llama-scalar-retest-v3', 'llama-scalar-retest-v4', 'llama-scalar-retest-v5')
+EVENT_MODEL_PROTOCOLS = ('llama-retest-v4', 'llama-scalar-retest-v4', 'llama-retest-v5', 'llama-scalar-retest-v5')
 FORBIDDEN_ENV = ('LD_PRELOAD', 'CHIMERA_BOOTSTRAP', 'CHIMERA_REGISTRY',
                  'CHIMERA_WORKSPACE', 'CHIMERA_RESOURCES', 'CHIMERA_AUTOMIGRATE',
                  'CHIMERA_LAUNCH_PID', 'CHIMERA_VERIFY_TABLES_ONLY', 'CHIMERA_BOOTSTRAP_TRACE')
@@ -73,12 +80,40 @@ def backend(name, relative):
     return module
 
 
+def model_preference(config):
+    protocol=config.get('protocol')
+    require(protocol in MODEL_PREFERENCES, 'Wrong or missing model protocol version')
+    expected=MODEL_PREFERENCES[protocol]
+    declared=config.get('automatic_preference')
+    require(declared==expected or (protocol.endswith('-v1') and declared is None),
+            'Declare the automatic preference fixed by this protocol version')
+    return expected
+
+
 def validate_config(config, kind):
-    require(config.get('protocol') == kind + '-retest-v1', 'Wrong or missing protocol version')
+    scalar_model = kind == 'llama' and config.get('protocol') in SCALAR_MODEL_PROTOCOLS
+    if kind=='llama':
+        model_preference(config)
+    else:
+        require(config.get('protocol') == kind + '-retest-v1', 'Wrong or missing protocol version')
     require(re.fullmatch(r'[0-9a-f]{40}', config.get('source_commit', '')), 'Pin source_commit')
     require(bool(config.get('source_tree')) and bool(config.get('kernel')), 'Pin source_tree and kernel')
-    require(config.get('cpus') == list(range(8)), 'Native and startup placement must be CPU0-7')
+    require(config.get('cpus') == list(range(8,16) if scalar_model else range(8)),
+            'Native placement must match the declared protocol')
     required = {'bootstrap', 'registry', 'profile'} | ({'gcc', 'cc1'} if kind == 'startup' else {'elf', 'model', 'corpus'})
+    if kind == 'llama':
+        required.add('native_launcher')
+        if config['protocol'] in EVENT_MODEL_PROTOCOLS:
+            require(config.get('thread_evidence')=='kernel-lifecycle-v2', 'Pin the kernel lifecycle evidence contract')
+            required |= {'thread_layout','readiness_contract'}
+        if config['protocol'].endswith('-v5'):
+            required.add('policy_authorization')
+            require(config.get('application_configuration')=='original-default'
+                    and not any(key in config for key in ('diagnostic_configuration','application_options'))
+                    and not any(key.startswith('LLAMA_ARG_') for key in config.get('environment',{})),
+                    'Protocol v5 uses the original application arguments without diagnostic options')
+    if scalar_model:
+        required |= {'scalar_control', 'compile_commands', 'build_record'}
     assets = config.get('assets', {})
     require(required <= assets.keys(), 'Missing required input assets: ' + repr(sorted(required-assets.keys())))
     for name, row in assets.items():
@@ -116,7 +151,18 @@ def validate_config(config, kind):
                 'This protocol fixes the TinyLlama model and corpus from report 4.1')
         require(config.get('threads') == [2,4,8,12,16,24,32], 'Keep the recorded seven thread counts')
         require(config.get('repeat_16') == 10 and config.get('minimum_mixed_seconds') == 7200, 'Require ten repeats and 7200 active mixed seconds')
-        require(config.get('absolute_ppl_tolerance') == 0.01, 'Declare absolute PPL tolerance 0.01 before execution')
+        if config['protocol'].endswith('-v5'):
+            require(config.get('relative_ppl_tolerance') == 0.02 and 'absolute_ppl_tolerance' not in config,
+                    'Declare relative PPL tolerance 2% for model protocol v5')
+        elif config['protocol'].endswith(('-v3','-v4')):
+            require(config.get('relative_ppl_tolerance') == 0.01 and 'absolute_ppl_tolerance' not in config,
+                    'Declare relative PPL tolerance 1% for model protocol v3/v4')
+        elif scalar_model:
+            require(config.get('relative_ppl_tolerance') == 0.001 and 'absolute_ppl_tolerance' not in config,
+                    'Declare relative PPL tolerance 0.1% before scalar-control execution')
+        else:
+            require(config.get('absolute_ppl_tolerance') == 0.01 and 'relative_ppl_tolerance' not in config,
+                    'Declare absolute PPL tolerance 0.01 before execution')
     return config
 
 
@@ -132,6 +178,29 @@ def input_identities(config, kind):
         path = Path(row['path']).resolve(strict=True)
         require(path.is_file() and sha(path) == row['sha256'], 'Input SHA mismatch: ' + name)
         identities[name] = dict(path=str(path), sha256=row['sha256'], bytes=path.stat().st_size)
+    if config['protocol'] in EVENT_MODEL_PROTOCOLS:
+        layout=json.loads(Path(identities['thread_layout']['path']).read_text())
+        require(sha('/sys/kernel/btf/vmlinux')==layout['btf_sha256'], 'Kernel BTF differs from the task layout')
+        contract=json.loads(Path(identities['readiness_contract']['path']).read_text())
+        require(contract.get('files'), 'Missing readiness source contract')
+        for path,row in contract['files'].items():
+            require(sha(path)==row['sha256'], 'Readiness source contract changed: '+path)
+    if config['protocol'].endswith('-v5'):
+        policy=json.loads(Path(identities['policy_authorization']['path']).read_text())
+        require(config['protocol'] in policy.get('protocols',[]) and policy.get('selected_preference')=='prefer-a100'
+                and policy.get('relative_ppl_tolerance')==config['relative_ppl_tolerance']==0.02
+                and policy.get('preserve_all_prior_failures') is True and policy.get('old_results_reclassified') is False
+                and policy.get('safety_criteria_changed') is False, 'Version5 policy authorization differs')
+    if config['protocol'] in SCALAR_MODEL_PROTOCOLS:
+        build = json.loads(Path(identities['build_record']['path']).read_text())
+        audit = backend('_llama_build', 'experiments/runtime-evaluation/llama_build.py').audit_scalar_control(
+            json.loads(Path(identities['compile_commands']['path']).read_text()))
+        # The build contract is unchanged by the v2 migration-policy selection.
+        require(build.get('protocol') == 'llama-scalar-retest-v1' and build.get('source_commit') == head
+                and build.get('elf_sha256') == identities['elf']['sha256']
+                and build.get('scalar_control_sha256') == identities['scalar_control']['sha256']
+                and build.get('compile_commands_sha256') == identities['compile_commands']['sha256']
+                and build.get('control_compile_audit') == audit, 'Scalar-control build binding differs')
     workspaces = []
     inventories = {}
     for name in config.get('inventories',[]):
@@ -234,6 +303,29 @@ def cgroup():
     return Path('/sys/fs/cgroup')/Path('/proc/self/cgroup').read_text().split('0::',1)[1].strip().lstrip('/')
 
 
+def cpu_list(text):
+    result=set()
+    for part in text.strip().split(','):
+        require(re.fullmatch(r'[0-9]+(?:-[0-9]+)?',part), 'Invalid Linux CPU list')
+        values=list(map(int,part.split('-')))
+        first,last=values[0],values[-1]
+        require(first<=last<4096, 'Invalid Linux CPU range')
+        result.update(range(first,last+1))
+    return result
+
+
+def available_cpuset(group=None,root=None):
+    root=Path('/sys/fs/cgroup') if root is None else Path(root)
+    group=cgroup() if group is None else Path(group)
+    require(group.is_relative_to(root), 'Cgroup path escapes its root')
+    while True:
+        path=group/'cpuset.cpus.effective'
+        if path.exists():
+            return cpu_list(path.read_text())
+        require(group!=root, 'Missing effective CPU availability evidence')
+        group=group.parent
+
+
 def cgroup_values():
     root = cgroup()
     return {name:(root/name).read_text().strip() for name in
@@ -318,7 +410,13 @@ class Suite:
         self.initial = input_identities(self.config, self.kind)
         save(self.directory/'inputs-before.json', self.initial)
         self.before = zero_ledgers()
-        require(os.sched_getaffinity(0) >= set(range(16 if self.kind=='llama' else 8)), 'Required CPUs unavailable to this unit')
+        # An unmanaged K3 process has one HMP cluster as its affinity even
+        # when its cgroup can use both. Native A100 selection happens in the
+        # scalar syscall trampoline before application exec.
+        require(os.sched_getaffinity(0) >= set(range(8)), 'Runner X100 CPUs unavailable')
+        if self.kind=='llama':
+            require(cpu_list(Path('/sys/devices/system/cpu/online').read_text()) >= set(range(16))
+                    and available_cpuset() >= set(range(16)), 'Both K3 CPU clusters must be available to this unit')
         os.sched_setaffinity(0, set(range(8)))
         status = Path('/proc/self/status').read_text()
         require(re.search(r'^Hmp_preference:\s+none\s*$', status, re.M), 'Runner inherited a migration preference')
@@ -418,10 +516,16 @@ def cleanup_trace(directory):
         record=json.loads((directory/'trace-owner.json').read_text())
         name=trace_name(owner['unit'])
         require(record==dict(unit=owner['unit'],name=name), 'Trace ownership differs')
-        capture=backend('_retest_trace_cleanup','experiments/gcc-validation/k3-20261029/harness/migration_trace.py').TraceCapture(name)
+        module=backend('_retest_trace_cleanup','experiments/gcc-validation/k3-20261029/harness/migration_trace.py')
+        event_trace=owner.get('protocol') in EVENT_MODEL_PROTOCOLS
+        capture=(backend('_retest_thread_trace_cleanup','experiments/runtime-evaluation/model_thread_trace.py').capture_class(module)(name,{})
+                 if event_trace else module.TraceCapture(name))
         definitions=(capture.root/'kprobe_events').read_text()
         expected=(name+'_ack_enter',name+'_ack_return')
         capture.registered=[event for event in expected if name+'/'+event in definitions]
+        if event_trace:
+            capture.extra=[name+suffix for suffix in ('_state_ack','_state_exit','_eligible_enter','_eligible_return')
+                           if name+'/'+name+suffix in definitions]
         capture.close()
         remaining=(capture.root/'kprobe_events').read_text()
         require(not capture.instance.exists() and name+'/' not in remaining, 'Owned trace cleanup incomplete')

@@ -1,0 +1,21 @@
+--- a/ggml/src/ggml-cpu/arch/riscv/quants.c
++++ b/ggml/src/ggml-cpu/arch/riscv/quants.c
+@@ -159,8 +159,16 @@
+ 
+         if (amax == 0.0f) {
+             y_block->d = 0.0f;
+-            memset(y_block->qs, 0, QK_K);
+-            memset(y_block->bsums, 0, sizeof(y_block->bsums));
++            // Keep zero-block clearing inside this RVV function.  Volatile
++            // stores prevent loop-idiom lowering to an external memset call.
++            volatile int8_t * qs_zero = y_block->qs;
++            for (size_t j = 0; j < sizeof(y_block->qs); ++j) {
++                qs_zero[j] = 0;
++            }
++            volatile int16_t * bsums_zero = y_block->bsums;
++            for (size_t j = 0; j < sizeof(y_block->bsums)/sizeof(y_block->bsums[0]); ++j) {
++                bsums_zero[j] = 0;
++            }
+             continue;
+         }
+ 

@@ -1,0 +1,12 @@
+{
+  "SERVICE_RESULT": "success",
+  "EXIT_CODE": "exited",
+  "EXIT_STATUS": "0",
+  "memory.current": "3021082624",
+  "memory.peak": "4141338624",
+  "memory.swap.peak": "0",
+  "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+  "memory.max": "12884901888",
+  "memory.swap.max": "0",
+  "trace_cleanup_passed": true
+}

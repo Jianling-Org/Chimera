@@ -1,0 +1,70 @@
+{
+  "protocol": "llama-retest-v5",
+  "application_configuration": "original-default",
+  "automatic_preference": "prefer-a100",
+  "relative_ppl_tolerance": 0.02,
+  "native_cpus": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+  ],
+  "threads": [
+    2,
+    4,
+    8,
+    12,
+    16,
+    24,
+    32
+  ],
+  "repeat_16": 10,
+  "minimum_mixed_seconds": 7200,
+  "thread_evidence": "kernel-lifecycle-v2",
+  "source_commit": "578ab8321c0788ab8cba1ad24324f220e1e4a149",
+  "kernel": "6.18.3-chimera-d02cd7352",
+  "original_config_sha256": "6c1b7ea2a8f84c649a971d77886ac45d20620eb8bf873f33cbbf9bf5b3a94506",
+  "assets_sha256": {
+    "bootstrap": "5600ae95e64835ee62211b5b2daa38c79cc8a2568480cc15027a8233511f9c79",
+    "registry": "69384c1d21d3efc82e8536ce17de9466befff867e764e54cb27a511d1f94fd9f",
+    "profile": "dd07195f781cbf62843c59dcb9f4a31ed84cb5a7f4a2c34197c789d40a2d0d07",
+    "elf": "f1ab65ae87ab6dceaff78d6c1cd621ae5dac86fd883a19a21e2da41b91cd76b0",
+    "model": "6d58c8fbdaa822b004d7ba473f9b9ad4d1ef7c2dd2c4cf9f9856451aa44bf0ca",
+    "corpus": "b62ca0b765cc22e0f1ab25b0a53ae2b04c5a462650c49bbb9b18c315c1c18033",
+    "native_launcher": "dc0f6c431f333c706403663f1bb6680db9aa05e0eb7e8dab48cb19009a25a9e0",
+    "build_record": "347ab448bd55b57a15a1423fd1d4c4495f243a12540322aac730bca29eafd470",
+    "input_qualifier": "d0f7af32f47d11bc221f933af3ba3ac43a3f516c1bff6915c0accc9bb1055fc0",
+    "check": "d2ca7c8b1ebe78d5ee86163902d60d3e950f8e622a7d948b4fcc05a08c2e7640",
+    "q8_native_parity": "fef6e43c0fe2b55d68f892bfc3db6506123f3757ecd0cba61162833e59271062",
+    "q8_native_resources": "28a6c8ad0bdf2600c53a46a0e5908973c01f4af8b02b24db13a231394b0d018c",
+    "dependency_bindings": "350c0f77d1a7ad9164575e4fef522df77aab467443acef0cd855f250ffcee4f5",
+    "preserved_failure_index": "e71c5347a83cee20114c4c0caac2ed21a86f66914a77c7c5432d47a26851260d",
+    "llama_source_inventory": "1606addc273998750083e27d64f6bfa5051fd642a3d86d36044d21324f968bf1",
+    "policy_authorization": "a3b90687e179431df61acd9fc60ea50b38478c0144ef6a0ed018f0ad6ec23755",
+    "prior_default_failure": "199027214f26c25d89f611f031f3bf86a669de1f69ea3d510e28e368811472c0",
+    "prior_fa_off_timeout": "48253b2a43aea2bde0e562838a56b04ad441a4db4531a98b29ce0bffbeeb66e2",
+    "prior_fa_off_wait_timeout": "1a4947d0151057a463ac537da9d99ca91a718f86b6953ef46ba04c6fc4b6d9c6",
+    "native_ppl_comparison": "ca5a8f2e9da8ca2d2576a001a90788194bc5358316c0d1761a9532384a3558eb",
+    "thread_layout": "1547dba8176bb4b46d07abc2de30c7cc6de45eaa00a6ec3cf24649e8a206c4c7",
+    "readiness_contract": "34a86066f105019cdc6681fe11cf2ccda6e17f1b0c86efc5a0459ed39d0eeeaf",
+    "thread_evidence_preflight": "142bf3299281be244ee122ac5a3e2a08288f0e6ae45536599d6effe181527ae5",
+    "event_backend_preflight_source": "1d84ad3b91a4fa54d002e9211ce21ad6eaefeddc1d79154e246f911bc66e0ea1",
+    "event_backend_preflight_manifest": "1fdfcd8a9a2fe8c9a10dfd69d3ab112298a72ce0ddba771ebee7053f9605cde6",
+    "event_backend_ast_diagnosis": "ed31e9e4e2f26a963183d735fb80318cf11dea1cc49451333fe29c7201b2fb5b",
+    "event_qualification_failure": "87227934b9c98b262b3cd96e5dcb3d2540ccfb6a4545165dce373e4b9c7d32cc"
+  },
+  "workspace_receipt_rows": [
+    40
+  ],
+  "environment": {
+    "OMP_DYNAMIC": "FALSE",
+    "OMP_PROC_BIND": "FALSE",
+    "LD_LIBRARY_PATH": "each owned build/inputs",
+    "GLIBC_TUNABLES": "glibc.rtld.optional_static_tls=65536"
+  },
+  "publication_scope": "Path-free configuration summary; original complete config retained on K3 and locally in tmp; use public examples for a new run"
+}

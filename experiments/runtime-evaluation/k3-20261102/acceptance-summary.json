@@ -1,0 +1,116 @@
+{
+  "status": "passed_conditional",
+  "scope": "assume-scalar-independent/minVLEN256; StackObject/1328 gates; native dependencies without host-libc exemption",
+  "measured_commit": "578ab8321c0788ab8cba1ad24324f220e1e4a149",
+  "driver_base_commit": "58fd31b4c18102d989eb05dab28399d9c5e0315c",
+  "kernel": "6.18.3-chimera-d02cd7352",
+  "models": [
+    {
+      "section": "4.1",
+      "protocol": "llama-retest-v5",
+      "automatic_rounds": 291,
+      "mixed_rounds": 274,
+      "mixed_actual_application_seconds": 7231.521526972298,
+      "native_reference_ppl": 12.7928,
+      "automatic_ppl_range": [
+        12.6237,
+        12.8336
+      ],
+      "maximum_relative_ppl_delta": 0.01321837283471955,
+      "route_counts": {
+        "256-to-1024": 291,
+        "1024-to-256": 1493
+      },
+      "physical_commits": 1784,
+      "main_thread_actual_migration_cases": 291,
+      "owned_thread_instances": 9029,
+      "short_thread_instances": 3549,
+      "kernel_sha256": "966e2323c854c284dfacd1f888e6de46303bd25280e52b720f6958cf8aca6037",
+      "kernel_sequences": [
+        1629,
+        1630
+      ],
+      "kernel_maintenance_events": 0,
+      "health_samples": 600,
+      "bkops_counts": {
+        "0": 585,
+        "1": 12,
+        "2": 3
+      },
+      "runtime_actual": "success/exited/0",
+      "audit_actual": "success/exited/0",
+      "runtime_peak_bytes": 4141338624,
+      "audit_peak_bytes": 708263936,
+      "swap_peak_bytes": 0,
+      "oom_events": 0,
+      "trace_cleanup_passed": true,
+      "nine_ledgers_zero": true,
+      "timeout_increment": 0,
+      "all_threads_published_initialization_ready": true,
+      "all_commits_positive_kernel_predicate": true,
+      "trace_loss_zero": true,
+      "original_evidence_files": 2935,
+      "original_evidence_bytes": 2925937549,
+      "qualified_sha256": "110ce15e514ad2ddcd441e0d094164b15e02cd2d687032deae16689870d12705",
+      "audit_verification_sha256": "7110bd4edb18a2bb6d2133ea6382a748cf748d062afc48d628d42a2000ec8310",
+      "report_sha256": "e57898d1a6afbf0bdf0487c1a3cc4d59a8eb7bbdc2ab26eb9751a574bcc14afe"
+    },
+    {
+      "section": "4.2",
+      "protocol": "llama-scalar-retest-v5",
+      "automatic_rounds": 291,
+      "mixed_rounds": 274,
+      "mixed_actual_application_seconds": 7220.839470380568,
+      "native_reference_ppl": 12.7184,
+      "automatic_ppl_range": [
+        12.6293,
+        12.8412
+      ],
+      "maximum_relative_ppl_delta": 0.009655302553780333,
+      "route_counts": {
+        "256-to-1024": 292,
+        "1024-to-256": 1534
+      },
+      "physical_commits": 1826,
+      "main_thread_actual_migration_cases": 291,
+      "owned_thread_instances": 9029,
+      "short_thread_instances": 3369,
+      "kernel_sha256": "c33b3a4f1a555dc4a428a5d407922943136fa1176a307f4ddc91837b53ae0b3a",
+      "kernel_sequences": [
+        1640,
+        1641,
+        1642,
+        1643,
+        1644
+      ],
+      "kernel_maintenance_events": 3,
+      "health_samples": 559,
+      "bkops_counts": {
+        "0": 543,
+        "1": 16
+      },
+      "runtime_actual": "success/exited/0",
+      "audit_actual": "success/exited/0",
+      "runtime_peak_bytes": 4003864576,
+      "audit_peak_bytes": 3222528000,
+      "swap_peak_bytes": 0,
+      "oom_events": 0,
+      "trace_cleanup_passed": true,
+      "nine_ledgers_zero": true,
+      "timeout_increment": 0,
+      "all_threads_published_initialization_ready": true,
+      "all_commits_positive_kernel_predicate": true,
+      "trace_loss_zero": true,
+      "original_evidence_files": 2935,
+      "original_evidence_bytes": 2787319766,
+      "qualified_sha256": "22a1360df6b8d149c01f64eb643967226ff710cd5b04c88b0cb5bbdfa4970ceb",
+      "audit_verification_sha256": "5f007f2d6073e6df54a58a5b2808f9cb007591d3f394985b099cad70d49b23a4",
+      "report_sha256": "24f1a8fe8ab2beea3453d3a9ca0e73f7610e938ab5f91b6e1fbbb500e2a4b691"
+    }
+  ],
+  "numerical_difference_cause_resolved": false,
+  "detailed_trace_is_throughput": false,
+  "old_failures_preserved": true,
+  "raw_archives_retained_on_k3": true,
+  "git_commit_or_push_performed": false
+}

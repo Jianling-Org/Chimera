@@ -1,0 +1,1 @@
+Execution-byte snapshots from the completed K3 runs. They retain fixed absolute owned paths and unit names for evidence review, and are not portable launchers. Do not run them over the completed trees. Public reusable entry points are in the parent directory. No credentials, binaries, models, full Workspace or multi-GB raw logs are included.

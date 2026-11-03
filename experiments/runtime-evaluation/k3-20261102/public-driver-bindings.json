@@ -1,0 +1,92 @@
+{
+  "experiments/runtime-evaluation/evaluation_common.py": {
+    "measured_sha256": "2b6d4ac1de271916ac711c6083c582f5248b6f9506e4377831adada54ad6936f",
+    "local_sha256": "2b6d4ac1de271916ac711c6083c582f5248b6f9506e4377831adada54ad6936f",
+    "lf_sha256": "2b6d4ac1de271916ac711c6083c582f5248b6f9506e4377831adada54ad6936f",
+    "equivalence": "verbatim"
+  },
+  "experiments/runtime-evaluation/run_llama_acceptance.py": {
+    "measured_sha256": "bcb2f95a6b3d29b48baca91a56388663bdd3d7ea34609efcf2c9667d20b49f57",
+    "local_sha256": "bcb2f95a6b3d29b48baca91a56388663bdd3d7ea34609efcf2c9667d20b49f57",
+    "lf_sha256": "bcb2f95a6b3d29b48baca91a56388663bdd3d7ea34609efcf2c9667d20b49f57",
+    "equivalence": "verbatim"
+  },
+  "experiments/runtime-evaluation/llama_build.py": {
+    "measured_sha256": "f1619e26b91a4fb149148959e70bbf8f770c166ea65fadedc602c35961364255",
+    "local_sha256": "f1619e26b91a4fb149148959e70bbf8f770c166ea65fadedc602c35961364255",
+    "lf_sha256": "f1619e26b91a4fb149148959e70bbf8f770c166ea65fadedc602c35961364255",
+    "equivalence": "verbatim"
+  },
+  "experiments/runtime-evaluation/measure_startup.py": {
+    "measured_sha256": "09ea485d52e83eddb9bc7716d80d91234cf9c604f93f2b169008403475ba828a",
+    "local_sha256": "09ea485d52e83eddb9bc7716d80d91234cf9c604f93f2b169008403475ba828a",
+    "lf_sha256": "09ea485d52e83eddb9bc7716d80d91234cf9c604f93f2b169008403475ba828a",
+    "equivalence": "verbatim"
+  },
+  "experiments/runtime-evaluation/llama.example.json": {
+    "measured_sha256": "98c74b2595a7376f10ca899b9a95b48320c719f58c6867b83a8ee5bc92aba6a1",
+    "local_sha256": "98c74b2595a7376f10ca899b9a95b48320c719f58c6867b83a8ee5bc92aba6a1",
+    "lf_sha256": "d37093ea0e4019dce74025f45caf688830347815dc020768bee3727b3f4b58be",
+    "equivalence": "verbatim"
+  },
+  "experiments/runtime-evaluation/llama-scalar.example.json": {
+    "measured_sha256": "994c87732080c8df66254483d00afab1938bd00019d2accd3850029f65985a43",
+    "local_sha256": "994c87732080c8df66254483d00afab1938bd00019d2accd3850029f65985a43",
+    "lf_sha256": "9c0b634a971f598321d5c3118b80ecc979001b7f5d7dc18f01238decd4c7bd5b",
+    "equivalence": "verbatim"
+  },
+  "experiments/runtime-evaluation/model_thread_trace.py": {
+    "measured_sha256": "9047752fbd5e8d0a0d3f10182611522bc8cb7bde84ff9f605401f8bf5a0b76ee",
+    "local_sha256": "9047752fbd5e8d0a0d3f10182611522bc8cb7bde84ff9f605401f8bf5a0b76ee",
+    "lf_sha256": "9047752fbd5e8d0a0d3f10182611522bc8cb7bde84ff9f605401f8bf5a0b76ee",
+    "equivalence": "verbatim"
+  },
+  "experiments/gcc-validation/k3-20261029/harness/migration_trace.py": {
+    "measured_sha256": "685f9abeba72e616be18b056ac95abf9d7a767e55ab2b5a2069322467f77e247",
+    "local_sha256": "685f9abeba72e616be18b056ac95abf9d7a767e55ab2b5a2069322467f77e247",
+    "lf_sha256": "685f9abeba72e616be18b056ac95abf9d7a767e55ab2b5a2069322467f77e247",
+    "equivalence": "verbatim"
+  },
+  "experiments/gcc-performance/k3-20261030/harness/perf_storage_policy_v2.py": {
+    "measured_sha256": "cae0d24438faeb350e2b0d534c73554c92cef8d0aba5b02ef49fe4d2564ab0bf",
+    "local_sha256": "cae0d24438faeb350e2b0d534c73554c92cef8d0aba5b02ef49fe4d2564ab0bf",
+    "lf_sha256": "6e44e178b4675577686241c1dddf4958632a74f37533864b1ae0912082ed5ad7",
+    "equivalence": "verbatim"
+  },
+  "tests/test_runtime_evaluation.py": {
+    "measured_sha256": "5908bbc385ac41ff5fb4d7d98b6bf525f39cd3c7bcafb2e3abe6857132a6a120",
+    "local_sha256": "5908bbc385ac41ff5fb4d7d98b6bf525f39cd3c7bcafb2e3abe6857132a6a120",
+    "lf_sha256": "5908bbc385ac41ff5fb4d7d98b6bf525f39cd3c7bcafb2e3abe6857132a6a120",
+    "equivalence": "verbatim"
+  },
+  "tests/test_model_thread_trace.py": {
+    "measured_sha256": "cd655219ab8c4b3bb78a42d00b2e6f9fe0ab9349f1853bcc6784fc12ef305ced",
+    "local_sha256": "cd655219ab8c4b3bb78a42d00b2e6f9fe0ab9349f1853bcc6784fc12ef305ced",
+    "lf_sha256": "cd655219ab8c4b3bb78a42d00b2e6f9fe0ab9349f1853bcc6784fc12ef305ced",
+    "equivalence": "verbatim"
+  },
+  "experiments/runtime-evaluation/startup.example.json": {
+    "measured_sha256": "dcf37e237f1777bf117a960480d68faf0d917a3e953c639cdc2df71e432260a6",
+    "local_sha256": "dcf37e237f1777bf117a960480d68faf0d917a3e953c639cdc2df71e432260a6",
+    "lf_sha256": "340570083327a1a33add3b1527e13748a8b3f95aef9bb3099769053fc3d154e4",
+    "equivalence": "verbatim"
+  },
+  "experiments/runtime-evaluation/llama-ppl2pct.example.json": {
+    "measured_sha256": "f6bcf5a0fd9e7f338d2dbb05fa5c8030b9f335285cfe7af91617612b4523a0f7",
+    "local_sha256": "f6bcf5a0fd9e7f338d2dbb05fa5c8030b9f335285cfe7af91617612b4523a0f7",
+    "lf_sha256": "3e378aa3ccb91d3f75258ffbf79d56e8183036efdba69cb0bee0fbe40279fada",
+    "equivalence": "verbatim"
+  },
+  "experiments/runtime-evaluation/llama-scalar-ppl2pct.example.json": {
+    "measured_sha256": "ec0e83d7d4790669b23a511b3bd5c5d04b7432ae5c9b4731ee8589dd49d82d02",
+    "local_sha256": "ec0e83d7d4790669b23a511b3bd5c5d04b7432ae5c9b4731ee8589dd49d82d02",
+    "lf_sha256": "9a8593bfd8658f47f6c587f8e862cc555841c1e978c2bbaea3739b3f5927a9ff",
+    "equivalence": "verbatim"
+  },
+  "tests/test_model_ppl2pct.py": {
+    "measured_sha256": "e643b208fb2ce89de9e0951a4e51d70a720b64d26d93106015536febce345dea",
+    "local_sha256": "e643b208fb2ce89de9e0951a4e51d70a720b64d26d93106015536febce345dea",
+    "lf_sha256": "386983798897fd8bf6650784d61cf5abf2f9029993ac4e5a0246971bd0e41ba4",
+    "equivalence": "verbatim"
+  }
+}

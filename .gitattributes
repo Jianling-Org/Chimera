@@ -9,3 +9,7 @@
 
 # Verbatim upstream license texts retain their original whitespace.
 /LICENSES/*.txt -whitespace
+
+# Preserve original evidence bytes and valid unified-diff context whitespace.
+/experiments/runtime-evaluation/k3-20261102/** -whitespace
+/experiments/runtime-evaluation/patches/*.patch -text -whitespace

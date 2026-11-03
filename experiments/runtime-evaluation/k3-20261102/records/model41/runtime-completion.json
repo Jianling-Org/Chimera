@@ -1,0 +1,18 @@
+{
+  "passed": true,
+  "runner_rc": 0,
+  "resources": {
+    "SERVICE_RESULT": "success",
+    "EXIT_CODE": "exited",
+    "EXIT_STATUS": "0",
+    "memory.current": "3021082624",
+    "memory.peak": "4141338624",
+    "memory.swap.peak": "0",
+    "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0",
+    "memory.max": "12884901888",
+    "memory.swap.max": "0",
+    "trace_cleanup_passed": true
+  },
+  "evidence_manifest_sha256": "34f629e876bcfe08cb5077c08d9e2684576a9f50c2c08bc0ea5c4fc5d8ec7fc6",
+  "completed_utc": "2026-11-02T08:44:07.080731+00:00"
+}

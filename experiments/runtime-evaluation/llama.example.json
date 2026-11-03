@@ -1,5 +1,7 @@
 {
-  "protocol": "llama-retest-v1",
+  "protocol": "llama-retest-v4",
+  "thread_evidence": "kernel-lifecycle-v2",
+  "automatic_preference": "prefer-a100",
   "source_tree": "/absolute/Chimera-source",
   "source_commit": "REPLACE_WITH_40_CHARACTER_COMMIT",
   "kernel": "REPLACE_WITH_UNAME_R",
@@ -15,6 +17,14 @@
   ],
   "environment": {},
   "assets": {
+    "thread_layout": {
+      "path": "/absolute/kernel-task-layout.json",
+      "sha256": "REPLACE_WITH_SHA256"
+    },
+    "readiness_contract": {
+      "path": "/absolute/readiness-source-contract.json",
+      "sha256": "REPLACE_WITH_SHA256"
+    },
     "bootstrap": {
       "path": "/absolute/libchimera-bootstrap.so",
       "sha256": "REPLACE_WITH_SHA256"
@@ -38,6 +48,10 @@
     "corpus": {
       "path": "/absolute/file.txt",
       "sha256": "b62ca0b765cc22e0f1ab25b0a53ae2b04c5a462650c49bbb9b18c315c1c18033"
+    },
+    "native_launcher": {
+      "path": "/absolute/native-launch-image-v3",
+      "sha256": "REPLACE_WITH_SHA256"
     }
   },
   "threads": [
@@ -51,7 +65,7 @@
   ],
   "repeat_16": 10,
   "minimum_mixed_seconds": 7200,
-  "absolute_ppl_tolerance": 0.01,
+  "relative_ppl_tolerance": 0.01,
   "workspaces": [
     {
       "path": "/absolute/workspaces/llama",

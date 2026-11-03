@@ -1,0 +1,35 @@
+{
+  "scope": "Selected failure index summaries; all original trees and complete checkpoint/RESUME remain on K3 and in local tmp",
+  "attempts": [
+    {
+      "id": "model41-v1",
+      "reason": "No actual main-thread migration",
+      "index_sha256": "5d667f100aec78667518bee3212771083afe263271861d897032c450fb62bd51"
+    },
+    {
+      "id": "model41-v2",
+      "reason": "Earlier PPL threshold exceeded",
+      "index_sha256": "71b3b9083d404231e6ec63d4485dfbcbb185bdf9455fb3814716938ad6038296"
+    },
+    {
+      "id": "model41-v3",
+      "reason": "Short-thread sampling omitted raw counter witnesses",
+      "index_sha256": "ddbd8211c02a8d6a903dc0e4ecebf61a94399f10bccea9307f32a1649d61059c"
+    },
+    {
+      "id": "model41-events-v4",
+      "reason": "1.108435995percent exceeded the then1percent threshold",
+      "index_sha256": "199027214f26c25d89f611f031f3bf86a669de1f69ea3d510e28e368811472c0"
+    },
+    {
+      "id": "model41-v5-attempt1",
+      "reason": "6GiB disk guard,7136.372549035994 applicationseconds; not resumed or pooled",
+      "index_sha256": "36c2dfbb19ef69c1519a14ecfff154bdddccdcf2aaf10a438ce1ecaee0f64685"
+    },
+    {
+      "id": "model42-full-audit1",
+      "reason": "Wrong llama41 Workspace path in audit script; model runtime stayed successful",
+      "index_sha256": "623915f39c3460c254326db91ee148ca16d7a0cd282315c062cb4487004cc4f8"
+    }
+  ]
+}

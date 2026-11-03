@@ -1,0 +1,1279 @@
+{
+  "passed": true,
+  "archive": "/root/yangzheng/newest-chimera/llamacpp-bidirectional-20261024-4tef3fu6/rebuild-current/llama-source-base.tar",
+  "patches": [
+    {
+      "path": "/root/chimera-gcc-validation-578ab8321/source/examples/applications/llama-cpp/patch/llama-cpp-rvv-vlen1024-q5-fix-4fc4ec554.patch",
+      "sha256": "f236329088346cf662ca78e8bd370e1fe53298446860f283b7e17b5bbf66be8f"
+    },
+    {
+      "path": "/root/chimera-gcc-validation-578ab8321/source/examples/applications/llama-cpp/patch/0001-llama.cpp-rvv-vlen1024-compatible-with-vlen256.patch",
+      "sha256": "b069bcf750adc550741d6f4287c4e6a5879904587b10149dea5a4e4cacfee5ba"
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/llama-cpp-rvv-migration-call-boundaries-4fc4ec554.patch",
+      "sha256": "db111ec92095b6953b3c9c4fcffc42bb65fec3807ffbab09a20edd3b3bd19ab6"
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/llama-cpp-q8-k-zero-call-boundary-4fc4ec554.patch",
+      "sha256": "90b4458e630134de0c956cd19e8ef8dc625e7ca9151691350a1d8075001b9ec3"
+    }
+  ],
+  "reconstructed_files": 3019,
+  "scalar_include": "/root/chimera-runtime-retest-20261031/model42-attempt4/scalar-control.cmake",
+  "scalar_control_sha256": "3a5e6efebf8a11ed4d4d3aeaf704338d26a3fb47f706a454035e9e5615695463",
+  "compile_commands": 337,
+  "selected_existing_objects": [
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/ggml/src/CMakeFiles/ggml-base.dir/ggml.c.o",
+      "sha256": "b2b426e630d5a2cf0ddbcf0f12204fa4015b45157af6c569735347ed1436623f",
+      "bytes": 598376
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/ggml/src/CMakeFiles/ggml-base.dir/ggml.cpp.o",
+      "sha256": "4c56ef7a63eed5d2a5ac19a922781164d8446f2c2780fcaad8df9b53b904b506",
+      "bytes": 4736
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/ggml/src/CMakeFiles/ggml-base.dir/ggml-alloc.c.o",
+      "sha256": "45caf3d710855b938b4496fc9fb772f9543417efb3c785338cf12a32d2efb1b1",
+      "bytes": 61912
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/ggml/src/CMakeFiles/ggml-base.dir/ggml-backend.cpp.o",
+      "sha256": "8dd82107fd4359f9dda7d07cbdf236ca93e24edf27995e47f4824e8c33ef8d99",
+      "bytes": 260272
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/ggml/src/CMakeFiles/ggml-base.dir/ggml-backend-meta.cpp.o",
+      "sha256": "5dde27d1f4aaf178a987082931a32599b41931cb4fdd6fcdea5ee6346b68c2de",
+      "bytes": 438480
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/ggml/src/CMakeFiles/ggml-base.dir/ggml-opt.cpp.o",
+      "sha256": "59cbcdfd398b47db6ed088a9c91566a5fffff10915d6597ca20bc13e82f0a02e",
+      "bytes": 112232
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/ggml/src/CMakeFiles/ggml-base.dir/ggml-threading.cpp.o",
+      "sha256": "1d3dc3f533969666daf0620f637d086c46bc1a1a7841672d0d8c19c28bb32507",
+      "bytes": 2616
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/ggml/src/CMakeFiles/ggml-base.dir/ggml-quants.c.o",
+      "sha256": "5846154d51df4d9bcae1852284d559f810f57b2eb70cce1983e5ee3f053a019a",
+      "bytes": 501192
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/ggml/src/CMakeFiles/ggml-base.dir/gguf.cpp.o",
+      "sha256": "11ddd37efd76f345716827749c28eb0ebbf8f54d2c471bc0d83a8a483a1a2dbe",
+      "bytes": 656952
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/ggml-cpu.c.o",
+      "sha256": "73440f8ffbf6678e3c9b1d24337fbe0e500f28cb87c54ad77cc2b65e49e942bf",
+      "bytes": 148872
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/ggml-cpu.cpp.o",
+      "sha256": "11d409ad7e95ad8a58c3ddeafb5c53cea524dd73568f84d175882827aa2e63a9",
+      "bytes": 120576
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/repack.cpp.o",
+      "sha256": "572ec020fe2a492364827e0914b5786e60843a9044e6db01f9ad859b50696702",
+      "bytes": 981736
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/hbm.cpp.o",
+      "sha256": "c9567e791473701df03e2ca00c6f781d74016b248ca38fc2a578dbbcb51a6a2a",
+      "bytes": 1144
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/quants.c.o",
+      "sha256": "aac2a81ec9a9b94067cae81d3d700c4778ad9e9064e5c85fca38830c51cc45a8",
+      "bytes": 84416
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/traits.cpp.o",
+      "sha256": "d5acc8d92cd2cd991af0b3b59125ae65b936bba68c6294e1a190a6f05cfa3bea",
+      "bytes": 4384
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/amx/amx.cpp.o",
+      "sha256": "517e528cedbea21e5c74a52731417e4ed9c78e8c49bf145d73be6d29e3f71d81",
+      "bytes": 1144
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/amx/mmq.cpp.o",
+      "sha256": "c61303240f765f72877d75b251e0b435d68e08005ddc6a44cc0129123033408c",
+      "bytes": 1144
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/binary-ops.cpp.o",
+      "sha256": "e43c736e59ece99e3d794952b9c0ef958f4c8bb651456f78c29ed57e9e80fab5",
+      "bytes": 81856
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/unary-ops.cpp.o",
+      "sha256": "bec06c3ce1cb16b73373cbd50707e03d24c9c7773dd640663c1dd53bbba65ae0",
+      "bytes": 307424
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/vec.cpp.o",
+      "sha256": "3d3aaa3e1e8cd1651b75e16b964c38a42cedacb39842e8612fdd87cf29c18377",
+      "bytes": 9656
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/ops.cpp.o",
+      "sha256": "f6b902fb4bdca09a03030e322f495380a9ecd6ed5b777385fb338595a4a7a4a9",
+      "bytes": 539920
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/llamafile/sgemm.cpp.o",
+      "sha256": "a730a9efbe8b9e28edef01ce4930b7e25f4f73c1933d1485329411b467f736f9",
+      "bytes": 56528
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/arch/riscv/quants.c.o",
+      "sha256": "051043f18468287bb2cfa572fd6f9211650a181b96b7e09270bd8358fb47a6b6",
+      "bytes": 128216
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/arch/riscv/repack.cpp.o",
+      "sha256": "2f94bfaf9d74e3a5827822587058356684a6824a66728be207668d0d9c84af29",
+      "bytes": 84872
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/ggml/src/CMakeFiles/ggml.dir/ggml-backend-dl.cpp.o",
+      "sha256": "fa0409cdf3ee3fab0b503975d5859741408c30b0b68438bff4b57cd9646dfce6",
+      "bytes": 3760
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/ggml/src/CMakeFiles/ggml.dir/ggml-backend-reg.cpp.o",
+      "sha256": "91bd32bfe4bb2deb15ef7133590c91dfdc3ac71143b41a53742a83c9cd13a8ad",
+      "bytes": 144528
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/llama.cpp.o",
+      "sha256": "1599e34eb37c3bfbb25674c6088e42666bdfde50cdc283b18a15b441796ddfa5",
+      "bytes": 101504
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/llama-adapter.cpp.o",
+      "sha256": "153496da6a6a0904fd3b01cf5b0d207bf587b05c9930dcc6257b6b8bb0cb700c",
+      "bytes": 175056
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/llama-arch.cpp.o",
+      "sha256": "dfb377508822c9c9ac23517465768f9e62940ee9416080a2d62f09f2cbc12116",
+      "bytes": 107320
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/llama-batch.cpp.o",
+      "sha256": "f7f7b87df0dab1849194cd92dfb23af6ff1dfcbc9e9632bc991d446f40365621",
+      "bytes": 138800
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/llama-chat.cpp.o",
+      "sha256": "e4c65977f6e74019333682d2b88f4bc67973a6105c78c97089a34790ca9b6786",
+      "bytes": 268680
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/llama-context.cpp.o",
+      "sha256": "a98ec1a139ae05a75137a45ddbcc07faafc56d4cb87e8e1f133497e3d557121c",
+      "bytes": 600448
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/llama-cparams.cpp.o",
+      "sha256": "7b76eb96a13a97b012225cb1dda8a48ff310711e3020e56e87d98514535d8d3b",
+      "bytes": 1352
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/llama-grammar.cpp.o",
+      "sha256": "7ef8bdfa495339900610064a6d97a2d6ed0fcb1229a067d48e25ad54eec6d4f6",
+      "bytes": 884664
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/llama-graph.cpp.o",
+      "sha256": "6f230365c4c13840481581a3153acc3ff3feefde5dd6ed901762d7dc3e64e52e",
+      "bytes": 433376
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/llama-hparams.cpp.o",
+      "sha256": "0b2a5acc3c826f3d0e35b0061605bb2e0a1e6301c913387f7c0000aad90d7b99",
+      "bytes": 17504
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/llama-impl.cpp.o",
+      "sha256": "e9bc5b8fee7747de33eadb2d8cb447a2d11ee956e90b41264c84e6a5a966c990",
+      "bytes": 46144
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/llama-io.cpp.o",
+      "sha256": "c9e835d4aade442b1d68c183150918f1eae34e54a87258cb041805ddca639925",
+      "bytes": 3936
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/llama-kv-cache.cpp.o",
+      "sha256": "c00887a819acdb91e5dcc3fe2a9ac212cc83ea2ad1a073420f119ea661c9bf2a",
+      "bytes": 608440
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/llama-kv-cache-iswa.cpp.o",
+      "sha256": "cef952ed3e549a35ebed5b1d075caf9e38ab63f97b3dcf83a47b7924580e8458",
+      "bytes": 65248
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/llama-kv-cache-dsa.cpp.o",
+      "sha256": "30aa4acd0afcb90c60534b98df8325c05edde862f55ac5f9b525bda2086675cd",
+      "bytes": 54520
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/llama-kv-cache-dsv4.cpp.o",
+      "sha256": "236c907b73d9589b1a5b9f53b1339875a50a36ccb9d7d27bb545a19a6ea084a4",
+      "bytes": 401408
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/llama-memory.cpp.o",
+      "sha256": "c33bff87d5e5268f457a6440bfe453450e486efb161649235f4362798ea82f2f",
+      "bytes": 1576
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/llama-memory-hybrid.cpp.o",
+      "sha256": "81e779c9dd85b323989bfb7f975a284ad9682cc0922040355f8ba3cf0f8ccc8f",
+      "bytes": 61488
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/llama-memory-hybrid-iswa.cpp.o",
+      "sha256": "bb25383a76f52ae4d906c1cc891449c61c6e23db8168d42c581e74945ae7ea7a",
+      "bytes": 63864
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/llama-memory-recurrent.cpp.o",
+      "sha256": "f29dc7ce484e5523f089c093df46b99d85850403e9bb6f57b97cbcaf57d3bb1e",
+      "bytes": 138040
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/llama-mmap.cpp.o",
+      "sha256": "83fe2f3026527d0ff910ce4f87cdb93cb82e071a34cfd41166a99ca2d5c3b759",
+      "bytes": 64808
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/llama-model-loader.cpp.o",
+      "sha256": "f77e888fd76186d2745ec03af6bd20a426130c706651081fa208765e09a0cc02",
+      "bytes": 1148048
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/llama-model-saver.cpp.o",
+      "sha256": "eb72f7f7ca7f49909d9191584f7c4f78d28a8024fd26a8b4920fce5f2ceb225f",
+      "bytes": 146224
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/llama-model.cpp.o",
+      "sha256": "6540462441ead7163013676b1f974ea2fc6734fe58e34ec6b921d7220d56a8e4",
+      "bytes": 1411824
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/llama-quant.cpp.o",
+      "sha256": "3e32e3aaa7b4b9ee172f125ee16bde264dae43de219b0a966149ea3ab6b495a2",
+      "bytes": 794640
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/llama-sampler.cpp.o",
+      "sha256": "914ba0cb6987e5115cb361783781bf73654dfe95334b70ceaa5e8d4ce572eff3",
+      "bytes": 918024
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/llama-vocab.cpp.o",
+      "sha256": "a7f2aa6189416b62d6c3cb550249cca6715aaf2c194796397689ccac0a1a7f7b",
+      "bytes": 778920
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/unicode-data.cpp.o",
+      "sha256": "74692f5b16b0bee0b7994088cba46efdafbbc84744fc53d69a699e34ea66d7ca",
+      "bytes": 77040
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/unicode.cpp.o",
+      "sha256": "865727ae8a228a82b255ff4deffe270d61beeb2b770b53dfbb57cc8b9b254c0b",
+      "bytes": 1396240
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/afmoe.cpp.o",
+      "sha256": "a38b80a5665fbbc2b5f12f70d48083c0cea683f9a4db3508fec4b711f9d453b2",
+      "bytes": 39992
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/apertus.cpp.o",
+      "sha256": "665bbba66e123326889c77bdd2584faa03ad571194061577c5c8d1563c2b263b",
+      "bytes": 34616
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/arcee.cpp.o",
+      "sha256": "8d562c566dee2ae0138685e493956c7f3eef00cadfb0ff8683e25a0102c70f01",
+      "bytes": 31296
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/arctic.cpp.o",
+      "sha256": "02bc5f9e9c4c689f543c03b7db757bddbf259322599bcf7de292a97c5f03085b",
+      "bytes": 31544
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/arwkv7.cpp.o",
+      "sha256": "902c320cbaf4569ab41e062c4614970287c81177d0c7b2db09655ab3ebe03731",
+      "bytes": 40000
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/baichuan.cpp.o",
+      "sha256": "4adee875e0d9d8e6b69a056998bd93e5b67a27bfa8822e1ddf64dba03636ec0f",
+      "bytes": 30000
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/bailingmoe.cpp.o",
+      "sha256": "dfa02a535a9fc4fe03cac0e488411f773b385f12e273470296b344915bcc6011",
+      "bytes": 33776
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/bailingmoe2.cpp.o",
+      "sha256": "7754fdac80621a8e7617b1320374549a65927e1e12822a11b018e0eb35158325",
+      "bytes": 37448
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/bert.cpp.o",
+      "sha256": "5e715e8e0eb25f262d99b73d4def24fba153d545618b6fe5d57db18ece983dcc",
+      "bytes": 40088
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/bitnet.cpp.o",
+      "sha256": "9d4a68ee993f99b6fd4b72c07cfcec787eeaf1c1e2a9c39b1c4735b3acd900a8",
+      "bytes": 31792
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/bloom.cpp.o",
+      "sha256": "ec22625c9699d5da371ca02ddee3a6c3f7472149f1c3fb04d056f6227b51040a",
+      "bytes": 29400
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/chameleon.cpp.o",
+      "sha256": "0564606cd896e76bbe073f470d78aabfc3555ecaf5df20c7421d1c4138f87314",
+      "bytes": 33240
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/chatglm.cpp.o",
+      "sha256": "c5312d1ebe4005dc03af74c2ca582bd9d4603093e897ca0bc5893a589e08c81d",
+      "bytes": 29384
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/codeshell.cpp.o",
+      "sha256": "4847c9c527b089b51375ad467e11a9245a97daf4e383ef10f9fc0ea7123af054",
+      "bytes": 30536
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/cogvlm.cpp.o",
+      "sha256": "0affc9abc0b4aeacfd98163e282e5c4b3b21702a4307d0373612216a1c529815",
+      "bytes": 30488
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/cohere2.cpp.o",
+      "sha256": "1a509b3c904742ddc34a9c4aa05edc75de29d4a3fa185b9f0413fb7cbe22f25a",
+      "bytes": 29608
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/cohere2moe.cpp.o",
+      "sha256": "054f1183e8f4413cfc1f0998ae6453eb5da60416142946196c76c19eac8256eb",
+      "bytes": 78136
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/command-r.cpp.o",
+      "sha256": "7973d8fbe3236c61725f9a40882a5684024a659bbbc5e7a25368d435e880fe29",
+      "bytes": 29552
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/dbrx.cpp.o",
+      "sha256": "1012b0e9d00c41656aa88a0007b7e2a325325f1703b163581139fcb5ba50fce5",
+      "bytes": 31096
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/deci.cpp.o",
+      "sha256": "02ac33178a9e3340ab2919e3265eb1b4986ab6d157a95a5f73e833375b35a9f4",
+      "bytes": 34240
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/deepseek.cpp.o",
+      "sha256": "f157b3dad048f517c373f206b7c52cf87938a17d16b1a153480327c88870be07",
+      "bytes": 36328
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/deepseek2.cpp.o",
+      "sha256": "51db3df2f6503f85a56aa618dc271a84432c2e6cf4c82481e9c74285c0866e0d",
+      "bytes": 63664
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/deepseek2ocr.cpp.o",
+      "sha256": "d933f0237dab33e81ec7ef9ce2fddd8b0a34ea545395db30e58fd4a83d4e8c5a",
+      "bytes": 15224
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/deepseek32.cpp.o",
+      "sha256": "6d2ccae409b4677db85f2424f686995818a4547cf38f7c0aa91a9d2b68d8eddc",
+      "bytes": 68512
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/deepseek4.cpp.o",
+      "sha256": "aa8a24f744a512445d3ff32bcf93d38ecd06ed837ed03ea6917dd9e42b7cdecc",
+      "bytes": 117608
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/delta-net-base.cpp.o",
+      "sha256": "2aaac4433f6e6f63563c301a190e76d471f8a55bc85835551c2f462216b253df",
+      "bytes": 60960
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/dflash.cpp.o",
+      "sha256": "742e505cbd6523dc09e6044f78f460c4b2c03785d2a87e78a89e0470d7015f8f",
+      "bytes": 57800
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/dots1.cpp.o",
+      "sha256": "db68a24662c66f86d5ebb975f28c52e8b0301048490453b361cfc811fa27b8eb",
+      "bytes": 37376
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/dream.cpp.o",
+      "sha256": "aa5a66f26be9e267698f99bd94f4ee687fd063e9fdd953133085306d7039be81",
+      "bytes": 29624
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/eagle3.cpp.o",
+      "sha256": "54f471ab74cbaaf86071b6f6d6612e034e7d05f1a0bfef464989711ce6bc20ca",
+      "bytes": 58504
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/ernie4-5-moe.cpp.o",
+      "sha256": "32fc08afe24c66bce613f6bd73ce184716d000b53cc5e6b05fa60c645d964c82",
+      "bytes": 28872
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/ernie4-5.cpp.o",
+      "sha256": "62868f833b984aa358b0a6a54f62185230e235116256e2697f114d4565213c45",
+      "bytes": 31736
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/eurobert.cpp.o",
+      "sha256": "35dc98c1e885d3a367b24be182b1a018d24184bba1ede59cf0457203d74f952d",
+      "bytes": 27648
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/exaone-moe.cpp.o",
+      "sha256": "ccd8c6aa540bfe3464e31d82af09253c4c7b349d60157b88c4ce3804d4d40254",
+      "bytes": 41224
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/exaone.cpp.o",
+      "sha256": "1a610d154da43a221be5cd1fe39f307293bec057bf5d86f5569e630255eb735b",
+      "bytes": 31320
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/exaone4.cpp.o",
+      "sha256": "0e01511f8fa07ff550e9999188c8ec36cdd0ada0051681467c49de41f9bce21a",
+      "bytes": 48672
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/falcon-h1.cpp.o",
+      "sha256": "59655263e47a15d9597db220432f7369da7ef1d94393b715e510079c9864451f",
+      "bytes": 36472
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/falcon.cpp.o",
+      "sha256": "1473efee8c12062046e8177966321a896eec9e41379a76d55adb73ef346c6a39",
+      "bytes": 29800
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/gemma-embedding.cpp.o",
+      "sha256": "0e6fca1b1d1cbed1d2df90d5f981879885163219520027e081d660a252fca091",
+      "bytes": 33872
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/gemma.cpp.o",
+      "sha256": "89707658142714459964a274b91c721703a45831c413faedc1964e2c74651ea4",
+      "bytes": 28480
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/gemma2.cpp.o",
+      "sha256": "a8d7726bf42acd5d2445083b63f48811255169153cd8ebe9b8f0ceead605ee5b",
+      "bytes": 31160
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/gemma3.cpp.o",
+      "sha256": "ce9c749f84aed1d6ec762d42c7620c1497b6b422ddbe844f3075cc351483e7cd",
+      "bytes": 49968
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/gemma3n.cpp.o",
+      "sha256": "229bc246a995aa91f5dc4d7c1407670a58d1458fae72f6c55b0fcd5a54533182",
+      "bytes": 74416
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/gemma4-assistant.cpp.o",
+      "sha256": "70574615a7aa5482b9d58dcc2d76107fe0e8f0c79db5c42afe053fda24cd1cb9",
+      "bytes": 46232
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/gemma4.cpp.o",
+      "sha256": "e536f112952aa255bb9842bddf1c539e04b0951cb20986ef1fdb56bf72104092",
+      "bytes": 74408
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/glm-dsa.cpp.o",
+      "sha256": "eefed61a6ffa5c5bf35b8c6719fb0061892c01d6e45efb8ca8f73c4c903eb9b3",
+      "bytes": 22000
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/glm4-moe.cpp.o",
+      "sha256": "d7f6fe55a0dd902830b1c800c352cd340d4558b4b275ce3a30e7872ba7300d00",
+      "bytes": 39800
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/glm4.cpp.o",
+      "sha256": "1a1194963fb151a128de0727b32ce2d05ea67bbbc1c640025bea857f684e8315",
+      "bytes": 33320
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/gpt2.cpp.o",
+      "sha256": "5ff461975d6b11500db8b80d217f1c7f24e9a0c8e23c0bfe6d9215b1281e7b32",
+      "bytes": 30272
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/gptneox.cpp.o",
+      "sha256": "aaddaeecf3602438ae52d2afbdb243f6ab69de5deea5ba4c823671b04c6e0809",
+      "bytes": 35096
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/granite-hybrid.cpp.o",
+      "sha256": "60bdf79e25432fb66f4b45677f3e5ee3e07dd87507cfe7c20c2b701ae3a6bd52",
+      "bytes": 40216
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/granite-moe.cpp.o",
+      "sha256": "efd9683e391c7e8e08dc4b0c3eb30755a196c2cda2274c6a5ad92c4868f6cda0",
+      "bytes": 13640
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/granite.cpp.o",
+      "sha256": "80e85323113579d18a492d85dfc2fff5fa49c00efe2058506577895cab20c862",
+      "bytes": 47720
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/grok.cpp.o",
+      "sha256": "d97608818b882b533c21334bc269dde38ee8bec576da346a9e3ca667635bf380",
+      "bytes": 39208
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/grovemoe.cpp.o",
+      "sha256": "5f0ad37438628088ecc22ed12288f8bbaf5a9265ef28aebabc06739ae7d4e62b",
+      "bytes": 35680
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/hunyuan-dense.cpp.o",
+      "sha256": "835e0b573676ec08e4855aef0dea1fdd8d33358fc490a8001b26b55b7a19ce98",
+      "bytes": 5504
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/hunyuan-moe.cpp.o",
+      "sha256": "d0da6ab59984cc1dafa981e9defa0244d715db70f6a2e66809d6b7f780b7d21d",
+      "bytes": 34064
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/hunyuan-vl.cpp.o",
+      "sha256": "a626bb3c3f8970ec09f5a3a8fcc7de44ec6f113cef1575abbfb3af40df788d76",
+      "bytes": 33008
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/internlm2.cpp.o",
+      "sha256": "456c6e454d089a011a449ee916f586ff01a4232bcb9fa47d785be7c32c577d18",
+      "bytes": 29032
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/jais.cpp.o",
+      "sha256": "95f6398bcff23699c4eeede2739e9412d7a7b3534990ca32815820094f830812",
+      "bytes": 28760
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/jais2.cpp.o",
+      "sha256": "05f968f1116b622c3abf9c640b1badc2ab8ff17c3432c8258732756a0e9c2103",
+      "bytes": 30912
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/jamba.cpp.o",
+      "sha256": "4c12ae8e368f53f873c449900a05a1f39b53e408d4d3acdc30d9a46ae6f49233",
+      "bytes": 33000
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/jina-bert-v2.cpp.o",
+      "sha256": "24542e9dfba46f7ff3849d7b3b8e5f835afd792434706a4e30be8879037c1dad",
+      "bytes": 14576
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/jina-bert-v3.cpp.o",
+      "sha256": "333b1d8f34471f10192f462ce1bf2edbc804ef12ad1827dfad2003d32492b086",
+      "bytes": 17440
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/kimi-linear.cpp.o",
+      "sha256": "f13af4dbacf5e8420ee4188b12f7036eda64a9c9344682914ca074c25b1534bb",
+      "bytes": 71408
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/lfm2.cpp.o",
+      "sha256": "82df95196f784b38d4ad900f47cc1b6c227f2b60831990fec0b5aeca6a7aec3d",
+      "bytes": 76528
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/lfm2moe.cpp.o",
+      "sha256": "6ba1a47e93be150886be0af413eaa8b43183129a54436e2a56b5682c368604e9",
+      "bytes": 15920
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/llada-moe.cpp.o",
+      "sha256": "790c0ee0320ba6233ab8167e29055d920bd517d1e4d47a2bd6413b907930e319",
+      "bytes": 31736
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/llada.cpp.o",
+      "sha256": "a1d572473024fddb083edda0534b9d28c588336cfbe2e9320ae2e2ee92f2fb20",
+      "bytes": 30560
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/llama-embed.cpp.o",
+      "sha256": "39288d853d1e9a1ae81cc9bce1589996663736d6f0ce981f86f5c3cedc054b28",
+      "bytes": 5480
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/llama.cpp.o",
+      "sha256": "75eecedd4c5245cd1dcce33836f983c0698846e17dcc4edad549fa33358d7fc6",
+      "bytes": 54472
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/llama4.cpp.o",
+      "sha256": "fd8b97f9e43eadd9a8bfea8d5f5691c29a4850fc154b90252f5df5645243aa7a",
+      "bytes": 60872
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/maincoder.cpp.o",
+      "sha256": "b0424f4418d87f350edfb614cda474e86d3bd542f5d7ec09dd8766a7a9608e3d",
+      "bytes": 30336
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/mamba-base.cpp.o",
+      "sha256": "e8916f2fda718c1993bf925988420697be1e950066b6afb8b20dad7670d00746",
+      "bytes": 39736
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/mamba.cpp.o",
+      "sha256": "8be1d5237d339c1516764563769b96f0b057dc0f2c79183f0778626f00e300be",
+      "bytes": 27632
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/mamba2.cpp.o",
+      "sha256": "34342e4311863139a6495c76896f292ba51ae97f50787e493c47c6ec1691ef3e",
+      "bytes": 11240
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/mellum.cpp.o",
+      "sha256": "8eed8a0b36c6c9797cc41a180d610b003092454325c9d36eaa2fcec7453456b6",
+      "bytes": 50976
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/mimo2.cpp.o",
+      "sha256": "b554221c0a83198a2a22325af8fee19cd6e651c22e7b30e5fc97bf20a3bc8426",
+      "bytes": 37272
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/minicpm.cpp.o",
+      "sha256": "0b33ff0066258829de215d0eb6a76ae9dd4a21625c68605e4622d14a8cfae555",
+      "bytes": 13656
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/minicpm3.cpp.o",
+      "sha256": "312934cbcd4671a0602802d21423b2d1d7daf87192a489e387b7b33ef884ebbc",
+      "bytes": 42088
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/minimax-m2.cpp.o",
+      "sha256": "be27a56190a4ddf61d7d416c380493ec03be5c39bc81c30959a6009396f5f5a7",
+      "bytes": 31712
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/mistral3.cpp.o",
+      "sha256": "0a74a7ba88628e34b53bbc69245e9932d8230a983a4228385e9fd0c51872d56c",
+      "bytes": 36760
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/mistral4.cpp.o",
+      "sha256": "c0e07192e8bd9e495775d194ec9f6df46f794786d730647f09f34776947a0bde",
+      "bytes": 5464
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/modern-bert.cpp.o",
+      "sha256": "96eef16b24b71b9f0fb60cb0f6789e5a77f3a38cb18d454498656cc943158dfb",
+      "bytes": 32664
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/mpt.cpp.o",
+      "sha256": "2c563ae5ade6b90106dac8eaac5b0aa3ce0aa64fa1e3b4255cf7f9653ac02a66",
+      "bytes": 32480
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/nemotron-h-moe.cpp.o",
+      "sha256": "4650922a8329618187b2d6bd078d46ee0a395815086c641f836d501f1a660b6b",
+      "bytes": 5512
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/nemotron-h.cpp.o",
+      "sha256": "21474854be934ce96c59a0760f57c5cf66560423a9e6541c1a897823437ddacb",
+      "bytes": 36328
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/nemotron.cpp.o",
+      "sha256": "bb5841c8c69734e1e1bd9908e7419102ace3048a4ab142a8f5edac26fe0319fd",
+      "bytes": 29736
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/neo-bert.cpp.o",
+      "sha256": "c0210c6fe15efc859e1796670da4994e63cd283071b11e21ff35a2e7639ed86b",
+      "bytes": 28024
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/nomic-bert-moe.cpp.o",
+      "sha256": "b8758f8a2f87bba5c9f53c62634c908d8a1ef59935a25c0375cc5ab9f7814d1b",
+      "bytes": 17648
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/nomic-bert.cpp.o",
+      "sha256": "054b4d99f57840da523c8862c7e992727200b67dfd454e0f347d18e4652ecbbf",
+      "bytes": 17616
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/olmo.cpp.o",
+      "sha256": "f957eac149ef51bddec57b5f9db247cc1ad3a44bccde04d4cc454bea22bf92a1",
+      "bytes": 28976
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/olmo2.cpp.o",
+      "sha256": "7cd4d337cb4a8d1679b953ace2aff9b37f22f52030258a295ab8e3068ee5d4d0",
+      "bytes": 49008
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/olmoe.cpp.o",
+      "sha256": "141c51770698f608cb8ec686332703a1a9430d3a7816d7b0c5a980d309f699de",
+      "bytes": 34168
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/openai-moe.cpp.o",
+      "sha256": "ae22c3066c58201bacb36858bd659d3ab24adfbb7a525be6b686bd6c38dc1fc7",
+      "bytes": 30728
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/openelm.cpp.o",
+      "sha256": "5092d407c4e591d8c233b5807ad50f216b201c2ec9af937084189c945e61c05f",
+      "bytes": 32016
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/orion.cpp.o",
+      "sha256": "ca0f84896d541d8adb14543707a51060f7339c5536f78a2cf6d54e9dd9c9d58e",
+      "bytes": 29696
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/paddleocr.cpp.o",
+      "sha256": "62daa4025f0911bd30c965a3d5de465a8b584947b8bd6fad1d4338f353733be5",
+      "bytes": 24864
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/pangu-embed.cpp.o",
+      "sha256": "7da7845d8d105cd9451aaaab2542bca09196e5873092661efdabdc6b32f0026b",
+      "bytes": 30552
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/phi2.cpp.o",
+      "sha256": "4dcee6d1ed18a291fe652b0892c9882dee291fea0bfaadc6bf6dac04820b7b31",
+      "bytes": 29136
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/phi3.cpp.o",
+      "sha256": "51d13c38f3760a91729f62481b45bdea423d5cd956f57a528743ba9715da9061",
+      "bytes": 47344
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/phimoe.cpp.o",
+      "sha256": "9b365c610236b1281e17d62079baa08222652c96fe55418fbe7e7d13aa4881ee",
+      "bytes": 11992
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/plamo.cpp.o",
+      "sha256": "6c858299e537f3ff147d95bb1f84f9e1ef4bb3ce3cb9c95658602914e684659d",
+      "bytes": 28416
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/plamo2.cpp.o",
+      "sha256": "01e28c5e0e170f3d724ca3e513b58f51ece68223a72219c44b3c086c50df09ea",
+      "bytes": 58512
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/plamo3.cpp.o",
+      "sha256": "1a81666c31238261863332033290653791b385b14b3820d979fe7e61e1f29b3c",
+      "bytes": 50280
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/plm.cpp.o",
+      "sha256": "871fcc05d43e72ff5f5335c149ee637fba26fbd3eb3663f6dbfb26df484277a0",
+      "bytes": 37752
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/qwen.cpp.o",
+      "sha256": "cd5991306d143d158563425d0f01b513b46c54dfae2c2ddc4182a0f6439cf6f6",
+      "bytes": 28952
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/qwen2.cpp.o",
+      "sha256": "1fcf8ab425c3eaaef9f7e6cb27011427016509a5e81afa2da4560af305578142",
+      "bytes": 31632
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/qwen2moe.cpp.o",
+      "sha256": "05aa40656a4a9d740e290732424ee6cc72e794987826a23dc7c54017eaaad0f5",
+      "bytes": 37000
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/qwen2vl.cpp.o",
+      "sha256": "19b53a0b7b72993a2e3212e8293b0d94427f4b67a69486924d4123a005f764d7",
+      "bytes": 29496
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/qwen3.cpp.o",
+      "sha256": "f1f8d22be080415648af893261dc23d559cc33a6ae0fb319143cb09d47aceb49",
+      "bytes": 30992
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/qwen35.cpp.o",
+      "sha256": "ef86c59753e7237ffb856667d2c99601e0af6d7fe38b1e6f6d922eed3a252609",
+      "bytes": 90432
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/qwen35moe.cpp.o",
+      "sha256": "1d52558febad078cd0124867c12385b3216253ab34cf172718a426934cd6635f",
+      "bytes": 96160
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/qwen3moe.cpp.o",
+      "sha256": "052303a3d4e3e4bdff318e1b826eee5cc434c1532ab6bfd99377c87506cd67e0",
+      "bytes": 33952
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/qwen3next.cpp.o",
+      "sha256": "3f19735c02c9add8982872d40e29fbece71ceaf2374e8cde88bc9182337a07fb",
+      "bytes": 66088
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/qwen3vl.cpp.o",
+      "sha256": "f5fc3fd3ef727108ebe8c1da777ecd9afab099e0508c1cd651986fcd4cce3f56",
+      "bytes": 31880
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/qwen3vlmoe.cpp.o",
+      "sha256": "5824f396be13cfe77e9b29b89041f3a76ebbceef38f83a29785a5d0006bca564",
+      "bytes": 35120
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/refact.cpp.o",
+      "sha256": "57192984b65a734fc3e95c5308ae811c78df77a07ef02a4c2690e98f1da4b731",
+      "bytes": 31136
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/rnd1.cpp.o",
+      "sha256": "ab18f6ed1412f5326c61f5905ac18434546c6b0418f7e17158d98bc3995012ec",
+      "bytes": 33864
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/rwkv6-base.cpp.o",
+      "sha256": "096af6089fb1b6e2f31e628f7388e8aab77c3997f0ef2aaeecf2052c40228eab",
+      "bytes": 27872
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/rwkv6.cpp.o",
+      "sha256": "bb332ae538d3265f40de7c9cf2dc42f52c21408a7a822ca1f26f1bcc31457fe9",
+      "bytes": 36496
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/rwkv6qwen2.cpp.o",
+      "sha256": "de06e7e413760dc640174f36ed28cd76aecb2d11d2ccaaf8462b3460a5adab33",
+      "bytes": 32608
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/rwkv7-base.cpp.o",
+      "sha256": "8c282ebf96a81c287206b56c69e1a51b6eddb0bf63e8d0e532bbd4c3e9c44b10",
+      "bytes": 25120
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/rwkv7.cpp.o",
+      "sha256": "e4b0c5ee4002417e8042c2b9b5b2c45b9363bff5796dedeaa20cbc582daa99b2",
+      "bytes": 39240
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/seed-oss.cpp.o",
+      "sha256": "5df4fcb9e19190bde642d9dfca2a8a754dc4dcb15fa52db500691f6793d714e5",
+      "bytes": 29752
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/smallthinker.cpp.o",
+      "sha256": "0a075a610a7c0a820bccaf2ac965b16f3ec3859a92015a61feb205fe4bde4191",
+      "bytes": 48672
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/smollm3.cpp.o",
+      "sha256": "c395be8cfa9fee6d1839083057e852eb15d3db9e52cfd6d02730e03e6c2644d5",
+      "bytes": 29768
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/stablelm.cpp.o",
+      "sha256": "d86921a6988cc4f73c4c938c22eabd675801e60f3959206ee18ff2cfc6635a4d",
+      "bytes": 30792
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/starcoder.cpp.o",
+      "sha256": "84e92e78bd141be618fb45fe93fa6d390c7ce6e78baa1825e4b244ffe7a23cf5",
+      "bytes": 30696
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/starcoder2.cpp.o",
+      "sha256": "fed25217f16294e34de03880d318cb0141228999d58631818b484cb2a9574039",
+      "bytes": 30696
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/step35.cpp.o",
+      "sha256": "a13c508d37f91a36746f7dd22048c458a229ae54ab443179b7e092f60263fcba",
+      "bytes": 96664
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/t5.cpp.o",
+      "sha256": "d3c6c6ef4d64a9195ca2de52ffcbb783fe7d62e2101e145997a6546742cd9de3",
+      "bytes": 55616
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/t5encoder.cpp.o",
+      "sha256": "99413114135e34f98ff88493dfb3456986a8bb2da8d4e35d78c735a59c87098d",
+      "bytes": 10728
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/talkie.cpp.o",
+      "sha256": "0eec0249bbe4aa29a6851f6d9cf4edba7e919f0a62f384869015ca40db76779c",
+      "bytes": 30752
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/wavtokenizer-dec.cpp.o",
+      "sha256": "810b245653854e9c740431218aed32938ce51698564d0a8916ed6b7326e0231e",
+      "bytes": 35512
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/src/CMakeFiles/llama.dir/models/xverse.cpp.o",
+      "sha256": "49a28447ebc45d14c09adbf7cf274d6a8b32ed8fc88fa7afaf81dd6fe6a861a8",
+      "bytes": 28984
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/common/CMakeFiles/llama-common-base.dir/build-info.cpp.o",
+      "sha256": "36b5f1d6e6dac2eb390cb9ce79c8b99a2a3ebaf2cb992d53918844eca03ed864",
+      "bytes": 15128
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/common/CMakeFiles/llama-common.dir/arg.cpp.o",
+      "sha256": "a4595d9e5bdc87b7b4a2b3402fc8516d9bf43beb8b912ca76b5b3f1d3025cb2a",
+      "bytes": 3867032
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/common/CMakeFiles/llama-common.dir/chat-auto-parser-generator.cpp.o",
+      "sha256": "62425792ee3a07942839e21004058edaad5a2c982312dafb249f077b1b3fe768",
+      "bytes": 496048
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/common/CMakeFiles/llama-common.dir/chat-auto-parser-helpers.cpp.o",
+      "sha256": "78354e581d35cdebfe1b384c24d4d87b51bd12e0a560658944c93302eedce3bf",
+      "bytes": 170800
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/common/CMakeFiles/llama-common.dir/chat-diff-analyzer.cpp.o",
+      "sha256": "9d6fad6d4791699d13924ab02f57c46830ffee65bc10d38f85aa5cdb1ff94499",
+      "bytes": 1814560
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/common/CMakeFiles/llama-common.dir/chat-peg-parser.cpp.o",
+      "sha256": "429080f7018210deb6b96fcce52022ddb9ea84bda6a5c73dd679bd2d0735c502",
+      "bytes": 825520
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/common/CMakeFiles/llama-common.dir/chat.cpp.o",
+      "sha256": "a0ca5ab38f356d3e9f9aea5d2c569829301fdc8c7b72933b4bf654926bd4afa3",
+      "bytes": 2706536
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/common/CMakeFiles/llama-common.dir/common.cpp.o",
+      "sha256": "1c1be858be8bdbe3b484dcaec079b3a2fc59830857d152494201946ec8adf246",
+      "bytes": 915008
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/common/CMakeFiles/llama-common.dir/console.cpp.o",
+      "sha256": "37b12d481b8343134053d2b2aa01c76a0afbfd1fd365224986ea322a5d4814a0",
+      "bytes": 86624
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/common/CMakeFiles/llama-common.dir/debug.cpp.o",
+      "sha256": "38291c5b3e28b2a505831418f2575a803714af1cca54c41fe0dcd07ad061357d",
+      "bytes": 601688
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/common/CMakeFiles/llama-common.dir/download.cpp.o",
+      "sha256": "1810a2b98b5e350a741644eaa504d10abcac4e26a2ee756ad4b2a6ea3a0930ad",
+      "bytes": 1791216
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/common/CMakeFiles/llama-common.dir/fit.cpp.o",
+      "sha256": "859dc02c64f5c709503ca1f96ac08cfb2ec920cebfc0dab3d9a05428a87bf8b2",
+      "bytes": 241504
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/common/CMakeFiles/llama-common.dir/hf-cache.cpp.o",
+      "sha256": "d24d08c6963d49e06f94bdb968ac6eb96d8e2d90505599a7713eb8bad200006d",
+      "bytes": 1036296
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/common/CMakeFiles/llama-common.dir/imatrix-loader.cpp.o",
+      "sha256": "c4015874500a0e2ce1e51a26f4e174032f638cfd1ff8cd14808c2d986c2e4b00",
+      "bytes": 69608
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/common/CMakeFiles/llama-common.dir/json-schema-to-grammar.cpp.o",
+      "sha256": "f688774655bdae7240ff4a0d241f69c4e0fcd8d1bdd363a8b726bc5698cd8e24",
+      "bytes": 1638136
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/common/CMakeFiles/llama-common.dir/llguidance.cpp.o",
+      "sha256": "9ec0b6e979b324f25f852e1489d9425d63da38b29ce17851d9d1aaf8b87b3965",
+      "bytes": 2352
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/common/CMakeFiles/llama-common.dir/log.cpp.o",
+      "sha256": "c1af572696ce172b99a82bd2f4d762f365bc9f10d5a4d23295f1aa887f374198",
+      "bytes": 62768
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/common/CMakeFiles/llama-common.dir/ngram-cache.cpp.o",
+      "sha256": "e8d443aa3d8b3d916805810839895711cb606502900ebb9e4dec0d5b28851ee2",
+      "bytes": 81768
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/common/CMakeFiles/llama-common.dir/ngram-map.cpp.o",
+      "sha256": "7d7eaa8201c4bd4a186afcccf5c1a5efa64799797cbe9cd61dee8ba8c13436d6",
+      "bytes": 41048
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/common/CMakeFiles/llama-common.dir/ngram-mod.cpp.o",
+      "sha256": "2ee0443ef0a7338b87d24b996056aa7ffa0e5958a87ae224655c57271f6d62a5",
+      "bytes": 7640
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/common/CMakeFiles/llama-common.dir/peg-parser.cpp.o",
+      "sha256": "4bc30cc70d3f4d8a891930b75e93104e8d9f96af708f97f2ec8bf52b64706b8c",
+      "bytes": 2686520
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/common/CMakeFiles/llama-common.dir/preset.cpp.o",
+      "sha256": "e81484fc8ac7e6aa95788ac58d035e8644a723e8b714779546a2934cac46fa70",
+      "bytes": 986936
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/common/CMakeFiles/llama-common.dir/reasoning-budget.cpp.o",
+      "sha256": "02215e55b4408cef83626544e55a4342180d1012ac30b0f8ce8f8d26590b12e2",
+      "bytes": 23368
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/common/CMakeFiles/llama-common.dir/sampling.cpp.o",
+      "sha256": "ab34a63f9a883ca35c6951f0c8b54df842c8942a70e0971c136b9da6154827c8",
+      "bytes": 212472
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/common/CMakeFiles/llama-common.dir/speculative.cpp.o",
+      "sha256": "c3f96f6a2255ed8b3ae4475554f5342ae916192ff5e991183244660cda7bbc3f",
+      "bytes": 530424
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/common/CMakeFiles/llama-common.dir/unicode.cpp.o",
+      "sha256": "6b60dcbc1bdf0cf6868f551cf9dddcc95b7d2f0ecc1978a23623ad3270ac269c",
+      "bytes": 8520
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/common/CMakeFiles/llama-common.dir/jinja/lexer.cpp.o",
+      "sha256": "b362cc391608b2451c5b56b3973f9680a2fe27f821c708102b73c04d409604b5",
+      "bytes": 95840
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/common/CMakeFiles/llama-common.dir/jinja/parser.cpp.o",
+      "sha256": "64a79d722df196f723e204622d2a00194a024d90c7a8d8808424245774ce8e18",
+      "bytes": 491168
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/common/CMakeFiles/llama-common.dir/jinja/runtime.cpp.o",
+      "sha256": "18e4e9839da1911051889f86268cb30827c6f99c2a333e351b2280fa2d5ea300",
+      "bytes": 912808
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/common/CMakeFiles/llama-common.dir/jinja/value.cpp.o",
+      "sha256": "19a7ebb322f4f18bf84efc21bb6478ea528ae2ea23da5d1cce9bc026f5fdb2e7",
+      "bytes": 1358400
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/common/CMakeFiles/llama-common.dir/jinja/string.cpp.o",
+      "sha256": "3730e92f64f264e80f13ca23df7f1e98181c75bff7cecd4ead9f621683b8a51e",
+      "bytes": 42528
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/common/CMakeFiles/llama-common.dir/jinja/caps.cpp.o",
+      "sha256": "d300ae1818976f217d492dcb0fd97d2711202084e6929e918b1c90a0319b4251",
+      "bytes": 706336
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/vendor/cpp-httplib/CMakeFiles/cpp-httplib.dir/httplib.cpp.o",
+      "sha256": "8bb15fa70c3be6bda1631fde8d4d372f1b680637a10e4fb9248065b074fb2794",
+      "bytes": 3344784
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/tools/perplexity/CMakeFiles/llama-perplexity-impl.dir/perplexity.cpp.o",
+      "sha256": "d6c251eb6d4c89618ea8af4e190f0a30d9c3e8c41f8210aa5ae9807fa1ca3b59",
+      "bytes": 429400
+    },
+    {
+      "path": "/root/chimera-runtime-retest-20261031/model42-attempt4/build/tools/perplexity/CMakeFiles/llama-perplexity.dir/main.cpp.o",
+      "sha256": "427a832de682062fd2929325084650deaf8477991b8275aea324d84fe65cd13d",
+      "bytes": 1552
+    }
+  ],
+  "control_targets": {
+    "llama": 165,
+    "llama-common-base": 1,
+    "llama-common": 31,
+    "cpp-httplib": 1,
+    "llama-perplexity-impl": 1,
+    "llama-perplexity": 1
+  },
+  "ggml_rvv_commands": 26,
+  "exported_unbuilt_targets": {
+    "llama-batched": 1,
+    "llama-debug": 1,
+    "llama-embedding": 1,
+    "llama-eval-callback": 1,
+    "xxhash": 1,
+    "sha1": 1,
+    "sha256": 1,
+    "llama-gguf-hash": 1,
+    "llama-gguf": 1,
+    "llama-idle": 1,
+    "llama-lookahead": 1,
+    "llama-lookup": 1,
+    "llama-lookup-create": 1,
+    "llama-lookup-merge": 1,
+    "llama-lookup-stats": 1,
+    "llama-parallel": 1,
+    "llama-passkey": 1,
+    "llama-retrieval": 1,
+    "llama-simple": 1,
+    "llama-simple-chat": 1,
+    "llama-speculative": 1,
+    "llama-speculative-simple": 1,
+    "llama-gen-docs": 1,
+    "llama-finetune": 1,
+    "llama-diffusion": 1,
+    "llama-diffusion-cli": 1,
+    "llama-convert-llama2c-to-ggml": 1,
+    "llama-vdot": 1,
+    "llama-q8dot": 1,
+    "llama-batched-bench-impl": 1,
+    "llama-batched-bench": 1,
+    "llama-gguf-split": 1,
+    "llama-imatrix": 1,
+    "llama-bench-impl": 1,
+    "llama-bench": 1,
+    "llama-completion-impl": 1,
+    "llama-completion": 1,
+    "llama-quantize-impl": 1,
+    "llama-quantize": 1,
+    "llama-ui-embed": 1,
+    "llama-ui": 1,
+    "llama-cli-impl": 1,
+    "llama-cli": 1,
+    "server-context": 8,
+    "llama-server-impl": 3,
+    "llama-server": 1,
+    "llama-tokenize": 1,
+    "llama-debug-template-parser": 1,
+    "llama-template-analysis": 1,
+    "llama-tts": 1,
+    "mtmd": 38,
+    "llama-llava-cli": 1,
+    "llama-gemma3-cli": 1,
+    "llama-minicpmv-cli": 1,
+    "llama-qwen2vl-cli": 1,
+    "llama-mtmd-cli": 1,
+    "llama-mtmd-debug": 1,
+    "llama-cvector-generator": 1,
+    "llama-export-lora": 1,
+    "llama-fit-params-impl": 1,
+    "llama-fit-params": 1,
+    "llama-results": 1,
+    "llama-app": 3
+  },
+  "control_functions": {
+    "llama_decode": {
+      "instructions": 19,
+      "vector_or_width_instructions": []
+    },
+    "_Z25common_params_parser_initR13common_params13llama_examplePFviPPcE": {
+      "instructions": 96958,
+      "vector_or_width_instructions": []
+    }
+  },
+  "whole_elf_vector_instructions": 14119,
+  "disassembly_sha256": "a1bd50ad2336af3eb2c99cb83c13247642651e0390acce24842853911adff32a",
+  "configuration_argv": [
+    "cmake",
+    "-S",
+    "/root/chimera-runtime-retest-20261031/model42-attempt4/llama-source",
+    "-B",
+    "/root/chimera-runtime-retest-20261031/model42-attempt4/build",
+    "-DCMAKE_C_COMPILER=/root/chimera-runtime-retest-20261031/model42-attempt4/gate/cc",
+    "-DCMAKE_CXX_COMPILER=/root/chimera-runtime-retest-20261031/model42-attempt4/gate/cxx",
+    "-DCMAKE_BUILD_TYPE=Release",
+    "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
+    "-DCMAKE_C_FLAGS=-march=rv64gcv -mabi=lp64d",
+    "-DCMAKE_CXX_FLAGS=-march=rv64gcv -mabi=lp64d",
+    "-DCMAKE_EXE_LINKER_FLAGS=-fuse-ld=lld",
+    "-DCMAKE_INTERPROCEDURAL_OPTIMIZATION=OFF",
+    "-DBUILD_SHARED_LIBS=OFF",
+    "-DLLAMA_BUILD_SHARED_LIBS=OFF",
+    "-DGGML_STATIC=ON",
+    "-DGGML_SHARED=OFF",
+    "-DGGML_NATIVE=OFF",
+    "-DLLAMA_NATIVE=OFF",
+    "-DLLAMA_CURL=OFF",
+    "-DLLAMA_OPENSSL=OFF",
+    "-DLLAMA_BUILD_TESTS=OFF",
+    "-DGGML_OPENMP=ON",
+    "-DOpenMP_C_FLAGS=-fopenmp -isystem /root/chimera-runtime-retest-20261031/model42-attempt4/openmp-include",
+    "-DOpenMP_CXX_FLAGS=-fopenmp -isystem /root/chimera-runtime-retest-20261031/model42-attempt4/openmp-include",
+    "-DOpenMP_C_LIB_NAMES=omp",
+    "-DOpenMP_CXX_LIB_NAMES=omp",
+    "-DOpenMP_omp_LIBRARY=/root/chimera-runtime-retest-20261031/model42-attempt4/target-libs/libomp.so.5",
+    "-DCMAKE_C_FLAGS_RELEASE=-O3 -DNDEBUG -fno-vectorize -fno-slp-vectorize",
+    "-DCMAKE_CXX_FLAGS_RELEASE=-O3 -DNDEBUG -fno-vectorize -fno-slp-vectorize"
+  ],
+  "strict_check_sha256": "11055a21437679e5161cf67396f812d35841e84ff6a09bc2bc6ea97044c483ba",
+  "profile_sha256": "11a563e1015588f2b827ed5ddbc6b068d472fdbfb90cc56ca6b702e9bcceefc3",
+  "conditional_safety_scope": "assume-scalar-independent/minVLEN256; StackObject and1328 gates; no scalar leaf exemption"
+}

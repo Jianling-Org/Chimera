@@ -1,0 +1,114 @@
+{
+  "passed": true,
+  "scope": "Independent local cross-check of the target full raw-evidence audit, actual exit/resources, fresh per-case summaries and Chinese reports",
+  "verified_utc": "2026-11-02T09:44:22.543889+00:00",
+  "audit_actual": "success/exited/0",
+  "audit_completion_path": "/root/chimera-runtime-retest-20261031/model41-ppl2pct-v5-attempt2-independent-audit1/completion.json",
+  "audit_completion_sha256": "3fd66bfb31bf821cb079835a70e5d5d3f59e8e2a6235874d46eb7ec42c9f8c7d",
+  "audit_resources_path": "/root/chimera-runtime-retest-20261031/model41-ppl2pct-v5-attempt2-independent-audit1/unit.resources.json",
+  "audit_resources_sha256": "15532f14c400ff9dc7910d2a1d9b9483dbd62781dc211faf86ec991af7c7de4d",
+  "verification_path": "/root/chimera-runtime-retest-20261031/model41-ppl2pct-v5-attempt2-independent-audit1/verification.json",
+  "verification_sha256": "7110bd4edb18a2bb6d2133ea6382a748cf748d062afc48d628d42a2000ec8310",
+  "runtime_completion_path": "/root/chimera-runtime-retest-20261031/model41-runtime-ppl2pct-v5-attempt2/completion.json",
+  "runtime_completion_sha256": "b5e54893e606802a1aeeeb2bc4fbe894c078a673f49613581c4379aeb250e9ef",
+  "report_path": "/root/chimera-runtime-retest-20261031/model41-ppl2pct-v5-attempt2-independent-audit1/4.1-完整重测独立审计报告.zh-CN.md",
+  "report_sha256": "e57898d1a6afbf0bdf0487c1a3cc4d59a8eb7bbdc2ab26eb9751a574bcc14afe",
+  "report_change_notes_path": "/root/chimera-runtime-retest-20261031/model41-ppl2pct-v5-attempt2-independent-audit1/性能报告4.1修改意见.zh-CN.md",
+  "report_change_notes_sha256": "7eb8f9d98f8fee651a317059e987f79ae0b385c32b6d82b1377b4cd05f318af7",
+  "automatic_rounds": 291,
+  "mixed_rounds": 274,
+  "mixed_actual_application_seconds": 7231.521526972298,
+  "route_counts": {
+    "256-to-1024": 291,
+    "1024-to-256": 1493
+  },
+  "maximum_relative_ppl_delta": 0.01321837283471955,
+  "evidence_files": 2935,
+  "evidence_bytes": 2925937549,
+  "local_download_bytes": 793857,
+  "source_reconstruction_files": 3019,
+  "all_original_raw_files_replayed_on_target": true,
+  "local_full_raw_archive_downloaded": false,
+  "files": {
+    "model41-ppl2pct-v5-attempt2-independent-audit1/verification.json": {
+      "sha256": "7110bd4edb18a2bb6d2133ea6382a748cf748d062afc48d628d42a2000ec8310",
+      "bytes": 4521
+    },
+    "model41-ppl2pct-v5-attempt2-independent-audit1/completion.json": {
+      "sha256": "3fd66bfb31bf821cb079835a70e5d5d3f59e8e2a6235874d46eb7ec42c9f8c7d",
+      "bytes": 321
+    },
+    "model41-ppl2pct-v5-attempt2-independent-audit1/unit.resources.json": {
+      "sha256": "15532f14c400ff9dc7910d2a1d9b9483dbd62781dc211faf86ec991af7c7de4d",
+      "bytes": 218
+    },
+    "model41-ppl2pct-v5-attempt2-independent-audit1/original-evidence-verification.json": {
+      "sha256": "12c688fc31e583b9653b8a4ccf8ed580c9c35d4c8a9789fde6227dc2b2b0cdcf",
+      "bytes": 328
+    },
+    "model41-ppl2pct-v5-attempt2-independent-audit1/current-inputs.json": {
+      "sha256": "be0ca9f14c13bffc000f196d52319727569143e7ecc3d21157e56bc8eb3902d4",
+      "bytes": 7395
+    },
+    "model41-ppl2pct-v5-attempt2-independent-audit1/source-and-build-verification.json": {
+      "sha256": "5c1af066bf35aeffd02f84ed3c33cacd2533e55943acc8df3a77a5390586822f",
+      "bytes": 58089
+    },
+    "model41-ppl2pct-v5-attempt2-independent-audit1/case-audits.jsonl": {
+      "sha256": "351e7ea63b50e1dcf5c7f2873690270bb40c9f703b6952a91e94b3aced946c4d",
+      "bytes": 233279
+    },
+    "model41-ppl2pct-v5-attempt2-independent-audit1/4.1-完整重测独立审计报告.zh-CN.md": {
+      "sha256": "e57898d1a6afbf0bdf0487c1a3cc4d59a8eb7bbdc2ab26eb9751a574bcc14afe",
+      "bytes": 2703
+    },
+    "model41-ppl2pct-v5-attempt2-independent-audit1/性能报告4.1修改意见.zh-CN.md": {
+      "sha256": "7eb8f9d98f8fee651a317059e987f79ae0b385c32b6d82b1377b4cd05f318af7",
+      "bytes": 699
+    },
+    "model41-runtime-ppl2pct-v5-attempt2/completion.json": {
+      "sha256": "b5e54893e606802a1aeeeb2bc4fbe894c078a673f49613581c4379aeb250e9ef",
+      "bytes": 572
+    },
+    "model41-runtime-ppl2pct-v5-attempt2/evidence-sha256.json": {
+      "sha256": "34f629e876bcfe08cb5077c08d9e2684576a9f50c2c08bc0ea5c4fc5d8ec7fc6",
+      "bytes": 443362
+    },
+    "model41-runtime-ppl2pct-v5-attempt2/unit.resources.json": {
+      "sha256": "3bdfe07cde5b901e98bd82250f11f9bd2ded37058564b07cbbd3d0aac5038682",
+      "bytes": 342
+    },
+    "model41-runtime-ppl2pct-v5-attempt2/run-config.json": {
+      "sha256": "6c1b7ea2a8f84c649a971d77886ac45d20620eb8bf873f33cbbf9bf5b3a94506",
+      "bytes": 7280
+    },
+    "audit_model41_full_attempt2_1.py": {
+      "sha256": "7ce7623be8cefe4ea6678b7d2b2419d946cce64b248906386c2e3a4639e98c50",
+      "bytes": 26837
+    },
+    "model41-ppl2pct-v5-attempt2-independent-audit1-frozen.json": {
+      "sha256": "7517871bea0f5c2a09a6d69c07f86a034533d607cc968ace0724cdc9510465bc",
+      "bytes": 801
+    },
+    "model41-ppl2pct-v5-attempt2-independent-audit1-launch.json": {
+      "sha256": "4e1fccc2ffedc776d1cd2c9c811cf480576aa8fce1c25939309efee4a8276608",
+      "bytes": 2634
+    },
+    "model41-ppl2pct-v5-attempt2-independent-audit1.time.txt": {
+      "sha256": "70c3b45ec15c53205f6c3a546778d5c45a01232850bac0aa4262defba533dfa3",
+      "bytes": 853
+    },
+    "model41-ppl2pct-v5-attempt2-independent-audit1.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "model41-runtime-ppl2pct-v5-controller-2.resources.json": {
+      "sha256": "0f4e492e4d98d722911052f1ff0f78ea9faea7625fdf7ae6ded2fc2e173c4af8",
+      "bytes": 273
+    },
+    "model42-restore4-frozen.json": {
+      "sha256": "85d2c6b2c1fc59c882b80397d16c11c39b37085053902fda38d688c230dbfcb9",
+      "bytes": 3350
+    }
+  }
+}

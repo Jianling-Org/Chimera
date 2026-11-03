@@ -1,0 +1,75 @@
+--- a/ggml/src/ggml-cpu/vec.h
++++ b/ggml/src/ggml-cpu/vec.h
+@@ -316,7 +316,14 @@
+     }
+ }
+ 
+-inline static void ggml_vec_mad_f32(const int n, float * GGML_RESTRICT y, const float * GGML_RESTRICT x, const float v) {
++// Keep RVV spills inside the vector leaf instead of its scalar caller.
++#if defined(__riscv_v_intrinsic)
++#define GGML_CHIMERA_VECTOR_HELPER __attribute__((noinline))
++#else
++#define GGML_CHIMERA_VECTOR_HELPER inline
++#endif
++
++GGML_CHIMERA_VECTOR_HELPER static void ggml_vec_mad_f32(const int n, float * GGML_RESTRICT y, const float * GGML_RESTRICT x, const float v) {
+ #if defined(GGML_SIMD)
+     #if defined(__ARM_FEATURE_SVE)
+ 
+@@ -436,7 +443,7 @@
+ #endif
+ }
+ 
+-inline static void ggml_vec_mad_f16(const int n, ggml_fp16_t * GGML_RESTRICT y, const ggml_fp16_t * GGML_RESTRICT x, const float v) {
++GGML_CHIMERA_VECTOR_HELPER static void ggml_vec_mad_f16(const int n, ggml_fp16_t * GGML_RESTRICT y, const ggml_fp16_t * GGML_RESTRICT x, const float v) {
+ #if defined(GGML_SIMD) && defined(__ARM_FEATURE_SVE)
+     const int sve_register_length = svcntb() * 8;
+     const int ggml_f16_epr = sve_register_length / 16;
+@@ -582,7 +589,7 @@
+ }
+ 
+ // xs and vs are byte strides of x and v
+-inline static void ggml_vec_mad_f32_unroll(const int n, const int xs, const int vs, float * GGML_RESTRICT y, const float * GGML_RESTRICT xv, const float * GGML_RESTRICT vv) {
++GGML_CHIMERA_VECTOR_HELPER static void ggml_vec_mad_f32_unroll(const int n, const int xs, const int vs, float * GGML_RESTRICT y, const float * GGML_RESTRICT xv, const float * GGML_RESTRICT vv) {
+ 
+     const float * GGML_RESTRICT x[GGML_VEC_MAD_UNROLL];
+     const float * GGML_RESTRICT v[GGML_VEC_MAD_UNROLL];
+@@ -700,7 +707,7 @@
+ }
+ 
+ //inline static void ggml_vec_scale_f32(const int n, float * y, const float   v) { for (int i = 0; i < n; ++i) y[i] *= v;          }
+-inline static void ggml_vec_scale_f32(const int n, float * y, const float   v) {
++GGML_CHIMERA_VECTOR_HELPER static void ggml_vec_scale_f32(const int n, float * y, const float   v) {
+ #if defined(GGML_USE_ACCELERATE)
+     vDSP_vsmul(y, 1, &v, y, 1, n);
+ #elif defined(GGML_SIMD)
+@@ -766,7 +773,7 @@
+ #endif
+ }
+ 
+-inline static void ggml_vec_scale_f16(const int n, ggml_fp16_t * y, const float v) {
++GGML_CHIMERA_VECTOR_HELPER static void ggml_vec_scale_f16(const int n, ggml_fp16_t * y, const float v) {
+ #if defined(GGML_SIMD) && defined(__ARM_FEATURE_SVE)
+     const int sve_register_length = svcntb() * 8;
+     const int ggml_f16_epr = sve_register_length / 16;
+--- a/ggml/src/ggml-cpu/ops.cpp
++++ b/ggml/src/ggml-cpu/ops.cpp
+@@ -9048,6 +9048,10 @@
+         const int64_t dr = (nr + nchunk - 1) / nchunk;
+ 
+         static constexpr int64_t Q_TILE_SZ  = ggml_fa_tile_config::Q;
++#if defined(__riscv_v_intrinsic)
++        // This path does not retain a hardware-width dispatch decision across calls.
++        const bool use_tiled = false;
++#else
+         bool use_tiled = !use_ref &&
+                                (q->type == GGML_TYPE_F32 &&
+                                 kv_is_f32_or_f16 &&
+@@ -9060,6 +9064,7 @@
+         const int64_t f32_epr = GGML_F32_EPR;
+ #endif
+         use_tiled &= (DV % f32_epr == 0);
++#endif
+ #endif
+         int current_chunk = ith;
+ 

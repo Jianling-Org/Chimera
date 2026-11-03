@@ -1,0 +1,8 @@
+{
+  "passed": true,
+  "files": 2935,
+  "bytes": 2787319766,
+  "manifest_sha256": "dd6048b4947a60e603eb28ce82d8a061468df1b603b93fbff1e6fc4afd532d9c",
+  "completion_sha256": "b95742e2c36be89e0f15929bd3e94f375441b3f9122158c75454dd4f20a96e14",
+  "result_sha256": "51fb56fdf475f06dfce63591eb517455913fdc276c1d877d54c5eb7f36ad14e7"
+}

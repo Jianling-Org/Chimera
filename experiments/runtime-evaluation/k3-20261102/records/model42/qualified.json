@@ -1,0 +1,47 @@
+{
+  "passed": true,
+  "qualified_utc": "2026-11-03T03:44:36.590325+00:00",
+  "protocol": "llama-scalar-retest-v5",
+  "relative_ppl_tolerance": 0.02,
+  "application_configuration": "original-default",
+  "completion": {
+    "path": "/root/chimera-runtime-retest-20261031/model42-runtime-ppl2pct-v5-attempt1/completion.json",
+    "sha256": "b95742e2c36be89e0f15929bd3e94f375441b3f9122158c75454dd4f20a96e14"
+  },
+  "audit": {
+    "path": "/root/chimera-runtime-retest-20261031/model42-ppl2pct-v5-attempt1-independent-audit2/verification.json",
+    "sha256": "5f007f2d6073e6df54a58a5b2808f9cb007591d3f394985b099cad70d49b23a4"
+  },
+  "audit_completion": {
+    "path": "/root/chimera-runtime-retest-20261031/model42-ppl2pct-v5-attempt1-independent-audit2/completion.json",
+    "sha256": "3165d5b4795dbe0133ed256318bac028916fa1d50c880c27aa8314d6731e0e3f"
+  },
+  "audit_resources": {
+    "path": "/root/chimera-runtime-retest-20261031/model42-ppl2pct-v5-attempt1-independent-audit2/unit.resources.json",
+    "sha256": "ae66183e28d76d8249f125443e52d40f3fbc35b85b97fd9a26bb112b7e8a5710"
+  },
+  "report": {
+    "path": "/root/chimera-runtime-retest-20261031/model42-ppl2pct-v5-attempt1-independent-audit2/4.2-完整重测独立审计报告.zh-CN.md",
+    "sha256": "24f1a8fe8ab2beea3453d3a9ca0e73f7610e938ab5f91b6e1fbbb500e2a4b691"
+  },
+  "report_change_notes": {
+    "path": "/root/chimera-runtime-retest-20261031/model42-ppl2pct-v5-attempt1-independent-audit2/性能报告4.2修改意见.zh-CN.md",
+    "sha256": "6c2f74f78ed55846e21e85720176a9271779c774dc639b4d51e224faa41bcb21"
+  },
+  "local_verification": {
+    "path": "/root/chimera-runtime-retest-20261031/model42-full-independent-local-verification1.json",
+    "sha256": "b60f88547893e5e96ecd4307c3c22ba2422b45eb4d26fbce564f822998be3fbf"
+  },
+  "model41_qualified_sha256": "110ce15e514ad2ddcd441e0d094164b15e02cd2d687032deae16689870d12705",
+  "automatic_rounds": 291,
+  "mixed_rounds": 274,
+  "mixed_actual_application_seconds": 7220.839470380568,
+  "route_counts": {
+    "256-to-1024": 292,
+    "1024-to-256": 1534
+  },
+  "native_reference_ppl": 12.7184,
+  "maximum_relative_ppl_delta": 0.009655302553780333,
+  "all_prior_failures_preserved": true,
+  "numerical_cause_resolved": false
+}

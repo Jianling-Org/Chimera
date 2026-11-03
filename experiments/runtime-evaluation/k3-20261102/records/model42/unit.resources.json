@@ -1,0 +1,8 @@
+{
+  "SERVICE_RESULT": "success",
+  "EXIT_CODE": "exited",
+  "EXIT_STATUS": "0",
+  "memory.peak": "3222528000",
+  "memory.swap.peak": "0",
+  "memory.events": "low 0\nhigh 1532\nmax 0\noom 0\noom_kill 0\noom_group_kill 0"
+}

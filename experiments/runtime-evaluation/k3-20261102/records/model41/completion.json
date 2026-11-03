@@ -1,0 +1,12 @@
+{
+  "passed": true,
+  "resources": {
+    "SERVICE_RESULT": "success",
+    "EXIT_CODE": "exited",
+    "EXIT_STATUS": "0",
+    "memory.peak": "708263936",
+    "memory.swap.peak": "0",
+    "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0"
+  },
+  "full_model_qualification_marker_written": false
+}

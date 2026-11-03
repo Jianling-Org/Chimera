@@ -13,7 +13,8 @@ import time
 
 from evaluation_common import (LEDGERS, MOVES, TIMEOUT, backend, cgroup_values, counters,
     entry, environment, frequencies, kill_group, no_migration, require, run_command,
-    save, temperatures, zero_ledgers, cgroup, gzip_identity, trace_name)
+    save, temperatures, zero_ledgers, cgroup, gzip_identity, trace_name,
+    model_preference, SCALAR_MODEL_PROTOCOLS, EVENT_MODEL_PROTOCOLS)
 
 
 def prefix(config):
@@ -23,6 +24,12 @@ def prefix(config):
 
 def plan(config):
     return dict(protocol=config['protocol'],native_reference_threads=16,fixed_prefix=prefix(config),
+        native_reference_cpus=config['cpus'],automatic_initial_cpus=list(range(8)),
+        automatic_preference=model_preference(config),
+        thread_evidence=config.get('thread_evidence','periodic-proc-samples'),
+        native_launcher='pinned scalar syscall trampoline; static HMP group selected before exec',
+        ppl_criterion=(dict(relative_tolerance=config['relative_ppl_tolerance'])
+                       if 'relative_ppl_tolerance' in config else dict(absolute_tolerance=config['absolute_ppl_tolerance'])),
         mixed_minimum_active_seconds=7200,mixed_thread_cycle=config['threads'],
         round_count='measured at execution; not fixed to the historical 123 rounds',
         scope='functional acceptance with detailed tracing; elapsed time is not inference throughput')
@@ -32,6 +39,12 @@ def arguments(config,threads):
     return ['-m',config['assets']['model']['path'],'-f',config['assets']['corpus']['path'],
             '-c','512','-b','512','-ub','128','--chunks','1','--seed','1234',
             '-t',str(threads),'-tb',str(threads)]
+
+
+def native_arguments(config,threads):
+    mode='x100' if config['cpus']==list(range(8)) else 'a100'
+    return [config['assets']['native_launcher']['path'],mode,
+            config['assets']['elf']['path'],*arguments(config,threads)]
 
 
 def parse_ppl(text):
@@ -45,13 +58,14 @@ def parse_ppl(text):
     return value
 
 
-def check_ppl(value,reference,tolerance):
-    require(math.isfinite(value) and math.isfinite(reference) and abs(value-reference)<=tolerance,
+def check_ppl(value,reference,tolerance,relative=False):
+    require(math.isfinite(value) and math.isfinite(reference) and value>0 and reference>0
+            and abs(value-reference)<=(reference*tolerance if relative else tolerance),
             'PPL differs from this run\'s native reference')
 
 
-def initialization_ready(values):
-    if values.get('Hmp_preference')!='prefer-x100' or values.get('Hmp_runtime_ready')!='1' or values.get('Hmp_exec_requires_ready')!='1':
+def initialization_ready(values, preference='prefer-x100'):
+    if values.get('Hmp_preference')!=preference or values.get('Hmp_runtime_ready')!='1' or values.get('Hmp_exec_requires_ready')!='1':
         return False
     try:
         required=(1<<4)|(1<<40)
@@ -61,8 +75,11 @@ def initialization_ready(values):
 
 
 class Samples:
-    def __init__(self,directory,elf,native,suite):
+    def __init__(self,directory,elf,native,suite,native_cpus=None,automatic_preference='prefer-x100'):
         self.directory,self.elf,self.native,self.suite=directory,str(Path(elf).resolve()),native,suite
+        self.native_cpus=list(range(8)) if native_cpus is None else native_cpus
+        require(automatic_preference in ('prefer-x100','prefer-a100'), 'Unknown automatic preference')
+        self.automatic_preference=automatic_preference
         self.stop=threading.Event()
         self.rows={}
         self.error=None
@@ -92,7 +109,7 @@ class Samples:
                                             continue
                                         tid=int(task.name)
                                         row=dict(tid=tid,starttime=fields[19],cpu=int(fields[36]),state=fields[0],
-                                                 allowed_cpus=values['Cpus_allowed_list'],ready=initialization_ready(values),
+                                                 allowed_cpus=values['Cpus_allowed_list'],ready=initialization_ready(values,self.automatic_preference),
                                                  preference=values.get('Hmp_preference'),status=values)
                                         prior=self.rows.setdefault(tid,dict(tid=tid,starttime=row['starttime'],cpus=[],ready=False))
                                         require(prior['starttime']==row['starttime'], 'TID reuse inside a case')
@@ -100,9 +117,11 @@ class Samples:
                                             prior['cpus'].append(row['cpu'])
                                         prior['ready'] |= row['ready']
                                         if self.native:
-                                            require(row['cpu']<8 and row['preference']=='none' and row['allowed_cpus']=='0-7', 'Native model placement differs')
+                                            mask=f'{self.native_cpus[0]}-{self.native_cpus[-1]}'
+                                            require(row['cpu'] in self.native_cpus and row['preference']=='none'
+                                                    and row['allowed_cpus']==mask, 'Native model placement differs')
                                         else:
-                                            require(row['preference']=='prefer-x100', 'Automatic thread lost its preference')
+                                            require(row['preference']==self.automatic_preference, 'Automatic thread lost its preference')
                                         tasks.append(row)
                                     except (FileNotFoundError,ProcessLookupError):
                                         continue
@@ -150,10 +169,21 @@ def validate_migration(samples,audit,threads,pid,before,after):
 
 
 def execute(config,root,suite):
+    require(environment(config)['GLIBC_TUNABLES']=='glibc.rtld.optional_static_tls=65536',
+            'The pinned native launcher requires the same fixed TLS tunable in both model groups')
     trace_module=backend('_retest_trace','experiments/gcc-validation/k3-20261029/harness/migration_trace.py')
     owner=json.loads((root/'owner.json').read_text())
     name=trace_name(owner['unit'])
-    trace=trace_module.TraceCapture(name)
+    event_trace=config['protocol'] in EVENT_MODEL_PROTOCOLS
+    if config['protocol'].endswith('-v5'):
+        require(not any(key.startswith('LLAMA_ARG_') for key in environment(config)),
+                'Original-default protocol must not inherit application option overrides')
+    if event_trace:
+        thread_trace=backend('_retest_model_thread_trace','experiments/runtime-evaluation/model_thread_trace.py')
+        layout=json.loads(Path(config['assets']['thread_layout']['path']).read_text())
+        trace=thread_trace.capture_class(trace_module)(name,layout)
+    else:
+        trace=trace_module.TraceCapture(name)
     # Prefix is required by the archived private trace backend; no GCC is run.
     require(not trace.instance.exists() and name+'/' not in (trace.root/'kprobe_events').read_text(), 'Owned trace namespace already exists')
     save(root/'trace-owner.json',dict(unit=owner['unit'],name=name))
@@ -166,15 +196,19 @@ def execute(config,root,suite):
             cooling=suite.cool()
             before=zero_ledgers()
             directory=root/f'{index:04d}-{stage}-t{threads}'
-            sampler=Samples(directory,config['assets']['elf']['path'],not automatic,suite)
+            sampler=Samples(directory,config['assets']['elf']['path'],not automatic,suite,config['cpus'],model_preference(config))
             argv=[config['assets']['elf']['path'],*arguments(config,threads)]
             if automatic:
                 argv=[sys.executable,str(Path(__file__).resolve()),'--launch',str(root/'run-config.json'),str(root),*arguments(config,threads)]
+            else:
+                argv=native_arguments(config,threads)
             trace_active=False
             try:
                 if automatic:
                     # run_command creates its evidence directory before sampling.
                     directory.mkdir()
+                    if event_trace and hasattr(trace,'last_base_audit'):
+                        del trace.last_base_audit
                     trace.start(directory/'raw-ack-and-cpu.trace.gz')
                     trace_active=True
                     command_directory=directory/'command'
@@ -188,23 +222,44 @@ def execute(config,root,suite):
                 ppl=parse_ppl(text)
                 audit=None
                 if automatic:
-                    audit=trace.finish({item['tid'] for item in row['samples']['rows']})
+                    audit=(trace.finish_model(row['samples'],row['pid'],config['assets']['elf']['path']) if event_trace
+                           else trace.finish({item['tid'] for item in row['samples']['rows']}))
                     trace_active=False
                     save(directory/'trace-summary.json',audit)
-                    validate_migration(row['samples'],audit,threads,row['pid'],before,after)
-                    check_ppl(ppl,native['ppl'],config['absolute_ppl_tolerance'])
+                    initialized=row['samples']
+                    if event_trace:
+                        initialized=dict(rows=[dict(tid=item['tid'],ready=bool(item['kernel_published_ready_rows']) or item['proc_ready'],
+                            start_boottime_ns=item['start_boottime_ns']) for item in audit['lifecycle']['threads']],
+                            maximum_live_threads=row['samples']['maximum_live_threads'],
+                            readiness_source='kernel published-ready and installed handlers; pre-migration eligibility checked separately')
+                        save(directory/'kernel-initialization-validation.json',initialized)
+                        save(directory/'eligibility-summary.json',audit['migration_eligibility'])
+                    validate_migration(initialized,audit,threads,row['pid'],before,after)
+                    relative='relative_ppl_tolerance' in config
+                    tolerance=config['relative_ppl_tolerance'] if relative else config['absolute_ppl_tolerance']
+                    check_ppl(ppl,native['ppl'],tolerance,relative)
                 else:
                     no_migration(before,after)
                     require(row['samples']['maximum_live_threads']>=threads, 'Native reference thread count not observed')
                 row.update(stage=stage,threads=threads,ppl=ppl,cooling=cooling,counters_before=before,
                            counters_after=after,trace=audit)
                 save(directory/'case.json',row)
+                if automatic and event_trace:
+                    # Full case/trace/eligibility stay in their own hashed files.
+                    # Keep the multi-hour aggregate bounded for the controller.
+                    row={**row,'trace':dict(raw_trace=audit['raw_trace'],uncompressed_sha256=audit['uncompressed_sha256'],
+                        replay=audit['replay'],owned_threads=len(audit['lifecycle']['owned_tids']),
+                        short_thread_tids=audit['lifecycle']['short_thread_tids'],all_threads_published_ready=True,
+                        all_commits_have_positive_kernel_predicate=True),
+                        'full_case':dict(path=str(directory/'case.json'),sha256=hashlib.sha256((directory/'case.json').read_bytes()).hexdigest()),
+                        'full_trace':dict(path=str(directory/'trace-summary.json'),sha256=hashlib.sha256((directory/'trace-summary.json').read_bytes()).hexdigest())}
                 return row
             finally:
                 if trace_active:
                     # Preserve raw trace and loss counters even after child failure.
                     try:
-                        audit=trace.finish(set(sampler.rows))
+                        audit=(trace.last_base_audit if event_trace and hasattr(trace,'last_base_audit')
+                               else trace_module.TraceCapture.finish(trace,set(sampler.rows)))
                         save(directory/'failed-trace-summary.json',audit)
                     except BaseException as error:
                         save(directory/'trace-failure.json',dict(error=repr(error)))
@@ -235,9 +290,11 @@ def launch(config_path,root,args):
     config=json.loads(Path(config_path).read_text())
     owner=json.loads((Path(root)/'owner.json').read_text())
     require(owner['unit']+'.service' in str(cgroup()), 'Launcher must run inside its owned unit')
+    if config['protocol'] in SCALAR_MODEL_PROTOCOLS:
+        os.sched_setaffinity(0,set(range(8)))
     # Same preference-only opt-in as production launch_bootstrap; readiness is
     # published by the application runtime after exec, never by this helper.
-    with open('/proc/prefer_x100','w') as control:
+    with open('/proc/'+model_preference(config).replace('-','_'),'w') as control:
         control.write('inherit:'+str(os.getpid())+'\n')
     elf=config['assets']['elf']['path']
     os.execve(elf,[elf,*args],dict(os.environ))
