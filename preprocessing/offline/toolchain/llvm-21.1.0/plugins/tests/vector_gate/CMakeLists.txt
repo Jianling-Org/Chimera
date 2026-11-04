@@ -83,3 +83,20 @@ set_tests_properties(
   ChimeraVectorGate
   PROPERTIES LABELS "chimera;vector-gate"
 )
+
+add_test(
+  NAME ChimeraVectorGateBoundaries
+  COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/test_boundaries.py"
+    --opt "${LLVM_TOOLS_BINARY_DIR}/opt"
+    --llc "${LLVM_TOOLS_BINARY_DIR}/llc"
+    --plugin "$<TARGET_FILE:ChimeraVectorGate>"
+)
+set_tests_properties(ChimeraVectorGateBoundaries PROPERTIES LABELS "chimera;vector-gate")
+
+add_test(
+  NAME ChimeraVectorGateRvvBoundaries
+  COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/test_rvv_boundaries.py"
+    --opt "${LLVM_TOOLS_BINARY_DIR}/opt"
+    --plugin "$<TARGET_FILE:ChimeraVectorGate>"
+)
+set_tests_properties(ChimeraVectorGateRvvBoundaries PROPERTIES LABELS "chimera;vector-gate")

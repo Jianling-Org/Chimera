@@ -10,6 +10,8 @@ add_llvm_pass_plugin(
   ChimeraVectorGate
   BUILDTREE_ONLY
   VectorGatePlugin.cpp
+  GateMemory.cpp
+  GateRvvBoundary.cpp
 )
 
 # The plugin only uses the LLVM C API surface exposed through headers plus

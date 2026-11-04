@@ -50,6 +50,7 @@ class ElfStateRecord:
     # check plan.
     check_fingerprint: str | None = None
     check_scope: Mapping | None = None
+    check_input_fingerprint: str | None = None
 
 
 def sha256_of(path: Path) -> str:
@@ -161,6 +162,7 @@ class ElfStateRegistry:
             updated_at=str(raw.get("updated_at", "")),
             check_fingerprint=raw.get("check_fingerprint"),
             check_scope=raw_scope,
+            check_input_fingerprint=raw.get("check_input_fingerprint"),
         )
 
     def effective_status(self, path: Path | str) -> tuple[str, ElfStateRecord | None]:
@@ -189,6 +191,7 @@ class ElfStateRegistry:
         decision_ref: str | None = None,
         check_fingerprint: str | None = None,
         check_scope: Mapping | None = None,
+        check_input_fingerprint: str | None = None,
         expected_previous: str | None = None,
         require_file: bool = True,
     ) -> ElfStateRecord:
@@ -222,6 +225,7 @@ class ElfStateRegistry:
                 "updated_at": now,
                 "check_fingerprint": check_fingerprint,
                 "check_scope": dict(check_scope) if check_scope is not None else None,
+                "check_input_fingerprint": check_input_fingerprint,
             }
             data[key] = record
             self._save(data)
@@ -233,6 +237,7 @@ class ElfStateRegistry:
             updated_at=now,
             check_fingerprint=check_fingerprint,
             check_scope=record["check_scope"],
+            check_input_fingerprint=check_input_fingerprint,
         )
 
 

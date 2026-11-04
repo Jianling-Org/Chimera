@@ -197,14 +197,22 @@ def verify_external_leaf_json(path, artifact, manifest, settings) -> None:
     format_name = document.get("format")
     if format_name == "chimera-external-scalar-leaf-v1":
         complete = bool(document.get("proofs"))
-    elif format_name == "chimera-external-call-contracts-v2":
+    elif format_name in {"chimera-external-call-contracts-v2", "chimera-external-call-contracts-v3"}:
         interfaces = document.get("no_callback_interfaces")
+        native = (document.get("native_no_callback_proofs", [])
+                  if format_name == "chimera-external-call-contracts-v3" else [])
         complete = (isinstance(interfaces, list)
-                    and bool(document.get("proofs") or interfaces)
+                    and isinstance(native, list)
+                    and bool(document.get("proofs") or interfaces or native)
                     and all(isinstance(item, dict)
                             and item.get("semantic_basis") ==
                             "standard-libc-memcpy-no-application-callback-v1"
-                            for item in interfaces))
+                            for item in interfaces)
+                    and all(isinstance(item, dict)
+                            and item.get("format") == "chimera-native-scalar-call-closure-v1"
+                            and item.get("status") == "verified-native-scalar-call-closure"
+                            and item.get("modules") and item.get("functions")
+                            for item in native))
     else:
         complete = False
     if (not complete or not document.get("closed_calls")

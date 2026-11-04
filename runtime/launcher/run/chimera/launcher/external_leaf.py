@@ -6,7 +6,7 @@ import os
 from pathlib import Path
 
 from chimera.preprocess.offline.analysis.safety.external_leaf import (
-    CONTRACT_CAPABILITY, CONTRACT_FORMAT, CONTRACT_FORMAT_V2,
+    CONTRACT_CAPABILITY, CONTRACT_FORMAT, CONTRACT_FORMAT_V2, CONTRACT_FORMAT_V3,
     MEMCPY_NO_CALLBACK_BASIS, file_sha256,
 )
 from chimera.preprocess.offline.analysis.safety.external_leaf_binding import (
@@ -55,12 +55,14 @@ def validate_leaf_launch(root, manifest, resolved, *, environment=None,
     document = json.loads(path.read_text(encoding="utf-8"))
     format_name = document.get("format")
     proofs = document.get("proofs", [])
-    interfaces = document.get("no_callback_interfaces", []) if format_name == CONTRACT_FORMAT_V2 else []
-    if (format_name not in {CONTRACT_FORMAT, CONTRACT_FORMAT_V2}
+    interfaces = document.get("no_callback_interfaces", []) if format_name in {CONTRACT_FORMAT_V2, CONTRACT_FORMAT_V3} else []
+    native = document.get("native_no_callback_proofs", []) if format_name == CONTRACT_FORMAT_V3 else []
+    if (format_name not in {CONTRACT_FORMAT, CONTRACT_FORMAT_V2, CONTRACT_FORMAT_V3}
             or document.get("elf_sha256") != main.sha256
             or not isinstance(proofs, list)
             or not isinstance(interfaces, list)
-            or not (proofs or interfaces)
+            or not isinstance(native, list)
+            or not (proofs or interfaces or native)
             or document.get("rejections")):
         raise ValueError("incomplete or mismatched scalar leaf evidence")
     for name, module in modules.items():
@@ -69,6 +71,8 @@ def validate_leaf_launch(root, manifest, resolved, *, environment=None,
         if file_sha256(resolved[name]) != module.sha256:
             raise ValueError("scalar leaf module identity changed: " + name)
     names = {proof["symbol"] for proof in proofs} | {item["symbol"] for item in interfaces}
+    names.update(proof['symbol'] for proof in native)
+    names.update(item['symbol'] for proof in native for item in proof.get('object_bindings', []))
     files = {Path(path).resolve() for path in resolved.values()}
     # These DSOs are loaded by the injected Runtime too. Checking just the
     # native provider would miss symbol preemption by a translated body.
@@ -142,4 +146,8 @@ def validate_leaf_launch(root, manifest, resolved, *, environment=None,
                         or (interface.get("imported_version") is not None
                             and definition["version"] != interface.get("imported_version"))):
                     raise ValueError("memcpy provider definition differs from its bound interface")
+    if native:
+        from .native_calls import validate_native_call_proofs
+        validate_native_call_proofs(native, main=main, modules=modules, resolved=resolved,
+                                    files=files, exports=exports)
     return True

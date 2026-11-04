@@ -96,6 +96,8 @@ def _compute_summary(
             "rejections": list(getattr(stack, "external_leaf_rejections", ())),
             "no_callback_interfaces": list(getattr(stack, "external_no_callback_interfaces", ())),
             "interface_rejections": list(getattr(stack, "external_interface_rejections", ())),
+            "native_no_callback_proofs": list(getattr(stack, "external_native_call_proofs", ())),
+            "native_rejections": list(getattr(stack, "external_native_call_rejections", ())),
         },
     }
 

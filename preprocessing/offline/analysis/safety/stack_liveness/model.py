@@ -778,6 +778,8 @@ class StackLivenessResult:
     external_leaf_rejections: tuple[dict, ...] = ()
     external_no_callback_interfaces: tuple[dict, ...] = ()
     external_interface_rejections: tuple[dict, ...] = ()
+    external_native_call_proofs: tuple[dict, ...] = ()
+    external_native_call_rejections: tuple[dict, ...] = ()
 
     def proof(self, proof_id: str | None) -> OriginProof | None:
         if proof_id is None:

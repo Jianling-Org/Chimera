@@ -758,6 +758,7 @@ def _check_elf_one(arguments, configuration, plan):
     """Save one report and credential without retaining the analysis model."""
     elf_path = Path(arguments.input_elf).resolve()
     content_hash = sha256_of(elf_path)
+    input_fingerprint = plan.input_fingerprint(elf_path) if plan.requests else None
     objdump = arguments.objdump
     if plan.requests and objdump is None:
         objdump = getattr(
@@ -781,11 +782,14 @@ def _check_elf_one(arguments, configuration, plan):
     )
     if sha256_of(elf_path) != content_hash:
         raise RuntimeError(f"input ELF changed during analysis: {elf_path}")
+    if plan.requests and plan.input_fingerprint(elf_path) != input_fingerprint:
+        raise RuntimeError(f"binary check inputs changed during analysis: {elf_path}")
     report_path = write_check_report(
         plan,
         result,
         json_path,
         elf_identity={"path": str(elf_path), "content_sha256": content_hash},
+        input_fingerprint=input_fingerprint,
     )
 
     status = CHECKED if result.passed else PROBLEMATIC
@@ -795,6 +799,7 @@ def _check_elf_one(arguments, configuration, plan):
         decision_ref=str(report_path),
         check_fingerprint=plan.fingerprint(content_hash),
         check_scope=plan.scope,
+        check_input_fingerprint=input_fingerprint,
         require_file=True,
     )
     latest_counts = {
@@ -818,6 +823,7 @@ def _check_elf_one(arguments, configuration, plan):
         "strategy_reason": strategy_reason,
         "check_scope": plan.scope,
         "check_fingerprint": plan.fingerprint(content_hash),
+        "check_input_fingerprint": input_fingerprint,
         "exported_at": now_stamp(),
         "counts": latest_counts,
     })
@@ -862,7 +868,10 @@ def _elf_status(arguments: argparse.Namespace) -> int:
         if state == UNCHECKED and resolved.is_file():
             if sha256_of(resolved) != record.content_hash:
                 print("note: ELF changed since the recorded check")
-        elif resolved.is_file() and record.check_fingerprint != check_plan.fingerprint(sha256_of(resolved)):
+        elif resolved.is_file() and (
+            record.check_fingerprint != check_plan.fingerprint(sha256_of(resolved))
+            or record.check_input_fingerprint != check_plan.input_fingerprint(resolved)
+        ):
             print("note: check conditions do not match the selected workflow")
     elif check_plan is not None and check_plan.requests and record is None:
         print("note: selected workflow requires binary checks")

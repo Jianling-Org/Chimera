@@ -15,11 +15,13 @@
 //     into CHIMERA_GATE_STATS.
 //
 // Historical components retired when the attribute-driven backend
-// switches landed: MemopScalarPass (IR-level memop expansion), the
+// switches landed: the old MemopScalarPass, the
 // "-v" target-feature stripping with its functionHasRvvCode guard, and
 // the VectorScanPass residual monitor — the attribute now reaches every
 // generation site directly, so there is no "skip-if-intrinsics" escape
-// and no residual class left unaccounted.
+// and no residual class left unaccounted. GateLocalMemsetPass is different:
+// after optimization it prevents an external scalar fallback call from
+// stranding live explicit RVV state; it is not an implicit-vector census.
 //
 // Registered callbacks:
 //
@@ -59,6 +61,8 @@
 #include "llvm/Passes/PassBuilder.h"
 #include "llvm/Passes/PassPlugin.h"
 #include "llvm/Support/CommandLine.h"
+#include "GateMemory.h"
+#include "GateRvvBoundary.h"
 
 #include <cstdlib>
 #include <fstream>
@@ -207,6 +211,7 @@ extern "C" LLVM_ATTRIBUTE_WEAK PassPluginLibraryInfo llvmGetPassPluginInfo() {
         PB.registerPipelineStartEPCallback(
             [](ModulePassManager &MPM, OptimizationLevel) {
               MPM.addPass(GateMarkPass());
+              MPM.addPass(chimera::GateRvvBoundaryPass());
             });
         // 全量 LTO 链接管线（buildLTODefaultPipeline）不触发
         // PipelineStartEP，只触发 FullLinkTimeOptimizationEarlyEP；
@@ -214,6 +219,7 @@ extern "C" LLVM_ATTRIBUTE_WEAK PassPluginLibraryInfo llvmGetPassPluginInfo() {
         PB.registerFullLinkTimeOptimizationEarlyEPCallback(
             [](ModulePassManager &MPM, OptimizationLevel) {
               MPM.addPass(GateMarkPass());
+              MPM.addPass(chimera::GateRvvBoundaryPass());
             });
         PB.registerOptimizerLastEPCallback(
             [](ModulePassManager &MPM, OptimizationLevel,
@@ -222,12 +228,28 @@ extern "C" LLVM_ATTRIBUTE_WEAK PassPluginLibraryInfo llvmGetPassPluginInfo() {
               // LTO inliner.  The full-LTO post-link callback below supplies
               // the ID after that inlining is complete.
               if (Phase != ThinOrFullLTOPhase::ThinLTOPreLink &&
-                  Phase != ThinOrFullLTOPhase::FullLTOPreLink)
+                  Phase != ThinOrFullLTOPhase::FullLTOPreLink) {
+                MPM.addPass(chimera::GateLocalMemsetPass());
                 MPM.addPass(CensusIdPass());
+              }
             });
         PB.registerFullLinkTimeOptimizationLastEPCallback(
             [](ModulePassManager &MPM, OptimizationLevel) {
+              MPM.addPass(chimera::GateLocalMemsetPass());
               MPM.addPass(CensusIdPass());
+            });
+        PB.registerPipelineParsingCallback(
+            [](StringRef Name, ModulePassManager &MPM,
+               ArrayRef<PassBuilder::PipelineElement>) {
+              if (Name == "chimera-gate-local-memsets") {
+                MPM.addPass(chimera::GateLocalMemsetPass());
+                return true;
+              }
+              if (Name == "chimera-gate-rvv-boundaries") {
+                MPM.addPass(chimera::GateRvvBoundaryPass());
+                return true;
+              }
+              return false;
             });
       }};
 }

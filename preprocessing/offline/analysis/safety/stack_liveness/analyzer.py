@@ -94,6 +94,16 @@ class StackLivenessAnalyzer:
         result = self._propagator.propagate(program, local_results, metadata,
             closed_external_targets=(external_leaf_bindings.closed_targets
                 if external_leaf_bindings is not None else frozenset()))
+        if external_leaf_bindings is not None:
+            before = external_leaf_bindings.closed_targets
+            needed = {target for warning in result.warnings
+                      for target in getattr(warning, 'external_targets', ())}
+            external_leaf_bindings.resolve_native_targets(needed-before)
+            if external_leaf_bindings.closed_targets != before:
+                # Reuse all local facts. Only the now-proven callback edges
+                # close; no vector/frame/width/control liveness is cleared.
+                result = self._propagator.propagate(program, local_results, metadata,
+                    closed_external_targets=external_leaf_bindings.closed_targets)
         proofs = {node.id: node for node in prover.proofs()}
         return replace(
             result,
@@ -110,6 +120,10 @@ class StackLivenessAnalyzer:
                                               if external_leaf_bindings else ()),
             external_interface_rejections=(external_leaf_bindings.interface_rejections
                                            if external_leaf_bindings else ()),
+            external_native_call_proofs=(external_leaf_bindings.native_proofs
+                                        if external_leaf_bindings else ()),
+            external_native_call_rejections=(external_leaf_bindings.native_rejections
+                                            if external_leaf_bindings else ()),
         )
 
 

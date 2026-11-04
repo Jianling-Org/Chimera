@@ -17,6 +17,7 @@ from ..toolchain.objdump import LinuxObjdump
 CONTRACT_CAPABILITY = "external-scalar-leaf-contracts"
 CONTRACT_FORMAT = "chimera-external-scalar-leaf-v1"
 CONTRACT_FORMAT_V2 = "chimera-external-call-contracts-v2"
+CONTRACT_FORMAT_V3 = "chimera-external-call-contracts-v3"
 MEMCPY_NO_CALLBACK_BASIS = "standard-libc-memcpy-no-application-callback-v1"
 # A deliberately small language: no vector, CSR, system, indirect jump or call.
 _SCALAR = frozenset("""
@@ -59,13 +60,33 @@ class ExternalLeafBindings:
     rejections: tuple[dict, ...] = ()
     no_callback_interfaces: tuple[dict, ...] = ()
     interface_rejections: tuple[dict, ...] = ()
+    native_provider: object | None = None
+
+    @property
+    def native_proofs(self) -> tuple[dict, ...]:
+        return tuple(self.native_provider.proofs) if self.native_provider else ()
+
+    @property
+    def native_rejections(self) -> tuple[dict, ...]:
+        return tuple(self.native_provider.rejections) if self.native_provider else ()
+
+    def resolve_native_targets(self, targets) -> None:
+        if self.native_provider:
+            self.native_provider.resolve(targets)
 
     @property
     def closed_targets(self) -> frozenset[int]:
         return frozenset(item["target"] for item in
-                         (*self.proofs, *self.no_callback_interfaces))
+                         (*self.proofs, *self.no_callback_interfaces, *self.native_proofs))
 
     def payload(self) -> dict:
+        if self.native_proofs or self.native_rejections:
+            return {"format": CONTRACT_FORMAT_V3, "proofs": list(self.proofs),
+                    "rejections": list(self.rejections),
+                    "no_callback_interfaces": list(self.no_callback_interfaces),
+                    "interface_rejections": list(self.interface_rejections),
+                    "native_no_callback_proofs": list(self.native_proofs),
+                    "native_rejections": list(self.native_rejections)}
         if self.no_callback_interfaces or self.interface_rejections:
             return {"format": CONTRACT_FORMAT_V2, "proofs": list(self.proofs),
                     "rejections": list(self.rejections),

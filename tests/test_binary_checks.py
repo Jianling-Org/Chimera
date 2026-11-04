@@ -126,13 +126,109 @@ class BinaryCheckPlanTests(unittest.TestCase):
             registry = ElfStateRegistry(root / "states.json")
             scope = {"checks": [{"id": "example.check", "version": 1}]}
             record = registry.set_status(
-                elf, CHECKED, check_fingerprint="a" * 64, check_scope=scope
+                elf, CHECKED, check_fingerprint="a" * 64, check_scope=scope,
+                check_input_fingerprint="b" * 64,
             )
             self.assertEqual(record.check_fingerprint, "a" * 64)
             self.assertEqual(registry.entry(elf).check_scope, scope)
+            self.assertEqual(registry.entry(elf).check_input_fingerprint, "b" * 64)
             cleared = registry.set_status(elf, REMEDIATED)
             self.assertIsNone(cleared.check_fingerprint)
             self.assertIsNone(cleared.check_scope)
+            self.assertIsNone(cleared.check_input_fingerprint)
+
+    def test_dependency_replacement_and_added_provider_invalidate_admission(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            elf, provider = root / "app", root / "provider.so"
+            elf.write_bytes(b"unchanged main ELF")
+            provider.write_bytes(b"proved provider")
+            selected = [provider]
+            request = BinaryCheckRequest("native.check", 1, {},
+                lambda _path, _context: BinaryCheckOutcome(passed=True),
+                input_identity=lambda _path, _context: [
+                    {"path": str(p), "sha256": sha256_of(p)} for p in selected])
+            steps = (ResolvedWorkflowStep("001:check", "check", {},
+                     _Definition("check", lambda _p: request)),)
+            plan = build_check_plan(self._configuration(), resolved_steps=steps)
+            registry = ElfStateRegistry(root / "registry.json")
+            registry.set_status(elf, CHECKED,
+                check_fingerprint=plan.fingerprint(sha256_of(elf)), check_scope=plan.scope,
+                check_input_fingerprint=plan.input_fingerprint(elf))
+            check_admission(elf, plan, registry=registry)
+            provider.write_bytes(b"replacement that may call back")
+            with self.assertRaisesRegex(RuntimeError, "inputs changed"):
+                check_admission(elf, plan, registry=registry)
+            provider.write_bytes(b"proved provider")
+            interposer = root / "interposer.so"
+            interposer.write_bytes(b"another provider")
+            selected.append(interposer)
+            with self.assertRaisesRegex(RuntimeError, "inputs changed"):
+                check_admission(elf, plan, registry=registry)
+            # --allow-problematic is not permission to reuse stale inputs.
+            with self.assertRaisesRegex(RuntimeError, "inputs changed"):
+                check_admission(elf, plan, registry=registry, allow_problematic=True)
+
+    def test_missing_dependency_credential_requires_a_fresh_check(self):
+        with tempfile.TemporaryDirectory() as directory:
+            elf = Path(directory) / "app"
+            elf.write_bytes(b"ELF")
+            request = BinaryCheckRequest("native.check", 1, {},
+                lambda _path, _context: BinaryCheckOutcome(passed=True),
+                input_identity=lambda _path, _context: ["selected dependency identity"])
+            step = ResolvedWorkflowStep("001:check", "check", {},
+                        _Definition("check", lambda _p: request))
+            plan = build_check_plan(self._configuration(), resolved_steps=(step,))
+            registry = ElfStateRegistry(Path(directory) / "registry.json")
+            registry.set_status(elf, CHECKED,
+                check_fingerprint=plan.fingerprint(sha256_of(elf)), check_scope=plan.scope)
+            with self.assertRaisesRegex(RuntimeError, "not bound"):
+                check_admission(elf, plan, registry=registry)
+
+    def test_dependency_changed_during_check_does_not_publish_a_credential(self):
+        from chimera import cli as cli_module
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            elf, provider = root / "app", root / "provider.so"
+            elf.write_bytes(b"ELF");provider.write_bytes(b"initial provider")
+
+            def run(_path, _context):
+                provider.write_bytes(b"provider changed while analysis was running")
+                return BinaryCheckOutcome(passed=True)
+
+            request = BinaryCheckRequest("native.check", 1, {}, run,
+                input_identity=lambda _path, _context: sha256_of(provider))
+            configuration = self._configuration()
+            step = ResolvedWorkflowStep("001:check", "check", {},
+                        _Definition("check", lambda _p: request))
+            plan = build_check_plan(configuration, resolved_steps=(step,))
+            args = SimpleNamespace(input_elf=elf, objdump="unused", strategy="auto",
+                                   text_threshold=1, json=root / "report.json")
+            with mock.patch.object(cli_module, "ElfStateRegistry") as registry:
+                with self.assertRaisesRegex(RuntimeError, "inputs changed during analysis"):
+                    cli_module._check_elf_one(args, configuration, plan)
+            registry.assert_not_called()
+            self.assertFalse(args.json.exists())
+
+    def test_safety_identity_uses_actual_prepare_module_selection(self):
+        from chimera.check_elf import safety_binary_check_request
+        from chimera.preprocess.offline.analysis_profile.checks import BinaryCheckContext
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            elf, provider = root / "app", root / "provider.so"
+            elf.write_bytes(b"ELF");provider.write_bytes(b"selected bytes")
+            request = safety_binary_check_request({"min_vlen_bits": 256, "compiler_metadata": ()})
+            modules = [SimpleNamespace(module_id="native", selected_path=provider,
+                                       is_scalar=False, delivery="target")]
+            configuration = self._configuration()
+            with mock.patch("chimera.check_elf.selected_check_modules", return_value=modules) as select:
+                identity = request.input_identity(elf, BinaryCheckContext(configuration))
+            select.assert_called_once_with(elf, configuration)
+            self.assertEqual(identity, [{"module": "native", "path": str(provider.resolve()),
+                                         "is_scalar": False, "delivery": "target",
+                                         "sha256": sha256_of(provider)}])
 
     def test_cli_empty_plan_does_not_require_or_invoke_objdump(self):
         from chimera import cli as cli_module

@@ -230,5 +230,11 @@ def bind_leaves(elf_path, program, modules, contracts, objdump):
             return ExternalLeafBindings((), (error,) if contracts else (), (),
                                         (error,) if any(f.name.removesuffix("@plt") == "memcpy"
                                                         for f in program.functions) else ())
+    from .native_call_binding import NativeClosureBindings
+    # Explicit failed proof requests never get silently reclassified under
+    # an automatic mechanism; memcpy retains its separate interface contract.
+    excluded = {f.start for f in program.functions if f.is_external_trampoline
+                and f.name.removesuffix('@plt') in names}
+    native = NativeClosureBindings(elf_path, modules, objdump, excluded_targets=excluded)
     return ExternalLeafBindings(tuple(proofs), tuple(rejections),
-                                tuple(interfaces), tuple(interface_rejections))
+                                tuple(interfaces), tuple(interface_rejections), native)

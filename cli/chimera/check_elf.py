@@ -356,6 +356,8 @@ def _external_leaf_payload(result) -> dict:
         "rejections": list(getattr(stack, "external_leaf_rejections", ())),
         "no_callback_interfaces": list(getattr(stack, "external_no_callback_interfaces", ())),
         "interface_rejections": list(getattr(stack, "external_interface_rejections", ())),
+        "native_no_callback_proofs": list(getattr(stack, "external_native_call_proofs", ())),
+        "native_rejections": list(getattr(stack, "external_native_call_rejections", ())),
         "closed_calls": [
             {"call_site": hex(site), "targets": [hex(target) for target in targets]}
             for site, targets in sorted(getattr(stack, "closed_external_calls", {}).items())],
@@ -401,6 +403,18 @@ def safety_binary_check_request(parameters) -> BinaryCheckRequest:
         "external_scalar_leaf_contracts": normalize_leaf_contracts(
             parameters.get("external_scalar_leaf_contracts", ())),
     }
+
+    def input_identity(input_elf: Path, context: BinaryCheckContext):
+        from .elf_state import sha256_of
+
+        # Use the same dependency/scalar selection as the actual proof and
+        # prepare. Adding an interposer is also an identity change, even if
+        # all previously selected provider files retain their old hashes.
+        return [dict(module=module.module_id,
+                     path=str(Path(module.selected_path).resolve()),
+                     is_scalar=module.is_scalar, delivery=module.delivery,
+                     sha256=sha256_of(Path(module.selected_path)))
+                for module in selected_check_modules(input_elf, context.configuration)]
 
     def run(input_elf: Path, context: BinaryCheckContext) -> BinaryCheckOutcome:
         configuration = context.configuration
@@ -605,13 +619,20 @@ def safety_binary_check_request(parameters) -> BinaryCheckRequest:
         # uses; v30 credentials require a fresh check under that lifetime.
         # v32 keeps width-selected CFG regions unsafe after a scalar guard
         # dies and binds the standard libc memcpy callback boundary by interface.
-        version=32,
+        # v33 can close a native callback edge only after binding and proving
+        # its complete bounded scalar ABI call closure. Caller liveness stays
+        # unchanged. Old v32 admission credentials require an actual recheck.
+        # v34 additionally binds the selected module set and bytes into the
+        # admission credential; library replacement requires a fresh check.
+        version=34,
         parameters=normalized,
         runner=run,
+        input_identity=input_identity,
     )
 
 
-def write_check_report(plan, result, output_path: Path, *, elf_identity: dict) -> Path:
+def write_check_report(plan, result, output_path: Path, *, elf_identity: dict,
+                       input_fingerprint: str | None = None) -> Path:
     """Write the generic workflow check report consumed by build wrappers."""
     output_path = Path(output_path)
     identity = dict(elf_identity)
@@ -640,6 +661,7 @@ def write_check_report(plan, result, output_path: Path, *, elf_identity: dict) -
         "runtime_abi": plan.runtime_abi,
         "check_scope": plan.scope,
         "check_fingerprint": plan.fingerprint(identity["content_sha256"]),
+        "check_input_fingerprint": input_fingerprint,
         "checks": checks,
         "passed": result.passed,
         "message": result.message,

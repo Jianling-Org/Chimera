@@ -14,8 +14,13 @@ if [[ -z "$PLUGIN" ]]; then
     done
 fi
 PYTHON="${PYTHON:-python3}"
-TMP_DIR="$(mktemp -d)"
-trap 'rm -rf "$TMP_DIR"' EXIT
+if [[ -n "${CHIMERA_VECTOR_GATE_TEST_OUTPUT:-}" ]]; then
+    mkdir -p "$CHIMERA_VECTOR_GATE_TEST_OUTPUT"
+    TMP_DIR="$(mktemp -d "$CHIMERA_VECTOR_GATE_TEST_OUTPUT/run-XXXXXX")"
+else
+    TMP_DIR="$(mktemp -d)"
+    trap 'rm -rf "$TMP_DIR"' EXIT
+fi
 
 fail() { echo "ERROR: $*" >&2; exit 1; }
 [[ -x "$CLANG" ]] || fail "patched clang++ not found: $CLANG"
@@ -74,11 +79,11 @@ fi
 # SLP: straight-line independent operations exercise the list/store-tree
 # commit paths without relying on loop vectorization.
 cat >"$TMP_DIR/slp.cc" <<'EOF'
-extern "C" void gated_slp(float *a, const float *b) {
+extern "C" void gated_slp(float *__restrict a, const float *__restrict b) {
   a[0] = b[0] + 1.0f; a[1] = b[1] + 1.0f;
   a[2] = b[2] + 1.0f; a[3] = b[3] + 1.0f;
 }
-extern "C" void open_slp(float *a, const float *b) {
+extern "C" void open_slp(float *__restrict a, const float *__restrict b) {
   a[0] = b[0] + 1.0f; a[1] = b[1] + 1.0f;
   a[2] = b[2] + 1.0f; a[3] = b[3] + 1.0f;
 }
@@ -148,10 +153,10 @@ grep -F $'implicit-vector-census\tMEMOP\topen_memop\tformed' \
 # Store Merge: disable the IR vectorizers so adjacent scalar load/store pairs
 # reach the SelectionDAG combine decision unchanged.
 cat >"$TMP_DIR/merge.cc" <<'EOF'
-extern "C" void gated_merge(long *d, const long *s) {
+extern "C" void gated_merge(long *__restrict d, const long *__restrict s) {
   d[0] = s[0]; d[1] = s[1]; d[2] = s[2]; d[3] = s[3];
 }
-extern "C" void open_merge(long *d, const long *s) {
+extern "C" void open_merge(long *__restrict d, const long *__restrict s) {
   d[0] = s[0]; d[1] = s[1]; d[2] = s[2]; d[3] = s[3];
 }
 EOF

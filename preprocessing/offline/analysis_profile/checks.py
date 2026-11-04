@@ -25,6 +25,7 @@ from chimera.elf_state import (
 
 
 CheckRunner = Callable[[Path, "BinaryCheckContext"], "BinaryCheckOutcome"]
+InputIdentity = Callable[[Path, "BinaryCheckContext"], Any]
 
 
 def _jsonable(value: Any) -> Any:
@@ -88,6 +89,7 @@ class BinaryCheckRequest:
     parameters: Mapping[str, Any]
     runner: CheckRunner
     requested_by: tuple[str, ...] = ()
+    input_identity: InputIdentity | None = None
 
     def __post_init__(self) -> None:
         if not self.check_id:
@@ -100,6 +102,8 @@ class BinaryCheckRequest:
             raise ValueError("binary check version must be a positive integer")
         if not callable(self.runner):
             raise TypeError("binary check runner must be callable")
+        if self.input_identity is not None and not callable(self.input_identity):
+            raise TypeError("binary check input identity must be callable")
         object.__setattr__(self, "parameters", MappingProxyType(dict(self.parameters)))
         object.__setattr__(self, "requested_by", tuple(self.requested_by))
 
@@ -113,6 +117,7 @@ class BinaryCheckRequest:
         return BinaryCheckRequest(
             self.check_id, self.version, self.parameters, self.runner,
             (*self.requested_by, identifier),
+            self.input_identity,
         )
 
     def run(self, path: Path, context: BinaryCheckContext) -> BinaryCheckOutcome:
@@ -165,6 +170,24 @@ class BinaryCheckPlan:
     def fingerprint(self, elf_sha256: str) -> str:
         payload = {"elf_sha256": elf_sha256, "scope": self.scope}
         return hashlib.sha256(_canonical_json(payload).encode("utf-8")).hexdigest()
+
+    def input_fingerprint(self, input_elf: Path) -> str | None:
+        """Bind any external inputs on which the check's proof depends.
+
+        This is separate from the structural workflow scope: selecting a new
+        provider must invalidate admission even if the main ELF is unchanged.
+        A missing legacy credential is never an empty successful binding.
+        """
+        context = BinaryCheckContext(configuration=self.configuration)
+        bindings = [
+            {"check": request.identity,
+             "inputs": request.input_identity(Path(input_elf).resolve(), context)}
+            for request in sorted(self.requests, key=lambda item: item.identity)
+            if request.input_identity is not None
+        ]
+        if not bindings:
+            return None
+        return hashlib.sha256(_canonical_json(bindings).encode("utf-8")).hexdigest()
 
     def run(
         self,
@@ -302,6 +325,10 @@ def check_admission(
     if record.check_fingerprint != expected or record.check_scope != plan.scope:
         raise RuntimeError(
             "binary check scope does not match the current workflow; re-run check-elf"
+        )
+    if record.check_input_fingerprint != plan.input_fingerprint(input_elf):
+        raise RuntimeError(
+            "binary check inputs changed or were not bound; re-run check-elf"
         )
     if state == CHECKED:
         return

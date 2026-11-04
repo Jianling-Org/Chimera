@@ -73,11 +73,11 @@ CONTRACT = {"symbol": "memset", "library": "libc.so.6", "sha256": "a" * 64}
 
 
 class RequestTests(unittest.TestCase):
-    def test_requests_are_content_pinned_and_part_of_v32_fingerprint(self):
+    def test_requests_are_content_pinned_and_part_of_v33_fingerprint(self):
         params = {"min_vlen_bits": 256, "compiler_metadata": [],
                   "external_scalar_leaf_contracts": [CONTRACT]}
         request = safety_binary_check_request(params)
-        self.assertEqual(request.version, 32)
+        self.assertEqual(request.version, 34)
         self.assertEqual(request.parameters["external_scalar_leaf_contracts"],
                          normalize_leaf_contracts([CONTRACT]))
         changed = dict(CONTRACT, sha256="b" * 64)

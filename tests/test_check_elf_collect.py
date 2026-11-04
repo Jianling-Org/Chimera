@@ -950,7 +950,7 @@ class CheckElfInheritanceDiagnosticsTests(unittest.TestCase):
         )
 
         self.assertEqual(ORIGIN_ANALYSIS_VERSION, "origins-v16")
-        self.assertEqual(request.version, 32)
+        self.assertEqual(request.version, 34)
 
         registry = ElfStateRegistry(Path(self.tmp.name) / "states.json")
         elf_path = self.elf.resolve()
@@ -1038,7 +1038,7 @@ class CheckElfInheritanceDiagnosticsTests(unittest.TestCase):
             requests=(scoped,),
         )
 
-        self.assertEqual(conservative.version, 32)
+        self.assertEqual(conservative.version, 34)
         self.assertEqual(conservative.parameters["unknown_stack_size_policy"], "conservative")
         self.assertNotEqual(
             conservative_plan.fingerprint("0" * 64),
@@ -1347,6 +1347,9 @@ class CheckElfInheritanceDiagnosticsTests(unittest.TestCase):
 
             def fingerprint(self, digest):
                 return digest
+
+            def input_fingerprint(self, _path):
+                return None
 
         def run_cli(passed, strict):
             arguments = SimpleNamespace(
