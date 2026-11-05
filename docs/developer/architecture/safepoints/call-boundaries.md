@@ -38,7 +38,7 @@ middle:
 
 已知外部地址仍可能调用应用 callback，但当前调用图没有这段边，所以“目标地址已知”不等于传播闭合。`--strategy auto` 遇到活跃的已知外部边界会选择 gate；显式 `--strategy svf` 不能靠补齐地址解决这个缺口，会要求改用 gate 并复检。栈对象覆盖 metadata 与调用目标 metadata 是独立能力。
 
-分析层的 `AnalysisWarning` 结构同时承载可行动边界信息与普通观察，正式检查报告再区分 finding 和 warning。宽度选择影响、已确认非栈写出以及 `escaping-vlen-scalar-value` 观察不单独构成 finding；它们也不自动进入 gate 名单。unsafe、warning、finding、候选名单四者含义不同。
+分析层的 `AnalysisWarning` 结构同时承载可行动边界信息与普通观察，正式检查报告再区分 finding 和 warning。宽度选择影响、已确认非栈写出以及 `escaping-vlen-scalar-value` 观察不单独构成 finding；它们也不自动进入 gate 名单。unsafe、warning、finding、候选名单四者含义不同。有关针对外部原生数学函数的新增闭包证明与编译器边界控制，参见 [Gate 调用边界与原生标量调用闭包](../../gate-call-boundaries.zh-CN.md)。
 
 ## 局部缓存死亡不解除继承上下文
 

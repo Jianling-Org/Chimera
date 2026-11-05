@@ -78,7 +78,7 @@ parameters = { min_vlen_bits = 256, compiler_metadata = [], external_scalar_leaf
 
 prepare 对本次所选模块重新绑定并分析，发布 `external-scalar-leaf-contracts` JSON 工件。使用该工件的 register 和 run 核对所有实际加载模块以及 Runtime、翻译等 ELF 工件，拒绝同名符号抢占、库变更、额外 preload、audit 和 ELF 自带审计／过滤钩子。即使跳过一般 verify，这项绑定校验也执行；启动使用 `LD_BIND_NOW=1` 固定普通 GOT 绑定。缓存的 safety 结果不能代替这次绑定，需重新执行 safety。
 
-这是静态的闭合调用边界证明，不是库函数内的安全点声明，也不证明库函数的任意内存写或返回值可用于尺寸独立性分析。
+这是静态的闭合调用边界证明，不是库函数内的安全点声明，也不证明库函数的任意内存写或返回值可用于尺寸独立性分析。关于机器码原生闭包证明的更多规则（如 `chimera-external-call-contracts-v3` 及 64 函数 / 128 KiB 限额）见 [Gate 调用边界与原生标量调用闭包](gate-call-boundaries.zh-CN.md)。
 
 ## 报告与凭证
 

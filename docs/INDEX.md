@@ -14,7 +14,7 @@
 | [RELEASE_NOTES-v0.1.0-preview.1.md](../RELEASE_NOTES-v0.1.0-preview.1.md) | 技术预览版发布说明 |
 | [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md) | 第三方软件说明 |
 
-## 正式指南与协议（45）
+## 正式指南与协议（46）
 
 | 文档 | 内容 |
 |---|---|
@@ -51,6 +51,7 @@
 | [docs/developer/build-and-test.md](developer/build-and-test.md) | 构建与测试 |
 | [docs/developer/cli.md](developer/cli.md) | 开发者命令参考 |
 | [docs/developer/diagnostics.md](developer/diagnostics.md) | 开发与诊断 |
+| [docs/developer/gate-call-boundaries.zh-CN.md](developer/gate-call-boundaries.zh-CN.md) | Gate 调用边界与原生标量调用闭包 |
 | [docs/developer/gate-source-audit.md](developer/gate-source-audit.md) | 隐式向量化源头独立核对 |
 | [docs/developer/gcc-workflow.md](developer/gcc-workflow.md) | GCC 重编、静态检查与后续交付 |
 | [docs/developer/releasing.md](developer/releasing.md) | Chimera 系统发布 |

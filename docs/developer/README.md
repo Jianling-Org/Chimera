@@ -9,7 +9,8 @@ Chimera 开发者维护离线分析与翻译流程、运行时、目标适配、
 3. [命令参考](cli.md)：使用开发工具链与步骤重建命令。
 4. [扩展机制](architecture/extensibility.md)：实现步骤、目标、场景或工件能力。
 5. [协议与 ABI](abi/README.md)：核对跨组件接口。
-6. [系统发布](releasing.md)：从已构建产物生成平台 wheel。
+6. [Gate 调用边界与原生闭包](gate-call-boundaries.zh-CN.md)：理解编译插件与原生闭包证明机制。
+7. [系统发布](releasing.md)：从已构建产物生成平台 wheel。
 
 分析行为的设计说明统一在 [安全点分析算法](architecture/safepoints/README.md)。排查问题与核对实际安装版本见 [诊断指南](diagnostics.md)。
 
