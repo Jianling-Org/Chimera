@@ -16,7 +16,7 @@ def main():
     p.add_argument('--output',required=True,type=Path)
     a=p.parse_args();out=a.output;out.mkdir(exist_ok=False)
     source=Path(__file__).with_name('live-rvv-boundary.c')
-    gate=out/'gate.txt';gate.write_text('gated_control\n')
+    gate=out/'gate.txt';gate.write_text('gated_control\ngated_compute\n')
     environment=dict(os.environ,CHIMERA_GATE_LIST=str(gate))
     for key in ('LD_PRELOAD','LD_AUDIT','LD_PROFILE','CHIMERA_BOOTSTRAP',
                 'CHIMERA_REGISTRY','CHIMERA_AUTOMIGRATE','CHIMERA_LAUNCH_PID'):
@@ -50,10 +50,13 @@ def main():
     leaf=re.search(r'define [^\n]*@vector_leaf\([^\n]* #(\d+)\s*\{',ir)
     assert leaf,'Missing isolated RVV function'
     attrs=re.search(r'attributes #'+leaf[1]+r' = \{([^\n]*)\}',ir)[1]
-    assert 'noinline' in attrs and '"chimera-no-vectorize"' in attrs
+    assert 'noinline' not in attrs and '"chimera-no-vectorize"' in attrs
     assert re.search(r'implicit-vector-census\tSLP\tvector_leaf\tblocked',stats.read_text())
     assembly=(out/'candidate.s').read_text()
     leaf_asm=extract(assembly,'vector_leaf')
+    compute=extract(assembly,'gated_compute')
+    assert 'vle32.v' in compute and 'vse32.v' in compute
+    assert not re.search(r'\b(?:call|tail)\s+vector_leaf',compute),'Pure compute edge lost inlining'
     assert 'vle32.v' in leaf_asm and 'vse32.v' in leaf_asm
     assert re.search(r'\bcsrr\s+\w+,\s*vlenb',leaf_asm),'Fixture lost the actual isolated VLEN frame'
     binary=out/'live-rvv-boundary'

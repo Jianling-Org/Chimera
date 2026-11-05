@@ -1,4 +1,4 @@
-"""Actual LLVM inlining: RVV definitions retain Gate; scalar wrappers still fold."""
+"""Actual LLVM inlining: protect callback call sites, keep compute edges inlineable."""
 import argparse
 from pathlib import Path
 import re
@@ -30,12 +30,20 @@ def main():
             assert r.returncode==0,r.stderr
         text=(out/'pass1.ll').read_text()
         assert text==(out/'pass2.ll').read_text(),'Boundary pass is not idempotent'
-        for name in ['gated_caller','gated_wrapper','gated_callback_wrapper','open_caller']:
+        for name in ['gated_caller','gated_wrapper','gated_transitive','gated_callback_wrapper']:
             body=function(text,name)
-            assert '@vector_leaf(' in body,name
+            edge=re.search(r'call void @vector_leaf\([^\n]*\) #(\d+)',body)
+            assert edge,name
+            attrs=re.search(r'attributes #'+edge[1]+r' = \{([^\n]*)\}',text)[1]
+            assert 'noinline' in attrs and 'alwaysinline' not in attrs,(name,attrs)
             assert '<vscale x 4 x i32>' not in body,name
             assert '@wrapper(' not in body,name
             assert '@scalar_helper(' not in body,name
+            assert '@call_callback(' not in body,name
+        for name in ['open_caller','gated_compute','gated_vector_abi']:
+            body=function(text,name)
+            assert '<vscale x 4 x i32>' in body,name
+            assert '@vector_leaf(' not in body and '@vector_value(' not in body,name
         assert 'add i32' in function(text,'gated_caller')
         assert 'add i32' in function(text,'gated_callback_wrapper')
         assert 'call void %' not in function(text,'gated_callback_wrapper')
@@ -47,8 +55,10 @@ def main():
             group=re.search(r' #(\d+)\s*\{',body)
             assert group,name
             attrs=re.search(r'attributes #'+group[1]+r' = \{([^\n]*)\}',text)[1]
-            assert 'noinline' in attrs and 'alwaysinline' not in attrs,(name,attrs)
+            assert 'noinline' not in attrs,(name,attrs)
             assert '"chimera-no-vectorize"' in attrs,(name,attrs)
+            if name == 'vector_leaf':
+                assert 'alwaysinline' in attrs,attrs
         for name in ['scalar_helper','scalar_callback','wrapper','width_query']:
             # Successfully inlined internal definitions may be deleted.
             if not re.search(r'define [^{]*@'+name+r'\(',text):
@@ -77,8 +87,8 @@ def main():
                              capture_output=True,text=True)
             assert r.returncode==0,r.stderr
         assert (out/'original-no-roots.ll').read_bytes()==(out/'boundary-no-roots.ll').read_bytes()
-        print('PASS: explicit RVV stays in Gate+noinline definitions; scalar/width/callback '
-              'specialization retained; identities, linkage and repeated passes preserved')
+        print('PASS: Gate propagation and callback call-site boundaries preserved; '
+              'pure RVV edges and scalar wrappers still inline; identity and idempotence preserved')
 
 
 if __name__=='__main__':main()

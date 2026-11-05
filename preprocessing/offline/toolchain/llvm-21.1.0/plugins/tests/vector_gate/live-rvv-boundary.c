@@ -28,25 +28,32 @@ void gated_control(void (*callback)(unsigned *), unsigned *calls,
     vector_leaf(dst, src, scalar_dst, count);
 }
 
+void gated_compute(float *dst, const float *src, float *scalar_dst, size_t count) {
+    vector_leaf(dst, src, scalar_dst, count);
+}
+
 static void bump(unsigned *calls) { ++*calls; }
 
 int main(void) {
     unsigned calls = 0;
     for (size_t count = 0; count <= 64; ++count) {
-        float src[66], dst[66], scalar_dst[6];
+        float src[66], dst[66], compute_dst[66], scalar_dst[6], compute_scalar_dst[6];
         for (size_t i = 0; i < 66; ++i) {
             src[i] = (float)i/4;
-            dst[i] = -17.0f;
+            dst[i] = compute_dst[i] = -17.0f;
         }
-        for (size_t i = 0; i < 6; ++i) scalar_dst[i] = -19.0f;
+        for (size_t i = 0; i < 6; ++i) scalar_dst[i] = compute_scalar_dst[i] = -19.0f;
         size_t vl = __riscv_vsetvl_e32m1(count);
         gated_control(bump, &calls, dst+1, src+1, scalar_dst+1, count);
+        gated_compute(compute_dst+1, src+1, compute_scalar_dst+1, count);
         if (calls != count+1) return 20;
         for (size_t i = 0; i < 66; ++i)
-            if (dst[i] != (i >= 1 && i <= vl ? src[i]+0.5f : -17.0f)) return 21;
+            if (dst[i] != (i >= 1 && i <= vl ? src[i]+0.5f : -17.0f) || compute_dst[i] != dst[i]) return 21;
         if (scalar_dst[0] != -19.0f || scalar_dst[5] != -19.0f) return 22;
         for (size_t i = 1; i <= 4; ++i)
             if (scalar_dst[i] != src[i]+2.0f) return 23;
+        for (size_t i = 0; i < 6; ++i)
+            if (compute_scalar_dst[i] != scalar_dst[i]) return 24;
     }
     printf("{\"passed\":true,\"cases\":65,\"callbacks\":%u,\"cpu\":%d,\"vlenb\":%zu}\n",
            calls, sched_getcpu(), __riscv_vlenb());
